@@ -397,115 +397,60 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ================= MOBILE OPTIMIZATION ================= */
 /* ======================================================= */
 
+/* ================================================= */
+/* ============= CRITICAL MOBILE FIX ============== */
+/* ================================================= */
 @media screen and (max-width: 768px) {
-
-  /* --- 1. HEADER & BUTTONS FIX --- */
-  /* Fix: Buttons going off-screen. We allow scrolling for buttons if they don't fit. */
-  .topbar {
-    flex-wrap: wrap;       /* Allow wrapping if needed */
-    padding: 10px;
-    height: auto;          /* Let height grow */
-    gap: 10px;
+  
+  /* 1. ENABLE SCROLLING & VERTICAL STACK */
+  /* Remove the fixed screen height so you can scroll down */
+  body, html {
+    overflow-x: hidden;
+    overflow-y: auto !important; /* Force scrollbar */
+    height: auto !important;
   }
 
-  .brand {
-    font-size: 0.9rem;     /* Smaller title */
-    white-space: nowrap;
+  .auction-wrapper {
+    display: flex !important;
+    flex-direction: column;
+    height: auto !important;     /* Don't trap content in 100vh */
+    overflow: visible !important; 
+    padding-bottom: 80px;        /* Space at bottom for scrolling */
   }
 
-  /* Create a scrollable container for admin buttons so they never push off-screen */
-  .top-right {
+  /* 2. FORCE AUCTION CARD TO TOP */
+  /* This moves the middle column (Card) to the very top visually */
+  .auction-center {
+    order: 1 !important;         /* 1st Item */
     width: 100%;
-    justify-content: flex-end;
-    overflow-x: auto;      /* Enable horizontal scroll for buttons */
-    white-space: nowrap;   /* Keep buttons in one line */
-    padding-bottom: 5px;   /* Space for scrollbar touch */
-    -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
-  }
-  
-  /* Make buttons smaller on mobile */
-  .admin-mini button, .topbar button {
-    padding: 6px 10px !important;
-    font-size: 0.75rem !important;
+    padding: 10px 0;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  /* Hide the vertical separator line in header on mobile */
-  .admin-mini span[style*="border-left"] {
-    display: none !important; 
+  /* 3. PUSH LOG & CHAT TO BOTTOM */
+  .panel {
+    order: 2 !important;         /* 2nd Item */
+    width: 100%;
+    height: 300px;               /* Fixed height for log/chat areas */
+    margin-bottom: 20px;
+    flex: none;                  /* Stop them from stretching weirdly */
   }
 
-  /* --- 2. POPUP FIXES (Rules, Team Select) --- */
-  /* Fix: Popups crossing screen / needing zoom out */
-  .overlay-card, .rules-card {
-    width: 95% !important;   /* Force fit within screen width */
-    max-width: 95% !important;
-    max-height: 90vh;        /* Max height 90% of screen */
-    margin: auto;            /* Center it */
+  /* 4. ENSURE CARD IS VISIBLE */
+  #auctionCard {
+    width: 100% !important;
+    transform: none !important;  /* Remove any centering transforms */
+    margin: 0 auto;
   }
 
-  .rules-scroll-area {
-    padding: 15px;           /* Reduce padding inside popup */
-  }
-
-  /* Fix inputs inside rules pushing width out */
-  .rule-row {
-    gap: 10px;
-  }
-  
-  .rule-row label {
-    font-size: 0.8rem;       /* Smaller text */
-    flex: 1;                 /* Let text take available space */
-  }
-
-  .rule-row input {
-    width: 60px !important;  /* Force smaller input width */
-    font-size: 0.9rem;
-    padding: 4px;
-  }
-
-  /* --- 3. LANDING & JOIN PAGE OPTIMIZATION --- */
-  /* Fix: Cards taking up too much space or font being huge */
-  .landing-card, .auth-card {
-    padding: 25px 20px;      /* Reduced padding (was 40px) */
-    width: 90%;
-  }
-
-  .title {
-    font-size: 2.2rem;       /* Smaller Title (was 3.5rem) */
-  }
-  
-  .subtitle {
-    font-size: 0.95rem;
-  }
-  
-  /* Stack features vertically if needed, or make smaller */
-  .features span {
-    font-size: 0.75rem;
-    padding: 4px 8px;
-  }
-
-  /* --- 4. AUCTION CARD & BADGES --- */
-  #playerInfoBox {
-    padding: 20px 10px;      /* Less padding around player name */
-  }
-  
-  #playerName {
-    font-size: 1.8rem;       /* Prevent name from breaking line */
-  }
-
-  .price-container {
-    padding: 10px;
-  }
-
-  #bid {
-    font-size: 1.8rem;
-  }
-  
-  /* Make the team badge smaller on mobile */
-  .bidder-badge {
-    padding: 6px 12px;
+  /* 5. Hide the big "Notifications" title on mobile to save space */
+  .panel h3 {
     font-size: 0.8rem;
+    padding-bottom: 5px;
   }
 }
+
+
 
 
