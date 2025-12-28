@@ -400,56 +400,69 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ================================================= */
 /* ============= CRITICAL MOBILE FIX ============== */
 /* ================================================= */
+/* ================================================= */
+/* =========== FINAL MOBILE POLISH ================= */
+/* ================================================= */
 @media screen and (max-width: 768px) {
+
+  /* --- 1. LANDING PAGE FIXES --- */
+  /* Prevents the "stretched" look and cutting off */
+  #landing {
+    min-height: 100dvh;      /* Use dynamic viewport height (fixes browser bar glitches) */
+    height: auto;            /* Allow it to grow if content is tall */
+    padding: 40px 0;         /* Add safe space top and bottom */
+    display: flex;
+    align-items: center;     /* Center vertically */
+  }
+
+  .landing-card {
+    margin: 20px;            /* Ensure it doesn't touch edges */
+    transform: none !important; /* Disable the 'float' animation if it causes clipping */
+    animation: none;         /* Stop floating on mobile to prevent cutting off */
+  }
+
+  /* --- 2. HEADER & BUTTONS ADJUSTMENT --- */
+  /* Fixes buttons going off-screen by wrapping them nicely */
   
-  /* 1. ENABLE SCROLLING & VERTICAL STACK */
-  /* Remove the fixed screen height so you can scroll down */
-  body, html {
-    overflow-x: hidden;
-    overflow-y: auto !important; /* Force scrollbar */
-    height: auto !important;
+  .topbar {
+    flex-direction: column;  /* Stack: Title on top, Buttons below */
+    height: auto;            /* Let header grow to fit buttons */
+    padding: 10px 5px;       /* Reduce padding */
+    gap: 10px;               /* Space between title and buttons */
   }
 
-  .auction-wrapper {
-    display: flex !important;
-    flex-direction: column;
-    height: auto !important;     /* Don't trap content in 100vh */
-    overflow: visible !important; 
-    padding-bottom: 80px;        /* Space at bottom for scrolling */
-  }
-
-  /* 2. FORCE AUCTION CARD TO TOP */
-  /* This moves the middle column (Card) to the very top visually */
-  .auction-center {
-    order: 1 !important;         /* 1st Item */
+  .top-left {
     width: 100%;
-    padding: 10px 0;
-    height: auto !important;
-    overflow: visible !important;
+    justify-content: center; /* Center the Title */
   }
 
-  /* 3. PUSH LOG & CHAT TO BOTTOM */
-  .panel {
-    order: 2 !important;         /* 2nd Item */
+  .top-right {
     width: 100%;
-    height: 300px;               /* Fixed height for log/chat areas */
-    margin-bottom: 20px;
-    flex: none;                  /* Stop them from stretching weirdly */
+    justify-content: center; /* Center the Buttons */
+    flex-wrap: wrap;         /* Allow buttons to drop to next line */
+    gap: 5px;                /* Tiny gap between buttons */
   }
 
-  /* 4. ENSURE CARD IS VISIBLE */
-  #auctionCard {
-    width: 100% !important;
-    transform: none !important;  /* Remove any centering transforms */
-    margin: 0 auto;
+  /* Force buttons to be smaller and fit */
+  .topbar button, .admin-mini button {
+    padding: 8px 12px !important;  /* Comfortable touch target */
+    font-size: 0.75rem !important; /* Smaller text */
+    flex: 0 1 auto;          /* Don't stretch too wide */
+    margin: 0 !important;
   }
 
-  /* 5. Hide the big "Notifications" title on mobile to save space */
-  .panel h3 {
-    font-size: 0.8rem;
-    padding-bottom: 5px;
+  /* Hide the vertical separator line */
+  .admin-mini span[style*="border-left"] {
+    display: none !important; 
+  }
+
+  /* Optional: Shorten button text if needed (e.g. "Skip Set" -> "Set") */
+  #skipSetBtn {
+    font-size: 0.7rem !important;
   }
 }
+
+
 
 
 
