@@ -392,78 +392,102 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; white-space: nowrap; }
 .leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
 .leaderboard-table th { background: #1e293b; color: #aaa; }
-/* ================= MOBILE RESPONSIVENESS ================= */
 /* ======================================================= */
-/* ================= MOBILE OPTIMIZATION ================= */
+/* =========== ULTIMATE MOBILE OVERRIDE v2.0 ============= */
 /* ======================================================= */
+@media screen and (max-width: 900px) {
 
-/* ================================================= */
-/* ============= CRITICAL MOBILE FIX ============== */
-/* ================================================= */
-/* ================================================= */
-/* =========== FINAL MOBILE POLISH ================= */
-/* ================================================= */
-@media screen and (max-width: 768px) {
-
-  /* --- 1. LANDING PAGE FIXES --- */
-  /* Prevents the "stretched" look and cutting off */
-  #landing {
-    min-height: 100dvh;      /* Use dynamic viewport height (fixes browser bar glitches) */
-    height: auto;            /* Allow it to grow if content is tall */
-    padding: 40px 0;         /* Add safe space top and bottom */
-    display: flex;
-    align-items: center;     /* Center vertically */
+  /* --- 1. LANDING PAGE (Fix for "Stretched/Cut-off" look) --- */
+  /* instead of centering, we push it down slightly so the top never gets cut off */
+  #landing, .auth-wrapper {
+    display: block !important;    /* Disable flex centering */
+    height: auto !important;      /* Allow scrolling */
+    min-height: 100vh;
+    padding-top: 50px;            /* Push card down from top */
+    padding-bottom: 50px;
+    overflow-y: auto !important;  /* Ensure we can scroll */
   }
 
-  .landing-card {
-    margin: 20px;            /* Ensure it doesn't touch edges */
-    transform: none !important; /* Disable the 'float' animation if it causes clipping */
-    animation: none;         /* Stop floating on mobile to prevent cutting off */
+  .landing-card, .auth-card {
+    margin: 0 auto !important;    /* Center horizontally */
+    width: 90% !important;
+    transform: none !important;   /* Kill the float animation positions */
+    animation: none !important;   /* Kill the movement completely */
   }
-
-  /* --- 2. HEADER & BUTTONS ADJUSTMENT --- */
-  /* Fixes buttons going off-screen by wrapping them nicely */
   
+  /* Make the big title text fit */
+  .title {
+    font-size: 2.5rem !important; 
+    line-height: 1.2;
+  }
+
+  /* --- 2. AUCTION HEADER (Fix for "Buttons beyond screen") --- */
   .topbar {
-    flex-direction: column;  /* Stack: Title on top, Buttons below */
-    height: auto;            /* Let header grow to fit buttons */
-    padding: 10px 5px;       /* Reduce padding */
-    gap: 10px;               /* Space between title and buttons */
+    display: block !important;    /* Stack vertically, not side-by-side */
+    height: auto !important;      /* Let it grow */
+    padding: 15px 10px !important;
+    position: relative !important; /* Unstick it if it causes issues */
   }
 
+  /* Top Part: Title */
   .top-left {
-    width: 100%;
-    justify-content: center; /* Center the Title */
+    display: flex !important;
+    justify-content: center !important;
+    margin-bottom: 10px !important;
+    width: 100% !important;
   }
-
+  
+  /* Bottom Part: Buttons */
   .top-right {
-    width: 100%;
-    justify-content: center; /* Center the Buttons */
-    flex-wrap: wrap;         /* Allow buttons to drop to next line */
-    gap: 5px;                /* Tiny gap between buttons */
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;   /* Allow multi-line buttons */
+    gap: 8px !important;          /* Space between buttons */
+    width: 100% !important;
   }
 
-  /* Force buttons to be smaller and fit */
+  /* Force buttons to be small */
   .topbar button, .admin-mini button {
-    padding: 8px 12px !important;  /* Comfortable touch target */
-    font-size: 0.75rem !important; /* Smaller text */
-    flex: 0 1 auto;          /* Don't stretch too wide */
+    font-size: 0.7rem !important;
+    padding: 8px 12px !important;
+    flex: 0 0 auto !important;    /* Don't stretch */
     margin: 0 !important;
   }
+  
+  /* Remove spacers/dividers in the header */
+  .admin-mini span { display: none !important; }
+  .admin-mini { display: contents !important; } /* Unwrap the container */
 
-  /* Hide the vertical separator line */
-  .admin-mini span[style*="border-left"] {
-    display: none !important; 
+
+  /* --- 3. AUCTION TILE (Fix for "Not Visible") --- */
+  /* This forces the layout to vertical stack */
+  .auction-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding-bottom: 50px;
   }
 
-  /* Optional: Shorten button text if needed (e.g. "Skip Set" -> "Set") */
-  #skipSetBtn {
-    font-size: 0.7rem !important;
+  /* ORDER: 1. Card, 2. Chat, 3. Log */
+  .auction-center {
+    order: 1 !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 0 10px !important;
+    margin-bottom: 20px;
+  }
+
+  .panel {
+    order: 2 !important;
+    width: 100% !important;
+    height: 250px !important; /* Limit height of log/chat */
+  }
+
+  #auctionCard {
+    width: 100% !important;
+    margin-top: 10px !important;
   }
 }
-
-
-
-
 
 
