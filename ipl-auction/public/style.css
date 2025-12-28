@@ -393,101 +393,103 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
 .leaderboard-table th { background: #1e293b; color: #aaa; }
 /* ======================================================= */
-/* =========== ULTIMATE MOBILE OVERRIDE v2.0 ============= */
 /* ======================================================= */
-@media screen and (max-width: 900px) {
+/* =========== FINAL MOBILE FIX (NO SCROLL) ============== */
+/* ======================================================= */
+@media screen and (max-width: 768px) {
 
-  /* --- 1. LANDING PAGE (Fix for "Stretched/Cut-off" look) --- */
-  /* instead of centering, we push it down slightly so the top never gets cut off */
+  /* --- 1. LANDING & AUTH PAGE (Centered & Compact) --- */
   #landing, .auth-wrapper {
-    display: block !important;    /* Disable flex centering */
-    height: auto !important;      /* Allow scrolling */
+    display: flex !important;       /* Bring back centering */
+    align-items: center !important;
+    justify-content: center !important;
     min-height: 100vh;
-    padding-top: 50px;            /* Push card down from top */
-    padding-bottom: 50px;
-    overflow-y: auto !important;  /* Ensure we can scroll */
+    padding: 0 !important;          /* Remove extra padding causing scroll */
+    overflow: hidden !important;    /* Hide scrollbars */
   }
 
   .landing-card, .auth-card {
-    margin: 0 auto !important;    /* Center horizontally */
-    width: 90% !important;
-    transform: none !important;   /* Kill the float animation positions */
-    animation: none !important;   /* Kill the movement completely */
-  }
-  
-  /* Make the big title text fit */
-  .title {
-    font-size: 2.5rem !important; 
-    line-height: 1.2;
+    width: 85% !important;          /* Slightly narrower to look neat */
+    max-width: 400px;
+    margin: 0 auto !important;
+    padding: 20px !important;       /* COMPACT PADDING */
+    
+    /* Stop it from stretching/extending weirdly */
+    height: auto !important;        
+    max-height: 90vh;               /* Never go taller than screen */
+    overflow-y: auto;               /* Scroll INSIDE card if needed */
+    
+    /* Kill animation so it stays put */
+    transform: none !important;
+    animation: none !important;
   }
 
-  /* --- 2. AUCTION HEADER (Fix for "Buttons beyond screen") --- */
+  /* Make text smaller so it fits without scrolling */
+  .title { font-size: 2rem !important; margin-bottom: 10px !important; }
+  .subtitle { font-size: 0.9rem !important; margin-bottom: 20px !important; }
+  .features { margin-bottom: 20px !important; }
+  .features span { font-size: 0.7rem !important; padding: 4px 8px !important; }
+
+
+  /* --- 2. AUCTION HEADER (Compact Rows) --- */
   .topbar {
-    display: block !important;    /* Stack vertically, not side-by-side */
-    height: auto !important;      /* Let it grow */
-    padding: 15px 10px !important;
-    position: relative !important; /* Unstick it if it causes issues */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 8px !important;
+    height: auto !important;
+    gap: 8px;
   }
 
-  /* Top Part: Title */
   .top-left {
-    display: flex !important;
+    width: 100%;
+    text-align: center;
     justify-content: center !important;
-    margin-bottom: 10px !important;
-    width: 100% !important;
   }
-  
-  /* Bottom Part: Buttons */
+
+  /* Fix Buttons: Wrap them tightly in center */
   .top-right {
+    width: 100%;
     display: flex !important;
     justify-content: center !important;
-    flex-wrap: wrap !important;   /* Allow multi-line buttons */
-    gap: 8px !important;          /* Space between buttons */
-    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important; /* Tight gap */
   }
 
-  /* Force buttons to be small */
+  /* Tiny Buttons for Mobile */
   .topbar button, .admin-mini button {
-    font-size: 0.7rem !important;
-    padding: 8px 12px !important;
-    flex: 0 0 auto !important;    /* Don't stretch */
-    margin: 0 !important;
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
+    height: 30px !important;       /* Fixed height for uniformity */
+    line-height: 1 !important;
+    flex: 0 0 auto !important;     /* Prevent stretching */
   }
   
-  /* Remove spacers/dividers in the header */
+  /* Hide dividers */
   .admin-mini span { display: none !important; }
-  .admin-mini { display: contents !important; } /* Unwrap the container */
 
 
-  /* --- 3. AUCTION TILE (Fix for "Not Visible") --- */
-  /* This forces the layout to vertical stack */
+  /* --- 3. AUCTION TILE VISIBILITY --- */
   .auction-wrapper {
     display: flex !important;
     flex-direction: column !important;
+    padding-bottom: 60px !important;
     height: auto !important;
-    overflow: visible !important;
-    padding-bottom: 50px;
+    overflow-y: auto !important;
   }
 
-  /* ORDER: 1. Card, 2. Chat, 3. Log */
   .auction-center {
-    order: 1 !important;
+    order: 1 !important; /* SHOW FIRST */
     width: 100% !important;
-    height: auto !important;
-    padding: 0 10px !important;
-    margin-bottom: 20px;
+    padding: 10px !important;
+    margin: 0 !important;
   }
 
   .panel {
-    order: 2 !important;
+    order: 2 !important; /* SHOW BELOW */
     width: 100% !important;
-    height: 250px !important; /* Limit height of log/chat */
-  }
-
-  #auctionCard {
-    width: 100% !important;
-    margin-top: 10px !important;
+    height: 250px !important;
+    margin-bottom: 20px !important;
   }
 }
-
 
