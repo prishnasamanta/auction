@@ -457,6 +457,14 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     text-align: center !important;
   }
 }
+.mobile-tabs { display: none; gap: 10px; justify-content: center; margin-bottom: 10px; }
+
+@media screen and (max-width: 1024px) {
+  .mobile-tabs { display: flex; }
+  /* Hide panels by default on mobile if you want a cleaner look */
+  /* .panel { display: none; } */ 
+}
+
 
 
 
