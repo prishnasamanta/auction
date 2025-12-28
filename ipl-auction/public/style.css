@@ -395,159 +395,120 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 
 /* ================================================= */
-/* ========= GLOBAL MOBILE POPUP SYSTEM ============= */
+/* ================= MOBILE (FROM OLD CSS) ========= */
 /* ================================================= */
+@media (max-width: 1024px) {
+  .auction-wrapper {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    height: auto;
+  }
+  .auction-center { order: 1; margin-bottom: 20px; }
+  .bottom-panels { order: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+}
+
+@media (max-width: 600px) {
+  .bottom-panels { grid-template-columns: 1fr; }
+  .title { font-size: 2.5rem; }
+  #bid { font-size: 2rem; }
+}
+
 /* ================================================= */
-/* ========== CLEAN RULE SET POPUP (MOBILE) ========= */
+/* ================= MOBILE OPTIMIZATION =========== */
 /* ================================================= */
 
 @media (max-width: 900px) {
 
-  .rules-overlay {
-    padding: 15px;
-    align-items: center;
-    justify-content: center;
+  /* 1. Stack the Grid vertically */
+  .auction-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: auto; /* Allow scrolling */
+    padding-bottom: 80px; /* Space for bottom nav if needed */
   }
 
-  .rules-card {
-    width: 100%;
-    max-width: 360px;          /* SMALL POPUP */
-    max-height: 70vh;          /* NOT FULL SCREEN */
-    border-radius: 16px;
-
-    background: rgba(30, 41, 59, 0.92);
-    backdrop-filter: blur(16px);
-
-    box-shadow:
-      0 18px 40px rgba(0,0,0,0.6),
-      inset 0 0 0 1px rgba(255,255,255,0.06);
-
-    animation: popupIn 0.25s ease-out;
+  /* 2. Reorder: Card First, then Logs, then Chat */
+  .auction-center {
+    order: 1;
+    margin-bottom: 20px;
+  }
+  .panel {
+    order: 2;
+    height: 300px; /* Fixed height for scrollable areas on mobile */
+    margin-bottom: 20px;
   }
 
-  .rules-card h3 {
-    font-size: 1.1rem;
-    padding: 14px;
-  }
-
-  .rules-scroll-area {
-    padding: 14px;
-    overflow-y: auto;
-  }
-
-  .rules-section {
-    padding: 12px;
-    margin-bottom: 12px;
-  }
-
-  .rule-row {
+  /* 3. Adjust Top Bar for Mobile */
+  .topbar {
+    padding: 10px 15px;
+    flex-wrap: wrap; /* Allow wrapping if too many buttons */
     gap: 10px;
   }
+  .brand { font-size: 1rem; }
+   
+  /* Hide Room Code Text on tiny screens to save space */
+  #roomCodeBar { display: none !important; }
 
-  .rule-row label {
-    font-size: 0.85rem;
+  /* 4. Make Admin Controls Scrollable horizontally if too many buttons */
+  #adminControls {
+    display: flex;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 5px;
+    gap: 8px;
+    justify-content: flex-start; /* Left align scroll */
   }
+   
+  /* Hide scrollbar for neatness */
+  #adminControls::-webkit-scrollbar { display: none; }
 
-  .rule-row input {
-    width: 70px;
-    padding: 6px;
-    font-size: 0.9rem;
-  }
-
-  .rules-footer {
-    padding: 12px;
-  }
-}
-
-/* Small pop animation */
-@keyframes popupIn {
-  from { transform: scale(0.9); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
-}
-/* ================================================= */
-/* ========= MOBILE AUCTION UI (FIXED) ============== */
-/* ================================================= */
-
-@media (max-width: 900px) {
-
-  /* Remove desktop panel feeling */
-  .panel.left,
-  .panel.right {
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-  }
-
-  /* AUCTION CARD = HERO */
+  /* 5. Auction Card Tweaks */
   #auctionCard {
-    border-radius: 18px;
-    background: rgba(30,41,59,0.9);
-    box-shadow:
-      0 20px 50px rgba(0,0,0,0.6),
-      inset 0 0 0 1px rgba(255,255,255,0.06);
-
-    animation: none; /* remove float here */
+    width: 100%;
+    border: none; /* Remove border for cleaner mobile look */
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent; /* Seamless blend */
   }
+   
+  /* Make the Player Name smaller so it doesn't wrap weirdly */
+  #playerName { font-size: 2rem; }
+  #bid { font-size: 2.2rem; }
 
-  /* Make bid button dominant */
+  /* 6. BIGGER TOUCH TARGETS */
   #bidBtn {
-    position: sticky;
-    bottom: 12px;
-    z-index: 200;
-
-    font-size: 1.25rem;
-    padding: 18px;
-    border-radius: 14px;
-
-    box-shadow:
-      0 12px 30px rgba(34,197,94,0.5);
+    padding: 20px; /* Fatter button for thumbs */
+    font-size: 1.3rem;
+    position: fixed; /* Optional: Stick to bottom? No, let's keep inline for now */
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    width: calc(100% - 40px);
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    border-radius: 12px;
   }
+   
+  /* Since Bid Button is fixed, add padding to body so content isn't hidden */
+  .auction-wrapper { padding-bottom: 100px; }
+   
+  /* Hide the old inline bid button location to prevent duplicates visually */
+  /* Actually, we just moved it via fixed positioning above. */
 
-  /* Logs as compact card */
-  .panel.left {
-    margin-top: 10px;
-    border-radius: 14px;
-    background: rgba(15,23,42,0.85);
-    padding: 10px;
+  /* 7. Chat & Logs adjustments */
+  .chat-box input { font-size: 16px; } /* Prevents iOS zoom on focus */
+   
+  /* 8. Modal / Popup Mobile Fixes */
+  .rules-card, .auth-card {
+    width: 90%;
+    margin: 20px auto;
+    padding: 20px;
   }
-
-  .panel.left h3 {
-    font-size: 0.8rem;
-    margin-bottom: 6px;
-  }
-
-  .panel.left .scroll {
-    max-height: 120px;
-    font-size: 0.8rem;
-  }
-
-  /* Chat compact */
-  .panel.right {
-    margin-top: 10px;
-    border-radius: 14px;
-    background: rgba(15,23,42,0.85);
-    padding: 10px;
-  }
-
-  .chat-box input {
-    font-size: 0.9rem;
-  }
-
-  .chat-box button {
-    padding: 8px 12px;
+   
+  /* Leaderboard Table Scroll */
+  .leaderboard-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 }
-
-/* ================================================= */
-/* ========= SOFT POPUP FLOAT ANIMATION ============= */
-/* ================================================= */
-
-@keyframes popupFloat {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-
-
-
-
-
