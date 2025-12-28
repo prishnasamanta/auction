@@ -21,7 +21,6 @@
 * { 
   box-sizing: border-box; 
   outline: none; 
-  -webkit-tap-highlight-color: transparent; /* Removes blue tap box on Android/iOS */
 }
 
 body {
@@ -393,4 +392,5 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; white-space: nowrap; }
 .leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
 .leaderboard-table th { background: #1e293b; color: #aaa; }
+
 
