@@ -399,71 +399,151 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ======================================================= */
 /* ========= PERFECT "MINI DESKTOP" MOBILE FIT =========== */
 /* ======================================================= */
-@media screen and (max-width: 768px) {
+/* ================================================= */
+/* ============== RESPONSIVE FIX =================== */
+/* ================================================= */
 
-  /* 1. STOP THE SCROLLING */
-  body, html {
-    overflow: hidden !important;   /* Lock the page */
-    height: 100% !important;
+/* ---------- MOBILE & TABLET ---------- */
+@media (max-width: 900px) {
+
+  /* Allow scrolling */
+  html, body {
+    overflow-y: auto;
+    height: auto;
   }
 
-  /* 2. CENTER THE CARD PERFECTLY */
+  /* Remove fixed heights */
+  .screen {
+    min-height: auto;
+  }
+
+  /* ---------- LANDING / AUTH ---------- */
   #landing, .auth-wrapper {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    height: 100vh !important;      /* Fill exactly one screen */
-    min-height: 100vh !important;
-    padding: 0 !important;         /* Remove padding that pushes it off */
+    min-height: 100vh;
+    padding: 20px;
   }
 
-  /* 3. RESIZE THE CARD (Mini Desktop Look) */
   .landing-card, .auth-card {
-    width: 90% !important;         /* Fit within screen width */
-    max-width: 380px !important;   /* Don't get too wide */
-    padding: 30px 20px !important; /* Smaller padding than desktop */
-    margin: 0 !important;
-    
-    /* Reset any animations causing issues */
-    transform: none !important;
-    animation: none !important;
+    width: 100%;
+    max-width: 420px;
+    padding: 25px 20px;
+    animation: none; /* disable float on mobile */
   }
 
-  /* 4. FIX THE TEXT SIZE (The Main Problem) */
-  /* This shrinks the huge title so "SIMULATOR" fits */
   .title {
-    font-size: 2rem !important;    /* Reduced from 3.5rem */
-    line-height: 1.1 !important;
-    word-wrap: normal !important;  /* Prevent weird letter breaking */
-  }
-
-  /* Target the second line (Simulator) specifically if needed */
-  .title[style*="opacity"] {
-    font-size: 1.5rem !important;  /* Make "Live Simulator" slightly smaller */
-    margin-top: 5px !important;
+    font-size: 2rem;
+    line-height: 1.2;
   }
 
   .subtitle {
-    font-size: 0.9rem !important;
-    margin: 15px 0 25px !important;
-    line-height: 1.4 !important;
+    font-size: 0.95rem;
   }
 
-  /* 5. ADJUST FEATURES & BUTTONS */
-  .features {
-    gap: 8px !important;
-  }
-  
-  .features span {
-    font-size: 0.75rem !important;
-    padding: 5px 10px !important;
+  /* ---------- AUCTION LAYOUT ---------- */
+  .auction-wrapper {
+    grid-template-columns: 1fr; /* STACK */
+    height: auto;
+    gap: 15px;
   }
 
-  .primary-btn {
-    padding: 12px !important;
-    font-size: 1rem !important;
-    width: 100% !important;
+  .panel {
+    height: auto;
+    max-height: none;
+  }
+
+  /* Order panels logically */
+  .auction-center { order: 1; }
+  .panel.left { order: 2; }
+  .panel.right { order: 3; }
+
+  /* ---------- AUCTION CARD ---------- */
+  #auctionCard {
+    max-width: 100%;
+  }
+
+  #playerInfoBox {
+    padding: 25px 15px;
+  }
+
+  #playerName {
+    font-size: 1.6rem;
+  }
+
+  #playerMeta {
+    font-size: 0.9rem;
+  }
+
+  /* ---------- BID AREA ---------- */
+  .price-container {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  #bid {
+    font-size: 1.8rem;
+  }
+
+  #timer {
+    font-size: 1.2rem;
+  }
+
+  .bidder-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  #bidBtn {
+    font-size: 1.1rem;
+    padding: 15px;
+  }
+
+  /* ---------- TOP BAR ---------- */
+  .topbar {
+    padding: 12px 15px;
+  }
+
+  .brand {
+    font-size: 1rem;
+  }
+
+  /* ---------- RULES / MODALS ---------- */
+  .overlay-card,
+  .rules-card {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  /* ---------- TEAM GRID ---------- */
+  .team-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* ---------- TABLES ---------- */
+  .leaderboard-table {
+    font-size: 0.8rem;
   }
 }
+
+/* ---------- SMALL PHONES ---------- */
+@media (max-width: 480px) {
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  #playerName {
+    font-size: 1.4rem;
+  }
+
+  #bid {
+    font-size: 1.6rem;
+  }
+
+  .team-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 
 
