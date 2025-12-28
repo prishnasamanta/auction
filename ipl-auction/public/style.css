@@ -429,59 +429,75 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ================================================= */
 /* ============= NO SCROLL ENFORCER =============== */
 /* ================================================= */
+/* ======================================================= */
+/* =========== BALANCED NO-SCROLL FIX ==================== */
+/* ======================================================= */
 @media screen and (max-width: 768px) {
 
-  /* 1. GLOBAL LOCK: Kill body scroll */
-  html, body {
-    width: 100% !important;
-    height: 100% !important;
-    overflow: hidden !important; /* Force disable scroll */
-    margin: 0 !important;
-    padding: 0 !important;
-    position: fixed; /* Prevents "bounce" scroll on iOS */
+  /* 1. Prevent Horizontal Scroll (Side-to-side wiggle) */
+  body, html {
+    overflow-x: hidden !important;
+    width: 100%;
+    /* Remove fixed height so it's not 'forceful', but reset margins */
+    margin: 0; 
+    padding: 0;
   }
 
-  /* 2. LANDING PAGE: Perfect Center, No overflow */
+  /* 2. LANDING PAGE: Smart Fit */
+  /* Use 100dvh (Dynamic Height) to account for mobile browser bars */
   #landing, .auth-wrapper {
-    height: 100vh !important;
-    width: 100vw !important;
-    padding: 0 !important;
+    min-height: 100dvh;       /* Fits visible screen exactly */
+    height: auto;             /* Grows if content is huge */
+    display: flex !important;
+    align-items: center;      /* Vertically Center */
+    justify-content: center;  /* Horizontally Center */
+    padding: 0 !important;    /* Remove padding here to kill scroll */
     margin: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important;
   }
 
-  /* 3. AUCTION ROOM: Flex Container that fits exactly */
-  /* This ensures the header + content = 100% of screen, no more */
+  /* 3. CARD: Keep your preferred look */
+  .landing-card, .auth-card {
+    width: 90% !important;
+    max-width: 360px;
+    margin: 0 auto;
+    /* This padding is INSIDE the card, so it won't cause page scroll */
+    padding: 25px 20px !important; 
+    transform: none !important;
+    animation: none !important;
+  }
+
+  /* 4. AUCTION ROOM: Fit to Screen */
   #auctionUI {
-    height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
+    height: 100dvh;           /* Exact screen height */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;         /* Hide outer scroll */
   }
 
-  /* Header takes space it needs, content takes the rest */
-  .topbar { flex: 0 0 auto !important; }
-  
+  .topbar {
+    flex-shrink: 0;           /* Header stays fixed size */
+  }
+
   .auction-wrapper {
-    flex: 1 !important; /* Takes remaining space */
+    flex-grow: 1;             /* Content takes remaining space */
     height: auto !important;
-    overflow-y: auto !important; /* ONLY allow scroll inside the content area */
-    padding-bottom: 20px !important; /* Space for bottom of phone */
+    overflow-y: auto;         /* Scroll ONLY inside the content area */
+    padding-bottom: 20px;     /* Safe space at bottom */
   }
 
-  /* 4. Fix popups extending the screen */
-  .rules-overlay {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    height: 100% !important;
-    width: 100% !important;
-    overflow: hidden !important;
+  /* 5. FONTS: Keep readable sizes */
+  .title { font-size: 2.2rem !important; line-height: 1.1; }
+  .title[style*="opacity"] { font-size: 1.6rem !important; }
+
+  /* 6. HEADER BUTTONS: Horizontal Scroll (Preserved) */
+  .top-right {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    display: block !important; /* Block allows scroll container to work */
+    padding-bottom: 5px;
   }
 }
+
 
 
 
