@@ -35,6 +35,7 @@ const TEAM_COLORS = {
   LSG: "#22c55e"
 };
 
+
 /* ================= RULES SAVE ================= */
 document.getElementById("saveRules").onclick = () => {
 
@@ -74,11 +75,8 @@ let rules = {};
 let squadWindow = null;
 let selectedSquadTeam = null;
 let remainingSets = [];
-let viewSetWindow = null; // 👈 Add this line
-/* ================= STATE ================= 
-// ... existing variables ...
-let currentSetPlayers = []; // Store only the current set
-let currentSetName = "";
+let viewSetWindow = null; 
+
 
 /* ================= SCREENS ================= */
 
@@ -92,6 +90,8 @@ enterBtn.onclick=()=>showScreen("auth");
 continueBtn.onclick=()=>{
   username=usernameInput.value.trim();
   if(!username) return alert("Enter name");
+  usernameInput.disabled = true;
+  continueBtn.classList.add("hidden");
   roomOptions.classList.remove("hidden");
 };
 
@@ -105,32 +105,61 @@ joinBtn.onclick=()=>{
   if(!roomCode) return alert("Enter room code");
   socket.emit("joinRoom",{roomCode,user:username});
 };
-socket.on("roomCreated",code=>{
-  roomCode=code;
-  alert("Room Code: "+code);
+socket.on("roomCreated", code => {
+  roomCode = code;
 
-  // show auction UI in background
-  showScreen("auctionUI");
+  // 1. Hide Landing/Auth
+  document.getElementById("landing").classList.add("hidden");
+  document.getElementById("auth").classList.add("hidden");
 
-  // show rules as popup
+  // 2. SHOW Auction UI (Background)
+  document.getElementById("auctionUI").classList.remove("hidden"); 
+
+  // 3. SHOW Rules Popup
   document.getElementById("rulesScreen").classList.remove("hidden");
+  
+  // LOCK SCROLLING so user can't scroll the background
+  document.body.style.overflow = "hidden"; 
+
   document.getElementById("roomCodeText").innerText = code;
   document.getElementById("roomCodeBar").classList.remove("hidden");
-
-  // keep admin controls hidden until rules locked
-  //adminControls.classList.add("hidden");
 });
 socket.on("joinedRoom", (data) => {
-    // Save rules if sent
+    console.log("Joined Room Payload:", data);
+
+    // 1. Sync Rules (if sent)
     if(data && data.rules) {
         activeRules = data.rules;
-        updateRulesUI();
+        // rules = data.rules; // Uncomment if needed
+        // updateRulesUI();    // Uncomment if needed
     }
     
+    // 2. Switch to Auction Screen
     showScreen("auctionUI");
+
+    // --- 3. SHOW ROOM CODE (Critical Step) ---
+    if (data.roomCode) {
+        // Remove 'hidden' class so the box is visible
+        document.getElementById("roomCodeBar").classList.remove("hidden");
+        
+        // Insert the actual code text
+        document.getElementById("roomCodeText").innerText = data.roomCode;
+    }
+
+    // --- 4. HANDLE ADMIN BUTTONS ---
+    // Only show Start/Stop buttons if the user is the Host
+    const adminControls = document.getElementById("adminControls");
+    if (data.isHost) {
+        adminControls.classList.remove("hidden");
+    } else {
+        adminControls.classList.add("hidden");
+    }
+
+    // 5. Sync State
     socket.emit("checkAdmin");
     socket.emit("getAuctionState");
 });
+
 
 // Listen for the answer
 socket.on("adminStatus", (isAdmin) => {
@@ -154,9 +183,8 @@ socket.on("forceTeamPopup", ({ teams }) => {
 
 socket.on("startTeamSelection", ({ teams }) => {
 
-  if(myTeam) return; // already picked
+  if(myTeam) return; 
 
-  // FORCE popup visible
   document.getElementById("teamPopup").classList.remove("hidden");
 
   renderTeamPopup(teams);
@@ -173,19 +201,16 @@ socket.on("needTeamSelection", ({ teams }) => {
 
   renderTeamPopup(teams);
 });
-/* ================= SET UPDATE ================= */
-/* ================= SET UPDATE ================= */
+
+
 /* ================= SET UPDATE ================= */
 socket.on("setUpdate", data => {
-  remainingSets = data; // Store the full list
-  
-  // Auto-refresh if open
+  remainingSets = data; 
+
   if(viewSetWindow && !viewSetWindow.closed){
     viewSet(); 
   }
 });
-
-
 
 
 /* ================= TEAM ================= */
@@ -202,117 +227,98 @@ function pickTeam(team){
   myTeam = team;
   socket.emit("selectTeam", { team, user: username });
 }
+
 /* ================= TEAM PICKED ================= */
 socket.on("teamPicked", ({ team, remaining }) => {
-  
-  // 1. Re-render list for others
   renderTeamPopup(remaining);
-
-  // 2. Update Squads Data
   socket.emit("getSquads");
-
-  // 3. 🔥 FORCE HIDE IF IT WAS ME
-  // We check if the picked team matches the one I selected
   if(myTeam === team) {
       const teamPopup = document.getElementById("teamPopup");
       if(teamPopup) {
           teamPopup.classList.add("hidden");
           teamPopup.style.display = "none"; // Extra safety
       }
-      
-      // Update header info immediately
       const notice = document.getElementById("teamNotice");
       if(notice) notice.innerText = `You are: ${team}`;
   }
 });
 
-
-
-
+/* ================= RULES UPDATED ================= */
+/* ================= RULES UPDATED ================= */
 /* ================= RULES UPDATED ================= */
 socket.on("rulesUpdated", data => {
-  console.log("Rules Updated:", data); // Debugging
-
-  // 1. Update Global Rules
+  console.log("Rules Updated:", data);
+  
+  // 1. Update BOTH variables to ensure data is consistent
   rules = data.rules;
+  activeRules = data.rules; 
 
-  // 2. 🔥 FORCE HIDE RULES SCREEN
-  const rulesScreen = document.getElementById("rulesScreen");
-  if(rulesScreen) rulesScreen.classList.add("hidden");
-
-  // 3. FORCE SHOW TEAM SELECTION
-  const teamPopup = document.getElementById("teamPopup");
-  if(teamPopup) teamPopup.classList.remove("hidden");
-
-  // 4. Render the teams
+  // 2. Hide the Waiting Screen
+  document.getElementById("rulesScreen").classList.add("hidden");
+  document.body.style.overflow = "auto"; 
+  
+  // 3. Show Team Selection
+  document.getElementById("teamPopup").classList.remove("hidden");
   renderTeamPopup(data.teams);
-
-  // 5. Show Admin Controls (if host)
+  
+  // 4. Show Admin Controls (if host)
   if(isHost){
-      const controls = document.getElementById("adminControls");
-      if(controls) controls.classList.remove("hidden");
+      document.getElementById("adminControls").classList.remove("hidden");
   }
+
+  // 5. 🔥 IMPORTANT: Refresh the Rules Popup UI immediately
+  updateRulesUI();
 });
+
+
 
 function toggleRules(){
     const el = document.getElementById("activeRulesPopup");
     el.classList.toggle("hidden");
-    
-    // Refresh content when opened
     if(!el.classList.contains("hidden")) updateRulesUI();
 }
+function updateRulesUI() {
+    // Safety check
+    if (!activeRules) return;
 
-function updateRulesUI(){
-    const list = document.getElementById("activeRulesList");
-    const xiDisplay = document.getElementById("xiRulesDisplay"); // The box in XI screen
+    // Helper to safely get value or show "---"
+    const getVal = (val) => (val !== undefined && val !== null) ? val : "---";
+
+    // Update the Popup Text
+    const elPurse = document.getElementById('viewPurse');
+    const elSquad = document.getElementById('viewSquadSize');
+    const elForeign = document.getElementById('viewForeign');
+
+    if(elPurse) elPurse.innerText = "₹" + getVal(activeRules.purse) + " Cr";
+    if(elSquad) elSquad.innerText = getVal(activeRules.maxPlayers);
+    if(elForeign) elForeign.innerText = getVal(activeRules.maxForeign);
     
-    if(!activeRules || Object.keys(activeRules).length === 0) return;
-
-    // Readable HTML for rules
-    const html = `
-        <ul style="list-style:none; padding:0; line-height:1.6;">
-            <li>💰 <b>Purse:</b> ₹${activeRules.purse} Cr</li>
-            <li>👥 <b>Max Squad:</b> ${activeRules.maxPlayers}</li>
-            <li>✈️ <b>Max Foreign:</b> ${activeRules.maxForeign}</li>
-            <hr style="border-color:#444; margin:8px 0;">
-            <li>🏏 <b>Batsmen:</b> Min ${activeRules.minBat}</li>
-            <li>⚾ <b>Bowlers:</b> Min ${activeRules.minBowl}</li>
-            <li>🧤 <b>Wicket Keepers:</b> Min ${activeRules.minWK}</li>
-            <li>⚔️ <b>All-Rounders:</b> Min ${activeRules.minAll}</li>
-            <li>🌀 <b>Spinners:</b> Min ${activeRules.minSpin}</li>
-            <li>🌍 <b>Foreign (XI):</b> Max 4</li>
-        </ul>
-    `;
-
-    // 1. Update Popup
-    if(list) list.innerHTML = html;
-
-    // 2. Update XI Screen Box
-    if(xiDisplay) xiDisplay.innerHTML = "<b>⚠️ Selection Criteria:</b> <br>" + 
-        `Bat: ${activeRules.minBat}+ | Bowl: ${activeRules.minBowl}+ | WK: ${activeRules.minWK}+ | All: ${activeRules.minAll}+ | Spin: ${activeRules.minSpin}+ | Foreign: Max 4`;
+    // Update Playing XI Requirements
+    if(document.getElementById('viewBat')) document.getElementById('viewBat').innerText = getVal(activeRules.minBat);
+    if(document.getElementById('viewBowl')) document.getElementById('viewBowl').innerText = getVal(activeRules.minBowl);
+    if(document.getElementById('viewWK')) document.getElementById('viewWK').innerText = getVal(activeRules.minWK);
+    if(document.getElementById('viewAR')) document.getElementById('viewAR').innerText = getVal(activeRules.minAll);
 }
+
+
+
 /* ================= ADMIN ================= */
-// 1. Select the buttons
 const startBtn = document.getElementById("startBtn");
 const togglePauseBtn = document.getElementById("togglePauseBtn"); // The Toggle Button
 const skipBtn = document.getElementById("skipBtn");
 const skipSetBtn = document.getElementById("skipSetBtn");         // The Skip Set Button
 
-// 2. Add Click Listeners
 if(startBtn) startBtn.onclick = () => socket.emit("adminAction", "start");
 if(skipBtn) skipBtn.onclick = () => socket.emit("adminAction", "skip");
 
-// Logic for Toggle Button (Pause/Resume)
 if(togglePauseBtn) togglePauseBtn.onclick = () => socket.emit("adminAction", "togglePause");
 
-// Logic for Skip Set Button
 if(skipSetBtn) skipSetBtn.onclick = () => {
     if(confirm("⚠ Are you sure you want to skip the rest of this set?")) {
         socket.emit("adminAction", "skipSet");
     }
 };
 
-// 3. Helper for 'end' or other manual calls
 function admin(action){
     socket.emit("adminAction", action);
 }
@@ -342,14 +348,13 @@ socket.on("auctionState", s => {
 
   updateBidButton(s);
 });
+
 function updateBidButton(state){
   if(!myTeam || !auctionLive || auctionPaused){
     bidBtn.disabled = true;
     return;
   }
 
-  // Only check purse if we actually have purse data
-  // logic: if we know the purse, and the purse < next bid, disable.
   if(teamPurse && teamPurse[myTeam] !== undefined && state){
     const currentBid = state.bid || 0;
     const nextBid = currentBid + 0.1; // Estimate next bid
@@ -391,6 +396,7 @@ socket.on("auctionResumed", () => {
 
 /* ================= NEW PLAYER (RESET) ================= */
 socket.on("newPlayer", d => {
+  // 1. Reset Game State
   auctionLive = true;
   auctionPaused = false;
   lastBidTeam = null;
@@ -398,25 +404,77 @@ socket.on("newPlayer", d => {
   
   updateBidButton({ bid: d.bid });
 
-  // Reset Card Styles
-  auctionCard.classList.remove("sold", "unsold");
-  
-  // 👇 UPDATED: Clear visual state, but keep space occupied
-  auctionResult.style.backgroundColor = "transparent"; // Remove color
-  auctionResult.style.boxShadow = "none";              // Remove glow
-  auctionResult.innerText = "";                        // Clear text
-  auctionResult.classList.remove("visible");           // Remove animation class
+  document.getElementById('resultOverlay').classList.add('hidden'); // Hide Stamp
+  document.getElementById('currentBidder').classList.add('hidden'); // Hide Badge
 
-  // Update Player Info
   playerName.innerText = d.player.name;
   playerMeta.innerText = `${d.player.role} • ⭐${d.player.rating}`;
-  //startBidEl.innerText = `₹${d.bid.toFixed(2)} Cr`;
   bidEl.innerText = `₹${d.bid.toFixed(2)} Cr`;
-
   bidBtn.disabled = !myTeam;
 });
+let activeRules = {
+    purse: 120,
+    maxPlayers: 25,
+    maxForeign: 8,
+    minBat: 3,
+    minBowl: 3,
+    minWK: 1,
+    minAll: 1
+};
+
+socket.on('syncRules', (serverRules) => {
+    console.log("Rules synced:", serverRules);
+    activeRules = serverRules;
+    // Update UI if the popup happens to be open
+    updateRulesUI(); 
+});
+
+function showRules() {
+    updateRulesUI();
+    document.getElementById('viewRulesOverlay').classList.remove('hidden');
+}
+function updateRulesUI() {
+    // 1. Safety Check
+    const r = activeRules || {};
+    const val = (v) => (v !== undefined && v !== null) ? v : "---";
+
+    // 2. Update PLAYING XI SCREEN (Hidden screen)
+    const elPurse = document.getElementById('viewPurse');
+    const elSquad = document.getElementById('viewSquadSize');
+    const elForeign = document.getElementById('viewForeign');
+
+    if(elPurse) elPurse.innerText = val(r.purse);
+    if(elSquad) elSquad.innerText = val(r.maxPlayers);
+    if(elForeign) elForeign.innerText = val(r.maxForeign);
+
+    // 3. Update POPUP OVERLAY (The one you are looking at)
+    const popPurse = document.getElementById('pop_viewPurse');
+    const popSquad = document.getElementById('pop_viewSquadSize');
+    const popForeign = document.getElementById('pop_viewForeign');
+    
+    if(popPurse) popPurse.innerText = val(r.purse);
+    if(popSquad) popSquad.innerText = val(r.maxPlayers);
+    if(popForeign) popForeign.innerText = val(r.maxForeign);
+
+    // 4. Update POPUP REQUIREMENTS
+    const setTxt = (id, v) => {
+        const el = document.getElementById(id);
+        if(el) el.innerText = val(v);
+    };
+
+    setTxt('pop_viewBat', r.minBat);
+    setTxt('pop_viewBowl', r.minBowl);
+    setTxt('pop_viewSpin', r.minSpin);
+    setTxt('pop_viewWK', r.minWK);
+    setTxt('pop_viewAR', r.minAll); // Ensure your variable is minAll (or minAR)
+}
 
 
+function closeRules(event) {
+    if (event.target.id === 'viewRulesOverlay') {
+        document.getElementById('viewRulesOverlay').classList.add('hidden');
+    }
+}
 
 /* ================= TIMER ================= */
 socket.on("timer", t => {
@@ -449,96 +507,79 @@ function bid(){
   soundBid.currentTime = 0;
   soundBid.play().catch(()=>{});
 
-  socket.emit("bid"); // 🔥 DO NOT disable here
+  socket.emit("bid"); 
 }
 
 bidBtn.onclick=bid;
+
 /* ================= BID UPDATE ================= */
 socket.on("bidUpdate", data => {
-  // 1. Update Price
   bidEl.innerText = `₹${data.bid.toFixed(2)} Cr`;
-
-  // 2. Logic
   lastBidTeam = data.team; 
   updateBidButton({ bid: data.bid });
-
-  // 3. Colors
+  bidBtn.disabled = (myTeam === data.team); 
   const color = TEAM_COLORS[data.team] || "#22c55e";
   document.documentElement.style.setProperty("--accent", color);
-  document.documentElement.style.setProperty("--accent2", color);
-
-  // 4. Pulse
+  const badge = document.getElementById('currentBidder');
+  const badgeName = document.getElementById('bidderName');
+  
+  badge.classList.remove('hidden'); // Reveal the badge
+  badgeName.innerText = data.team;
+  badge.style.borderColor = color;
+  badge.style.boxShadow = `0 0 15px ${color}66`; 
   auctionCard.classList.add("pulse");
   setTimeout(() => auctionCard.classList.remove("pulse"), 300);
-
-  // 5. Button State
-  bidBtn.disabled = (myTeam === data.team);
-
-  // 👇 UPDATED: Fill the result box
-  auctionResult.style.backgroundColor = color; // Fill with team color
-  auctionResult.style.boxShadow = `0 4px 15px ${color}66`; // Add glow
-  auctionResult.innerText = `${data.team} LEADS`; // Text
-  
-  // Trigger pop animation
-  auctionResult.classList.remove("visible");
-  void auctionResult.offsetWidth; 
-  auctionResult.classList.add("visible");
 });
 
-
-
-
-
-/* ================= SOLD / UNSOLD ================= */
 /* ================= SOLD / UNSOLD ================= */
 socket.on("sold", d => {
-  auctionCard.classList.remove("unsold");
-  auctionCard.classList.add("sold");
-  const color = TEAM_COLORS[d.team] || "#22c55e"; // Winner color
-  
-  auctionResult.style.display = "block";
-  auctionResult.style.backgroundColor = color;
-  // Ensure text is white and visible
-  auctionResult.style.color = "#fff";
-  auctionResult.innerText =
-    `🔨 SOLD to ${d.team} for ₹${d.price.toFixed(2)} Cr`;
-
   soundHammer.pause();
   soundHammer.currentTime = 0;
   soundHammer.play();
+  const color = TEAM_COLORS[d.team] || "#22c55e";
+  const overlay = document.getElementById('resultOverlay');
+  const title = document.getElementById('stampTitle');
+  const detail = document.getElementById('stampDetail');
+  const container = document.querySelector('.stamp-container');
 
-  //bidBtn.disabled = true;
-
-  // ✅ STEP 3 START: map player to team squad
+  title.innerText = "SOLD";
+  detail.innerText = `TO ${d.team}`;
+  container.classList.remove('unsold'); // Ensure it's not red
+  container.style.borderColor = color; 
+  overlay.classList.remove('hidden');
   allSquads[d.team] = allSquads[d.team] || [];
   allSquads[d.team].push(d.player);
 
-  // ✅ keep purse in sync (from server)
   if(d.purse){
     teamPurse = d.purse;
   }
-  // ✅ STEP 3 END
 });
 
-socket.on("unsold",()=>{
-  auctionCard.classList.remove("sold");
-  auctionCard.classList.add("unsold");
-  auctionResult.style.display = "block";
-  auctionResult.style.backgroundColor = "#555"; // Grey background
-  //auctionResult.innerText = "❌ UNSOLD";
-  auctionResult.innerText="❌ UNSOLD";
+socket.on("unsold", () => {
   soundUnsold.pause();
-  soundUnsold.currentTime=0;
+  soundUnsold.currentTime = 0;
   soundUnsold.play();
-  bidBtn.disabled=true;
   
+  bidBtn.disabled = true;
+  const overlay = document.getElementById('resultOverlay');
+  const title = document.getElementById('stampTitle');
+  const detail = document.getElementById('stampDetail');
+  const container = document.querySelector('.stamp-container');
+
+  title.innerText = "UNSOLD";
+  detail.innerText = "PASSED IN";
+  container.classList.add('unsold'); // Adds red styling
+  container.style.borderColor = "";  
+  overlay.classList.remove('hidden');
 });
+
 socket.on("bidRejected", msg => {
   alert("❌ " + msg);
   bidBtn.disabled = true;
 });
 
 /* ================= PLAYER SET ================= */
+
 socket.on("fullSet",players=>{
   fullSetPlayers=players;
 });
@@ -547,8 +588,6 @@ function viewSet(){
     alert("No sets remaining!");
     return;
   }
-
-  // Reuse window logic
   if(!viewSetWindow || viewSetWindow.closed){
      viewSetWindow = window.open("", "ViewSetWindow", "width=480,height=650");
   } else {
@@ -574,8 +613,6 @@ function viewSet(){
         h2.active {
             background: #2a1a00; border-left: 5px solid #facc15; color: #facc15;
         }
-
-        /* Player Rows */
         .p {
           display:flex; justify-content:space-between;
           padding: 6px 10px; border-bottom:1px solid #333;
@@ -641,8 +678,6 @@ socket.on("squadData", squads => {
       sel.appendChild(opt);
     });
   }
-
-  // 🔥 AUTO-UPDATE OPEN SQUAD WINDOW
   renderSquadWindow();
 });
 
@@ -731,8 +766,6 @@ socket.on("logUpdate",msg=>{
   logBox.scrollTop=logBox.scrollHeight;
 });
 /* ================= PLAYING XI LOGIC ================= */
-
-// Define this globally as you did
 let selectedXI = {
   BAT: [],
   BOWL: [], 
@@ -742,19 +775,11 @@ let selectedXI = {
 
 socket.on("mySquad", ({ squad }) => {
   const box = document.getElementById("mySquadList");
-  
-  // 1. SAFETY: Ensure squad exists
-  if(!squad) return;
 
-  // 2. 🔥 CRITICAL FIX: Reset the selection state every time the screen loads
-  // This prevents "Already selected 11" errors when the UI is refreshed
+  if(!squad) return;
   selectedXI = { BAT: [], BOWL: [], WK: [], ALL: [] };
-  
-  // 3. Unlock UI (in case it was locked from a previous submit)
   box.style.pointerEvents = "auto";
   box.style.opacity = "1";
-  
-  // Reset Submit Button Text
   const submitBtn = document.querySelector("button[onclick='submitXI()']");
   if(submitBtn) {
       submitBtn.innerText = "Submit XI (0/11)";
@@ -772,7 +797,6 @@ socket.on("mySquad", ({ squad }) => {
   };
 
   squad.forEach(p => {
-    // Map roles specifically
     if(p.role === "WK") groups.WK.players.push(p);
     else if(p.role === "BAT") groups.BAT.players.push(p);
     else if(p.role === "ALL") groups.ALL.players.push(p);
@@ -788,9 +812,7 @@ socket.on("mySquad", ({ squad }) => {
     g.players.forEach(p => {
       const btn = document.createElement("button");
       btn.className = "xi-player";
-      btn.innerHTML = `${p.name} <br><small>⭐${p.rating}</small>`; // Added HTML for better look
-      
-      // Click Handler
+      btn.innerHTML = `${p.name} <br><small>⭐${p.rating}</small>`; 
       btn.onclick = (e) => {
           e.preventDefault(); 
           assignPlayer(p, btn, key);
@@ -805,20 +827,14 @@ socket.on("mySquad", ({ squad }) => {
 });
 
 function assignPlayer(p, btn, groupKey){
-  // Safety check: ensure the array exists
   if(!selectedXI[groupKey]) selectedXI[groupKey] = [];
-  
   const list = selectedXI[groupKey];
-  
-  // Check if player is already in the list
   const index = list.findIndex(x => x.name === p.name);
 
   if(index > -1){
-    // REMOVE PLAYER
     list.splice(index, 1);
     btn.classList.remove("picked");
   } else {
-    // ADD PLAYER
     const total = countTotalXI();
     if(total >= 11) {
         alert("⚠️ You have already selected 11 players!");
@@ -830,20 +846,14 @@ function assignPlayer(p, btn, groupKey){
   
   updateXIPreview();
 }
-
-// 4. Counting Helper (Safe calculation)
 function countTotalXI(){
-    // Uses optional chaining (?.) to prevent crashes if a key is missing
     return (selectedXI.BAT?.length || 0) + 
            (selectedXI.WK?.length || 0) + 
            (selectedXI.ALL?.length || 0) + 
            (selectedXI.BOWL?.length || 0);
 }
 function updateXIPreview() {
-    // 1. Calculate Count
     const count = countTotalXI();
-    
-    // 2. Update Button Text (Existing Logic)
     const submitBtn = document.getElementById("submitXIBtn") || document.querySelector("button[onclick='submitXI()']");
     if(submitBtn) {
         submitBtn.innerText = `Submit XI (${count}/11)`;
@@ -856,19 +866,11 @@ function updateXIPreview() {
         } else {
             submitBtn.style.backgroundColor = ""; 
             submitBtn.style.color = "";
-            // Optional: disable button until 11 are picked
-            // submitBtn.disabled = true; 
         }
     }
-
-    // 3. 🔥 NEW: Render the Selected List
     const box = document.getElementById("xiPreviewContent");
     if(!box) return;
-
-    // Clear previous
     box.innerHTML = "";
-
-    // Define display order and labels
     const displayConfig = [
         { key: 'WK', label: 'Wicket Keepers' },
         { key: 'BAT', label: 'Batsmen' },
@@ -877,13 +879,9 @@ function updateXIPreview() {
     ];
 
     displayConfig.forEach(conf => {
-        const players = selectedXI[conf.key] || []; // Get players for this role
-        
-        // Create the row div
+        const players = selectedXI[conf.key] || []; 
         const row = document.createElement("div");
         row.className = "preview-row";
-
-        // Create the count label (e.g., "Batsmen (3)")
         const labelDiv = document.createElement("div");
         labelDiv.className = "preview-label";
         labelDiv.innerText = `${conf.label} (${players.length})`;
@@ -917,11 +915,8 @@ function submitXI(){
     alert(`❌ Incomplete XI. You have selected ${total} players. Need exactly 11.`);
     return;
   }
-  
   if(confirm("Confirm Playing XI? This cannot be changed.")){
       socket.emit("submitXI", { xi: selectedXI });
-      
-      // Disable UI to prevent double submit
       const box = document.getElementById("mySquadList");
       box.style.opacity = "0.5";
       box.style.pointerEvents = "none"; // 👈 This locks it (Reset in step 2)
@@ -930,93 +925,74 @@ function submitXI(){
       if(submitBtn) submitBtn.innerText = "Submitted... Waiting for others";
   }
 }
-
-// 7. Result Feedback
+/* ================= LOGIC: PLAYING XI & LEADERBOARD ================= */
 socket.on("submitResult", (res) => {
-    if(res.success){
-        let msg = res.disqualified 
-            ? `❌ DISQUALIFIED: ${res.reason}` 
-            : `✅ Team Rating: ${res.rating}`;
-        
-        alert(msg);
-        
-        // Ensure we switch to leaderboard screen if needed
-        // showScreen("leaderboardScreen"); (Optional: Wait for full leaderboard)
-    }
+    document.getElementById("xiSelectionArea").classList.add("hidden");
+    document.getElementById("submitXIBtn").classList.add("hidden");
+    const statusBox = document.getElementById("xiStatus");
+    statusBox.innerHTML = `
+        <div class="glass" style="text-align:center; padding:20px; border:1px solid ${res.disqualified ? 'red' : '#22c55e'}">
+            <h2 style="color:${res.disqualified ? '#ef4444' : '#22c55e'}">
+                ${res.disqualified ? '❌ DISQUALIFIED' : '✅ SUBMITTED'}
+            </h2>
+            <p style="font-size:1.2rem; margin:10px 0;">
+                Your Rating: <b>${res.rating}</b>
+            </p>
+            ${res.disqualified ? `<p style="color:#fca5a5">Reason: ${res.reason}</p>` : ''}
+            <div id="waitingMsg" style="margin-top:20px; color:#aaa; font-style:italic;">
+                ⏳ Waiting for other teams to finish...
+            </div>
+        </div>
+    `;
+    const btn = document.getElementById("submitXIBtn");
+    if(btn) { btn.disabled = true; btn.innerText = "Submitted"; }
 });
-/* ================= LEADERBOARD RENDER ================= */
-socket.on("leaderboard", board => {
-  console.log("Leaderboard received:", board);
 
-  // 1. Force Screen Switch (Only if user has submitted or auction is over)
-  // If the user hasn't submitted yet, we might not want to yank them away from selection
-  // But usually, showing the final results is fine.
-  
-  // Logic: If I have submitted (button disabled), show me the leaderboard.
-  const submitBtn = document.getElementById("submitXIBtn");
-  const iHaveSubmitted = submitBtn && (submitBtn.disabled || submitBtn.innerText.includes("Submitted"));
-  
-  // If I submitted OR everyone is done (board length matches total), show screen
-  if (iHaveSubmitted || board.length > 0) {
-      showScreen("leaderboard"); 
-      // Note: Make sure your HTML has <section id="leaderboard" class="screen">
-  }
-
-  // 2. Render Table
-  const tbody = document.getElementById("leaderboardBody");
-  if(tbody) {
-      tbody.innerHTML = "";
-      board.forEach((t, i) => {
-          const isDisq = t.disqualified;
-          
-          const row = document.createElement("tr");
-          if(isDisq) row.classList.add("disqualified-row");
-          
-          row.innerHTML = `
-              <td>#${i + 1}</td>
-              <td style="font-weight:bold;">${t.team} ${isDisq ? '🚫' : ''}</td>
-              <td style="font-size:1.1em; color:${isDisq ? '#ef4444' : '#22c55e'}">
-                  ${isDisq ? "0.00" : t.rating}
-              </td>
-              <td>${isDisq ? `<small style='color:#fca5a5'>${t.reason}</small>` : "Qualified"}</td>
-              <td>₹${(t.purse || 0).toFixed(2)} Cr</td>
-          `;
-          tbody.appendChild(row);
-      });
-  }
-
-  // 3. Also Render the Mini-Box inside the Playing XI screen (for live updates)
-  const miniBox = document.getElementById("leaderboardBox");
-  if(miniBox) {
-      miniBox.innerHTML = "<h3>🏆 Live Standings</h3>";
-      board.forEach((t, i) => {
-          miniBox.innerHTML += `
-             <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #444; ${t.disqualified?'opacity:0.6':''}">
-                <span>#${i+1} ${t.team}</span>
-                <span style="color:${t.disqualified?'red':'#4ade80'}">
-                    ${t.disqualified ? 'Disq.' : t.rating}
-                </span>
-             </div>
-          `;
-      });
-  }
+socket.on("leaderboard", (board) => {
+    console.log("Board Update:", board);
+    const myTeamName = myTeam; 
+    const isMyTeamDone = board.find(t => t.team === myTeamName);
+    const miniBox = document.getElementById("leaderboardBox");
+    if(miniBox) {
+        miniBox.innerHTML = "<h4 style='border-bottom:1px solid #444; padding-bottom:5px; margin-bottom:10px;'>🔴 Live Standings</h4>";
+        board.forEach((t, i) => {
+            miniBox.innerHTML += `
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem; padding:4px 0;">
+                    <span>#${i+1} ${t.team}</span>
+                    <span style="font-weight:bold; color:${t.disqualified?'red':'#4ade80'}">${t.rating}</span>
+                </div>
+            `;
+        });
+    }
+    if(isMyTeamDone) {
+        const waitingMsg = document.getElementById("waitingMsg");
+        if(waitingMsg) {
+            waitingMsg.innerHTML = `
+                <br>
+                📊 <b>Current Rank:</b> #${board.findIndex(t => t.team === myTeam) + 1} / ${board.length} Teams Submitted
+                <br><br>
+                <button onclick="showScreen('leaderboard')" class="primary-btn">View Full Leaderboard</button>
+            `;
+        }
+    }
 });
 
 socket.on("xiError", msg => alert(msg));
-
 function renderTeamPopup(teams){
   const box = document.getElementById("teamSelectList");
+  if(!box) return;
   box.innerHTML = "";
-
+  teams.sort(); // Keep alphabetical order
   teams.forEach(team => {
     const btn = document.createElement("button");
     btn.innerText = team;
-
+    btn.className = "team-btn";
+    const color = TEAM_COLORS[team] || "#94a3b8";
+    btn.style.setProperty("--team-color", color);
     btn.onclick = () => {
       myTeam = team;
       socket.emit("selectTeam", { team, user: username });
     };
-
     box.appendChild(btn);
   });
 }
@@ -1026,12 +1002,9 @@ socket.on("auctionEnded", () => {
   showScreen("playingXI");
   socket.emit("getMySquad");
 });
-
 socket.on("leaderboard", board => {
-
   const box = document.getElementById("leaderboardBox");
   box.innerHTML = "<h2>🏆 Final Leaderboard</h2>";
-
   board.forEach((t,i)=>{
     box.innerHTML += `
       <div class="row">
@@ -1044,4 +1017,3 @@ socket.on("leaderboard", board => {
     `;
   });
 });
-
