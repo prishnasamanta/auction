@@ -423,12 +423,89 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .leaderboard-table th { background: #1e293b; color: #aaa; }
 
 /* ================= MOBILE OPTIMIZATIONS ================= */
+/* ======================================================= */
+/* =========== FINAL MOBILE FIXES (TESTED) =============== */
+/* ======================================================= */
+@media screen and (max-width: 768px) {
 
-@media (max-width: 900px) {
-  .rules-overlay { padding: 15px; align-items: center; justify-content: center; }
-  .rules-card { width: 100%; max-width: 360px; max-height: 70vh; }
+  /* --- 1. LANDING PAGE: Fix Cut-off Text & Centering --- */
+  #landing, .auth-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100vh !important;       /* Full screen height */
+    overflow: hidden !important;    /* No page scroll */
+    background-attachment: fixed;   /* Fixes background glitch */
+  }
+
+  .landing-card, .auth-card {
+    width: 90% !important;
+    max-width: 360px !important;    /* Keep it card-sized */
+    padding: 25px 15px !important;  /* Reduce padding */
+    margin: 0 auto !important;
+    transform: none !important;     /* Stop floating animation */
+    animation: none !important;
+  }
+
+  /* CRITICAL: Shrink font so "SIMULATOR" fits */
+  .title {
+    font-size: 2.2rem !important;   /* Reduced from 3.5rem */
+    line-height: 1.1 !important;
+    word-wrap: break-word !important; 
+  }
   
-  /* Mobile Specifics for Single Column */
-  .panel { height: 250px; } /* Slightly shorter logs on mobile */
-  #bidBtn { padding: 20px; font-size: 1.3rem; }
+  /* Make the "Live Simulator" part even smaller if needed */
+  .title[style*="opacity"] {
+    font-size: 1.6rem !important;
+  }
+
+  /* --- 2. HEADER: Enable Horizontal Scrolling --- */
+  .topbar {
+    display: flex !important;
+    flex-direction: column !important; /* Stack Title on top of Buttons */
+    gap: 10px !important;
+    padding: 10px 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .top-left {
+    justify-content: center !important; /* Center the Title "IPL AUCTION" */
+    width: 100% !important;
+  }
+
+  /* The Button Container - SCROLLABLE */
+  .top-right {
+    display: flex !important;
+    justify-content: flex-start !important; /* Align start for scrolling */
+    width: 100% !important;
+    overflow-x: auto !important;       /* ENABLE HORIZONTAL SCROLL */
+    white-space: nowrap !important;    /* Keep buttons in one line */
+    padding-left: 15px !important;     /* Padding for start of scroll */
+    padding-right: 15px !important;    /* Padding for end of scroll */
+    gap: 10px !important;              /* Space between buttons */
+    -webkit-overflow-scrolling: touch; /* Smooth scroll on iPhone */
+    
+    /* Hide scrollbar visually but keep functionality */
+    scrollbar-width: none; 
+  }
+  .top-right::-webkit-scrollbar { display: none; }
+
+  /* Fix Buttons so they don't squish */
+  .topbar button, .admin-mini button {
+    flex-shrink: 0 !important;      /* Prevent button from shrinking */
+    padding: 8px 16px !important;   /* Good touch target size */
+    font-size: 0.8rem !important;
+    margin: 0 !important;
+  }
+
+  /* Unwrap the admin controls container so it scrolls with the rest */
+  .admin-mini {
+    display: contents !important; 
+  }
+  
+  /* Hide the vertical lines in header */
+  .admin-mini span { display: none !important; }
 }
+
+
