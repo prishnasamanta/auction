@@ -184,19 +184,80 @@
     </div>
   </header>
 
-  <div class="auction-wrapper">
+    <div class="auction-wrapper">
+
+    <div class="auction-center">
+      
+      <div id="teamNotice" class="notice" style="margin-bottom:15px; color:var(--gold); font-weight:bold; text-transform:uppercase; letter-spacing:1px;"></div>
+
+      <div class="auction glass" id="auctionCard">
+        
+        <div class="auction-header-role">
+          <span id="playerMeta">WAITING FOR AUCTION...</span>
+        </div>
+
+        <div class="auction-body">
+    
+          <div id="playerInfoBox" style="position: relative;"> 
+              
+              <div id="resultOverlay" class="result-overlay hidden">
+                  <div class="stamp-container">
+                      <div id="stampTitle" class="stamp-title">SOLD</div>
+                      <div id="stampDetail" class="stamp-detail">TO CSK</div>
+                  </div>
+              </div>
+
+              <div id="playerName">---</div>
+              <div style="margin-top:5px; font-size:0.8rem; opacity:0.6;">CURRENT PLAYER</div>
+          </div>
+
+          <div class="price-container">
+              <div style="text-align:left;">
+                  <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">CURRENT BID</div>
+                  <div id="bid" style="line-height:1;">₹0.00 Cr</div>
+              </div>
+
+              <div id="currentBidder" class="bidder-badge hidden">
+                 <span class="dot"></span> <span id="bidderName">CSK</span>
+              </div>
+
+              <div style="text-align:right;">
+                  <div id="timer">10</div>
+              </div>
+          </div>
+
+          <div class="card-padding-area">
+              <button id="bidBtn">PLACE BID</button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
 
     <div class="panel glass">
       <h3>📢 Notifications & Log</h3>
       <div id="log" class="scroll"></div>
       
-      <div style="margin-top:15px; border-top:1px solid var(--border); padding-top:15px;">
+      <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
         <select id="squadSelect" onchange="showSelectedSquad()" style="width:100%; padding:10px; background:#1e293b; color:white; border:1px solid var(--border); border-radius:6px;">
           <option value="">🧢 View Team Squads</option>
         </select>
         <button onclick="viewSet()" class="secondary-btn" style="width:100%; margin-top:10px;">📦 View Upcoming Sets</button>
       </div>
     </div>
+
+    <div class="panel glass">
+      <h3>💬 Team Chat</h3>
+      <div id="chat" class="scroll"></div>
+      <div class="chat-box">
+        <input id="msg" placeholder="Type..." style="background:#1e293b;">
+        <button onclick="sendChat()">➤</button>
+      </div>
+    </div>
+
+  </div>
+
 
     <div class="auction-center">
       
@@ -422,6 +483,7 @@
 
 </body>
 </html>
+
 
 
 
