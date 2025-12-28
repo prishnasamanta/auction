@@ -400,116 +400,103 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ========================================================== */
 /* ========== MOBILE AUCTION UI – REFINED ONLY =============== */
 /* ========================================================== */
-@media (max-width: 900px) {
+/* ================= MOBILE OPTIMIZATION ================= */
+@media (max-width: 1300px) {
 
-  /* ---------- AUCTION LAYOUT ---------- */
+  /* 1. Stack the Grid vertically */
   .auction-wrapper {
     display: flex;
     flex-direction: column;
-    padding-bottom: 120px; /* space for bid button */
+    height: auto;
+    padding-bottom: 100px; /* Space for the fixed Bid Button */
   }
 
-  /* ---------- AUCTION CARD (MAIN FOCUS) ---------- */
+  /* 2. Reorder: Card First, then Logs/Chat */
   .auction-center {
     order: 1;
-    padding: 0;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    padding-top: 10px;
+  }
+  
+  .panel {
+    order: 2;
+    width: 100%;
+    height: 350px; /* Fixed height for scrollable areas on mobile */
+    margin-bottom: 20px;
+    border-left: none; border-right: none;
+    border-bottom: 1px solid var(--border);
   }
 
+  /* 3. Adjust Top Bar for Mobile */
+  .topbar {
+    padding: 10px 15px;
+    flex-wrap: wrap; 
+    gap: 10px;
+  }
+  .brand { font-size: 1rem; }
+  
+  /* Hide Room Code Text on tiny screens to save space */
+  #roomCodeBar { display: none !important; }
+
+  /* 4. Make Admin Controls Scrollable horizontally */
+  #adminControls {
+    display: flex;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 10px;
+    gap: 10px;
+    justify-content: flex-start;
+  }
+  #adminControls::-webkit-scrollbar { display: none; }
+
+  /* 5. Auction Card Tweaks */
   #auctionCard {
     width: 100%;
-    max-width: 100%;
     border: none;
+    border-radius: 0;
+    box-shadow: none;
     background: transparent;
-    box-shadow: none;
   }
 
-  #playerInfoBox {
-    padding: 18px 12px;
-  }
-
-  #playerName {
-    font-size: 1.9rem;
-    line-height: 1.1;
-  }
-
-  #playerMeta {
-    font-size: 0.85rem;
-    opacity: 0.9;
-  }
-
-  /* ---------- PRICE + TIMER STRIP ---------- */
+  #playerName { font-size: 2rem; }
+  
+  /* Price Container Tweaks for Mobile */
   .price-container {
-    margin: 0 12px;
-    padding: 12px 14px;
-    border-radius: 14px;
-    background: rgba(15, 23, 42, 0.85);
+    padding: 10px 15px;
+    gap: 10px;
   }
+  #bid { font-size: 2.2rem; }
+  #timer { font-size: 1.2rem; padding: 4px 10px; }
 
-  #bid {
-    font-size: 2rem;
-    font-weight: 800;
-  }
-
-  #timer {
-    font-size: 1.1rem;
-    padding: 4px 10px;
-  }
-
-  /* ---------- BIDDER BADGE (MINIMAL) ---------- */
-  .bidder-badge {
-    font-size: 0.7rem;
-    padding: 6px 10px;
-    box-shadow: none;
-  }
-
-  .bidder-badge .dot {
-    animation: none; /* save battery */
-  }
-
-  /* ---------- ADMIN CONTROLS (SCROLL BAR) ---------- */
-  #adminControls {
-    order: 2;
-    display: flex;
-    gap: 8px;
-    padding: 8px 12px;
-    overflow-x: auto;
-    margin-bottom: 8px;
-  }
-
-  #adminControls button {
-    flex-shrink: 0;
-    padding: 8px 12px;
-    font-size: 0.75rem;
-    border-radius: 10px;
-  }
-
-  /* ---------- PANELS (LOG / CHAT) ---------- */
-  .panel {
-    order: 3;
-    margin: 8px 12px;
-    max-height: 260px;
-    overflow-y: auto;
-    background: rgba(15, 23, 42, 0.55);
-    border-radius: 12px;
-  }
-
-  .scroll {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* ---------- STICKY BID BUTTON ---------- */
+  /* 6. FIXED BOTTOM BID BUTTON */
   #bidBtn {
-    position: fixed;
-    bottom: 16px;
-    left: 16px;
-    right: 16px;
-    width: calc(100% - 32px);
-    z-index: 2000;
-    padding: 16px;
-    font-size: 1.05rem;
-    border-radius: 16px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+    padding: 18px;
+    font-size: 1.2rem;
+    position: fixed; 
+    bottom: 20px; left: 20px; right: 20px;
+    width: calc(100% - 40px);
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  /* 7. Chat & Utilities */
+  .chat-box input { font-size: 16px; } /* Prevents iOS zoom */
+
+  /* 8. Modals & Leaderboard */
+  .rules-card, .overlay-card {
+    width: 95%;
+    max-height: 85vh;
+    margin: 10px auto;
+  }
+
+  .leaderboard-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-size: 0.85rem;
   }
 }
 
