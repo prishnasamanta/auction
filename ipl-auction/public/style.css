@@ -397,123 +397,145 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ================================================= */
 /* ========= GLOBAL MOBILE POPUP SYSTEM ============= */
 /* ================================================= */
+/* ================================================= */
+/* ========== CLEAN RULE SET POPUP (MOBILE) ========= */
+/* ================================================= */
 
 @media (max-width: 900px) {
 
-  /* ---------- BACKGROUND ---------- */
-  body {
-    background-attachment: fixed;
-  }
-
-  /* ---------- SCREEN WRAPPER ---------- */
-  .screen {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-
-  /* ================================================= */
-  /* ========== LANDING + AUTH POPUPS ================= */
-  /* ================================================= */
-
-  #landing,
-  .auth-wrapper {
-    min-height: 100vh;
-    display: flex;
+  .rules-overlay {
+    padding: 15px;
     align-items: center;
     justify-content: center;
   }
 
-  .landing-card,
-  .auth-card {
-    width: 100%;
-    max-width: 420px;
-    padding: 26px 22px;
-    border-radius: 18px;
-
-    background: rgba(30, 41, 59, 0.78);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-
-    box-shadow:
-      0 15px 40px rgba(0,0,0,0.55),
-      inset 0 0 0 1px rgba(255,255,255,0.06);
-
-    animation: popupFloat 5.5s ease-in-out infinite;
-  }
-
-  .title {
-    font-size: 2rem;
-    line-height: 1.15;
-  }
-
-  .subtitle {
-    font-size: 0.95rem;
-  }
-
-  /* ================================================= */
-  /* =============== JOIN / RULE POPUPS ============== */
-  /* ================================================= */
-
-  .overlay-card,
   .rules-card {
     width: 100%;
-    max-width: 420px;
-    max-height: 85vh;
+    max-width: 360px;          /* SMALL POPUP */
+    max-height: 70vh;          /* NOT FULL SCREEN */
+    border-radius: 16px;
 
+    background: rgba(30, 41, 59, 0.92);
+    backdrop-filter: blur(16px);
+
+    box-shadow:
+      0 18px 40px rgba(0,0,0,0.6),
+      inset 0 0 0 1px rgba(255,255,255,0.06);
+
+    animation: popupIn 0.25s ease-out;
+  }
+
+  .rules-card h3 {
+    font-size: 1.1rem;
+    padding: 14px;
+  }
+
+  .rules-scroll-area {
+    padding: 14px;
+    overflow-y: auto;
+  }
+
+  .rules-section {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .rule-row {
+    gap: 10px;
+  }
+
+  .rule-row label {
+    font-size: 0.85rem;
+  }
+
+  .rule-row input {
+    width: 70px;
+    padding: 6px;
+    font-size: 0.9rem;
+  }
+
+  .rules-footer {
+    padding: 12px;
+  }
+}
+
+/* Small pop animation */
+@keyframes popupIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+/* ================================================= */
+/* ========= MOBILE AUCTION UI (FIXED) ============== */
+/* ================================================= */
+
+@media (max-width: 900px) {
+
+  /* Remove desktop panel feeling */
+  .panel.left,
+  .panel.right {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  /* AUCTION CARD = HERO */
+  #auctionCard {
     border-radius: 18px;
-    background: rgba(30, 41, 59, 0.85);
-
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-
+    background: rgba(30,41,59,0.9);
     box-shadow:
       0 20px 50px rgba(0,0,0,0.6),
-      inset 0 0 0 1px rgba(255,255,255,0.07);
+      inset 0 0 0 1px rgba(255,255,255,0.06);
 
-    animation: popupFloat 5s ease-in-out infinite;
+    animation: none; /* remove float here */
   }
 
-  .rules-overlay {
-    padding: 20px;
-  }
+  /* Make bid button dominant */
+  #bidBtn {
+    position: sticky;
+    bottom: 12px;
+    z-index: 200;
 
-  .overlay-card h2,
-  .rules-card h3 {
-    font-size: 1.2rem;
-  }
+    font-size: 1.25rem;
+    padding: 18px;
+    border-radius: 14px;
 
-  /* ================================================= */
-  /* ========== AUCTION MOBILE POPUPS ================= */
-  /* ================================================= */
-
-  .auction-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  #auctionCard {
-    animation: popupFloat 6s ease-in-out infinite;
-  }
-
-  .panel {
-    border-radius: 18px;
-    background: rgba(30, 41, 59, 0.75);
-    backdrop-filter: blur(18px);
     box-shadow:
-      0 12px 35px rgba(0,0,0,0.45),
-      inset 0 0 0 1px rgba(255,255,255,0.05);
-
-    animation: popupFloat 6.5s ease-in-out infinite;
+      0 12px 30px rgba(34,197,94,0.5);
   }
 
-  /* ---------- ORDER ---------- */
-  .auction-center { order: 1; }
-  .panel.left     { order: 2; }
-  .panel.right    { order: 3; }
+  /* Logs as compact card */
+  .panel.left {
+    margin-top: 10px;
+    border-radius: 14px;
+    background: rgba(15,23,42,0.85);
+    padding: 10px;
+  }
 
+  .panel.left h3 {
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+
+  .panel.left .scroll {
+    max-height: 120px;
+    font-size: 0.8rem;
+  }
+
+  /* Chat compact */
+  .panel.right {
+    margin-top: 10px;
+    border-radius: 14px;
+    background: rgba(15,23,42,0.85);
+    padding: 10px;
+  }
+
+  .chat-box input {
+    font-size: 0.9rem;
+  }
+
+  .chat-box button {
+    padding: 8px 12px;
+  }
 }
 
 /* ================================================= */
@@ -524,6 +546,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-6px); }
 }
+
 
 
 
