@@ -397,94 +397,25 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ========================================================== */
 /* ================= GLOBAL MOBILE OVERHAUL ================= */
 /* ========================================================== */
+/* ========================================================== */
+/* ========== MOBILE AUCTION UI – REFINED ONLY =============== */
+/* ========================================================== */
 @media (max-width: 900px) {
 
-  /* --- 1. GLOBAL RESET & SCROLLING --- */
-  body {
-    overflow-x: hidden; /* Stop horizontal shaking */
-    background-attachment: fixed; /* Fix background jitter */
-  }
-  
-  .screen {
-    padding: 10px; /* Reduced padding for all screens */
-    min-height: 100vh;
-    height: auto;
-  }
-
-  /* --- 2. LANDING & LOGIN PAGES --- */
-  #landing, .auth-wrapper {
-    min-height: 85vh; /* Account for browser UI bars */
-    padding: 20px 0;
-    align-items: flex-start; /* Move content up slightly */
-    padding-top: 10vh;
-  }
-
-  .landing-card, .auth-card {
-    width: 100%;
-    padding: 25px 20px; /* Smaller padding */
-    margin: 0 auto;
-    animation: none; /* Disable float animation on mobile to save battery/jitter */
-  }
-
-  .title {
-    font-size: 2.2rem; /* Reduced from 3.5rem */
-    margin-bottom: 10px;
-  }
-  
-  .subtitle {
-    font-size: 1rem;
-    margin-bottom: 20px;
-  }
-
-  /* --- 3. RULES & MODALS --- */
-  .rules-overlay {
-    align-items: flex-end; /* Sheet style on mobile (optional) or center */
-    padding: 0;
-  }
-
-  .overlay-card, .rules-card {
-    width: 100%;
-    max-width: 100%;
-    height: 90vh; /* Takes up most of screen */
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    margin: 0;
-  }
-
-  .rules-scroll-area {
-    padding: 15px;
-  }
-
-  .rule-row label { font-size: 0.8rem; }
-  .rule-row input { width: 60px; padding: 4px; }
-
-  /* --- 4. AUCTION UI (The Complex Part) --- */
-  .topbar {
-    padding: 10px 15px;
-    flex-wrap: wrap;
-    position: sticky; top: 0; z-index: 500;
-  }
-  .brand { font-size: 1rem; }
-  .topbar .secondary-btn { padding: 5px 10px; font-size: 0.75rem; }
-
-  /* Break the Grid Layout */
+  /* ---------- AUCTION LAYOUT ---------- */
   .auction-wrapper {
     display: flex;
     flex-direction: column;
-    height: auto;
-    padding-bottom: 120px; /* Massive space for the sticky bid button */
-    overflow: visible;
+    padding-bottom: 120px; /* space for bid button */
   }
 
-  /* Reorder: Auction Card (1), Admin (2), Panels (3) */
+  /* ---------- AUCTION CARD (MAIN FOCUS) ---------- */
   .auction-center {
     order: 1;
     padding: 0;
-    margin-bottom: 15px;
-    overflow: visible;
+    margin-bottom: 10px;
   }
 
-  /* Card Adjustments */
   #auctionCard {
     width: 100%;
     max-width: 100%;
@@ -492,75 +423,95 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     background: transparent;
     box-shadow: none;
   }
-  
-  #playerInfoBox { padding: 15px 0; }
-  #playerName { font-size: 2.2rem; }
-  #playerMeta { font-size: 0.9rem; }
 
-  /* Price Area Compact */
+  #playerInfoBox {
+    padding: 18px 12px;
+  }
+
+  #playerName {
+    font-size: 1.9rem;
+    line-height: 1.1;
+  }
+
+  #playerMeta {
+    font-size: 0.85rem;
+    opacity: 0.9;
+  }
+
+  /* ---------- PRICE + TIMER STRIP ---------- */
   .price-container {
-    padding: 10px 15px;
-    margin: 0 10px;
-    border-radius: 12px;
+    margin: 0 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.85);
   }
-  #bid { font-size: 2rem; }
-  #timer { font-size: 1.2rem; padding: 4px 10px; }
 
-  /* Badge mobile tweak */
+  #bid {
+    font-size: 2rem;
+    font-weight: 800;
+  }
+
+  #timer {
+    font-size: 1.1rem;
+    padding: 4px 10px;
+  }
+
+  /* ---------- BIDDER BADGE (MINIMAL) ---------- */
   .bidder-badge {
-    padding: 6px 12px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    padding: 6px 10px;
+    box-shadow: none;
   }
 
-  /* Panels (Chat/Logs) */
-  .panel {
-    order: 3;
-    height: 350px; /* Fixed height for scrollable areas */
-    margin-bottom: 20px;
-    border: 1px solid rgba(255,255,255,0.05);
-    background: rgba(15, 23, 42, 0.5);
+  .bidder-badge .dot {
+    animation: none; /* save battery */
   }
 
-  /* Admin Scroll */
+  /* ---------- ADMIN CONTROLS (SCROLL BAR) ---------- */
   #adminControls {
     order: 2;
     display: flex;
-    overflow-x: auto;
-    padding: 0 10px 10px 10px;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  #adminControls button {
-    flex-shrink: 0; /* Prevents buttons from squishing */
-    font-size: 0.8rem;
+    gap: 8px;
     padding: 8px 12px;
+    overflow-x: auto;
+    margin-bottom: 8px;
   }
 
-  /* --- 5. STICKY BID BUTTON --- */
+  #adminControls button {
+    flex-shrink: 0;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    border-radius: 10px;
+  }
+
+  /* ---------- PANELS (LOG / CHAT) ---------- */
+  .panel {
+    order: 3;
+    margin: 8px 12px;
+    max-height: 260px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.55);
+    border-radius: 12px;
+  }
+
+  .scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ---------- STICKY BID BUTTON ---------- */
   #bidBtn {
     position: fixed;
-    bottom: 20px; left: 15px; right: 15px;
-    width: calc(100% - 30px);
-    z-index: 999;
-    padding: 15px;
-    font-size: 1.1rem;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-    border: 1px solid rgba(255,255,255,0.2);
-    backdrop-filter: blur(10px);
-  }
-
-  /* --- 6. SOLD OVERLAY --- */
-  .sold-text { font-size: 2.5rem; }
-  .hammer { font-size: 4rem; }
-
-  /* --- 7. LEADERBOARD --- */
-  .leaderboard-table {
-    display: block;
-    overflow-x: auto;
-    font-size: 0.8rem;
-  }
-  .leaderboard-table th, .leaderboard-table td {
-    padding: 8px;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: calc(100% - 32px);
+    z-index: 2000;
+    padding: 16px;
+    font-size: 1.05rem;
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.6);
   }
 }
+
+
 
