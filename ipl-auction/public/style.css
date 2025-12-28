@@ -245,7 +245,10 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 #playerMeta { color: var(--gold); font-weight: 600; letter-spacing: 1px; }
 
-/* NEW BIDDER BADGE & PRICE AREA */
+/* ================= NEW BIDDER BADGE & PRICE AREA ================= */
+/* ================= UPDATED BIDDER BADGE ================= */
+
+/* Container for Price & Badge */
 .price-container {
   display: flex; justify-content: space-between; align-items: center;
   padding: 15px 20px; background: rgba(0,0,0,0.2); gap: 10px;
@@ -254,21 +257,53 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 #timer { font-family: monospace; font-size: 1.5rem; background: #0f172a; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--border); color: var(--accent); }
 
 .bidder-badge {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 6px 16px; border-radius: 50px;
+  /* 1. Shape: Button-like */
+  border-radius: 8px; 
+
+  /* 2. Color Logic: Strictly Team Color */
+  /* If no team is set, it defaults to a slate grey, never green/white */
+  border: 1px solid var(--team, #475569);
+  
+  /* 3. Background: Dark glass (clean, no messy gradients) */
+  background: rgba(15, 23, 42, 0.95);
+  
+  /* 4. Glow: Outer glow matches the team color */
+  box-shadow: 0 0 20px -5px var(--team, rgba(0,0,0,0));
+
+  /* Layout & Text */
+  padding: 8px 20px; 
   font-size: 0.9rem; font-weight: 700; color: #fff;
   text-transform: uppercase; letter-spacing: 1px;
-  display: flex; align-items: center; gap: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  display: flex; align-items: center; gap: 10px;
+  
+  /* Text Shadow: Adds a subtle tint of the team color to the white text */
+  text-shadow: 0 0 10px var(--team, transparent);
+  
   transition: all 0.3s ease;
 }
+
+/* Hover Effect */
+.bidder-badge:hover {
+  transform: translateY(-2px);
+  /* Stronger glow on hover */
+  box-shadow: 0 0 25px -2px var(--team, rgba(0,0,0,0));
+}
+
+/* 5. The Dot: STRICTLY Team Color (No Green) */
 .bidder-badge .dot {
-  height: 8px; width: 8px; background-color: var(--success);
-  border-radius: 50%; box-shadow: 0 0 8px var(--success);
+  height: 8px; width: 8px; 
+  border-radius: 50%; 
+  
+  /* Background is the team color */
+  background-color: var(--team, #94a3b8); 
+  
+  /* Glow is the team color */
+  box-shadow: 0 0 12px 2px var(--team, transparent);
+  
   animation: blink 1s infinite;
 }
-@keyframes blink { 50% { opacity: 0.5; } }
+
+@keyframes blink { 50% { opacity: 0.4; } }
 
 .card-padding-area { padding: 20px; background: #1e293b; }
 #bidBtn {
