@@ -394,126 +394,173 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
 .leaderboard-table th { background: #1e293b; color: #aaa; }
 /* ================= MOBILE OPTIMIZATION (REVAMPED) ================= */
+/* ========================================================== */
+/* ================= GLOBAL MOBILE OVERHAUL ================= */
+/* ========================================================== */
 @media (max-width: 900px) {
 
-  /* 1. Root & Body Adjustments */
+  /* --- 1. GLOBAL RESET & SCROLLING --- */
   body {
-    background-attachment: fixed; /* Prevents bg scrolling jitters */
+    overflow-x: hidden; /* Stop horizontal shaking */
+    background-attachment: fixed; /* Fix background jitter */
   }
-  .screen { 
-    padding: 0; /* Remove padding for edge-to-edge look */
-  }
-
-  /* 2. Topbar Compact Mode */
-  .topbar { 
-    padding: 12px 15px; 
-    position: sticky; 
-    top: 0; 
-    z-index: 500; /* Ensure it stays above content but below modals */
-  }
-  .brand { font-size: 1.1rem; }
-  .topbar .secondary-btn { font-size: 0.8rem; padding: 6px 12px; }
-
-  /* 3. Main Layout: Stack Vertically */
-  .auction-wrapper {
-    display: flex; 
-    flex-direction: column;
-    height: auto; 
+  
+  .screen {
+    padding: 10px; /* Reduced padding for all screens */
     min-height: 100vh;
-    padding-bottom: 100px; /* Space for the fixed Bid Button */
+    height: auto;
+  }
+
+  /* --- 2. LANDING & LOGIN PAGES --- */
+  #landing, .auth-wrapper {
+    min-height: 85vh; /* Account for browser UI bars */
+    padding: 20px 0;
+    align-items: flex-start; /* Move content up slightly */
+    padding-top: 10vh;
+  }
+
+  .landing-card, .auth-card {
+    width: 100%;
+    padding: 25px 20px; /* Smaller padding */
+    margin: 0 auto;
+    animation: none; /* Disable float animation on mobile to save battery/jitter */
+  }
+
+  .title {
+    font-size: 2.2rem; /* Reduced from 3.5rem */
+    margin-bottom: 10px;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  /* --- 3. RULES & MODALS --- */
+  .rules-overlay {
+    align-items: flex-end; /* Sheet style on mobile (optional) or center */
+    padding: 0;
+  }
+
+  .overlay-card, .rules-card {
+    width: 100%;
+    max-width: 100%;
+    height: 90vh; /* Takes up most of screen */
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
     margin: 0;
   }
 
-  /* 4. Order Re-arrangement */
-  /* Show Auction Card 1st, Panels 2nd */
-  .auction-center { 
-    order: 1; 
-    padding: 10px 0; 
-    width: 100%;
+  .rules-scroll-area {
+    padding: 15px;
+  }
+
+  .rule-row label { font-size: 0.8rem; }
+  .rule-row input { width: 60px; padding: 4px; }
+
+  /* --- 4. AUCTION UI (The Complex Part) --- */
+  .topbar {
+    padding: 10px 15px;
+    flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 500;
+  }
+  .brand { font-size: 1rem; }
+  .topbar .secondary-btn { padding: 5px 10px; font-size: 0.75rem; }
+
+  /* Break the Grid Layout */
+  .auction-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    padding-bottom: 120px; /* Massive space for the sticky bid button */
     overflow: visible;
   }
-  
-  .panel { 
-    order: 2; 
-    height: auto;
-    max-height: 400px; /* Limit height so users don't scroll forever */
+
+  /* Reorder: Auction Card (1), Admin (2), Panels (3) */
+  .auction-center {
+    order: 1;
+    padding: 0;
     margin-bottom: 15px;
-    border-radius: 0; /* Full width look */
-    border-left: none; 
-    border-right: none;
-    background: rgba(15, 23, 42, 0.6); /* Slightly darker background to separate */
+    overflow: visible;
   }
 
-  /* 5. Auction Card Transformations */
-  #auctionCard { 
-    width: 100%; 
-    max-width: 100%; 
-    border: none; 
-    border-radius: 0; 
-    box-shadow: none; 
-    background: transparent; 
+  /* Card Adjustments */
+  #auctionCard {
+    width: 100%;
+    max-width: 100%;
+    border: none;
+    background: transparent;
+    box-shadow: none;
   }
-
-  #playerInfoBox {
-    padding: 20px 10px;
-    background: radial-gradient(circle at center, rgba(30, 41, 59, 0.8), transparent);
-  }
-
-  #playerName { font-size: 2rem; } /* Shrink name slightly */
   
+  #playerInfoBox { padding: 15px 0; }
+  #playerName { font-size: 2.2rem; }
+  #playerMeta { font-size: 0.9rem; }
+
+  /* Price Area Compact */
   .price-container {
+    padding: 10px 15px;
     margin: 0 10px;
     border-radius: 12px;
-    padding: 12px;
   }
-  #bid { font-size: 2.2rem; }
+  #bid { font-size: 2rem; }
+  #timer { font-size: 1.2rem; padding: 4px 10px; }
 
-  /* 6. Sticky Bottom Bid Button (Dock Style) */
-  #bidBtn {
-    position: fixed; 
-    bottom: 15px; 
-    left: 15px; 
-    right: 15px;
-    width: calc(100% - 30px); 
-    z-index: 1000;
-    padding: 16px;
-    font-size: 1.1rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6); /* heavy shadow to pop */
-    border: 1px solid rgba(255,255,255,0.2);
-    backdrop-filter: blur(4px);
-  }
-  
-  /* Add a gradient fade behind the button so text doesn't clash */
-  body::after {
-    content: "";
-    position: fixed; bottom: 0; left: 0; right: 0; height: 100px;
-    background: linear-gradient(to top, #0f172a 20%, transparent);
-    z-index: 999;
-    pointer-events: none;
+  /* Badge mobile tweak */
+  .bidder-badge {
+    padding: 6px 12px;
+    font-size: 0.75rem;
   }
 
-  /* 7. Admin Controls Scroll */
-  #adminControls { 
-    display: flex; 
-    overflow-x: auto; 
-    white-space: nowrap; 
-    padding: 10px; 
+  /* Panels (Chat/Logs) */
+  .panel {
+    order: 3;
+    height: 350px; /* Fixed height for scrollable areas */
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(15, 23, 42, 0.5);
+  }
+
+  /* Admin Scroll */
+  #adminControls {
+    order: 2;
+    display: flex;
+    overflow-x: auto;
+    padding: 0 10px 10px 10px;
     gap: 10px;
-    -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+    margin-bottom: 10px;
   }
-  /* Hide scrollbar for admin controls */
-  #adminControls::-webkit-scrollbar { display: none; }
+  #adminControls button {
+    flex-shrink: 0; /* Prevents buttons from squishing */
+    font-size: 0.8rem;
+    padding: 8px 12px;
+  }
 
-  /* 8. Modals / Rules */
-  .overlay-card, .rules-card {
-    width: 95%;
-    max-height: 90vh;
+  /* --- 5. STICKY BID BUTTON --- */
+  #bidBtn {
+    position: fixed;
+    bottom: 20px; left: 15px; right: 15px;
+    width: calc(100% - 30px);
+    z-index: 999;
+    padding: 15px;
+    font-size: 1.1rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
   }
-  
-  /* 9. Leaderboard */
-  .leaderboard-table { 
-    font-size: 0.85rem; 
-    display: block; 
-    overflow-x: auto; 
+
+  /* --- 6. SOLD OVERLAY --- */
+  .sold-text { font-size: 2.5rem; }
+  .hammer { font-size: 4rem; }
+
+  /* --- 7. LEADERBOARD --- */
+  .leaderboard-table {
+    display: block;
+    overflow-x: auto;
+    font-size: 0.8rem;
+  }
+  .leaderboard-table th, .leaderboard-table td {
+    padding: 8px;
   }
 }
+
