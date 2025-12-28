@@ -1,371 +1,194 @@
 /* ================================================= */
-
 /* ================= ROOT & THEME ================== */
-
 /* ================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Inter:wght@400;600&display=swap');
 
-
-
 :root {
-
   --bg-dark: #0f172a;
-
   --bg-card: rgba(30, 41, 59, 0.7);
-
   --primary: #6366f1; /* Indigo */
-
   --accent: #f43f5e;  /* Rose */
-
   --gold: #fbbf24;
-
   --success: #22c55e;
-
   --text-main: #f8fafc;
-
   --text-muted: #94a3b8;
-
   --border: rgba(255, 255, 255, 0.1);
-
   --glow: 0 0 20px rgba(99, 102, 241, 0.5);
-
   --font-display: 'Exo 2', sans-serif;
-
   --font-body: 'Inter', sans-serif;
-
 }
-
-
 
 * { 
-
   box-sizing: border-box; 
-
   outline: none; 
-
 }
-
-
 
 body {
-
   margin: 0;
-
   background-color: var(--bg-dark);
-
   /* Merged: Old SVG texture + New Gradients for best look */
-
   background-image: 
-
     radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-
     radial-gradient(at 100% 0%, rgba(244, 63, 94, 0.15) 0px, transparent 50%),
-
     url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-
   color: var(--text-main);
-
   font-family: var(--font-body);
-
   overflow-x: hidden;
-
   min-height: 100vh;
-
 }
-
-
 
 /* ================= UTILITIES ================= */
 
 .hidden { display: none !important; opacity: 0; pointer-events: none; }
 
 .screen { 
-
   min-height: 100vh; 
-
   transition: opacity 0.4s ease, transform 0.4s ease;
-
   padding: 20px;
-
 }
-
 .screen.hidden { transform: scale(0.95); }
 
-
-
 /* Glass Effect */
-
 .glass {
-
   background: var(--bg-card);
-
   backdrop-filter: blur(16px);
-
   -webkit-backdrop-filter: blur(16px);
-
   border: 1px solid var(--border);
-
   border-radius: 16px;
-
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-
 }
-
-
 
 /* Buttons */
-
 .primary-btn {
-
   background: linear-gradient(135deg, var(--primary), #4f46e5);
-
   color: white;
-
   border: none;
-
   padding: 12px 24px;
-
   border-radius: 8px;
-
   font-family: var(--font-display);
-
   font-weight: 700;
-
   text-transform: uppercase;
-
   letter-spacing: 0.5px;
-
   cursor: pointer;
-
   transition: all 0.2s;
-
   box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-
 }
-
 .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6); }
-
 .primary-btn:active { transform: translateY(0); }
-
 .primary-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
 
-
-
 .secondary-btn {
-
   background: transparent;
-
   border: 1px solid var(--border);
-
   color: var(--text-muted);
-
   padding: 8px 16px;
-
   border-radius: 8px;
-
   cursor: pointer;
-
   transition: 0.2s;
-
 }
-
 .secondary-btn:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(255,255,255,0.05); }
 
-
-
 /* Inputs */
-
 input {
-
   background: rgba(0, 0, 0, 0.3);
-
   border: 1px solid var(--border);
-
   color: white;
-
   padding: 12px;
-
   border-radius: 8px;
-
   width: 100%;
-
   font-size: 1rem;
-
   transition: 0.3s;
-
 }
-
 input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
 
-
-
-/* ================= LANDING PAGE (RESTORED FLOAT) ================= */
+/* ================= LANDING PAGE ================= */
 
 #landing, .auth-wrapper {
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   text-align: center;
-
   min-height: 90vh;
-
 }
 
 .landing-card, .auth-card {
-
   padding: 40px;
-
   max-width: 450px;
-
   width: 90%;
-
   border-top: 4px solid var(--primary);
-
-  /* RESTORED ANIMATION */
-
   animation: float 6s ease-in-out infinite;
-
 }
-
-
 
 @keyframes float { 
-
   0%, 100% { transform: translateY(0); } 
-
   50% { transform: translateY(-10px); } 
-
 }
-
-
 
 .title {
-
   font-family: var(--font-display);
-
   font-size: 3.5rem;
-
   margin: 0;
-
   background: linear-gradient(to right, #fff, #94a3b8);
-
   -webkit-background-clip: text;
-
   -webkit-text-fill-color: transparent;
-
   line-height: 1.1;
-
 }
-
 .subtitle { color: var(--text-muted); margin: 15px 0 30px; font-size: 1.1rem; }
-
 .features { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
-
 .features span {
-
   background: rgba(255, 255, 255, 0.05);
-
   padding: 6px 12px;
-
   border-radius: 20px;
-
   font-size: 0.85rem;
-
   border: 1px solid var(--border);
-
 }
-
-
 
 .divider { margin: 20px 0; font-size: 0.8rem; color: var(--text-muted); position: relative; }
-
 .divider::before, .divider::after {
-
   content: ""; position: absolute; top: 50%; width: 40%; height: 1px; background: var(--border);
-
 }
-
 .divider::before { left: 0; } .divider::after { right: 0; }
 
-
-
-/* ================= RULES & MODALS (FIXED) ================= */
+/* ================= RULES & MODALS ================= */
 
 .rules-overlay {
-
     position: fixed; inset: 0;
-
     background: rgba(15, 23, 42, 0.95);
-
     backdrop-filter: blur(5px);
-
     z-index: 10000;
-
     display: flex; justify-content: center; align-items: center;
-
 }
-
-
 
 .overlay-card, .rules-card {
-
     background: #1e293b;
-
     width: 90%; max-width: 500px;
-
     max-height: 85vh;
-
     border-radius: 16px;
-
     border: 1px solid rgba(255, 255, 255, 0.1);
-
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-
     display: flex; flex-direction: column;
-
     overflow: hidden;
-
 }
-
-
 
 .overlay-card h2, .rules-card h3 {
-
     margin: 0; padding: 20px; text-align: center;
-
     color: #818cf8; font-size: 1.5rem;
-
     border-bottom: 1px solid rgba(255,255,255,0.05);
-
     background: #1e293b;
-
 }
 
-
-
 .rules-scroll-area { padding: 20px; overflow-y: auto; flex: 1; }
-
 .rules-footer { padding: 20px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
 
-
-
 .rules-section { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-
 .rules-section h4 { margin: 0 0 10px 0; color: var(--gold); text-transform: uppercase; font-size: 0.9rem; }
-
 .rule-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
-
 .rule-row label { color: #cbd5e1; font-size: 0.9rem; }
-
 .rule-row input { width: 80px; padding: 6px; text-align: center; background: #0f172a; border: 1px solid #334155; }
 
-
 /* ================= AUCTION UI (SINGLE COLUMN LAYOUT) ================= */
+
 .topbar {
   display: flex; justify-content: space-between; align-items: center;
   padding: 15px 25px; margin-bottom: 20px;
@@ -393,7 +216,8 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .auction-center {
   width: 100%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   margin-bottom: 10px;
 }
 
@@ -404,7 +228,28 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   border: 1px solid var(--border);
   box-shadow: 0 0 50px rgba(0,0,0,0.5);
   background: rgba(30, 41, 59, 0.9);
+  transition: transform 0.3s;
 }
+
+.auction-header-role {
+  background: #0f172a; color: var(--text-muted); text-transform: uppercase;
+  font-size: 0.8rem; letter-spacing: 2px; padding: 10px; text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+#playerInfoBox {
+  padding: 40px 20px;
+  background: radial-gradient(circle at center, #1e293b, #0f172a);
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+#playerName {
+  font-family: var(--font-display);
+  font-size: 2.5rem; font-weight: 800; color: white;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin-bottom: 5px;
+}
+#playerMeta { color: var(--gold); font-weight: 600; letter-spacing: 1px; }
 
 /* 2. Panels (Log & Chat) below the card */
 .panel { 
@@ -437,7 +282,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   overflow-y: auto; 
   font-size: 0.9rem; 
   color: #cbd5e1; 
-  padding-right: 5px; /* Space for scrollbar */
+  padding-right: 5px; 
 }
 
 /* Custom Scrollbar */
@@ -447,615 +292,143 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 .log-item { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-/* Rest of the existing CSS (Card internals, inputs, etc.) remains the same... */
-
-
-/* ================= NEW BIDDER BADGE & PRICE AREA ================= */
-
-/* ================= UPDATED BIDDER BADGE ================= */
-
-
-
-/* Container for Price & Badge */
+/* ================= BADGE & PRICE AREA ================= */
 
 .price-container {
-
   display: flex; justify-content: space-between; align-items: center;
-
   padding: 15px 20px; background: rgba(0,0,0,0.2); gap: 10px;
-
 }
-
 #bid { font-family: var(--font-display); font-size: 2.5rem; font-weight: 800; color: white; }
-
 #timer { font-family: monospace; font-size: 1.5rem; background: #0f172a; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--border); color: var(--accent); }
 
-
-
 .bidder-badge {
-
-  /* 1. Shape: Button-like */
-
   border-radius: 8px; 
-
-
-
-  /* 2. Color Logic: Strictly Team Color */
-
-  /* If no team is set, it defaults to a slate grey, never green/white */
-
   border: 1px solid var(--team, #475569);
-
-  
-
-  /* 3. Background: Dark glass (clean, no messy gradients) */
-
   background: rgba(15, 23, 42, 0.95);
-
-  
-
-  /* 4. Glow: Outer glow matches the team color */
-
   box-shadow: 0 0 20px -5px var(--team, rgba(0,0,0,0));
-
-
-
-  /* Layout & Text */
-
   padding: 8px 20px; 
-
   font-size: 0.9rem; font-weight: 700; color: #fff;
-
   text-transform: uppercase; letter-spacing: 1px;
-
   display: flex; align-items: center; gap: 10px;
-
-  
-
-  /* Text Shadow: Adds a subtle tint of the team color to the white text */
-
   text-shadow: 0 0 10px var(--team, transparent);
-
-  
-
   transition: all 0.3s ease;
-
 }
-
-
-
-/* Hover Effect */
 
 .bidder-badge:hover {
-
   transform: translateY(-2px);
-
-  /* Stronger glow on hover */
-
   box-shadow: 0 0 25px -2px var(--team, rgba(0,0,0,0));
-
 }
-
-
-
-/* 5. The Dot: STRICTLY Team Color (No Green) */
 
 .bidder-badge .dot {
-
   height: 8px; width: 8px; 
-
   border-radius: 50%; 
-
-  
-
-  /* Background is the team color */
-
   background-color: var(--team, #94a3b8); 
-
-  
-
-  /* Glow is the team color */
-
   box-shadow: 0 0 12px 2px var(--team, transparent);
-
-  
-
   animation: blink 1s infinite;
-
 }
-
-
 
 @keyframes blink { 50% { opacity: 0.4; } }
 
-
-
 .card-padding-area { padding: 20px; background: #1e293b; }
-
 #bidBtn {
-
   width: 100%; padding: 18px; font-size: 1.2rem; font-weight: 800;
-
   text-transform: uppercase; background: var(--success);
-
   border: none; border-radius: 8px; color: #000; cursor: pointer;
-
   transition: 0.1s; box-shadow: 0 4px 0 #15803d;
-
 }
-
 #bidBtn:active { transform: translateY(4px); box-shadow: none; }
-
 #bidBtn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; }
 
-
-
 /* Chat */
-
 .chat-box { display: flex; gap: 5px; margin-top: 10px; }
-
 .chat-box input { padding: 8px; font-size: 0.9rem; }
-
 .chat-box button { padding: 8px 15px; background: var(--border); border-radius: 8px; border:none; color:white; cursor:pointer;}
 
-
-
-/* ================= NEW RESULT STAMP ANIMATION ================= */
+/* ================= RESULT STAMP ANIMATION ================= */
 
 .result-overlay {
-
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-
   background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);
-
   z-index: 50; display: flex; justify-content: center; align-items: center;
-
   pointer-events: none;
-
 }
-
 .stamp-container {
-
   text-align: center; transform: rotate(-12deg);
-
   border: 4px solid var(--success); padding: 10px 20px; border-radius: 12px;
-
   box-shadow: 0 0 30px var(--success) inset, 0 0 20px var(--success);
-
   background: rgba(34, 197, 94, 0.1);
-
   animation: stampSlam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-
   opacity: 0;
-
 }
-
 .stamp-title { font-family: var(--font-display); font-size: 2.5rem; font-weight: 900; color: var(--success); line-height: 1; text-transform: uppercase; }
-
 .stamp-detail { font-family: var(--font-body); font-size: 1.2rem; font-weight: 600; color: #fff; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; }
 
-
-
 .stamp-container.unsold {
-
   border-color: var(--accent); box-shadow: 0 0 30px var(--accent) inset, 0 0 20px var(--accent);
-
   background: rgba(244, 63, 94, 0.1);
-
 }
-
 .stamp-container.unsold .stamp-title { color: var(--accent); }
 
-
-
 @keyframes stampSlam {
-
   0% { transform: scale(3) rotate(0deg); opacity: 0; }
-
   50% { opacity: 1; }
-
   100% { transform: scale(1) rotate(-12deg); opacity: 1; }
-
 }
 
-
-
-/* ================= TEAM COLORS (RESTORED FROM OLD) ================= */
+/* ================= TEAM COLORS & MISC ================= */
 
 .CSK{--team: #facc15} .MI{--team: #38bdf8} .RCB{--team: #dc2626}
-
 .KKR{--team: #a855f7} .RR{--team: #fb7185} .DC{--team: #60a5fa}
-
 .SRH{--team: #fb923c} .PBKS{--team: #ef4444} .GT{--team: #0ea5e9} .LSG{--team: #22c55e}
 
-
-
 .auction-card.pulse { animation: neonPulse 0.4s ease-in-out; }
-
 @keyframes neonPulse {
-
   0% { box-shadow: 0 0 0 rgba(255,255,255,0); border-color: white; }
-
   50% { box-shadow: 0 0 30px var(--accent); border-color: var(--accent); }
-
   100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
-
 }
-
-
 
 /* Team Select Grid (Minimal) */
-
 .team-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; padding: 10px 0; }
-
 .team-btn {
-
   width: 100%; padding: 15px 10px;
-
   background: rgba(255, 255, 255, 0.03);
-
   border: 1px solid var(--team-color);
-
   border-radius: 8px; color: #fff;
-
   font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; letter-spacing: 1px;
-
   cursor: pointer; transition: all 0.2s ease;
-
 }
-
 .team-btn:hover { background: var(--team-color); color: #000; box-shadow: 0 0 20px var(--team-color); transform: translateY(-3px); }
-
 .team-btn:active { transform: scale(0.95); }
-
-
 
 /* ================= SOLD OVERLAY ================= */
 
 #soldOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 999; }
-
 .sold-box { text-align: center; }
-
 .hammer { font-size: 6rem; display: block; margin-bottom: 10px; animation: hammerSwing 0.5s ease-out; }
-
 .sold-text { font-family: var(--font-display); font-size: 4rem; font-weight: 900; color: var(--success); text-shadow: 0 0 30px var(--success); animation: popIn 0.3s ease; }
 
-
-
 @keyframes hammerSwing { 0% { transform: rotate(-45deg); } 50% { transform: rotate(0deg); } }
-
 @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-
 
 /* ================= PLAYING XI & LEADERBOARD ================= */
 
 .xi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
-
 .xi-preview-container { background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #334155; }
-
 .xi-player { display: block; width: 100%; padding: 8px; margin-bottom: 4px; background: #333; color: white; border: 1px solid #444; cursor: pointer; text-align: left; font-size: 0.85rem; }
-
 .xi-player.picked { background: var(--success); color: black; border-color: var(--success); font-weight: bold; }
 
-
-
 .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; white-space: nowrap; }
-
 .leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
-
 .leaderboard-table th { background: #1e293b; color: #aaa; }
 
-
-
-
-
-/* ================================================= */
-
-/* ========= GLOBAL MOBILE POPUP SYSTEM ============= */
-
-/* ================================================= */
-
-/* ================================================= */
-
-/* ========== CLEAN RULE SET POPUP (MOBILE) ========= */
-
-/* ================================================= */
-
-
+/* ================= MOBILE OPTIMIZATIONS ================= */
 
 @media (max-width: 900px) {
-
-
-
-  .rules-overlay {
-
-    padding: 15px;
-
-    align-items: center;
-
-    justify-content: center;
-
-  }
-
-
-
-  .rules-card {
-
-    width: 100%;
-
-    max-width: 360px;          /* SMALL POPUP */
-
-    max-height: 70vh;          /* NOT FULL SCREEN */
-
-    border-radius: 16px;
-
-
-
-    background: rgba(30, 41, 59, 0.92);
-
-    backdrop-filter: blur(16px);
-
-
-
-    box-shadow:
-
-      0 18px 40px rgba(0,0,0,0.6),
-
-      inset 0 0 0 1px rgba(255,255,255,0.06);
-
-
-
-    animation: popupIn 0.25s ease-out;
-
-  }
-
-
-
-  .rules-card h3 {
-
-    font-size: 1.1rem;
-
-    padding: 14px;
-
-  }
-
-
-
-  .rules-scroll-area {
-
-    padding: 14px;
-
-    overflow-y: auto;
-
-  }
-
-
-
-  .rules-section {
-
-    padding: 12px;
-
-    margin-bottom: 12px;
-
-  }
-
-
-
-  .rule-row {
-
-    gap: 10px;
-
-  }
-
-
-
-  .rule-row label {
-
-    font-size: 0.85rem;
-
-  }
-
-
-
-  .rule-row input {
-
-    width: 70px;
-
-    padding: 6px;
-
-    font-size: 0.9rem;
-
-  }
-
-
-
-  .rules-footer {
-
-    padding: 12px;
-
-  }
-
+  .rules-overlay { padding: 15px; align-items: center; justify-content: center; }
+  .rules-card { width: 100%; max-width: 360px; max-height: 70vh; }
+  
+  /* Mobile Specifics for Single Column */
+  .panel { height: 250px; } /* Slightly shorter logs on mobile */
+  #bidBtn { padding: 20px; font-size: 1.3rem; }
 }
-
-
-
-/* Small pop animation */
-
-@keyframes popupIn {
-
-  from { transform: scale(0.9); opacity: 0; }
-
-  to   { transform: scale(1); opacity: 1; }
-
-}
-
-/* ================================================= */
-
-/* ========= MOBILE AUCTION UI (FIXED) ============== */
-
-/* ================================================= */
-
-
-
-@media (max-width: 900px) {
-
-
-
-  /* Remove desktop panel feeling */
-
-  .panel.left,
-
-  .panel.right {
-
-    background: transparent;
-
-    box-shadow: none;
-
-    padding: 0;
-
-  }
-
-
-
-  /* AUCTION CARD = HERO */
-
-  #auctionCard {
-
-    border-radius: 18px;
-
-    background: rgba(30,41,59,0.9);
-
-    box-shadow:
-
-      0 20px 50px rgba(0,0,0,0.6),
-
-      inset 0 0 0 1px rgba(255,255,255,0.06);
-
-
-
-    animation: none; /* remove float here */
-
-  }
-
-
-
-  /* Make bid button dominant */
-
-  #bidBtn {
-
-    position: sticky;
-
-    bottom: 12px;
-
-    z-index: 200;
-
-
-
-    font-size: 1.25rem;
-
-    padding: 18px;
-
-    border-radius: 14px;
-
-
-
-    box-shadow:
-
-      0 12px 30px rgba(34,197,94,0.5);
-
-  }
-
-
-
-  /* Logs as compact card */
-
-  .panel.left {
-
-    margin-top: 10px;
-
-    border-radius: 14px;
-
-    background: rgba(15,23,42,0.85);
-
-    padding: 10px;
-
-  }
-
-
-
-  .panel.left h3 {
-
-    font-size: 0.8rem;
-
-    margin-bottom: 6px;
-
-  }
-
-
-
-  .panel.left .scroll {
-
-    max-height: 120px;
-
-    font-size: 0.8rem;
-
-  }
-
-
-
-  /* Chat compact */
-
-  .panel.right {
-
-    margin-top: 10px;
-
-    border-radius: 14px;
-
-    background: rgba(15,23,42,0.85);
-
-    padding: 10px;
-
-  }
-
-
-
-  .chat-box input {
-
-    font-size: 0.9rem;
-
-  }
-
-
-
-  .chat-box button {
-
-    padding: 8px 12px;
-
-  }
-
-}
-
-
-
-/* ================================================= */
-
-/* ========= SOFT POPUP FLOAT ANIMATION ============= */
-
-/* ================================================= */
-
-
-
-@keyframes popupFloat {
-
-  0%, 100% { transform: translateY(0); }
-
-  50%      { transform: translateY(-6px); }
-
-}
-
-
-
-
-
-
