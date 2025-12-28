@@ -392,5 +392,71 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; white-space: nowrap; }
 .leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
 .leaderboard-table th { background: #1e293b; color: #aaa; }
+/* ================= MOBILE RESPONSIVENESS ================= */
+@media screen and (max-width: 1024px) {
+  
+  /* 1. Reset the Main Grid to a Vertical Flex Stack */
+  .auction-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: auto;          /* Allow full page scrolling */
+    overflow-y: auto;      /* Enable scrolling */
+    padding-bottom: 50px;
+  }
+
+  /* 2. Reorder: Put Auction Card FIRST, Log/Chat BELOW */
+  .auction-center {
+    order: 1;             /* Shows first */
+    width: 100%;
+    padding: 10px;
+    height: auto;         /* Remove fixed height constraints */
+  }
+
+  /* 3. Style the Side Panels (Log & Chat) */
+  .panel {
+    order: 2;             /* Shows after auction card */
+    width: 100%;
+    height: auto;         
+    max-height: 300px;    /* Limit height so they don't take over */
+    margin-bottom: 20px;
+  }
+  
+  /* Optional: Put Chat last */
+  .panel:last-child {
+    order: 3;
+  }
+
+  /* 4. Fix Auction Card Sizing */
+  #auctionCard {
+    width: 100%;
+    max-width: 100%;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  }
+
+  /* 5. Adjust Font Sizes for Small Screens */
+  #playerName { font-size: 1.8rem; }
+  #bid { font-size: 2rem; }
+  
+  .topbar {
+    padding: 10px 15px;
+  }
+  
+  .brand {
+    font-size: 1rem;
+  }
+
+  /* 6. Fix Bidder Badge layout on mobile */
+  .price-container {
+    flex-direction: column; /* Stack Price, Badge, Timer */
+    text-align: center;
+    gap: 15px;
+  }
+  
+  .price-container > div {
+    width: 100%;
+    text-align: center !important;
+  }
+}
+
 
 
