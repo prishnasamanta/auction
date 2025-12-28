@@ -14,15 +14,20 @@
   --text-muted: #94a3b8;
   --border: rgba(255, 255, 255, 0.1);
   --glow: 0 0 20px rgba(99, 102, 241, 0.5);
-  --font-display: 'Exo 2', sans-serif; /* Sporty Font */
+  --font-display: 'Exo 2', sans-serif;
   --font-body: 'Inter', sans-serif;
 }
 
-* { box-sizing: border-box; outline: none; }
+* { 
+  box-sizing: border-box; 
+  outline: none; 
+  -webkit-tap-highlight-color: transparent; /* Removes blue tap box on Android/iOS */
+}
 
 body {
   margin: 0;
   background-color: var(--bg-dark);
+  /* Merged: Old SVG texture + New Gradients for best look */
   background-image: 
     radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(244, 63, 94, 0.15) 0px, transparent 50%),
@@ -69,12 +74,13 @@ body {
 }
 .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6); }
 .primary-btn:active { transform: translateY(0); }
+.primary-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
 
 .secondary-btn {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
   transition: 0.2s;
@@ -86,7 +92,7 @@ input {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--border);
   color: white;
-  padding: 14px;
+  padding: 12px;
   border-radius: 8px;
   width: 100%;
   font-size: 1rem;
@@ -94,20 +100,27 @@ input {
 }
 input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
 
-/* ================= LANDING PAGE ================= */
-#landing {
+/* ================= LANDING PAGE (RESTORED FLOAT) ================= */
+#landing, .auth-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  min-height: 90vh;
 }
-.landing-card {
+.landing-card, .auth-card {
   padding: 40px;
-  max-width: 500px;
+  max-width: 450px;
+  width: 90%;
   border-top: 4px solid var(--primary);
+  /* RESTORED ANIMATION */
   animation: float 6s ease-in-out infinite;
 }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+@keyframes float { 
+  0%, 100% { transform: translateY(0); } 
+  50% { transform: translateY(-10px); } 
+}
 
 .title {
   font-family: var(--font-display);
@@ -128,80 +141,96 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   border: 1px solid var(--border);
 }
 
-/* ================= AUTH PAGE ================= */
-.auth-wrapper {
-  height: 80vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.auth-card { padding: 40px; width: 100%; max-width: 400px; text-align: center; }
-.auth-card h2 { font-family: var(--font-display); margin-bottom: 20px; }
 .divider { margin: 20px 0; font-size: 0.8rem; color: var(--text-muted); position: relative; }
 .divider::before, .divider::after {
   content: ""; position: absolute; top: 50%; width: 40%; height: 1px; background: var(--border);
 }
 .divider::before { left: 0; } .divider::after { right: 0; }
 
+/* ================= RULES & MODALS (FIXED) ================= */
+.rules-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(5px);
+    z-index: 10000;
+    display: flex; justify-content: center; align-items: center;
+}
+
+.overlay-card, .rules-card {
+    background: #1e293b;
+    width: 90%; max-width: 500px;
+    max-height: 85vh;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+}
+
+.overlay-card h2, .rules-card h3 {
+    margin: 0; padding: 20px; text-align: center;
+    color: #818cf8; font-size: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: #1e293b;
+}
+
+.rules-scroll-area { padding: 20px; overflow-y: auto; flex: 1; }
+.rules-footer { padding: 20px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+
+.rules-section { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+.rules-section h4 { margin: 0 0 10px 0; color: var(--gold); text-transform: uppercase; font-size: 0.9rem; }
+.rule-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
+.rule-row label { color: #cbd5e1; font-size: 0.9rem; }
+.rule-row input { width: 80px; padding: 6px; text-align: center; background: #0f172a; border: 1px solid #334155; }
+
 /* ================= AUCTION UI ================= */
-/* Header */
 .topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 25px;
-  margin-bottom: 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 15px 25px; margin-bottom: 10px;
   background: rgba(15, 23, 42, 0.8);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(10px);
 }
 .brand { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; color: var(--primary); letter-spacing: 1px; }
 
 /* Main Grid Layout */
 .auction-wrapper {
   display: grid;
-  grid-template-columns: 350px 1fr 300px; /* Sidebar | Main | Sidebar */
+  grid-template-columns: 320px 1fr 320px; /* Using New Dimensions but Old Layout Logic */
   gap: 20px;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 90px);
+  overflow: hidden;
 }
 
-/* Center Stage (The Card) */
+.panel { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding: 15px; }
+.panel h3 { margin: 0; margin-bottom:10px; font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+
+.scroll { flex: 1; overflow-y: auto; font-size: 0.9rem; color: #cbd5e1; }
+.log-item { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
 .auction-center {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
+  display: flex; flex-direction: column;
+  justify-content: flex-start; align-items: center;
+  padding-top: 20px; overflow-y: auto;
 }
 
 #auctionCard {
-  width: 100%;
-  max-width: 500px;
-  padding: 0;
+  width: 100%; max-width: 500px;
   overflow: hidden;
   border: 1px solid var(--border);
   box-shadow: 0 0 50px rgba(0,0,0,0.5);
   transition: transform 0.3s;
 }
 
-/* Card Header */
 .auction-header-role {
-  background: #0f172a;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 2px;
-  padding: 10px;
-  text-align: center;
+  background: #0f172a; color: var(--text-muted); text-transform: uppercase;
+  font-size: 0.8rem; letter-spacing: 2px; padding: 10px; text-align: center;
   border-bottom: 1px solid var(--border);
 }
 
-/* Player Image/Name Area */
 #playerInfoBox {
   padding: 40px 20px;
   background: radial-gradient(circle at center, #1e293b, #0f172a);
@@ -211,116 +240,82 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 #playerName {
   font-family: var(--font-display);
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: white;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-  margin-bottom: 5px;
+  font-size: 2.5rem; font-weight: 800; color: white;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin-bottom: 5px;
 }
 #playerMeta { color: var(--gold); font-weight: 600; letter-spacing: 1px; }
 
-/* Price & Timer Area */
+/* NEW BIDDER BADGE & PRICE AREA */
 .price-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 30px;
-  background: rgba(0,0,0,0.2);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 15px 20px; background: rgba(0,0,0,0.2); gap: 10px;
 }
+#bid { font-family: var(--font-display); font-size: 2.5rem; font-weight: 800; color: white; }
+#timer { font-family: monospace; font-size: 1.5rem; background: #0f172a; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--border); color: var(--accent); }
 
-#bid {
-  font-family: var(--font-display);
-  font-size: 2.8rem;
-  font-weight: 800;
-  color: white;
+.bidder-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 16px; border-radius: 50px;
+  font-size: 0.9rem; font-weight: 700; color: #fff;
+  text-transform: uppercase; letter-spacing: 1px;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
 }
-#timer {
-  font-family: monospace;
-  font-size: 1.5rem;
-  background: #0f172a;
-  padding: 5px 15px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  color: var(--accent);
+.bidder-badge .dot {
+  height: 8px; width: 8px; background-color: var(--success);
+  border-radius: 50%; box-shadow: 0 0 8px var(--success);
+  animation: blink 1s infinite;
 }
+@keyframes blink { 50% { opacity: 0.5; } }
 
-/* Controls Area */
 .card-padding-area { padding: 20px; background: #1e293b; }
-
 #bidBtn {
-  width: 100%;
-  padding: 18px;
-  font-size: 1.2rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  background: var(--success);
-  border: none;
-  border-radius: 8px;
-  color: #000;
-  cursor: pointer;
-  transition: 0.1s;
-  box-shadow: 0 4px 0 #15803d; /* 3D effect */
+  width: 100%; padding: 18px; font-size: 1.2rem; font-weight: 800;
+  text-transform: uppercase; background: var(--success);
+  border: none; border-radius: 8px; color: #000; cursor: pointer;
+  transition: 0.1s; box-shadow: 0 4px 0 #15803d;
 }
 #bidBtn:active { transform: translateY(4px); box-shadow: none; }
 #bidBtn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; }
 
-#auctionResult {
-  margin-top: 15px;
-  padding: 10px;
-  text-align: center;
-  font-weight: 800;
-  text-transform: uppercase;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  min-height: 40px;
-  display: flex; align-items: center; justify-content: center;
-}
-
-/* ================= SIDEBARS (Chat & Logs) ================= */
-.panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 15px;
-}
-.panel h3 { 
-  margin-top: 0; 
-  font-size: 0.9rem; 
-  text-transform: uppercase; 
-  color: var(--text-muted); 
-  border-bottom: 1px solid var(--border); 
-  padding-bottom: 10px; 
-}
-
-.scroll {
-  flex: 1;
-  overflow-y: auto;
-  font-size: 0.9rem;
-  color: #cbd5e1;
-}
-.log-item { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
+/* Chat */
 .chat-box { display: flex; gap: 5px; margin-top: 10px; }
 .chat-box input { padding: 8px; font-size: 0.9rem; }
 .chat-box button { padding: 8px 15px; background: var(--border); border-radius: 8px; border:none; color:white; cursor:pointer;}
 
-/* ================= MOBILE ================= */
-@media (max-width: 1024px) {
-  .auction-wrapper {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    height: auto;
-  }
-  .auction-center { order: 1; margin-bottom: 20px; }
-  .bottom-panels { order: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* ================= NEW RESULT STAMP ANIMATION ================= */
+.result-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);
+  z-index: 50; display: flex; justify-content: center; align-items: center;
+  pointer-events: none;
 }
-@media (max-width: 600px) {
-  .bottom-panels { grid-template-columns: 1fr; }
-  .title { font-size: 2.5rem; }
-  #bid { font-size: 2rem; }
+.stamp-container {
+  text-align: center; transform: rotate(-12deg);
+  border: 4px solid var(--success); padding: 10px 20px; border-radius: 12px;
+  box-shadow: 0 0 30px var(--success) inset, 0 0 20px var(--success);
+  background: rgba(34, 197, 94, 0.1);
+  animation: stampSlam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  opacity: 0;
+}
+.stamp-title { font-family: var(--font-display); font-size: 2.5rem; font-weight: 900; color: var(--success); line-height: 1; text-transform: uppercase; }
+.stamp-detail { font-family: var(--font-body); font-size: 1.2rem; font-weight: 600; color: #fff; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; }
+
+.stamp-container.unsold {
+  border-color: var(--accent); box-shadow: 0 0 30px var(--accent) inset, 0 0 20px var(--accent);
+  background: rgba(244, 63, 94, 0.1);
+}
+.stamp-container.unsold .stamp-title { color: var(--accent); }
+
+@keyframes stampSlam {
+  0% { transform: scale(3) rotate(0deg); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: scale(1) rotate(-12deg); opacity: 1; }
 }
 
-/* ================= TEAM COLORS & ANIMATIONS ================= */
+/* ================= TEAM COLORS (RESTORED FROM OLD) ================= */
 .CSK{--team: #facc15} .MI{--team: #38bdf8} .RCB{--team: #dc2626}
 .KKR{--team: #a855f7} .RR{--team: #fb7185} .DC{--team: #60a5fa}
 .SRH{--team: #fb923c} .PBKS{--team: #ef4444} .GT{--team: #0ea5e9} .LSG{--team: #22c55e}
@@ -332,116 +327,158 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
 }
 
-/* SOLD OVERLAY */
-#soldOverlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-  display: flex; justify-content: center; align-items: center; z-index: 999;
+/* Team Select Grid (Minimal) */
+.team-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; padding: 10px 0; }
+.team-btn {
+  width: 100%; padding: 15px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--team-color);
+  border-radius: 8px; color: #fff;
+  font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.2s ease;
 }
+.team-btn:hover { background: var(--team-color); color: #000; box-shadow: 0 0 20px var(--team-color); transform: translateY(-3px); }
+.team-btn:active { transform: scale(0.95); }
+
+/* ================= SOLD OVERLAY ================= */
+#soldOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 999; }
 .sold-box { text-align: center; }
-.sold-text { font-family: var(--font-display); font-size: 4rem; font-weight: 900; color: var(--success); text-shadow: 0 0 30px var(--success); }
-.hammer { font-size: 6rem; display: block; margin-bottom: 10px; }
+.hammer { font-size: 6rem; display: block; margin-bottom: 10px; animation: hammerSwing 0.5s ease-out; }
+.sold-text { font-family: var(--font-display); font-size: 4rem; font-weight: 900; color: var(--success); text-shadow: 0 0 30px var(--success); animation: popIn 0.3s ease; }
 
-/* Squad List Rules */
+@keyframes hammerSwing { 0% { transform: rotate(-45deg); } 50% { transform: rotate(0deg); } }
+@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* ================= PLAYING XI & LEADERBOARD ================= */
 .xi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
-.role-group { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; }
-.xi-player { background: #334155; border: 1px solid #475569; }
-.xi-player.picked { background: var(--success); color: #000; border-color: var(--success); }
-/* ================================================= */
-/* ================= MOBILE OPTIMIZATION =========== */
-/* ================================================= */
+.xi-preview-container { background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #334155; }
+.xi-player { display: block; width: 100%; padding: 8px; margin-bottom: 4px; background: #333; color: white; border: 1px solid #444; cursor: pointer; text-align: left; font-size: 0.85rem; }
+.xi-player.picked { background: var(--success); color: black; border-color: var(--success); font-weight: bold; }
 
+.leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; white-space: nowrap; }
+.leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+.leaderboard-table th { background: #1e293b; color: #aaa; }
+/* ================= MOBILE OPTIMIZATION (REVAMPED) ================= */
 @media (max-width: 900px) {
 
-  /* 1. Stack the Grid vertically */
+  /* 1. Root & Body Adjustments */
+  body {
+    background-attachment: fixed; /* Prevents bg scrolling jitters */
+  }
+  .screen { 
+    padding: 0; /* Remove padding for edge-to-edge look */
+  }
+
+  /* 2. Topbar Compact Mode */
+  .topbar { 
+    padding: 12px 15px; 
+    position: sticky; 
+    top: 0; 
+    z-index: 500; /* Ensure it stays above content but below modals */
+  }
+  .brand { font-size: 1.1rem; }
+  .topbar .secondary-btn { font-size: 0.8rem; padding: 6px 12px; }
+
+  /* 3. Main Layout: Stack Vertically */
   .auction-wrapper {
-    display: flex;
+    display: flex; 
     flex-direction: column;
-    height: auto; /* Allow scrolling */
-    padding-bottom: 80px; /* Space for bottom nav if needed */
+    height: auto; 
+    min-height: 100vh;
+    padding-bottom: 100px; /* Space for the fixed Bid Button */
+    margin: 0;
   }
 
-  /* 2. Reorder: Card First, then Logs, then Chat */
-  .auction-center {
-    order: 1;
-    margin-bottom: 20px;
-  }
-  .panel {
-    order: 2;
-    height: 300px; /* Fixed height for scrollable areas on mobile */
-    margin-bottom: 20px;
-  }
-
-  /* 3. Adjust Top Bar for Mobile */
-  .topbar {
-    padding: 10px 15px;
-    flex-wrap: wrap; /* Allow wrapping if too many buttons */
-    gap: 10px;
-  }
-  .brand { font-size: 1rem; }
-  
-  /* Hide Room Code Text on tiny screens to save space */
-  #roomCodeBar { display: none !important; }
-
-  /* 4. Make Admin Controls Scrollable horizontally if too many buttons */
-  #adminControls {
-    display: flex;
-    overflow-x: auto;
+  /* 4. Order Re-arrangement */
+  /* Show Auction Card 1st, Panels 2nd */
+  .auction-center { 
+    order: 1; 
+    padding: 10px 0; 
     width: 100%;
-    padding-bottom: 5px;
-    gap: 8px;
-    justify-content: flex-start; /* Left align scroll */
+    overflow: visible;
   }
   
-  /* Hide scrollbar for neatness */
-  #adminControls::-webkit-scrollbar { display: none; }
+  .panel { 
+    order: 2; 
+    height: auto;
+    max-height: 400px; /* Limit height so users don't scroll forever */
+    margin-bottom: 15px;
+    border-radius: 0; /* Full width look */
+    border-left: none; 
+    border-right: none;
+    background: rgba(15, 23, 42, 0.6); /* Slightly darker background to separate */
+  }
 
-  /* 5. Auction Card Tweaks */
-  #auctionCard {
-    width: 100%;
-    border: none; /* Remove border for cleaner mobile look */
-    border-radius: 0;
-    box-shadow: none;
-    background: transparent; /* Seamless blend */
+  /* 5. Auction Card Transformations */
+  #auctionCard { 
+    width: 100%; 
+    max-width: 100%; 
+    border: none; 
+    border-radius: 0; 
+    box-shadow: none; 
+    background: transparent; 
   }
+
+  #playerInfoBox {
+    padding: 20px 10px;
+    background: radial-gradient(circle at center, rgba(30, 41, 59, 0.8), transparent);
+  }
+
+  #playerName { font-size: 2rem; } /* Shrink name slightly */
   
-  /* Make the Player Name smaller so it doesn't wrap weirdly */
-  #playerName { font-size: 2rem; }
+  .price-container {
+    margin: 0 10px;
+    border-radius: 12px;
+    padding: 12px;
+  }
   #bid { font-size: 2.2rem; }
 
-  /* 6. BIGGER TOUCH TARGETS */
+  /* 6. Sticky Bottom Bid Button (Dock Style) */
   #bidBtn {
-    padding: 20px; /* Fatter button for thumbs */
-    font-size: 1.3rem;
-    position: fixed; /* Optional: Stick to bottom? No, let's keep inline for now */
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
-    width: calc(100% - 40px);
+    position: fixed; 
+    bottom: 15px; 
+    left: 15px; 
+    right: 15px;
+    width: calc(100% - 30px); 
     z-index: 1000;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    border-radius: 12px;
+    padding: 16px;
+    font-size: 1.1rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6); /* heavy shadow to pop */
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(4px);
   }
   
-  /* Since Bid Button is fixed, add padding to body so content isn't hidden */
-  .auction-wrapper { padding-bottom: 100px; }
-  
-  /* Hide the old inline bid button location to prevent duplicates visually */
-  /* Actually, we just moved it via fixed positioning above. */
+  /* Add a gradient fade behind the button so text doesn't clash */
+  body::after {
+    content: "";
+    position: fixed; bottom: 0; left: 0; right: 0; height: 100px;
+    background: linear-gradient(to top, #0f172a 20%, transparent);
+    z-index: 999;
+    pointer-events: none;
+  }
 
-  /* 7. Chat & Logs adjustments */
-  .chat-box input { font-size: 16px; } /* Prevents iOS zoom on focus */
-  
-  /* 8. Modal / Popup Mobile Fixes */
-  .rules-card, .auth-card {
-    width: 90%;
-    margin: 20px auto;
-    padding: 20px;
+  /* 7. Admin Controls Scroll */
+  #adminControls { 
+    display: flex; 
+    overflow-x: auto; 
+    white-space: nowrap; 
+    padding: 10px; 
+    gap: 10px;
+    -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+  }
+  /* Hide scrollbar for admin controls */
+  #adminControls::-webkit-scrollbar { display: none; }
+
+  /* 8. Modals / Rules */
+  .overlay-card, .rules-card {
+    width: 95%;
+    max-height: 90vh;
   }
   
-  /* Leaderboard Table Scroll */
-  .leaderboard-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+  /* 9. Leaderboard */
+  .leaderboard-table { 
+    font-size: 0.85rem; 
+    display: block; 
+    overflow-x: auto; 
   }
 }
