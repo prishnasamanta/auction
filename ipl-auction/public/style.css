@@ -15,6 +15,7 @@
   --text-muted: #94a3b8;
   --border: rgba(255, 255, 255, 0.1);
   --glow: 0 0 20px rgba(99, 102, 241, 0.5);
+
   --font-display: 'Exo 2', sans-serif;
   --font-body: 'Inter', sans-serif;
 }
@@ -27,26 +28,32 @@
 body {
   margin: 0;
   background-color: var(--bg-dark);
-  /* Merged: Old SVG texture + New Gradients for best look */
   background-image: 
     radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(244, 63, 94, 0.15) 0px, transparent 50%),
     url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   color: var(--text-main);
   font-family: var(--font-body);
-  overflow-x: hidden;
-  min-height: 100vh;
+  /* FIX: Ensure body doesn't cause scroll */
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; 
 }
 
 /* ================= UTILITIES ================= */
 
 .hidden { display: none !important; opacity: 0; pointer-events: none; }
 
+/* FIX: Removed global padding to prevent overflow */
 .screen { 
-  min-height: 100vh; 
+  width: 100%;
+  height: 100vh;
   transition: opacity 0.4s ease, transform 0.4s ease;
-  padding: 20px;
+  padding: 0; 
+  position: relative;
+  overflow: hidden;
 }
+
 .screen.hidden { transform: scale(0.95); }
 
 /* Glass Effect */
@@ -102,14 +109,17 @@ input {
 }
 input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
 
-/* ================= LANDING PAGE ================= */
+/* ================= LANDING PAGE & AUTH ================= */
 
+/* FIX: Exact height and overflow hidden to stop float scrollbars */
 #landing, .auth-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-height: 90vh;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
 }
 
 .landing-card, .auth-card {
@@ -150,6 +160,14 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 .divider::before { left: 0; } .divider::after { right: 0; }
 
+/* Waiting Screen */
+#waiting {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.waiting-card { padding: 40px; text-align: center; }
+
 /* ================= RULES & MODALS ================= */
 
 .rules-overlay {
@@ -187,47 +205,57 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .rule-row label { color: #cbd5e1; font-size: 0.9rem; }
 .rule-row input { width: 80px; padding: 6px; text-align: center; background: #0f172a; border: 1px solid #334155; }
 
-/* ================= AUCTION UI (SINGLE COLUMN LAYOUT) ================= */
+/* ================= AUCTION UI ================= */
+
+/* FIX: Make Auction UI a Flex Column to fit screen exactly */
+#auctionUI {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Strict height */
+  overflow: hidden; /* Prevent body scroll */
+}
 
 .topbar {
+  flex-shrink: 0; /* Prevent shrinking */
   display: flex; justify-content: space-between; align-items: center;
-  padding: 15px 25px; margin-bottom: 20px;
+  padding: 15px 25px; 
   background: rgba(15, 23, 42, 0.8);
   border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
   backdrop-filter: blur(10px);
+  z-index: 100;
 }
-
 .brand { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; color: var(--primary); letter-spacing: 1px; }
 
-/* Main Single Column Layout */
+/* FIX: Auction Wrapper uses Flex Grow instead of Calc */
 .auction-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Centers items horizontally */
+  flex-grow: 1; /* Take up remaining space */
+  display: grid;
+  grid-template-columns: 320px 1fr 320px;
   gap: 20px;
-  max-width: 1000px;
+  max-width: 1600px;
+  width: 100%;
   margin: 0 auto;
-  padding-bottom: 50px; /* Space at bottom */
-  min-height: calc(100vh - 90px);
+  overflow: hidden; /* Scroll happens inside panels */
+  padding: 20px; /* Padding applied here inside the bounds */
 }
 
-/* 1. Auction Card Area */
+.panel { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding: 15px; }
+.panel h3 { margin: 0; margin-bottom:10px; font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+
+.scroll { flex: 1; overflow-y: auto; font-size: 0.9rem; color: #cbd5e1; }
+.log-item { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
 .auction-center {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 10px;
+  display: flex; flex-direction: column;
+  justify-content: flex-start; align-items: center;
+  padding-top: 20px; overflow-y: auto;
 }
 
 #auctionCard {
-  width: 100%;
-  max-width: 500px; /* Consistent width */
+  width: 100%; max-width: 500px;
   overflow: hidden;
   border: 1px solid var(--border);
   box-shadow: 0 0 50px rgba(0,0,0,0.5);
-  background: rgba(30, 41, 59, 0.9);
   transition: transform 0.3s;
 }
 
@@ -251,48 +279,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 #playerMeta { color: var(--gold); font-weight: 600; letter-spacing: 1px; }
 
-/* 2. Panels (Log & Chat) below the card */
-.panel { 
-  display: flex; 
-  flex-direction: column; 
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 15px;
-  
-  /* Layout Sizing */
-  width: 100%;
-  max-width: 500px; /* Matches auction card width */
-  height: 300px; /* Fixed height for scrollable areas */
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.panel h3 { 
-  margin: 0 0 10px 0; 
-  font-size: 0.9rem; 
-  text-transform: uppercase; 
-  color: var(--text-muted); 
-  border-bottom: 1px solid var(--border); 
-  padding-bottom: 10px; 
-}
-
-.scroll { 
-  flex: 1; 
-  overflow-y: auto; 
-  font-size: 0.9rem; 
-  color: #cbd5e1; 
-  padding-right: 5px; 
-}
-
-/* Custom Scrollbar */
-.scroll::-webkit-scrollbar { width: 6px; }
-.scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-.scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-
-.log-item { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-/* ================= BADGE & PRICE AREA ================= */
+/* ================= BIDDER BADGE & PRICE AREA ================= */
 
 .price-container {
   display: flex; justify-content: space-between; align-items: center;
@@ -375,8 +362,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   100% { transform: scale(1) rotate(-12deg); opacity: 1; }
 }
 
-/* ================= TEAM COLORS & MISC ================= */
-
+/* ================= TEAM COLORS ================= */
 .CSK{--team: #facc15} .MI{--team: #38bdf8} .RCB{--team: #dc2626}
 .KKR{--team: #a855f7} .RR{--team: #fb7185} .DC{--team: #60a5fa}
 .SRH{--team: #fb923c} .PBKS{--team: #ef4444} .GT{--team: #0ea5e9} .LSG{--team: #22c55e}
@@ -402,7 +388,6 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .team-btn:active { transform: scale(0.95); }
 
 /* ================= SOLD OVERLAY ================= */
-
 #soldOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 999; }
 .sold-box { text-align: center; }
 .hammer { font-size: 6rem; display: block; margin-bottom: 10px; animation: hammerSwing 0.5s ease-out; }
@@ -412,6 +397,11 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 /* ================= PLAYING XI & LEADERBOARD ================= */
+/* Note: These screens need scrolling, so we override height */
+#playingXI, #leaderboard {
+    overflow-y: auto; /* Allow scroll */
+    padding: 20px;
+}
 
 .xi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
 .xi-preview-container { background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #334155; }
@@ -422,83 +412,70 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
 .leaderboard-table th { background: #1e293b; color: #aaa; }
 
-/* ================= MOBILE OPTIMIZATIONS ================= */
-/* ======================================================= */
-/* =========== FINAL MOBILE FIXES (TESTED) =============== */
-/* ======================================================= */
+
 /* ================================================= */
-/* ============= NO SCROLL ENFORCER =============== */
+/* ========= MOBILE POPUP & RESPONSIVE ============== */
 /* ================================================= */
-/* ======================================================= */
-/* =========== BALANCED NO-SCROLL FIX ==================== */
-/* ======================================================= */
-@media screen and (max-width: 768px) {
 
-  /* 1. Prevent Horizontal Scroll (Side-to-side wiggle) */
-  body, html {
-    overflow-x: hidden !important;
-    width: 100%;
-    /* Remove fixed height so it's not 'forceful', but reset margins */
-    margin: 0; 
-    padding: 0;
-  }
-
-  /* 2. LANDING PAGE: Smart Fit */
-  /* Use 100dvh (Dynamic Height) to account for mobile browser bars */
-  #landing, .auth-wrapper {
-    min-height: 100dvh;       /* Fits visible screen exactly */
-    height: auto;             /* Grows if content is huge */
-    display: flex !important;
-    align-items: center;      /* Vertically Center */
-    justify-content: center;  /* Horizontally Center */
-    padding: 0 !important;    /* Remove padding here to kill scroll */
-    margin: 0 !important;
-  }
-
-  /* 3. CARD: Keep your preferred look */
-  .landing-card, .auth-card {
-    width: 90% !important;
-    max-width: 360px;
-    margin: 0 auto;
-    /* This padding is INSIDE the card, so it won't cause page scroll */
-    padding: 25px 20px !important; 
-    transform: none !important;
-    animation: none !important;
-  }
-
-  /* 4. AUCTION ROOM: Fit to Screen */
+@media (max-width: 900px) {
+  
+  /* FIX: Restore scrolling for mobile, otherwise keyboard hides inputs */
   #auctionUI {
-    height: 100dvh;           /* Exact screen height */
+    height: auto;
+    overflow-y: auto;
+    display: block;
+  }
+  
+  .auction-wrapper {
     display: flex;
     flex-direction: column;
-    overflow: hidden;         /* Hide outer scroll */
+    height: auto;
+    overflow: visible;
+    padding: 10px; /* Reduced mobile padding */
   }
 
-  .topbar {
-    flex-shrink: 0;           /* Header stays fixed size */
+  /* Compact Panels */
+  .panel.left, .panel.right {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 10px;
+    border-radius: 14px;
+    background: rgba(15,23,42,0.85);
+    padding: 10px;
   }
 
-  .auction-wrapper {
-    flex-grow: 1;             /* Content takes remaining space */
-    height: auto !important;
-    overflow-y: auto;         /* Scroll ONLY inside the content area */
-    padding-bottom: 20px;     /* Safe space at bottom */
+  .panel.left h3 { font-size: 0.8rem; margin-bottom: 6px; }
+  .panel.left .scroll { max-height: 120px; font-size: 0.8rem; }
+
+  /* AUCTION CARD = HERO */
+  #auctionCard {
+    border-radius: 18px;
+    background: rgba(30,41,59,0.9);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.06);
+    animation: none;
   }
 
-  /* 5. FONTS: Keep readable sizes */
-  .title { font-size: 2.2rem !important; line-height: 1.1; }
-  .title[style*="opacity"] { font-size: 1.6rem !important; }
-
-  /* 6. HEADER BUTTONS: Horizontal Scroll (Preserved) */
-  .top-right {
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    display: block !important; /* Block allows scroll container to work */
-    padding-bottom: 5px;
+  /* Sticky Bid Button */
+  #bidBtn {
+    position: sticky; bottom: 12px; z-index: 200;
+    font-size: 1.25rem; padding: 18px; border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(34,197,94,0.5);
   }
+
+  /* Popup Rules Mobile */
+  .rules-overlay { padding: 15px; }
+  .rules-card { width: 100%; max-width: 360px; max-height: 70vh; animation: popupIn 0.25s ease-out; }
+  .rules-card h3 { font-size: 1.1rem; padding: 14px; }
+  .rules-scroll-area { padding: 14px; }
+  .rules-section { padding: 12px; margin-bottom: 12px; }
+  .rule-row { gap: 10px; }
+  .rule-row label { font-size: 0.85rem; }
+  .rule-row input { width: 70px; padding: 6px; font-size: 0.9rem; }
+  .rules-footer { padding: 12px; }
 }
 
-
-
-
-
+@keyframes popupIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
