@@ -172,37 +172,41 @@ io.on("connection", socket => {
 
     // --- 3. RECONNECT USER ---
     // --- 3. RECONNECT USER ---
+        // --- 3. RECONNECT USER ---
     socket.on('reconnectUser', ({ roomId, username, team }) => {
         const room = rooms[roomId];
         if (room) {
-            // Check if user exists in memory
+            // 1. FIND EXISTING USER IN MEMORY
+            // We search for a user with the same name to see if they were already here.
             let oldSocketId = Object.keys(room.users).find(key => room.users[key].name === username);
             
-            // SECURITY: Block strangers if auction is already over
+            // 2. SECURITY: BLOCK STRANGERS IF AUCTION ENDED
+            // If user is not found in memory AND the game is over, deny access.
             if (!oldSocketId && room.auctionEnded) {
                 return socket.emit("error", "Auction Closed.");
             }
 
-            // Update User Data / Socket ID
+            // 3. UPDATE SOCKET MAPPING
             if(oldSocketId) {
+                // Existing user: Swap old socket data to the new socket ID
                 const userData = room.users[oldSocketId];
-                delete room.users[oldSocketId];
-                room.users[socket.id] = userData;
+                delete room.users[oldSocketId]; // Remove old ID
+                room.users[socket.id] = userData; // Add new ID
                 userData.id = socket.id;
                 userData.connected = true;
             } else {
+                // New user (only happens if game is NOT ended due to check above)
                 room.users[socket.id] = { name: username, team: team, id: socket.id, connected: true };
             }
 
-            // Socket Setup
+            // 4. SETUP SOCKET PROPERTIES
             socket.join(roomId);
             socket.room = roomId;
             socket.user = username;
             socket.team = team;
             if(room.adminUser === username) socket.isAdmin = true;
 
-            // SEND STATE (Includes auctionEnded flag)
-                        // SEND STATE TO RECONNECTING USER
+            // 5. SEND STATE TO THE RECONNECTING USER
             socket.emit("joinedRoom", { 
                 rules: room.rules,
                 squads: room.squads,
@@ -210,21 +214,23 @@ io.on("connection", socket => {
                 isHost: socket.isAdmin,
                 auctionStarted: room.auctionStarted,
                 availableTeams: room.availableTeams,
-                auctionEnded: room.auctionEnded,
-                // --- NEW FIELDS ---
-                userCount: Object.keys(room.users).length,
-                teamOwners: getTeamOwners(room)
+                auctionEnded: room.auctionEnded, // Critical flag for client logic
+                userCount: Object.keys(room.users).length, // <--- Send Count
+                teamOwners: getTeamOwners(room)            // <--- Send Owners
             });
-
             
-            // SYNC DATA
+            // 6. BROADCAST UPDATES TO EVERYONE ELSE
+            // Tell everyone the new user count immediately
+            io.to(roomId).emit("updateUserCount", Object.keys(room.users).length);
+
+            // 7. SYNC GAMEPLAY DATA
             broadcastSets(room, roomId);
 
             if(team) {
                 socket.emit("teamPicked", { team, remaining: room.availableTeams });
             } 
 
-            // Sync Auction Status
+            // Sync Auction Timer/Bids
             socket.emit("auctionState", {
                 live: room.auction.live,
                 paused: room.auction.paused,
@@ -233,7 +239,7 @@ io.on("connection", socket => {
                 lastBidTeam: room.auction.lastBidTeam
             });
 
-            // If a player is currently on screen
+            // If a player is currently being auctioned, show them
             if(room.auction.player){
                  socket.emit("newPlayer", { 
                     player: room.auction.player, 
@@ -241,10 +247,11 @@ io.on("connection", socket => {
                  });
             }
 
-            // If Auction Ended, ensure they get final data for Leaderboard/Squads
+            // 8. FINAL DATA SYNC (IF GAME OVER)
+            // If they reconnect after the game ended, ensure they have data for the Leaderboard/XI screen
             if(room.auctionEnded) {
                 socket.emit("squadData", room.squads);
-                // Send leaderboard if data exists
+                // Send leaderboard if calculated
                 if(Object.keys(room.playingXI).length > 0){
                     const board = Object.values(room.playingXI).sort((a,b) => {
                        if(b.rating !== a.rating) return b.rating - a.rating; 
@@ -261,23 +268,23 @@ io.on("connection", socket => {
 
     // --- 4. JOIN ROOM ---
     // 2. JOIN ROOM
-socket.on("joinRoom", ({ roomCode, user }) => {
+    // --- 4. JOIN ROOM ---
+    socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
-
-        // FIX: Reject new users if auction ended
+        
         if(room.auctionEnded) {
             return socket.emit("error", "This auction has ended and is closed.");
         }
 
-        // ... (Rest of join logic) ...
         socket.join(roomCode);
         socket.room = roomCode;
         socket.user = user;
         
+        // Add to user list
         room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
 
-                // SEND STATE TO NEW JOINER
+        // 1. Send State to the NEW User
         socket.emit("joinedRoom", { 
             rules: room.rules,
             squads: room.squads,
@@ -286,15 +293,17 @@ socket.on("joinRoom", ({ roomCode, user }) => {
             auctionStarted: room.auctionStarted,
             availableTeams: room.availableTeams,
             auctionEnded: false,
-            // --- NEW FIELDS ---
-            userCount: Object.keys(room.users).length, 
-            teamOwners: getTeamOwners(room)            
+            userCount: Object.keys(room.users).length,
+            teamOwners: getTeamOwners(room)
         });
 
-
+        // 2. BROADCAST UPDATES TO EVERYONE ELSE (The Fix)
+        io.to(roomCode).emit("updateUserCount", Object.keys(room.users).length); // <--- ADD THIS
+        
         broadcastSets(room, roomCode);
         io.to(roomCode).emit('logUpdate', `👋 ${user} has joined.`);
     });
+
     // --- 5. SELECT TEAM ---
     socket.on("selectTeam", ({ team, user }) => {
         const r = rooms[socket.room];
@@ -716,6 +725,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
