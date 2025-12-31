@@ -974,15 +974,24 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .footer-link:hover { text-decoration: underline; color: #fff; }
 
 .separator { color: #475569; }
-
-.social-links { display: flex; gap: 8px; }
-.social-links a {
-    text-decoration: none;
-    font-size: 1rem;
-    opacity: 0.7;
-    transition: 0.2s;
+.social-links {
+  display: flex;
+  gap: 16px;
 }
-.social-links a:hover { opacity: 1; transform: translateY(-2px); }
+
+.social-links a {
+  font-size: 26px;
+  color: #fff;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.social-links a:hover {
+  transform: scale(1.2);
+}
+
+.social-links a:hover .fa-discord { color: #5865F2; }
+.social-links a:hover .fa-whatsapp { color: #25D366; }
+.social-links a:hover .fa-github { color: #000; }
 
 /* Ensure body allows footer at bottom */
 body {
@@ -996,4 +1005,5 @@ body {
     display: flex;
     flex-direction: column;
 }
+
 
