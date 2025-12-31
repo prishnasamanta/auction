@@ -93,13 +93,13 @@ io.on("connection", socket => {
 
     // --- 1. GET PUBLIC ROOMS ---
    // Inside io.on('connection')
-socket.on('getPublicRooms', () => {
+    socket.on('getPublicRooms', () => {
         const liveRooms = [];
         const waitingRooms = [];
         
         for (const [id, room] of Object.entries(rooms)) {
-            // FIX: Only show if public AND NOT ENDED
-            if (room.isPublic && !room.auctionEnded) {
+            // Check !room.auctionEnded
+            if (room.isPublic && !room.auctionEnded) { 
                 const info = { id: id, count: Object.keys(room.users).length };
                 if (room.auctionStarted) {
                     liveRooms.push(info);
@@ -626,4 +626,5 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
