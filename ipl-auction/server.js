@@ -227,7 +227,8 @@ io.on("connection", socket => {
             
             // 6. BROADCAST UPDATES TO EVERYONE ELSE
             // Tell everyone the new user count immediately
-            io.to(roomId).emit("updateUserCount", Object.keys(room.users).length);
+// REPLACE the old updateCount line with:
+            broadcastUserList(room, roomId);
 
             // 7. SYNC GAMEPLAY DATA
             broadcastSets(room, roomId);
@@ -304,7 +305,8 @@ io.on("connection", socket => {
         });
 
         // 2. BROADCAST UPDATES TO EVERYONE ELSE (The Fix)
-        io.to(roomCode).emit("updateUserCount", Object.keys(room.users).length); // <--- ADD THIS
+// REPLACE the old updateCount line with:
+        broadcastUserList(room, roomCode);
         
         broadcastSets(room, roomCode);
         io.to(roomCode).emit('logUpdate', `👋 ${user} has joined.`);
@@ -330,6 +332,9 @@ io.on("connection", socket => {
             remaining: r.availableTeams
         });
         io.to(socket.room).emit("logUpdate", `👕 ${user} selected ${team}`);
+        // Add this at the end of selectTeam logic:
+        broadcastUserList(rooms[socket.room], socket.room);
+
     });
 
     // --- 6. ADMIN: SET RULES ---
@@ -530,7 +535,8 @@ io.on("connection", socket => {
                 }
 
                 // 4. Update Count
-                io.to(roomCode).emit("updateUserCount", Object.keys(finalRoom.users).length);
+// REPLACE the old updateCount line with:
+                    broadcastUserList(finalRoom, roomCode);
             }
             
             // Clean up timer map
@@ -741,11 +747,25 @@ function getTeamOwners(room) {
     });
     return owners;
 }
+// --- HELPER: Broadcast User List ---
+function broadcastUserList(room, roomCode) {
+    if (!room) return;
+    
+    // Map to simple objects to send to client
+    const userList = Object.values(room.users).map(u => ({
+        name: u.name,
+        team: u.team
+    }));
+    
+    io.to(roomCode).emit("roomUsersUpdate", userList);
+}
+
 
 const PORT = process.env.PORT || 2500; 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
