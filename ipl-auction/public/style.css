@@ -24,39 +24,44 @@
   box-sizing: border-box; 
   outline: none; 
 }
+
+/* --- GLOBAL LAYOUT SETUP (FIXED FOOTER LOGIC) --- */
 body {
   margin: 0;
   background-color: var(--bg-dark);
-  /* ... your existing background-image code ... */
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(244, 63, 94, 0.15) 0px, transparent 50%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   color: var(--text-main);
   font-family: var(--font-body);
   
-  /* --- FIX 1: USE DYNAMIC HEIGHT --- */
-  min-height: 100vh;       /* Fallback */
-  min-height: 100dvh;      /* Modern mobile browser fix */
+  /* Critical for Mobile: Fix body height to viewport */
+  height: 100vh; 
+  height: 100dvh; /* Dynamic Height for Mobile Browsers */
+  width: 100vw;
+  overflow: hidden; /* Prevent body scroll, we scroll internal elements */
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;      /* Prevent horizontal scroll on body */
 }
 
-/* Ensure screens take up space but allow scrolling inside */
+/* --- SCROLLABLE CONTENT AREA --- */
 .screen { 
   width: 100%;
-  flex: 1;                 /* Fill remaining space */
+  flex: 1; /* Takes all available space between header/footer */
+  overflow-y: auto; /* Enables scrolling inside this area */
+  -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+  padding-bottom: 20px;
+  position: relative;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;        /* Allow vertical scrolling */
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
-  padding-bottom: 80px;    /* --- FIX 2: Space for Footer --- */
 }
 
+.screen.hidden { display: none !important; }
 
 /* ================= UTILITIES ================= */
 
 .hidden { display: none !important; opacity: 0; pointer-events: none; }
-
-.screen.hidden { transform: scale(0.95); }
 
 /* Glass Effect */
 .glass {
@@ -67,6 +72,11 @@ body {
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
 
 /* Buttons */
 .primary-btn {
@@ -115,19 +125,19 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 #landing, .auth-wrapper {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  height: 100vh;
-  width: 100%;
-  overflow: hidden;
+  min-height: 100%; /* Ensure it fills the scroll area */
 }
 
 .landing-card, .auth-card {
-  padding: 40px;
+  padding: 30px;
   max-width: 450px;
   width: 90%;
   border-top: 4px solid var(--primary);
+  margin: 20px auto;
   animation: float 6s ease-in-out infinite;
 }
 
@@ -138,20 +148,20 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 .title {
   font-family: var(--font-display);
-  font-size: 3.5rem;
+  font-size: 3rem;
   margin: 0;
   background: linear-gradient(to right, #fff, #94a3b8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 1.1;
 }
-.subtitle { color: var(--text-muted); margin: 15px 0 30px; font-size: 1.1rem; }
+.subtitle { color: var(--text-muted); margin: 15px 0 30px; font-size: 1rem; }
 .features { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
 .features span {
   background: rgba(255, 255, 255, 0.05);
   padding: 6px 12px;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   border: 1px solid var(--border);
 }
 
@@ -216,43 +226,40 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .rules-section h4 { margin: 0 0 10px 0; color: var(--gold); text-transform: uppercase; font-size: 0.9rem; }
 .rule-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
 .rule-row label { color: #cbd5e1; font-size: 0.9rem; }
-.rule-row input { width: 80px; padding: 6px; text-align: center; background: #0f172a; border: 1px solid #334155; }
+.rule-row input { width: 70px; padding: 6px; text-align: center; background: #0f172a; border: 1px solid #334155; }
 
 /* ================= AUCTION UI ================= */
-
-#auctionUI {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
 
 .topbar {
   flex-shrink: 0; 
   display: flex; justify-content: space-between; align-items: center;
-  padding: 15px 25px; 
-  background: rgba(15, 23, 42, 0.8);
+  padding: 10px 15px; 
+  background: rgba(15, 23, 42, 0.95);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);
   z-index: 100;
+  position: sticky; /* Sticky header within the flex column */
+  top: 0;
 }
 .topbar .admin-mini { flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
-.topbar .admin-mini button { padding: 6px 8px !important; font-size: 0.75rem !important; }
-.brand { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; color: var(--primary); letter-spacing: 1px; }
+.topbar .admin-mini button { padding: 4px 8px !important; font-size: 0.75rem !important; }
+.brand { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; color: var(--primary); letter-spacing: 1px; }
 
 .auction-wrapper {
-  flex-grow: 1;
   display: grid;
-  grid-template-columns: 320px 1fr 320px;
+  grid-template-columns: 300px 1fr 300px;
   gap: 20px;
   max-width: 1600px;
   width: 100%;
   margin: 0 auto;
-  overflow: hidden; 
   padding: 20px; 
 }
 
-.panel { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding: 15px; }
+.panel { 
+    display: flex; flex-direction: column; 
+    height: 600px; /* Fixed height for desktop panels */
+    overflow: hidden; padding: 15px; 
+}
 .panel h3 { margin: 0; margin-bottom:10px; font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
 
 .scroll { flex: 1; overflow-y: auto; font-size: 0.9rem; color: #cbd5e1; }
@@ -261,23 +268,23 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .auction-center {
   display: flex; flex-direction: column;
   justify-content: flex-start; align-items: center;
-  padding-top: 20px; overflow-y: auto;
 }
 
-/* --- CENTER CARDS (TEAM SELECT & AUCTION) --- */
+/* --- CENTER CARDS --- */
 #auctionCard, #teamSelectionMain {
   width: 100%; max-width: 500px;
   overflow: hidden;
   border: 1px solid var(--border);
   box-shadow: 0 0 50px rgba(0,0,0,0.5);
   transition: transform 0.3s;
+  background: rgba(30, 41, 59, 0.8);
 }
 
 #teamSelectionMain {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 400px;
+    min-height: 350px;
     padding: 20px;
     text-align: center;
 }
@@ -289,7 +296,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 #playerInfoBox {
-  padding: 40px 20px;
+  padding: 30px 20px;
   background: radial-gradient(circle at center, #1e293b, #0f172a);
   text-align: center;
   border-bottom: 1px solid var(--border);
@@ -297,51 +304,23 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 #playerName {
   font-family: var(--font-display);
-  font-size: 1.5rem; font-weight: 800; color: white;
+  font-size: 2rem; font-weight: 800; color: white;
   text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin-bottom: 5px;
 }
-#playerMeta { color: var(--gold); font-weight: 750; letter-spacing: 1px; }
+#playerMeta { color: var(--gold); font-weight: 700; letter-spacing: 1px; font-size: 0.9rem; }
 
-/* ================= BIDDER BADGE & PRICE AREA ================= */
-
+/* Price Container */
 .price-container {
   display: flex; justify-content: space-between; align-items: center;
   padding: 15px 20px; background: rgba(0,0,0,0.2); gap: 10px;
 }
-#bid { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: white; }
-#timer { font-family: monospace; font-size: 1.5rem; background: #0f172a; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--border); color: var(--accent); }
+#bid { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: white; }
+#timer { font-family: monospace; font-size: 1.2rem; background: #0f172a; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); color: var(--accent); }
 
-.bidder-badge {
-  border-radius: 6px; 
-  border: 1px solid var(--team, #475569);
-  background: rgba(15, 23, 42, 0.95);
-  box-shadow: 0 0 20px -5px var(--team, rgba(0,0,0,0));
-  padding: 8px 20px; 
-  font-size: 0.9rem; font-weight: 600; color: #fff;
-  text-transform: uppercase; letter-spacing: 1px;
-  display: flex; align-items: center; gap: 10px;
-  text-shadow: 0 0 10px var(--team, transparent);
-  transition: all 0.3s ease;
-}
-
-.bidder-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 25px -2px var(--team, rgba(0,0,0,0));
-}
-
-.bidder-badge .dot {
-  height: 8px; width: 8px; 
-  border-radius: 50%; 
-  background-color: var(--team, #94a3b8); 
-  box-shadow: 0 0 12px 2px var(--team, transparent);
-  animation: blink 1s infinite;
-}
-
-@keyframes blink { 50% { opacity: 0.4; } }
-
-.card-padding-area { padding: 20px; background: #1e293b; }
+/* Bid Button */
+.card-padding-area { padding: 15px; background: #1e293b; }
 #bidBtn {
-  width: 100%; padding: 18px; font-size: 1.2rem; font-weight: 800;
+  width: 100%; padding: 15px; font-size: 1.2rem; font-weight: 800;
   text-transform: uppercase; background: var(--success);
   border: none; border-radius: 8px; color: #000; cursor: pointer;
   transition: 0.1s; box-shadow: 0 4px 0 #15803d;
@@ -351,11 +330,30 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 /* Chat */
 .chat-box { display: flex; gap: 5px; margin-top: 10px; }
-.chat-box input { padding: 8px; font-size: 0.9rem; }
-.chat-box button { padding: 8px 15px; background: var(--border); border-radius: 8px; border:none; color:white; cursor:pointer;}
+.chat-box input { padding: 10px; font-size: 0.9rem; background: #1e293b; border: 1px solid #334155; }
+.chat-box button { padding: 0 15px; background: var(--primary); border-radius: 8px; border:none; color:white; cursor:pointer;}
 
-/* ================= RESULT STAMP ANIMATION ================= */
+/* Bidder Badge */
+.bidder-badge {
+  border-radius: 6px; 
+  border: 1px solid var(--team, #475569);
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 0 20px -5px var(--team, rgba(0,0,0,0));
+  padding: 5px 15px; 
+  font-size: 0.8rem; font-weight: 600; color: #fff;
+  text-transform: uppercase; letter-spacing: 1px;
+  display: flex; align-items: center; gap: 8px;
+  text-shadow: 0 0 10px var(--team, transparent);
+}
+.bidder-badge .dot {
+  height: 6px; width: 6px; border-radius: 50%; 
+  background-color: var(--team, #94a3b8); 
+  box-shadow: 0 0 8px 1px var(--team, transparent);
+  animation: blink 1s infinite;
+}
+@keyframes blink { 50% { opacity: 0.4; } }
 
+/* Result Overlay */
 .result-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);
@@ -372,45 +370,26 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 .stamp-title { font-family: var(--font-display); font-size: 2.5rem; font-weight: 900; color: var(--success); line-height: 1; text-transform: uppercase; }
 .stamp-detail { font-family: var(--font-body); font-size: 1.2rem; font-weight: 600; color: #fff; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; }
-
-.stamp-container.unsold {
-  border-color: var(--accent); box-shadow: 0 0 30px var(--accent) inset, 0 0 20px var(--accent);
-  background: rgba(244, 63, 94, 0.1);
-}
+.stamp-container.unsold { border-color: var(--accent); box-shadow: 0 0 30px var(--accent) inset, 0 0 20px var(--accent); background: rgba(244, 63, 94, 0.1); }
 .stamp-container.unsold .stamp-title { color: var(--accent); }
-
-@keyframes stampSlam {
-  0% { transform: scale(3) rotate(0deg); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: scale(1) rotate(-12deg); opacity: 1; }
-}
-
-/* ================= TEAM COLORS ================= */
-.CSK{--team: #facc15} .MI{--team: #38bdf8} .RCB{--team: #dc2626}
-.KKR{--team: #a855f7} .RR{--team: #fb7185} .DC{--team: #60a5fa}
-.SRH{--team: #fb923c} .PBKS{--team: #ef4444} .GT{--team: #0ea5e9} .LSG{--team: #22c55e}
+@keyframes stampSlam { 0% { transform: scale(3) rotate(0deg); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1) rotate(-12deg); opacity: 1; } }
 
 .auction-card.pulse { animation: neonPulse 0.4s ease-in-out; }
-@keyframes neonPulse {
-  0% { box-shadow: 0 0 0 rgba(255,255,255,0); border-color: white; }
-  50% { box-shadow: 0 0 30px var(--accent); border-color: var(--accent); }
-  100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
-}
+@keyframes neonPulse { 0% { box-shadow: 0 0 0 rgba(255,255,255,0); border-color: white; } 50% { box-shadow: 0 0 30px var(--accent); border-color: var(--accent); } 100% { box-shadow: 0 0 0 rgba(255,255,255,0); } }
 
 /* Team Select Grid (Embedded) */
-.team-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; padding: 10px 0; }
+.team-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; padding: 10px 0; }
 .team-btn {
-  width: 100%; padding: 15px 10px;
+  width: 100%; padding: 12px 5px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--team-color);
   border-radius: 8px; color: #fff;
-  font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; letter-spacing: 1px;
+  font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; letter-spacing: 1px;
   cursor: pointer; transition: all 0.2s ease;
 }
-.team-btn:hover { background: var(--team-color); color: #000; box-shadow: 0 0 20px var(--team-color); transform: translateY(-3px); }
-.team-btn:active { transform: scale(0.95); }
+.team-btn:hover { background: var(--team-color); color: #000; }
 
-/* ================= XI TEAM SHEET LAYOUT ================= */
+/* ================= XI DASHBOARD LAYOUT ================= */
 
 /* 1. THE CREATIVE CARD (PREVIEW) */
 .team-sheet-card {
@@ -425,575 +404,164 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     max-width: 500px;
     overflow: hidden;
 }
+.team-sheet-card::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at center, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 24px 24px; pointer-events: none; }
 
-/* Texture */
-.team-sheet-card::before {
-    content: ""; position: absolute; inset: 0;
-    background-image: radial-gradient(circle at center, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 24px 24px;
-    pointer-events: none;
-}
-
-.sheet-header {
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 10px; margin-bottom: 15px; position: relative; z-index: 2;
-}
-
-.sheet-title {
-    font-family: var(--font-display); color: var(--gold);
-    font-size: 1.8rem; text-transform: uppercase; margin: 0; letter-spacing: 2px;
-}
-
+.sheet-header { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; position: relative; z-index: 2; }
+.sheet-title { font-family: var(--font-display); color: var(--gold); font-size: 1.8rem; text-transform: uppercase; margin: 0; letter-spacing: 2px; }
 .sheet-subtitle { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 3px; }
 
-/* 2. PLAYER PILLS (INSIDE CARD) */
+/* 2. PLAYER PILLS */
 .sheet-role-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 12px; position: relative; z-index: 2; }
-
 .sheet-player-pill {
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.1);
     color: #fff;
     padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     display: flex; align-items: center; gap: 6px;
     backdrop-filter: blur(4px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 }
-
 .sheet-player-pill small { color: var(--gold); font-size: 0.75em; }
 .sheet-player-pill.foreign { border-color: var(--accent); background: rgba(244, 63, 94, 0.15); }
+.sheet-footer { margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; }
 
-.sheet-footer {
-    margin-top: 15px; padding-top: 10px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    font-size: 0.8rem; color: #64748b;
-    display: flex; justify-content: space-between;
-}
-/* 3. SELECTION LIST (COMPACT & MINIMIZED) */
+/* 3. SELECTION LIST (COMPACT) */
 .xi-select-container {
     display: grid;
-    /* Tighter grid: min 130px width */
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
-    gap: 8px; /* Reduced gap */
+    gap: 8px; 
     padding-bottom: 40px;
     margin-top: 5px;
 }
-
 .role-group-title {
     grid-column: 1 / -1;
     color: var(--gold);
     background: rgba(255, 255, 255, 0.03);
-    padding: 6px 10px; /* Reduced padding */
+    padding: 6px 10px;
     border-radius: 4px;
     margin-top: 15px;
     margin-bottom: 5px;
     font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.8rem; /* Smaller font */
+    font-size: 0.8rem;
     letter-spacing: 1px;
     border-left: 3px solid var(--gold);
 }
-
 .xi-player-btn {
-    /* Compact High Contrast Styles */
-    background: #1e293b; 
-    border: 1px solid #475569;
-    color: #f8fafc;
-    
-    /* MINIMIZED SIZE */
-    padding: 8px 10px;  /* Reduced from 14px */
-    border-radius: 6px;
-    font-size: 0.85rem; /* Smaller text */
-    
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
+    background: #1e293b; border: 1px solid #475569; color: #f8fafc;
+    padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;
+    text-align: left; cursor: pointer; transition: all 0.2s ease;
+    display: flex; justify-content: space-between; align-items: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
-
-.xi-player-btn:hover {
-    background: #334155;
-    transform: translateY(-1px);
-    border-color: #94a3b8;
-}
-
-.xi-player-btn.picked {
-    background: var(--success); 
-    color: #000;
-    border-color: #166534;
-    font-weight: 700;
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
-}
-
-/* Rating Badge Compact */
-.xi-player-btn small {
-    font-size: 0.75em;
-    color: #cbd5e1;
-    background: rgba(0,0,0,0.4);
-    padding: 2px 5px;
-    border-radius: 3px;
-    margin-left: 5px;
-}
-
-.xi-player-btn.picked small {
-    color: #000;
-    background: rgba(255,255,255,0.3);
-}
-
-/* --- COMPACT ACTION BUTTONS (Submit / Save / Home) --- */
-/* Add this to affect the buttons in the Playing XI screen specifically */
-#playingXI .primary-btn, 
-#playingXI .secondary-btn {
-    padding: 10px 16px; /* Reduced from default 12px 24px */
-    font-size: 0.95rem;
-    margin-bottom: 5px; /* Tighter spacing */
-}
+.xi-player-btn.picked { background: var(--success); color: #000; border-color: #166534; font-weight: 700; box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
+.xi-player-btn small { font-size: 0.75em; color: #cbd5e1; background: rgba(0,0,0,0.4); padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
+.xi-player-btn.picked small { color: #000; background: rgba(255,255,255,0.3); }
 
 /* Placeholder */
-.xi-placeholder {
-    text-align: center; padding: 40px;
-    border: 2px dashed #334155; border-radius: 16px;
-    color: #64748b; margin-bottom: 20px;
-}
+.xi-placeholder { text-align: center; padding: 40px; border: 2px dashed #334155; border-radius: 16px; color: #64748b; margin-bottom: 20px; }
 
-/* ================= RESPONSIVE ================= */
-
-@media (max-width: 900px) {
-  
-  #auctionUI {
-    height: auto;
-    overflow-y: auto;
-    display: block;
-  }
-  
-  .auction-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    overflow: visible;
-    padding: 10px;
-  }
-
-  .panel.left, .panel.right {
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-    margin-top: 10px;
-    border-radius: 14px;
-    background: rgba(15,23,42,0.85);
-    padding: 10px;
-  }
-
-  .panel.left h3 { font-size: 0.8rem; margin-bottom: 6px; }
-  .panel.left .scroll { max-height: 120px; font-size: 0.8rem; }
-
-  #auctionCard, #teamSelectionMain {
-    border-radius: 18px;
-    background: rgba(30,41,59,0.9);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.06);
-    animation: none;
-  }
-
-  /* XI DASHBOARD RESPONSIVE */
-  .xi-dashboard {
-      grid-template-columns: 1fr; /* Stack vertically */
-      height: auto;
-      overflow: visible;
-  }
-  .xi-squad-panel { height: auto; order: 2; margin-top:20px; }
-  .team-sheet-card { max-width: 100%; order: 1; }
-
-  /* Sticky Bid Button */
-  #bidBtn {
-    position: sticky; bottom: 12px; z-index: 200;
-    font-size: 1.25rem; padding: 18px; border-radius: 14px;
-    box-shadow: 0 12px 30px rgba(34,197,94,0.5);
-  }
-
-  .rules-overlay { padding: 15px; }
-  .rules-card { width: 100%; max-width: 360px; max-height: 70vh; animation: popupIn 0.25s ease-out; }
-}
-
-@keyframes popupIn {
-  from { transform: scale(0.9); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
-}
-
-/* 1. Force this specific screen to scroll */
-#playingXI {
-    overflow-y: auto !important;  /* Enable vertical scroll */
-    height: 100vh;                /* Take full height of device */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling for mobile */
-}
-
-/* 2. Add extra space at the bottom */
-/* This ensures the last player buttons aren't hidden behind the screen edge */
-#playingXI > div {
-    padding-bottom: 150px !important; 
-    min-height: auto !important; /* Let content determine height */
-}
-
-/* 3. Ensure the inner lists don't trap the scroll */
-#mySquadList {
-    overflow: visible;
-    height: auto;
-}
-/* ================= LEADERBOARD IMPROVEMENTS ================= */
-#leaderboard .container {
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-.leaderboard-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 8px; /* Spacing between rows */
-}
-
-.leaderboard-table th {
-    background: rgba(30, 41, 59, 0.8);
-    color: #94a3b8;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-    padding: 15px;
-    border-bottom: 2px solid var(--border);
-}
-
-.leaderboard-table tr.clickable {
-    background: rgba(255, 255, 255, 0.03);
-    transition: transform 0.2s, background 0.2s;
-    cursor: pointer;
-}
-
-.leaderboard-table tr.clickable:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transform: scale(1.01);
-}
-
-.leaderboard-table td {
-    padding: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-style: solid none; /* Top/Bottom borders only */
-}
-
-.leaderboard-table td:first-child {
-    border-left: 1px solid rgba(255, 255, 255, 0.05);
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-}
-
-.leaderboard-table td:last-child {
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-}
+/* ================= LEADERBOARD ================= */
+.leaderboard-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; min-width: 600px; }
+.leaderboard-table th { background: rgba(30, 41, 59, 0.8); color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; padding: 15px; border-bottom: 2px solid var(--border); }
+.leaderboard-table tr.clickable { background: rgba(255, 255, 255, 0.03); cursor: pointer; }
+.leaderboard-table td { padding: 15px; border: 1px solid rgba(255, 255, 255, 0.05); border-style: solid none; }
+.leaderboard-table td:first-child { border-left: 1px solid rgba(255, 255, 255, 0.05); border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+.leaderboard-table td:last-child { border-right: 1px solid rgba(255, 255, 255, 0.05); border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
 
 /* Rank Badge */
-.rank-badge {
-    background: #334155;
-    color: #fff;
-    width: 30px; height: 30px;
-    display: flex; justify-content: center; align-items: center;
-    border-radius: 50%;
-    font-weight: bold;
-    font-size: 0.9rem;
-}
-.rank-1 { background: #eab308; color: #000; box-shadow: 0 0 10px #eab308; }
-.rank-2 { background: #94a3b8; color: #000; }
-.rank-3 { background: #b45309; color: #fff; }
-
-/* Status Tags */
+.rank-badge { background: #334155; color: #fff; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: bold; font-size: 0.9rem; }
+.rank-1 { background: #eab308; color: #000; } .rank-2 { background: #94a3b8; color: #000; } .rank-3 { background: #b45309; color: #fff; }
 .status-tag { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
 .status-q { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
 .status-dq { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid #f43f5e; }
 
-/* Modal Override for Creative Card */
-#squadViewOverlay .team-sheet-card {
-    margin: 0; /* Remove auto margins */
+/* ================= FOOTER (FIXED) ================= */
+.app-footer {
     width: 100%;
-    max-width: 100%;
-    box-shadow: none; /* Remove shadow inside modal */
-    background: transparent; /* Let modal bg show or keep transparent */
-    border: none;
+    background: #0f172a; /* Solid background */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 0;
+    margin-top: auto; /* Pushes to bottom of flex container */
+    z-index: 2000;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-align: center;
+    /* Safe Area for Mobile */
+    padding-bottom: env(safe-area-inset-bottom, 12px);
 }
-/* ================================================= */
-/* ============= MOBILE RESPONSIVENESS ============= */
-/* ================================================= */
+.footer-content { display: flex; justify-content: center; align-items: center; gap: 10px; }
+.footer-link { color: var(--gold); text-decoration: none; font-weight: 600; }
+.social-links { display: flex; gap: 8px; }
+.social-links a { text-decoration: none; font-size: 1rem; opacity: 0.7; }
+
+/* ================= MOBILE RESPONSIVENESS ================= */
 
 @media (max-width: 900px) {
 
-  /* --- 1. GENERAL LAYOUT --- */
+  /* 1. LAYOUT & SCROLLING */
   .screen {
-    height: auto;        /* Allow scrolling on mobile */
-    min-height: 100vh;
-    overflow-y: auto;    /* Enable scroll */
+    height: auto !important; 
+    overflow-y: auto !important;
+    display: block; 
+    padding-bottom: 20px; /* Space above footer */
   }
 
-  /* --- 2. HEADER / TOPBAR --- */
-  .topbar {
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px;
-    height: auto;
-  }
-  
-  .topbar .top-right {
-    width: 100%;
-    justify-content: space-between; /* Spread buttons out */
-    flex-wrap: wrap;
-  }
-
-  #adminControls {
-    margin-top: 5px;
-    width: 100%;
-    justify-content: center;
-    gap: 5px;
-  }
-
-  /* --- 3. AUCTION SCREEN --- */
+  /* 2. AUCTION PAGE */
   .auction-wrapper {
     display: flex;
     flex-direction: column;
-    height: auto;
-    overflow: visible;
     padding: 10px;
+    padding-bottom: 80px; /* Space for buttons */
   }
-
-  /* Reorder: Auction Card (1), Chat (2), Logs (3) */
+  
   .auction-center { order: 1; margin-bottom: 20px; }
-  .panel.right { order: 2; height: 300px; margin-bottom: 20px; } /* Chat */
-  .panel.left { order: 3; height: auto; margin-bottom: 20px; }   /* Logs */
-
-  .panel {
-    border-radius: 12px;
-    background: rgba(30, 41, 59, 0.9);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  }
-
-  /* Sticky Bid Button for mobile users */
+  .panel { height: 250px; order: 2; margin-bottom: 20px; flex: none; }
+  
+  /* Mobile Sticky Bid Button */
   #bidBtn {
-    padding: 20px;
-    font-size: 1.1rem;
-  }
-
-  /* --- 4. PLAYING XI SCREEN --- */
-  .xi-dashboard {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    overflow: visible;
-  }
-
-  /* Stack: Preview Card (Top), Selection List (Bottom) */
-  .xi-pitch-container, .xi-team-sheet {
-    order: 1;
-    margin-bottom: 20px;
-    max-height: 400px; /* Limit height so list is visible */
-  }
-
-  .xi-squad-panel {
-    order: 2;
-    height: auto;
-    overflow: visible;
-  }
-
-  /* Allow the list to scroll naturally on the page */
-  .squad-scroll-area {
-    overflow-y: visible;
-    max-height: none;
-  }
-
-  /* Stats Header: Wrap nicely */
-  .stats-header {
-    grid-template-columns: repeat(3, 1fr); /* 3 items per row */
-    gap: 5px;
-  }
-  
-  .stat-pill {
-    font-size: 0.7rem;
-    padding: 4px;
-  }
-
-  /* Floating Action Bar at Bottom for Submit */
-  #submitXIBtn {
-    position: fixed;
-    bottom: 20px;
-    left: 20px; 
+    position: fixed; /* Fixed to viewport */
+    bottom: 60px;    /* Above footer */
+    left: 20px;
     right: 20px;
-    width: calc(100% - 40px);
-    z-index: 1000;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    border: 1px solid rgba(255,255,255,0.2);
+    width: auto;
+    z-index: 1500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   }
+
+  /* 3. PLAYING XI PAGE */
+  /* Ensure container pushes content up */
+  #playingXI > div { padding-bottom: 120px !important; }
   
-  /* Add padding to bottom so content isn't hidden behind fixed button */
-  #playingXI {
-    padding-bottom: 80px; 
-  }
-
-  /* --- 5. MODALS & POPUPS --- */
-  .rules-overlay {
-    padding: 10px;
-    align-items: flex-end; /* Slide up from bottom on mobile? or Center */
-    justify-content: center;
-  }
-
-  .rules-card, .overlay-card {
+  /* Buttons Stack */
+  #playingXI .primary-btn, #playingXI .secondary-btn {
     width: 100%;
-    max-height: 85vh;
-    border-radius: 16px 16px 0 0; /* Rounded top only if bottom aligned */
-    margin-bottom: 0;
+    margin-bottom: 8px;
   }
   
-  /* Ensure Rules inputs are tap-friendly */
-  .rule-row input {
-    width: 60px;
-    padding: 8px;
+  /* 4. LEADERBOARD */
+  #leaderboard .glass {
+    overflow-x: auto; /* Enable horizontal scroll */
+    margin: 0 -10px;  /* Edge to edge */
+    width: 100vw;
   }
-  /* ================================================= */
-/* ============= MOBILE & LAYOUT FIXES ============= */
-/* ================================================= */
-
-/* 1. LEADERBOARD TABLE FIX */
-/* Makes the table scroll horizontally if it's too wide, instead of breaking layout */
-#leaderboard .glass {
-    overflow-x: auto !important; /* Force horizontal scroll */
-    display: block;              /* Ensure block display for scrolling */
-    max-width: 100vw;            /* prevent pushing off screen */
-}
-
-.leaderboard-table {
-    min-width: 600px; /* Force table to be wide enough to read */
-}
-
-/* 2. UNIVERSAL FOOTER FIX */
-.app-footer {
-    margin-top: auto;
-    background: #0f172a; /* Solid background so it's readable */
-    padding-bottom: env(safe-area-inset-bottom); /* iPhone X+ safe area */
-}
-
-/* 3. MOBILE SPECIFIC OVERRIDES */
-@media (max-width: 900px) {
-
-  /* Fix for "Cannot see top/bottom" */
-  .screen {
-    height: auto !important; 
-    min-height: 100dvh; 
-    padding-top: 0;
-    padding-bottom: 120px !important; /* Extra padding so footer doesn't cover content */
-  }
-
-  /* Fix Header wrapping */
+  
+  /* 5. TOPBAR */
   .topbar {
     flex-direction: column;
     height: auto;
-    position: relative; /* Unstick header on mobile if it takes too much space */
+    position: relative;
   }
-
-  /* Fix Playing XI & Leaderboard Container */
-  .container {
-    padding-top: 20px !important; /* Reduce top padding on mobile */
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  /* Fix Leaderboard Table text size */
-  .leaderboard-table th, 
-  .leaderboard-table td {
-    padding: 10px 5px;
-    font-size: 0.8rem;
-  }
-
-  /* Ensure Embedded Team List (Select Team) scrolls */
-  #teamSelectionMain {
-    height: auto;
-    overflow-y: visible;
-  }
+  #roomCodeBar { display: none; } /* Hide code to save space */
   
-  .team-list {
-    max-height: 300px;
-    overflow-y: auto; /* Scroll teams inside the card if list is long */
-  }
-
-  /* Force Action Buttons to stay visible */
-  #submitXIBtn {
-    position: fixed;
-    bottom: 60px; /* Above the footer */
-    left: 5%;
-    width: 90%;
-    z-index: 999;
-  }
-  
-  /* Push content up so fixed button doesn't cover it */
-  #playingXI > div {
-    padding-bottom: 100px; 
-  }
-}
-
-
-}
-/* ================= UNIVERSAL FOOTER ================= */
-.app-footer {
+  /* 6. MODALS */
+  .rules-overlay { align-items: flex-end; padding: 0; }
+  .rules-card, .overlay-card {
     width: 100%;
-    background: rgba(15, 23, 42, 0.9);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 10px 0;
-    margin-top: auto; /* Pushes to bottom in flex containers */
-    z-index: 1000;
-    font-size: 0.8rem;
-    color: #94a3b8;
-    backdrop-filter: blur(10px);
-    position: relative; /* Normal flow usually, or fixed if you prefer */
+    border-radius: 16px 16px 0 0;
+    margin: 0;
+    max-height: 80vh;
+  }
 }
-
-/* If you want it sticky at bottom of viewport always: */
-/* .app-footer { position: fixed; bottom: 0; left: 0; } */
-
-.footer-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-}
-
-.footer-link {
-    color: var(--gold);
-    text-decoration: none;
-    font-weight: 600;
-    transition: 0.2s;
-}
-.footer-link:hover { text-decoration: underline; color: #fff; }
-
-.separator { color: #475569; }
-
-.social-links { display: flex; gap: 8px; }
-.social-links a {
-    text-decoration: none;
-    font-size: 1rem;
-    opacity: 0.7;
-    transition: 0.2s;
-}
-.social-links a:hover { opacity: 1; transform: translateY(-2px); }
-
-/* Ensure body allows footer at bottom */
-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-/* Ensure main screens take available space so footer sits at bottom */
-.screen {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
