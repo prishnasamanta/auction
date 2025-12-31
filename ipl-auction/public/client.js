@@ -331,10 +331,63 @@ socket.on("joinedRoom", (data) => {
     updateAdminButtons(data.auctionStarted);
 });
 
-socket.on("updateUserCount", count => {
-    const el = document.getElementById("liveUserCount");
-    if(el) el.innerText = count;
+/* ================= USER LIST LOGIC ================= */
+
+// 1. Toggle the Dropdown
+window.toggleUserList = function() {
+    const list = document.getElementById("userListDropdown");
+    list.classList.toggle("hidden");
+    
+    // Close if clicking outside (Optional helper)
+    if (!list.classList.contains("hidden")) {
+        document.addEventListener('click', closeUserListOutside);
+    }
+};
+
+function closeUserListOutside(e) {
+    const list = document.getElementById("userListDropdown");
+    const btn = document.querySelector(".count-pill-btn");
+    if (!list.contains(e.target) && !btn.contains(e.target)) {
+        list.classList.add("hidden");
+        document.removeEventListener('click', closeUserListOutside);
+    }
+}
+
+// 2. Handle Live Updates from Server
+socket.on("roomUsersUpdate", (users) => {
+    // Update the Count Number
+    const countEl = document.getElementById("liveUserCount");
+    if (countEl) countEl.innerText = users.length;
+
+    // Render the List
+    const box = document.getElementById("userListContent");
+    if (box) {
+        box.innerHTML = "";
+        
+        // Sort: Me first, then Host, then others
+        users.sort((a, b) => {
+            if (a.name === username) return -1;
+            return a.name.localeCompare(b.name);
+        });
+
+        users.forEach(u => {
+            const isMe = u.name === username;
+            const teamBadge = u.team ? `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>` : `<span style="opacity:0.5; font-size:0.7rem;">Spectator</span>`;
+            
+            const div = document.createElement("div");
+            div.className = "ul-item";
+            div.innerHTML = `
+                <div class="ul-name">
+                    <span class="ul-dot"></span>
+                    ${u.name} ${isMe ? '(You)' : ''}
+                </div>
+                ${teamBadge}
+            `;
+            box.appendChild(div);
+        });
+    }
 });
+
 
 
 function setupAuctionScreen() {
@@ -1327,6 +1380,7 @@ function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
+
 
 
 
