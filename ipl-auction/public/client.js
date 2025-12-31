@@ -241,7 +241,37 @@ socket.on("roomCreated", code => {
 
 /* ================= ROOM STATE LOGIC ================= */
 /* ================= ROOM STATE LOGIC ================= */
+/* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
+    console.log("Room Data:", data);
+    
+    // 1. SAVE METADATA (Owners & Count)
+    if (data.teamOwners) teamOwners = data.teamOwners;
+    if (data.userCount) {
+        const countEl = document.getElementById("liveUserCount");
+        if(countEl) countEl.innerText = data.userCount;
+    }
+
+    // 2. CHECK: HAS AUCTION ENDED?
+    if (data.auctionEnded) {
+        // If user is refreshing (already has session), let them stay for Leaderboard/XI
+        // If user is new (no session matching room), kick them out
+        const savedRoom = sessionStorage.getItem('ipl_room');
+        if (savedRoom === data.roomCode) {
+            setupAuctionScreen();
+            showScreen("playingXI");
+            document.body.style.overflow = "auto";
+            socket.emit("getMySquad"); 
+            updateRulesUI();
+        } else {
+            alert("⚠️ The Auction has ended. Returning to Main Screen.");
+            sessionStorage.clear();
+            window.location.href = "/";
+        }
+        return; // Stop processing
+    }
+
+    // 3. STANDARD SETUP (Game Active)
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
     
@@ -249,31 +279,37 @@ socket.on("joinedRoom", (data) => {
     if(data.squads) allSquads = data.squads;
 
     isHost = data.isHost;
+    gameStarted = data.auctionStarted; // Sync global state flag
     
     setupAuctionScreen();
 
-    // --- FIX: IF AUCTION ENDED (REFRESHED) -> GO TO SUBMIT XI ---
-    if (data.auctionEnded) {
-        showScreen("playingXI"); // Go directly to XI screen
-        document.body.style.overflow = "auto";
-        socket.emit("getMySquad"); 
-        updateRulesUI();
-        return; // Stop processing (Don't show auction screen)
-    }
-
-    // Normal Flow (Auction Live or Waiting)
+    // 4. RENDER TEAMS
     if (data.availableTeams) {
         renderEmbeddedTeams(data.availableTeams);
     }
 
+    // 5. DETERMINE SCREEN PHASE
     if (data.auctionStarted) {
-        setGamePhase("AUCTION");
+        // Auction is LIVE.
+        if (!myTeam && data.availableTeams && data.availableTeams.length > 0) {
+            // New player, teams available -> Show Selection First
+            setGamePhase("TEAM_SELECT");
+        } else {
+            // Already has team OR no teams left -> Show Auction
+            setGamePhase("AUCTION");
+        }
     } else {
+        // Auction NOT started -> Always show Selection
         setGamePhase("TEAM_SELECT");
     }
     
     updateAdminButtons(data.auctionStarted);
 });
+socket.on("updateUserCount", count => {
+    const el = document.getElementById("liveUserCount");
+    if(el) el.innerText = count;
+});
+
 
 function setupAuctionScreen() {
     document.getElementById("landing").classList.add("hidden");
@@ -412,12 +448,17 @@ window.switchSquadTab = function(team) {
     renderSquadWindow();      // Re-render UI
 }
 /* ================= SQUAD WINDOW (FIXED STYLE) ================= */
+/* ================= SQUAD WINDOW POPUP ================= */
 function renderSquadWindow() {
     if(!squadWindow || squadWindow.closed || !selectedSquadTeam) return;
 
     const squad = allSquads[selectedSquadTeam] || [];
     const purse = teamPurse?.[selectedSquadTeam];
     
+    // GET OWNER NAME
+    // Check our local map. Default to "(CPU/Available)" if undefined.
+    const ownerName = teamOwners[selectedSquadTeam] || "(CPU/Available)";
+
     const teams = Object.keys(allSquads).sort();
     const tabsHtml = teams.map(t => 
         `<button onclick="window.opener.switchSquadTab('${t}')" 
@@ -451,7 +492,6 @@ function renderSquadWindow() {
                 li { padding:5px 0; border-bottom:1px solid #222; font-size:0.95rem; }
                 .price { color:#4ade80; font-weight:bold; float:right; }
                 
-                /* Download Button */
                 .dl-btn {
                     display: block; width: 100%; padding: 12px; margin-top: 20px;
                     background: #6366f1; color: white; border: none; border-radius: 8px;
@@ -465,6 +505,11 @@ function renderSquadWindow() {
             
             <div id="captureTarget" style="padding:10px; background:#111;">
                 <h2 style="color:${TEAM_COLORS[selectedSquadTeam] || '#fff'}">${selectedSquadTeam}</h2>
+                
+                <div style="text-align:center; color:#94a3b8; font-size:0.85rem; margin-bottom:10px; font-family:sans-serif;">
+                    Manager: <span style="color:#fff; font-weight:bold;">${ownerName}</span>
+                </div>
+
                 <div class="stats">
                     Purse: <span style="color:#fff; font-weight:bold;">${typeof purse==="number" ? `₹${purse.toFixed(2)} Cr` : "—"}</span> 
                     | Players: ${squad.length}
@@ -595,16 +640,42 @@ function renderEmbeddedTeams(teams) {
     
     box.classList.remove("hidden");
 }
-socket.on("teamPicked", ({ team, remaining }) => {
-    if(myTeam === team) {
-        document.getElementById("embeddedTeamList").classList.add("hidden");
-        document.getElementById("waitingForHostMsg").classList.remove("hidden");
-        document.getElementById("teamNotice").innerText = `You are: ${team}`;
+/* ================= TEAM PICKED LOGIC ================= */
+socket.on("teamPicked", ({ team, user, remaining }) => {
+    // 1. Update Local Owners Map
+    if (team && user) {
+        teamOwners[team] = user; // Mark as owned
+    } else {
+        // If team is null (freed), we might not know exactly which one was freed 
+        // without reloading, but we can assume 'remaining' list is correct.
+        // Ideally, we just refresh the full state if needed, but for now:
+        // We rely on renderEmbeddedTeams to show it as available again.
     }
+
+    // 2. Logic for ME (The current user)
+    if(myTeam === team) {
+        document.getElementById("teamSelectionMain").classList.add("hidden");
+        // If game is already live, go straight to auction
+        if(gameStarted) {
+            setGamePhase("AUCTION");
+        } else {
+            // Otherwise show waiting message
+            document.getElementById("waitingForHostMsg").classList.remove("hidden");
+        }
+        document.getElementById("teamNotice").innerText = `You are: ${team}`;
+        
+        // Hide "Join Team" button since I have a team now
+        const lateBtn = document.getElementById("lateJoinBtn");
+        if(lateBtn) lateBtn.classList.add("hidden");
+    }
+
+    // 3. Logic for EVERYONE ELSE (Update the list of buttons)
+    // Only re-render if I haven't picked a team yet
     if(!myTeam) {
         renderEmbeddedTeams(remaining);
     }
 });
+
 
 /* ================================================= */
 /* =============== 6. ADMIN CONTROLS =============== */
@@ -1224,6 +1295,7 @@ function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
+
 
 
 
