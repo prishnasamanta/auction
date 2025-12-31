@@ -159,7 +159,10 @@
     </div>
     
     <div class="top-right" style="display:flex; align-items:center;">
-      
+      <div class="count-pill" style="margin-right:10px; background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:20px; font-size:0.8rem; display:flex; align-items:center; gap:6px;">
+          <span style="width:8px; height:8px; background:var(--success); border-radius:50%;"></span>
+          <span id="liveUserCount">1</span> Online
+      </div>
       <button id="lateJoinBtn" onclick="toggleLateJoin()" class="secondary-btn hidden" style="color:var(--gold); border-color:var(--gold); margin-right:8px; padding:6px 12px; font-size:0.8rem;">
         + Join Team
       </button>
@@ -443,6 +446,7 @@
 
 </body>
 </html>
+
 
 
 
