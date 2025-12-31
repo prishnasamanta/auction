@@ -30,7 +30,7 @@ const DEFAULT_RULES = {
     minWK: 1,
     minAll: 1,
     minSpin: 1,
-    minForeignXI: 0
+    maxForeignXI: 4
 };
 
 const AVAILABLE_TEAMS_LIST = ["CSK", "MI", "RCB", "KKR", "RR", "SRH", "DC", "PBKS", "LSG", "GT"];
@@ -133,7 +133,7 @@ io.on("connection", socket => {
             rules: { ...DEFAULT_RULES },
             auction: {
                 live: false, paused: false, player: null, 
-                bid: 0, team: null, timer: 4, interval: null, lastBidTeam: null
+                bid: 0, team: null, timer: 5, interval: null, lastBidTeam: null
             }
         };
 
@@ -423,7 +423,7 @@ socket.on("joinRoom", ({ roomCode, user }) => {
         r.auction.bid = nextBid;
         r.auction.lastBidTeam = socket.team;
         r.auction.team = socket.team; 
-        r.auction.timer = 8;         
+        r.auction.timer = 10;         
 
         io.to(socket.room).emit("bidUpdate", {
             bid: r.auction.bid,
@@ -575,7 +575,7 @@ function nextPlayer(r, room) {
 // Use player's specific basePrice, or calculate it from rating if missing
     r.auction.bid = r.auction.player.basePrice || startBid(r.auction.player.rating || 80);
     r.auction.team = null;
-    r.auction.timer = 1;
+    r.auction.timer = 10;
 
     io.to(room).emit("newPlayer", {
         player: r.auction.player,
@@ -653,6 +653,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
