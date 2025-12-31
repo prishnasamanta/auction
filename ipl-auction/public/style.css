@@ -558,6 +558,50 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   }
 }
 
+/* ================= EARLY ACCESS BADGE ================= */
+
+/* 1. Ensure the Hero section stacks items vertically */
+.landing-hero {
+    flex-direction: column !important; /* Stack badge on top of card */
+    gap: 10px;
+}
+
+/* 2. Style the Badge */
+.early-access-badge {
+    background: rgba(251, 191, 36, 0.15); /* Gold transparent bg */
+    border: 1px solid rgba(251, 191, 36, 0.4); /* Gold border */
+    color: #fbbf24; /* Bright Gold text */
+    
+    padding: 8px 24px;
+    border-radius: 50px; /* Pill shape */
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.15); /* Glow effect */
+    
+    /* Animation */
+    animation: floatBadge 3s ease-in-out infinite;
+    cursor: default;
+    user-select: none;
+}
+
+/* 3. Floating Animation */
+@keyframes floatBadge {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); } /* Moves up slightly */
+}
+
+/* Mobile Tweaks */
+@media (max-width: 900px) {
+    .early-access-badge {
+        font-size: 0.8rem;
+        padding: 6px 16px;
+        margin-bottom: 5px;
+    }
+}
+
 
 
 
