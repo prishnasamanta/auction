@@ -521,7 +521,15 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   .panel { height: 250px; order: 2; margin-bottom: 20px; flex: none; }
   
   /* Mobile Sticky Bid Button */
-
+  #bidBtn {
+    position: fixed; /* Fixed to viewport */
+    bottom: 60px;    /* Above footer */
+    left: 20px;
+    right: 20px;
+    width: auto;
+    z-index: 1500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
 
   /* 3. PLAYING XI PAGE */
   /* Ensure container pushes content up */
@@ -557,4 +565,3 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     max-height: 80vh;
   }
 }
-
