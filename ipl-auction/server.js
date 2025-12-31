@@ -2,7 +2,8 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
-const PLAYERS = require("./players"); // Ensure this file exists
+// Make sure you have players.js file
+const PLAYERS = require("./players"); 
 
 const app = express();
 const server = http.createServer(app);
@@ -10,233 +11,262 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-/* ================= CONSTANTS ================= */
-const RECONNECT_TIME = 2 * 60 * 1000; // ⏳ 2 Minutes in milliseconds
+/* ================= CONSTANTS & GLOBALS ================= */
 const rooms = {};
 
-// ================= GLOBAL VARIABLES (DEFAULTS) =================
-let auctionRules = {
-    purse: 120,       // Default Crore
-    maxPlayers: 18,   // Max Squad Size
-    maxForeign: 6,    // Max Foreigners
+const DEFAULT_RULES = {
+    purse: 120,      
+    maxPlayers: 18,  
+    maxForeign: 6,   
     minBat: 3,
     minBowl: 3,
     minWK: 1,
-    minAll: 1
+    minAll: 1,
+    minSpin: 1,
+    minForeignXI: 0
 };
 
-/* ================= HELPERS ================= */
-function generateRoomCode(){
-  return Math.random().toString(36).substring(2,7).toUpperCase();
+const AVAILABLE_TEAMS_LIST = ["CSK", "MI", "RCB", "KKR", "RR", "SRH", "DC", "PBKS", "LSG", "GT"];
+
+/* ================= HELPER FUNCTIONS ================= */
+
+function generateRoomCode() {
+    return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
 
-function startBid(r){
-  if(r>=9) return 2;
-  if(r>=8) return 1;
-  return 0.5;
+function startBid(rating) {
+    if (rating >= 90) return 2;
+    if (rating >= 80) return 1;
+    return 0.5;
 }
 
-// Groups players into sets based on Role and Nationality
 function createSets(allPlayers) {
-  const sets = [];
-  let currentSet = [];
-  
-  if (allPlayers.length === 0) return [];
-
-  // Start with first player
-  let lastP = allPlayers[0];
-  currentSet.push(lastP);
-
-  for (let i = 1; i < allPlayers.length; i++) {
-    const p = allPlayers[i];
+    const sets = [];
+    let currentSet = [];
     
-    // If Role changes OR Foreign status changes -> New Set
-    if (p.role !== lastP.role || p.foreign !== lastP.foreign) {
-      sets.push(currentSet); // Save previous set
-      currentSet = [];       // Start new set
+    if (!allPlayers || allPlayers.length === 0) return [];
+
+    let lastP = allPlayers[0];
+    currentSet.push(lastP);
+
+    for (let i = 1; i < allPlayers.length; i++) {
+        const p = allPlayers[i];
+        if (p.role !== lastP.role || p.foreign !== lastP.foreign) {
+            sets.push(currentSet); 
+            currentSet = [];      
+        }
+        currentSet.push(p);
+        lastP = p;
     }
-    
-    currentSet.push(p);
-    lastP = p;
-  }
-  sets.push(currentSet); // Save the final set
-  return sets;
+    sets.push(currentSet); 
+    return sets;
 }
 
-// Helper to get a readable name for the set (e.g., "Indian WK")
 function getSetName(set) {
-  if(!set || set.length === 0) return "Empty Set";
-  const p = set[0];
-  return `${p.foreign ? "Overseas" : "Indian"} ${p.role}s`;
+    if (!set || set.length === 0) return "Empty Set";
+    const p = set[0];
+    return `${p.foreign ? "Overseas" : "Indian"} ${p.role}s`;
 }
 
 function broadcastSets(r, roomCode) {
-  const payload = [];
-  // Loop from current set index to the end
-  for(let i = r.currentSetIndex; i < r.sets.length; i++){
-    payload.push({
-      name: getSetName(r.sets[i]),
-      players: r.sets[i],
-      active: (i === r.currentSetIndex) // Mark if this is the active bidding set
-    });
-  }
-  io.to(roomCode).emit("setUpdate", payload);
+    const payload = [];
+    for (let i = r.currentSetIndex; i < r.sets.length; i++) {
+        payload.push({
+            name: getSetName(r.sets[i]),
+            players: r.sets[i],
+            active: (i === r.currentSetIndex)
+        });
+    }
+    io.to(roomCode).emit("setUpdate", payload);
 }
 
 /* ================= SOCKET LOGIC ================= */
+
 io.on("connection", socket => {
 
-    /* --- GET STATE --- */
-    socket.on("getAuctionState", () => {
-        const r = rooms[socket.room];
-        if(!r) return;
-
-        socket.emit("auctionState", {
-            live: r.auction.live,
-            paused: r.auction.paused,
-            player: r.auction.player,
-            bid: r.auction.bid
-        });
+    // --- 1. GET PUBLIC ROOMS ---
+   // Inside io.on('connection')
+socket.on('getPublicRooms', () => {
+        const liveRooms = [];
+        const waitingRooms = [];
+        
+        for (const [id, room] of Object.entries(rooms)) {
+            // FIX: Only show if public AND NOT ENDED
+            if (room.isPublic && !room.auctionEnded) {
+                const info = { id: id, count: Object.keys(room.users).length };
+                if (room.auctionStarted) {
+                    liveRooms.push(info);
+                } else {
+                    waitingRooms.push(info);
+                }
+            }
+        }
+        socket.emit('publicRoomsList', { live: liveRooms, waiting: waitingRooms });
     });
 
-    /* ================= CREATE ROOM ================= */
-    socket.on("createRoom", ({ user }) => {
+
+    // --- 2. CREATE ROOM (FIXED) ---
+    socket.on("createRoom", ({ user, isPublic }) => {
         const code = generateRoomCode();
-        socket.isAdmin = true;
         
+        // Initialize Room
         rooms[code] = {
             admin: socket.id,
             adminUser: user,
-            phase: "auction",
-            rulesLocked: false,
-            auctionStarted: false,
-            users: {},
-            availableTeams: ["CSK", "MI", "RCB", "KKR", "RR", "SRH", "DC", "PBKS", "LSG", "GT"],
+            isPublic: !!isPublic,
+            users: {}, 
+            availableTeams: [...AVAILABLE_TEAMS_LIST],
             squads: {},
             purse: {},
-            
-            // Groups players into sets (Order preserved from players.js)
-            sets: createSets([...PLAYERS]), 
-            currentSetIndex: 0,            
-            
+            sets: createSets([...PLAYERS]),
+            currentSetIndex: 0,
             playingXI: {},
-            xiSubmitted: {},
-            rules: {
-                maxPlayers: 18,
-                maxForeign: 6,
-                purse: 120,
-                minBat: 4,
-                minAll: 2,
-                minBowl: 4,
-                minSpin: 1,
-                minWK: 1,
-                minForeignXI: 0
-            },
-
+            rulesLocked: false,
+            auctionStarted: false,
+            rules: { ...DEFAULT_RULES },
             auction: {
-                live: false,
-                paused: false,
-                player: null,
-                bid: 0,
-                team: null,
-                timer: 4,
-                interval: null,
-                increment: 0.1 
+                live: false, paused: false, player: null, 
+                bid: 0, team: null, timer: 4, interval: null, lastBidTeam: null
             }
         };
 
+        // FIX: Define 'room' variable here so we can use it below
+        const room = rooms[code];
+
+        // Init Purses
+        AVAILABLE_TEAMS_LIST.forEach(t => {
+            room.squads[t] = [];
+            room.purse[t] = room.rules.purse;
+        });
+
+        // Join Socket
         socket.join(code);
         socket.room = code;
         socket.user = user;
         socket.isAdmin = true;
-        rooms[code].users[socket.id] = user;
+        
+        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
 
         socket.emit("roomCreated", code);
         
-        // Send State Immediately
-        socket.emit("joinedRoom", { 
-            squads: rooms[code].squads,
-            rules: rooms[code].rules 
+        // Use 'room' variable safely here
+        socket.emit("joinedRoom", {
+            squads: room.squads,
+            rules: room.rules,
+            roomCode: code,
+            isHost: true,
+            auctionStarted: room.auctionStarted,
+            availableTeams: room.availableTeams,
+            auctionEnded: (room.auctionStarted && !room.auction.live && room.auction.paused) // or check if room.phase === "xi"
         });
-        
-        broadcastSets(rooms[code], code);
+
+        broadcastSets(room, code);
     });
 
-    /* ================= JOIN ROOM ================= */
-    socket.on("joinRoom", ({ roomCode, user }) => {
+    // --- 3. RECONNECT USER ---
+    socket.on('reconnectUser', ({ roomId, username, team }) => {
+        const room = rooms[roomId];
+        if (room) {
+            // ... (Your existing logic to find user) ...
+            let oldSocketId = Object.keys(room.users).find(key => room.users[key].name === username);
+            
+            if(oldSocketId) {
+                const userData = room.users[oldSocketId];
+                delete room.users[oldSocketId];
+                room.users[socket.id] = userData;
+                userData.id = socket.id;
+                userData.connected = true;
+            } else {
+                // If auction ended, DO NOT allow random reconnections from people who weren't tracked
+                if(room.auctionEnded) {
+                    return socket.emit("error", "Auction Closed.");
+                }
+                room.users[socket.id] = { name: username, team: team, id: socket.id, connected: true };
+            }
+
+            socket.join(roomId);
+            socket.room = roomId;
+            socket.user = username;
+            socket.team = team;
+            if(room.adminUser === username) socket.isAdmin = true;
+
+            // FIX: Send the auctionEnded flag so client knows where to go
+            socket.emit("joinedRoom", { 
+                rules: room.rules,
+                squads: room.squads,
+                roomCode: roomId,
+                isHost: socket.isAdmin,
+                auctionStarted: room.auctionStarted,
+                availableTeams: room.availableTeams,
+                auctionEnded: room.auctionEnded // <--- Critical Flag
+            });
+            
+            // ... (Rest of sync logic: setUpdate, teamPicked, etc.) ...
+            broadcastSets(room, roomId);
+            if(team) socket.emit("teamPicked", { team, remaining: room.availableTeams });
+            
+            // Force squad data update if ended
+            if(room.auctionEnded) {
+                socket.emit("squadData", room.squads);
+                // Send leaderboard immediately if available
+                if(Object.keys(room.playingXI).length > 0){
+                    const board = Object.values(room.playingXI).sort((a,b) => {
+                       if(b.rating !== a.rating) return b.rating - a.rating; 
+                       return (b.purse || 0) - (a.purse || 0); 
+                    });
+                    socket.emit("leaderboard", board);
+                }
+            }
+
+        } else {
+            socket.emit("error", "Room expired or not found");
+        }
+    });
+
+    // --- 4. JOIN ROOM ---
+    // 2. JOIN ROOM
+socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
 
+        // FIX: Reject new users if auction ended
+        if(room.auctionEnded) {
+            return socket.emit("error", "This auction has ended and is closed.");
+        }
+
+        // ... (Rest of join logic) ...
         socket.join(roomCode);
         socket.room = roomCode;
         socket.user = user;
         
-        // 1. 🔄 CHECK RECONNECTION (Did this user hold a team?)
-        let recoveredTeam = null;
+        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
 
-        // Search reservations for this username
-        for (const team in room.reservations) {
-            if (room.reservations[team].user === user) {
-                recoveredTeam = team;
-                // ✅ Cancel the 2-min timeout (User is back!)
-                clearTimeout(room.reservations[team].timeout);
-                delete room.reservations[team];
-                break;
-            }
-        }
-
-        // 2. ASSIGN ROLE
-       
-
-        // 3. SEND STATE
-// Inside your server logic (likely inside joinRoom event)
         socket.emit("joinedRoom", { 
             rules: room.rules,
             squads: room.squads,
-            
-            // ADD THESE TWO LINES:
-            roomCode: roomCode,          // Send the code so client can display it
-            isHost: socket.id === room.hostId // Send true if this user is the host
+            roomCode: roomCode,
+            isHost: false,
+            auctionStarted: room.auctionStarted,
+            availableTeams: room.availableTeams,
+            auctionEnded: false
         });
 
         broadcastSets(room, roomCode);
-        socket.emit('syncRules', room.rules); 
-
-        // 4. TEAM SELECTION LOGIC
-        // If user has NO team (didn't recover one), and rules are locked, show available teams
-        if(room.rulesLocked && !socket.team){
-            socket.emit("needTeamSelection", {
-                teams: room.availableTeams
-            });
-        }
-                io.to(roomCode).emit('logUpdate', `👋${user} has joined the room.`);
-
+        io.to(roomCode).emit('logUpdate', `👋 ${user} has joined.`);
     });
-
-  
-
-    /* ================= TEAM SELECTION ================= */
-    socket.on("requestTeamState", () => {
-        const room = rooms[socket.room];
-        if(!room) return;
-        if(room.rulesLocked && !socket.team){
-            socket.emit("forceTeamPopup", { teams: room.availableTeams });
-        }
-    });
-
+    // --- 5. SELECT TEAM ---
     socket.on("selectTeam", ({ team, user }) => {
         const r = rooms[socket.room];
         if(!r) return;
-        if(!Array.isArray(r.availableTeams)) return;
-        if(socket.team) return;
+        if(socket.team) return; 
         if(!r.availableTeams.includes(team)) return;
 
         socket.team = team;
-        r.users[socket.id] = { name: user, team };
-        r.squads[team] = [];
-        r.purse[team] = r.rules.purse;
+        if(r.users[socket.id]) r.users[socket.id].team = team;
 
-        // remove team
+        if(!r.squads[team]) r.squads[team] = [];
+        if(!r.purse[team]) r.purse[team] = r.rules.purse;
+
         r.availableTeams = r.availableTeams.filter(t => t !== team);
 
         io.to(socket.room).emit("teamPicked", {
@@ -246,29 +276,17 @@ io.on("connection", socket => {
         io.to(socket.room).emit("logUpdate", `👕 ${user} selected ${team}`);
     });
 
-    /* ================= RULES LOGIC ================= */
-    socket.on('updateRules', (newRules) => {
-        // Global admin update (optional, usually for dev)
-        auctionRules = newRules;
-        io.emit('syncRules', auctionRules);
-    });
-
+    // --- 6. ADMIN: SET RULES ---
     socket.on("setRules", rules => {
         const room = rooms[socket.room];
         if(!room || !socket.isAdmin) return;
-        if(room.auction.live) return;
+        if(room.auctionStarted) return;
 
-        room.rules = {
-            maxPlayers: rules.maxPlayers,
-            maxForeign: rules.maxForeign,
-            purse: rules.purse,
-            minBat: rules.minBat,
-            minAll: rules.minAll,
-            minBowl: rules.minBowl,
-            minSpin: rules.minSpin,
-            minWK: rules.minWK,
-            minForeignXI: rules.minForeignXI
-        };
+        room.rules = { ...room.rules, ...rules };
+        
+        Object.keys(room.purse).forEach(t => {
+            room.purse[t] = room.rules.purse;
+        });
 
         room.rulesLocked = true;
 
@@ -276,123 +294,113 @@ io.on("connection", socket => {
             rules: room.rules,
             teams: room.availableTeams
         });
-
-        // FORCE TEAM SELECTION FOR EVERYONE
-        io.to(socket.room).emit("forceTeamPopup", {
-            teams: room.availableTeams
-        });
     });
 
-    socket.on("getSquads", () => {
-        const r = rooms[socket.room];
-        if(!r) return;
-        io.to(socket.room).emit("squadData", r.squads);
-    });
-
-    /* ================= ADMIN ACTIONS ================= */
+    // --- 7. ADMIN ACTIONS ---
     socket.on("adminAction", action => {
         const r = rooms[socket.room];
-        if(!r || socket.id !== r.admin) return;
+        if(!r || !socket.isAdmin) return;
 
-        // 1. START
         if(action === "start"){
             if(r.auctionStarted) return;
             r.auctionStarted = true;
             r.auction.live = true;
-            r.auction.paused = false;
             io.to(socket.room).emit("auctionStarted");
             nextPlayer(r, socket.room);
         }
 
-        // 2. TOGGLE PAUSE / RESUME
         if(action === "togglePause"){
-            if(r.auction.paused){
-                r.auction.paused = false;
-                io.to(socket.room).emit("auctionResumed");
-            } else {
-                r.auction.paused = true;
-                io.to(socket.room).emit("auctionPaused");
-            }
+            r.auction.paused = !r.auction.paused;
+            io.to(socket.room).emit(r.auction.paused ? "auctionPaused" : "auctionResumed");
         }
 
-        // 3. SKIP PLAYER
         if(action === "skip"){
             if(!r.auction.player) return;
-            const skippedPlayer = r.auction.player;
-            if(r.auction.interval){
-                clearInterval(r.auction.interval);
-                r.auction.interval = null;
-            }
-            io.to(socket.room).emit("logUpdate", `⏭ ${skippedPlayer.name} skipped`);
-            io.to(socket.room).emit("unsold", { player: skippedPlayer });
+            if(r.auction.interval) clearInterval(r.auction.interval);
+            
+            io.to(socket.room).emit("logUpdate", `⏭ ${r.auction.player.name} skipped`);
+            io.to(socket.room).emit("unsold", { player: r.auction.player });
             setTimeout(() => nextPlayer(r, socket.room), 800);
         }
 
-        // 4. SKIP SET
         if(action === "skipSet"){
-            if(r.auction.interval){
-                clearInterval(r.auction.interval);
-                r.auction.interval = null;
-            }
-            const currentSetName = getSetName(r.sets[r.currentSetIndex]);
-            io.to(socket.room).emit("logUpdate", `⏩ SKIPPING REST OF: ${currentSetName}`);
-
-            // Empty current set
-            if(r.sets[r.currentSetIndex]){
-                r.sets[r.currentSetIndex] = []; 
-            }
+            io.to(socket.room).emit("logUpdate", `⏩ SKIPPING SET: ${getSetName(r.sets[r.currentSetIndex])}`);
+            r.sets[r.currentSetIndex] = []; 
+            if(r.auction.interval) clearInterval(r.auction.interval);
             nextPlayer(r, socket.room);
         }
 
-        // 5. END AUCTION
         if(action === "end"){
-            endAuction(r, socket.room);
+            if (r.auction.interval) {
+                clearInterval(r.auction.interval);
+                r.auction.interval = null;
+            }
+            r.auction.live = false;
+            r.auction.paused = true;
+            
+            // FIX: Mark room as ended and remove from public visibility
+            r.auctionEnded = true; 
+            r.isPublic = false; 
+
+            io.to(socket.room).emit("auctionEnded");
+            io.to(socket.room).emit("logUpdate", "🛑 Auction Ended. Prepare Playing XI.");
+            io.to(socket.room).emit("squadData", r.squads);
         }
     });
 
-    /* ================= BIDDING ================= */
+    // --- 8. BIDDING ---
+        // --- 8. BIDDING ---
     socket.on("bid", () => {
         const r = rooms[socket.room];
         if(!r || !socket.team) return;
         if(!r.auction.live || r.auction.paused) return;
         if(r.auction.lastBidTeam === socket.team) return;
 
-        const increment = r.auction.bid < 10 ? 0.2 : 0.5; 
-        const nextBid = r.auction.bid + increment;
-        const currentPurse = r.purse[socket.team];
+        // 1. Calculate Next Bid (Base Price logic included)
+        let nextBid;
+        if (r.auction.team === null) {
+            // No one has bid yet -> Start at Base Price
+            nextBid = r.auction.bid; 
+        } else {
+            // Someone holds the bid -> Add Increment
+            const increment = r.auction.bid < 10 ? 0.2 : 0.5; 
+            nextBid = r.auction.bid + increment;
+        }
+
+        // 2. Define currentPurse (This line was missing!)
+        const currentPurse = r.purse[socket.team]; 
         
+        // 3. Validate Purse
         if(currentPurse < nextBid){
             socket.emit("bidRejected", "Insufficient purse");
             return;
         }
 
+        // 4. Update State
         r.auction.bid = nextBid;
         r.auction.lastBidTeam = socket.team;
         r.auction.team = socket.team; 
-        r.auction.timer = 10; 
+        r.auction.timer = 8;         
 
         io.to(socket.room).emit("bidUpdate", {
             bid: r.auction.bid,
             team: socket.team
         });
-        io.to(socket.room).emit("logUpdate", `🟢 ${socket.team} bids ₹${r.auction.bid.toFixed(2)} Cr`);
+        io.to(socket.room).emit("logUpdate", `⚬ ${socket.team} bids ₹${r.auction.bid.toFixed(2)} Cr`);
     });
 
-    /* ================= CHAT & MISC ================= */
+
+    // --- 9. CHAT & SQUADS ---
     socket.on("chat", data => {
         io.to(socket.room).emit("chatUpdate", data);
     });
 
-    socket.on("checkAdmin", () => {
+    socket.on("getSquads", () => {
         const r = rooms[socket.room];
-        if(r && r.admin === socket.id){
-            socket.emit("adminStatus", true);
-        } else {
-            socket.emit("adminStatus", false);
-        }
+        if(!r) return;
+        socket.emit("squadData", r.squads);
     });
 
-    /* ================= PLAYING XI ================= */
     socket.on("getMySquad", () => {
         const r = rooms[socket.room];
         if(!r || !socket.team) return;
@@ -402,27 +410,21 @@ io.on("connection", socket => {
         });
     });
 
+    // --- 10. SUBMIT XI ---
     socket.on("submitXI", ({ xi }) => {
         const r = rooms[socket.room];
         if(!r || !socket.team) return;
 
         const allPlayers = [
-            ...(xi.BAT || []),
-            ...(xi.WK || []),
-            ...(xi.ALL || []),
-            ...(xi.BOWL || []),
-            ...(xi.BOWLER || [])
+            ...(xi.BAT || []), ...(xi.WK || []), 
+            ...(xi.ALL || []), ...(xi.BOWL || [])
         ];
-
-        if(allPlayers.length !== 11){
-             return socket.emit("xiError", "Server received incomplete XI.");
-        }
 
         let counts = { BAT: 0, WK: 0, ALL: 0, BOWL: 0, SPIN: 0, FOREIGN: 0 };
         let totalRating = 0;
 
         allPlayers.forEach(p => {
-            totalRating += (p.rating || 0);
+            totalRating += (p.rating || 75);
             if(p.foreign) counts.FOREIGN++;
             if(p.role === "BAT") counts.BAT++;
             if(p.role === "WK") counts.WK++;
@@ -431,19 +433,26 @@ io.on("connection", socket => {
             if(p.role === "SPIN") { counts.BOWL++; counts.SPIN++; }
         });
 
-        // VALIDATE
         let disqualified = false;
         let reason = "";
         const R = r.rules;
-
-        if(counts.FOREIGN > 4) { disqualified = true; reason = "More than 4 Overseas players"; }
-        else if(counts.BAT < R.minBat) { disqualified = true; reason = `Need min ${R.minBat} Batsmen`; }
-        else if(counts.WK < R.minWK) { disqualified = true; reason = `Need min ${R.minWK} Wicket Keeper`; }
-        else if(counts.ALL < R.minAll) { disqualified = true; reason = `Need min ${R.minAll} All-Rounders`; }
-        else if(counts.BOWL < R.minBowl) { disqualified = true; reason = `Need min ${R.minBowl} Bowlers`; }
-        else if(counts.SPIN < R.minSpin) { disqualified = true; reason = `Need min ${R.minSpin} Spinner`; }
-        else if(counts.FOREIGN < R.minForeignXI) { disqualified = true; reason = `Need min ${R.minForeignXI} Overseas`; }
-
+if (allPlayers.length !== 11) { 
+    disqualified = true; reason = `Selected ${allPlayers.length}/11 Players`; 
+}
+else if (counts.FOREIGN > R.maxForeign) { 
+    // Logic: Standard IPL is max 4 in XI usually, but using your dynamic rule variable
+    // If your variable 'minForeignXI' actually meant 'Max Foreign in XI', we use that limit.
+    // Assuming 'maxForeign' is total squad limit, and 'minForeignXI' is actually MAX in XI (based on your prompt)
+    disqualified = true; reason = `Max ${R.maxForeign} Overseas allowed in Squad`; 
+}
+// Specific check for XI foreign limit (renaming variable logic for clarity)
+else if (counts.FOREIGN > (R.minForeignXI || 4)) {
+    disqualified = true; reason = `Max ${R.minForeignXI || 4} Overseas allowed in XI`; 
+}
+else if (counts.WK < R.minWK) { disqualified = true; reason = `Need min ${R.minWK} Wicket Keeper`; }
+else if (counts.BAT < R.minBat) { disqualified = true; reason = `Need min ${R.minBat} Batsmen`; }
+else if (counts.ALL < R.minAll) { disqualified = true; reason = `Need min ${R.minAll} All-Rounders`; }
+else if (counts.BOWL < R.minBowl) { disqualified = true; reason = `Need min ${R.minBowl} Bowlers`; }
         const finalRating = disqualified ? 0 : Number((totalRating / 11).toFixed(2));
 
         r.playingXI[socket.team] = {
@@ -464,138 +473,140 @@ io.on("connection", socket => {
 
         io.to(socket.room).emit("logUpdate", `📝 ${socket.team} submitted Playing XI`);
 
-        // LIVE LEADERBOARD
         const board = Object.values(r.playingXI).sort((a,b) => {
-             if(b.rating !== a.rating) return b.rating - a.rating;
-             return (b.purse || 0) - (a.purse || 0);
+            if(b.rating !== a.rating) return b.rating - a.rating; 
+            return (b.purse || 0) - (a.purse || 0); 
         });
 
-        const totalTeams = Object.keys(r.squads).length;
-        const submittedCount = Object.keys(r.playingXI).length;
-
         io.to(socket.room).emit("leaderboard", board);
-
-        if(submittedCount >= totalTeams){
-             io.to(socket.room).emit("logUpdate", "🏆 Tournament Complete! Final Results are out.");
-        } else {
-             const remaining = totalTeams - submittedCount;
-             io.to(socket.room).emit("logUpdate", `⏳ Waiting for ${remaining} more teams...`);
-        }
     });
 
-}); // End io.on connection
+    socket.on("checkAdmin", () => {
+        const r = rooms[socket.room];
+        socket.emit("adminStatus", (r && r.admin === socket.id));
+    });
+
+    socket.on("getAuctionState", () => {
+        if(!socket.room) return;
+        const r = rooms[socket.room];
+        if(!r) return;
+        socket.emit("auctionState", {
+            live: r.auction.live,
+            paused: r.auction.paused,
+            player: r.auction.player,
+            bid: r.auction.bid,
+            lastBidTeam: r.auction.lastBidTeam
+        });
+    });
+
+});
 
 /* ================= AUCTION ENGINE ================= */
-function nextPlayer(r, room){
-  if(!r.auction.live) return;
 
-  if(r.auction.interval) {
-    clearInterval(r.auction.interval);
-    r.auction.interval = null;
-  }
+function nextPlayer(r, room) {
+    if (!r.auction.live) return;
 
-  let set = r.sets[r.currentSetIndex];
-
-  // Move to next set if empty
-  if (!set || set.length === 0) {
-    r.currentSetIndex++;
-    if (r.currentSetIndex >= r.sets.length) {
-      endAuction(r, room);
-      return;
+    if (r.auction.interval) {
+        clearInterval(r.auction.interval);
+        r.auction.interval = null;
     }
-    set = r.sets[r.currentSetIndex];
-    io.to(room).emit("logUpdate", `🔔 NEW SET: ${getSetName(set)}`);
-  }
 
-  // Pick player
-  const randIdx = Math.floor(Math.random() * set.length);
-  r.auction.player = set.splice(randIdx, 1)[0]; 
-  
-  broadcastSets(r, room); 
+    let set = r.sets[r.currentSetIndex];
 
-  // Reset Auction State
-  r.auction.lastBidTeam = null;
-  r.auction.bid = startBid(r.auction.player.rating);
-  r.auction.team = null;
-  r.auction.timer = 4;
-  
-  io.to(room).emit("newPlayer", {
-    player: r.auction.player,
-    bid: r.auction.bid,
-    live: true,
-    paused: false
-  });
-
-  // Start Timer
-  r.auction.interval = setInterval(() => {
-    if(r.auction.paused) return;
-    
-    io.to(room).emit("timer", r.auction.timer);
-    r.auction.timer--;
-    
-    if(r.auction.timer < 0){
-      clearInterval(r.auction.interval);
-      resolvePlayer(r, room);
-      setTimeout(() => nextPlayer(r, room), 1200);
+    if (!set || set.length === 0) {
+        r.currentSetIndex++;
+        if (r.currentSetIndex >= r.sets.length) {
+            endAuction(r, room);
+            return;
+        }
+        set = r.sets[r.currentSetIndex];
+        io.to(room).emit("logUpdate", `🔔 NEW SET: ${getSetName(set)}`);
     }
-  }, 1000);
+
+    const randIdx = Math.floor(Math.random() * set.length);
+    r.auction.player = set.splice(randIdx, 1)[0];
+    
+    broadcastSets(r, room); 
+
+    r.auction.lastBidTeam = null;
+// Use player's specific basePrice, or calculate it from rating if missing
+    r.auction.bid = r.auction.player.basePrice || startBid(r.auction.player.rating || 80);
+    r.auction.team = null;
+    r.auction.timer = 1;
+
+    io.to(room).emit("newPlayer", {
+        player: r.auction.player,
+        bid: r.auction.bid,
+        live: true,
+        paused: false
+    });
+
+    r.auction.interval = setInterval(() => {
+        if (r.auction.paused) return;
+
+        io.to(room).emit("timer", r.auction.timer);
+        r.auction.timer--;
+
+        if (r.auction.timer < 0) {
+            clearInterval(r.auction.interval);
+            resolvePlayer(r, room);
+            setTimeout(() => nextPlayer(r, room), 2000); 
+        }
+    }, 1000);
 }
+function resolvePlayer(r, room) {
+    const p = r.auction.player;
 
-function resolvePlayer(r, room){
-  const p = r.auction.player;
+    if (r.auction.team) {
+        const team = r.auction.team;
+        const squad = r.squads[team];
+        
+        // --- FIX 2: REMOVED RULE BLOCKING ---
+        // Only check Purse. Rules are checked at Submit XI.
+        if (r.purse[team] >= r.auction.bid) {
+            // SOLD
+            p.price = r.auction.bid;
+            squad.push(p);
+            r.squads[team] = squad;
+            r.purse[team] -= r.auction.bid;
 
-  if(r.auction.team){
-    const team = r.auction.team;
-    const squad = r.squads[team] || [];
-    const foreignCount = squad.filter(pl => pl.foreign).length;
-
-    // Rule Check
-    if(
-      squad.length < r.rules.maxPlayers &&
-      (!p.foreign || foreignCount < r.rules.maxForeign) &&
-      r.purse[team] >= r.auction.bid
-    ){
-      // SOLD
-      p.price = r.auction.bid;
-      squad.push(p);
-      r.squads[team] = squad;
-      r.purse[team] -= r.auction.bid;
-
-      io.to(room).emit("sold", {
-        player: p,
-        team: team,
-        price: r.auction.bid,
-        purse: r.purse
-      });
-      io.to(room).emit("logUpdate", `🔨 SOLD: ${p.name} → ${team} ₹${r.auction.bid.toFixed(2)} Cr`);
-      io.to(room).emit("squadData", r.squads);
+            io.to(room).emit("sold", {
+                player: p,
+                team: team,
+                price: r.auction.bid,
+                purse: r.purse
+            });
+            io.to(room).emit("logUpdate", `🔨 SOLD: ${p.name} → ${team} ₹${r.auction.bid.toFixed(2)} Cr`);
+            io.to(room).emit("squadData", r.squads);
+            
+            // Remove team from available list if they exist there (just in case)
+            r.availableTeams = r.availableTeams.filter(t => t !== team);
+        } else {
+            // UNSOLD (Only if insufficient funds)
+            io.to(room).emit("unsold", { player: p });
+            io.to(room).emit("logUpdate", `❌ UNSOLD (Insufficient Funds): ${p.name}`);
+        }
     } else {
-      // UNSOLD (Rule)
-      io.to(room).emit("unsold", { player: p });
-      io.to(room).emit("logUpdate", `❌ UNSOLD (rule limit): ${p.name}`);
+        io.to(room).emit("unsold", { player: p });
+        io.to(room).emit("logUpdate", `❌ UNSOLD: ${p.name}`);
     }
-  } else {
-    // UNSOLD (No Bids)
-    io.to(room).emit("unsold", { player: p });
-    io.to(room).emit("logUpdate", `❌ UNSOLD: ${p.name}`);
-  }
 }
 
-function endAuction(r, room){
-  if(r.auction.interval){
-    clearInterval(r.auction.interval);
-    r.auction.interval = null;
-  }
-  r.auction.live = false;
-  r.auction.paused = true;
-  r.phase = "xi";
 
-  io.to(room).emit("auctionEnded");
-  io.to(room).emit("startXI", r.squads);
-  io.to(room).emit("squadData", r.squads);
+function endAuction(r, room) {
+    if (r.auction.interval) {
+        clearInterval(r.auction.interval);
+        r.auction.interval = null;
+    }
+    r.auction.live = false;
+    r.auction.paused = true;
+    
+    io.to(room).emit("auctionEnded");
+    io.to(room).emit("logUpdate", "🛑 Auction Ended. Prepare Playing XI.");
+    io.to(room).emit("squadData", r.squads);
 }
 
 const PORT = process.env.PORT || 2500; 
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
