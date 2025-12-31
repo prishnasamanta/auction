@@ -11,6 +11,13 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
+// --- NEW: Handle /room/:code requests ---
+app.get('/room/:roomCode', (req, res) => {
+    // Send the main HTML file regardless of the room code
+    // The Client JS will extract the code from the URL
+    res.sendFile(__dirname + '/public/index.html');
+});
+
 /* ================= CONSTANTS & GLOBALS ================= */
 const rooms = {};
 
@@ -363,7 +370,13 @@ socket.on("joinRoom", ({ roomCode, user }) => {
             nextBid = r.auction.bid; 
         } else {
             // Someone holds the bid -> Add Increment
-            const increment = r.auction.bid < 10 ? 0.2 : 0.5; 
+            const increment =
+  r.auction.bid < 1  ? 0.05 :
+  r.auction.bid < 5  ? 0.1  :
+  r.auction.bid < 10 ? 0.2  :
+  r.auction.bid < 20 ? 0.25 :
+  1;
+
             nextBid = r.auction.bid + increment;
         }
 
