@@ -242,33 +242,47 @@ socket.on("roomCreated", code => {
 /* ================= ROOM STATE LOGIC ================= */
 /* ================= ROOM STATE LOGIC ================= */
 /* ================= ROOM STATE LOGIC ================= */
+/* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
     
     // 1. SAVE METADATA (Owners & Count)
     if (data.teamOwners) teamOwners = data.teamOwners;
-    if (data.userCount) {
+    
+    // Update the live user count pill in the top bar
+    if (data.userCount !== undefined) {
         const countEl = document.getElementById("liveUserCount");
         if(countEl) countEl.innerText = data.userCount;
     }
 
     // 2. CHECK: HAS AUCTION ENDED?
     if (data.auctionEnded) {
-        // If user is refreshing (already has session), let them stay for Leaderboard/XI
-        // If user is new (no session matching room), kick them out
+        // If user is refreshing (already has session matching this room), let them stay for Leaderboard/XI
         const savedRoom = sessionStorage.getItem('ipl_room');
+        
         if (savedRoom === data.roomCode) {
+            // Restore session variables if needed
+            roomCode = data.roomCode;
+            if(data.squads) allSquads = data.squads;
+            if(data.rules) activeRules = data.rules;
+            
+            // Setup base UI background
             setupAuctionScreen();
+            
+            // SKIP to Post-Game Screen
             showScreen("playingXI");
-            document.body.style.overflow = "auto";
+            document.body.style.overflow = "auto"; // Enable scrolling
+            
+            // Fetch personal data
             socket.emit("getMySquad"); 
             updateRulesUI();
         } else {
+            // If user is new (no session matching room), kick them out because game is over
             alert("⚠️ The Auction has ended. Returning to Main Screen.");
             sessionStorage.clear();
             window.location.href = "/";
         }
-        return; // Stop processing
+        return; // Stop further processing
     }
 
     // 3. STANDARD SETUP (Game Active)
@@ -283,7 +297,7 @@ socket.on("joinedRoom", (data) => {
     
     setupAuctionScreen();
 
-    // 4. RENDER TEAMS
+    // 4. RENDER TEAMS (If selecting)
     if (data.availableTeams) {
         renderEmbeddedTeams(data.availableTeams);
     }
@@ -291,20 +305,32 @@ socket.on("joinedRoom", (data) => {
     // 5. DETERMINE SCREEN PHASE
     if (data.auctionStarted) {
         // Auction is LIVE.
+        // If I don't have a team AND there are teams available -> Show Selection First
         if (!myTeam && data.availableTeams && data.availableTeams.length > 0) {
-            // New player, teams available -> Show Selection First
             setGamePhase("TEAM_SELECT");
         } else {
             // Already has team OR no teams left -> Show Auction
             setGamePhase("AUCTION");
+            
+            // If I have a team, update the notice
+            if (myTeam) {
+                document.getElementById("teamNotice").innerText = `You are: ${myTeam}`;
+            }
         }
     } else {
         // Auction NOT started -> Always show Selection
         setGamePhase("TEAM_SELECT");
+        if (myTeam) {
+             // If I already picked (reconnecting), show waiting message
+             document.getElementById("embeddedTeamList").classList.add("hidden");
+             document.getElementById("waitingForHostMsg").classList.remove("hidden");
+             document.getElementById("teamNotice").innerText = `You are: ${myTeam}`;
+        }
     }
     
     updateAdminButtons(data.auctionStarted);
 });
+
 socket.on("updateUserCount", count => {
     const el = document.getElementById("liveUserCount");
     if(el) el.innerText = count;
@@ -408,6 +434,12 @@ window.viewSet = function() {
     `);
     viewSetWindow.document.close();
 };
+/* ================= FORCE REDIRECT ================= */
+socket.on("forceHome", (msg) => {
+    alert("⚠️ " + msg + " Returning to Main Screen.");
+    sessionStorage.clear();
+    window.location.href = "/";
+});
 
 // --- B. SQUAD VIEWING (FIXED) ---
 socket.on("squadData", squads => {
@@ -1295,6 +1327,7 @@ function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
+
 
 
 
