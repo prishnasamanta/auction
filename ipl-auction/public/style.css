@@ -1007,59 +1007,5 @@ body {
 }
 /* ================= MOBILE AUCTION SCROLL FIX ================= */
 
-@media (max-width: 900px) {
-
-  /* 1. Unlock the Auction Screen Height */
-  #auctionUI {
-    height: auto !important;       /* Stop forcing 100% height */
-    min-height: 100dvh;            /* Minimum full screen */
-    overflow-y: auto !important;   /* Force vertical scrolling */
-    display: block;                /* Remove flex column lock */
-    padding-bottom: 150px !important; /* Extra space for footer */
-  }
-
-  /* 2. Fix the Wrapper to Flow Vertically */
-  .auction-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: auto !important;       /* Allow it to grow */
-    overflow: visible !important;  /* Don't clip content */
-    padding: 10px;
-  }
-
-  /* 3. Panel Spacing & Ordering */
-  .panel {
-    flex: none !important;         /* Stop flex resizing */
-    height: auto !important;       /* Let content define height */
-    margin-bottom: 30px;
-    background: rgba(30, 41, 59, 0.95);
-  }
-
-  /* Order: Auction Card (Top) -> Logs (Middle) -> Chat (Bottom) */
-  .auction-center { order: 1; margin-bottom: 20px; }
-  .panel.left     { order: 2; } /* Logs */
-  .panel.right    { order: 3; } /* Chat */
-
-  /* 4. Fix Internal Scroll areas inside panels */
-  /* We want the Logs and Chat to have a fixed height so they don't make the page 10 miles long */
-  .panel.left .scroll, 
-  .panel.right .scroll {
-    max-height: 250px; /* Fixed height for internal scroll areas */
-    min-height: 150px;
-    overflow-y: auto;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 10px;
-  }
-
-  /* 5. Ensure Auction Card doesn't get cut off */
-  #auctionCard, #teamSelectionMain {
-    margin-bottom: 20px;
-    height: auto;
-    overflow: visible;
-  }
-}
-
 
 
