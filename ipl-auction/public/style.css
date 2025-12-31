@@ -542,8 +542,12 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     height: auto;
     position: relative;
   }
-  #roomCodeBar { display: none; } /* Hide code to save space */
-  
+#roomCodeBar { 
+    display: block !important; /* Force Visible */
+    font-size: 0.7rem;
+    padding: 6px 9px;
+    background: rgba(255,255,255,0.15);
+  }  
   /* 6. MODALS */
   .rules-overlay { align-items: flex-end; padding: 0; }
   .rules-card, .overlay-card {
@@ -554,90 +558,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   }
 }
 
-/* ================= MOBILE RESPONSIVENESS (UPDATED) ================= */
-@media (max-width: 900px) {
 
-  /* 1. LAYOUT & SCROLLING */
-  #auctionUI {
-    height: auto !important; 
-    overflow-y: auto !important;
-    display: block; 
-    padding-bottom: 120px; 
-  }
-  
-  .screen {
-    height: auto !important; 
-    min-height: 100dvh;
-    overflow-y: auto !important;
-    padding-bottom: 120px !important;
-  }
-
-  /* 2. TOPBAR FIXES */
-  .topbar {
-    flex-direction: column;
-    height: auto;
-    gap: 10px;
-  }
-  
-  .topbar .top-left {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  /* --- FIX 3: SHOW ROOM CODE ON MOBILE --- */
-  #roomCodeBar { 
-    display: block !important; /* Force Visible */
-    font-size: 0.9rem;
-    padding: 6px 10px;
-    background: rgba(255,255,255,0.15);
-  }
-
-  /* 3. AUCTION PAGE PANELS */
-  .auction-wrapper {
-    display: flex;
-    flex-direction: column;
-    padding: 10px;
-    padding-bottom: 80px; 
-  }
-  
-  .auction-center { order: 1; margin-bottom: 20px; }
-  .panel { height: auto !important; order: 2; margin-bottom: 20px; flex: none; }
-  
-  /* --- FIX 4: BIGGER BUTTONS FOR VIEW SET/SQUAD --- */
-  #squadSelect {
-    padding: 15px !important; /* Larger touch area */
-    font-size: 1rem !important;
-    margin-bottom: 10px;
-  }
-  
-  .panel button.secondary-btn {
-    padding: 15px !important; /* Larger touch area */
-    font-size: 1rem !important;
-    background: rgba(255,255,255,0.1);
-    border-color: #fff;
-    color: #fff;
-  }
-
-  /* Mobile Sticky Bid Button */
-  #bidBtn {
-    position: fixed; 
-    bottom: 60px;    
-    left: 20px;
-    right: 20px;
-    width: auto;
-    z-index: 1500;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  }
-
-  /* 4. MODALS */
-  .rules-overlay { align-items: flex-end; padding: 0; }
-  .rules-card, .overlay-card {
-    width: 100%;
-    border-radius: 16px 16px 0 0;
-    margin: 0;
-    max-height: 80vh;
-  }
-}
 
 
 
