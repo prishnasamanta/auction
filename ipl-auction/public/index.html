@@ -122,7 +122,7 @@
             </div>
              <div class="rule-row">
                 <label>Max Foreign (Playing XI)</label>
-                <input id="minForeignXI" type="number" value="4">
+                <input id="maxForeignXI" type="number" value="4">
             </div>
         </div>
 
@@ -269,7 +269,7 @@
     <div id="xiCardTarget" class="team-sheet-card hidden">
         <div class="sheet-header">
             <h2 id="sheetTeamName" class="sheet-title">MY TEAM</h2>
-            <div class="sheet-subtitle">OFFICIAL SQUAD</div>
+            <div class="sheet-subtitle">PLAYING XI</div>
         </div>
         
         <div id="sheetContent"></div>
@@ -309,10 +309,6 @@
         </div>
 
     <div id="xiStatus" style="position:fixed; bottom:20px; right:20px; z-index:100;"></div>
-
-    <div id="leaderboardBox" class="glass" style="margin-top: 30px; padding: 15px; border-top: 2px solid var(--primary);">
-        <h4 style="margin:0 0 10px 0; color:#aaa;">🔴 LIVE STANDINGS</h4>
-        </div>
 
 </section>
 
@@ -390,8 +386,8 @@
         </div>
 
         <div class="rule-box" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-          <div style="font-size:0.8rem; color:#aaa;">✈️ Max Foreign (XI)</div>
-          <div style="font-size:1.2rem; font-weight:bold;"><span id="pop_viewForeignXI">---</span></div>
+          <div style="font-size:0.8rem; color:#aaa;">♠️ RTM Cards</div>
+          <div style="font-size:1.2rem; font-weight:bold;">0</span></div>
         </div>
 
       </div>
@@ -403,6 +399,9 @@
         <li>🥎 Spinners in Bowlers: <span id="pop_viewSpin" style="color:#fff; font-weight:bold;">-</span></li>
         <li>🧤 Min Wicket Keepers: <span id="pop_viewWK" style="color:#fff; font-weight:bold;">-</span></li>
         <li>🌟 Min All-Rounders: <span id="pop_viewAR" style="color:#fff; font-weight:bold;">-</span></li>
+        <li>✈︎ Max Foreigners: <span id="pop_viewForeignXI" style="color:#fff; font-weight:bold;">-</span></li>
+
+          
       </ul>
 
     </div>
@@ -418,12 +417,12 @@
     <div class="footer-content">
         <span>Made with <span style="color:#e11d48;">❤️</span> by <b>PRS</b></span>
         <span class="separator">•</span>
-        <a href="#" target="_blank" class="footer-link">Support for ♨</a>
+        <a href="#" target="_blank" class="footer-link">Support</a>
         <span class="separator">•</span>
         <div class="social-links">
 <div class="social-links">
-  <a href="#"><img src="discord.svg" alt="Discord"></a>
-  <a href="#"><img src="whatsapp.svg" alt="WhatsApp"></a>
+  <a href="#"><img src="/discord.svg" alt="D"></a>
+  <a href="#"><img src="/whatsapp.svg" alt="W"></a>
 </div>
     </div>
 </footer>
@@ -432,5 +431,6 @@
 
 </body>
 </html>
+
 
 
