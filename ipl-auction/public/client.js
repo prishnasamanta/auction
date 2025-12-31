@@ -1,1019 +1,1129 @@
+/* ================================================= */
+/* ============= GLOBAL SETUP & STATE ============== */
+/* ================================================= */
 const socket = io();
 
-/* ================= DOM ================= */
-const enterBtn=document.getElementById("enterBtn");
-const continueBtn=document.getElementById("continueBtn");
-const createBtn=document.getElementById("createBtn");
-const joinBtn=document.getElementById("joinBtn");
-const usernameInput=document.getElementById("username");
-const codeInput=document.getElementById("code");
-const roomOptions=document.getElementById("roomOptions");
-const adminControls=document.getElementById("adminControls");
-const teamSelect=document.getElementById("teamSelect");
-const teamNotice=document.getElementById("teamNotice");
-const playerName=document.getElementById("playerName");
-const playerMeta=document.getElementById("playerMeta");
-const startBidEl=document.getElementById("startBid");
-const bidEl=document.getElementById("bid");
-const timerEl=document.getElementById("timer");
-const bidBtn=document.getElementById("bidBtn");
-const auctionCard=document.getElementById("auctionCard");
-const auctionResult=document.getElementById("auctionResult");
-const logBox=document.getElementById("log");
-const chatBox=document.getElementById("chat");
-const msgInput = document.getElementById("msg");
-const TEAM_COLORS = {
-  CSK: "#facc15",
-  MI: "#38bdf8",
-  RCB: "#dc2626",
-  KKR: "#a855f7",
-  RR: "#fb7185",
-  DC: "#60a5fa",
-  SRH: "#fb923c",
-  PBKS: "#ef4444",
-  GT: "#0ea5e9",
-  LSG: "#22c55e"
-};
+// --- DOM ELEMENTS ---
+const enterBtn = document.getElementById("enterBtn");
+const createBtn = document.getElementById("createBtn");
+const joinBtn = document.getElementById("joinBtn");
+const usernameInput = document.getElementById("username");
+const codeInput = document.getElementById("code");
 
-
-/* ================= RULES SAVE ================= */
-document.getElementById("saveRules").onclick = () => {
-
-  socket.emit("setRules", {
-    maxPlayers: Number(document.getElementById("maxPlayers").value),
-    maxForeign: Number(document.getElementById("maxForeign").value),
-    purse: Number(document.getElementById("purse").value),
-    minBat: Number(minBat.value),
-    minAll: Number(minAll.value),
-    minBowl: Number(minBowl.value),
-    minSpin: Number(minSpin.value),
-    minWK: Number(minWK.value)
-  });
-
-};
-
-
-/* ================= SOUNDS ================= */
-const soundBid=new Audio("/sounds/bid.mp3");
-const soundHammer=new Audio("/sounds/sold.mp3");
-const soundUnsold=new Audio("/sounds/unsold.mp3");
-const soundTick=new Audio("/sounds/beep.mp3");
-
-/* ================= STATE ================= */
-let username="";
-let roomCode="";
-let myTeam=null;
-let isHost=false;
-let auctionLive=false;
-let auctionPaused=false;
-let lastBidTeam=null;
-let fullSetPlayers=[];
-let allSquads = {};     // team -> players[]
-let teamPurse = {};    // team -> remaining purse
+// --- GAME STATE ---
+let username = "";
+let roomCode = "";
+let myTeam = null;
+let isHost = false;
+let auctionLive = false;
+let auctionPaused = false;
+let lastBidTeam = null;
+let teamPurse = {}; 
+let allSquads = {};
+let activeRules = {};
+let selectedXI = { BAT: [], BOWL: [], WK: [], ALL: [] };
 let lastTickSecond = null;
-let rules = {};
-let squadWindow = null;
-let selectedSquadTeam = null;
+
+// --- POPUP WINDOW STATE ---
 let remainingSets = [];
 let viewSetWindow = null; 
+let squadWindow = null;
+let selectedSquadTeam = null;
 
-
-/* ================= SCREENS ================= */
-
-function showScreen(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-}
-
-/* ================= LANDING ================= */
-enterBtn.onclick=()=>showScreen("auth");
-continueBtn.onclick=()=>{
-  username=usernameInput.value.trim();
-  if(!username) return alert("Enter name");
-  usernameInput.disabled = true;
-  continueBtn.classList.add("hidden");
-  roomOptions.classList.remove("hidden");
+// --- CONFIG ---
+const TEAM_COLORS = {
+    CSK: "#facc15", MI: "#38bdf8", RCB: "#dc2626", KKR: "#a855f7",
+    RR: "#fb7185", DC: "#60a5fa", SRH: "#fb923c", PBKS: "#ef4444",
+    GT: "#0ea5e9", LSG: "#22c55e"
 };
 
-/* ================= ROOM ================= */
-createBtn.onclick=()=>{
-  isHost=true;
-  socket.emit("createRoom",{user:username});
-};
-joinBtn.onclick=()=>{
-  roomCode=codeInput.value.trim();
-  if(!roomCode) return alert("Enter room code");
-  socket.emit("joinRoom",{roomCode,user:username});
-};
-socket.on("roomCreated", code => {
-  roomCode = code;
+// --- SOUNDS ---
+const soundBid = new Audio("/sounds/bid.mp3");
+const soundHammer = new Audio("/sounds/sold.mp3");
+const soundUnsold = new Audio("/sounds/unsold.mp3");
+const soundTick = new Audio("/sounds/beep.mp3");
 
-  // 1. Hide Landing/Auth
-  document.getElementById("landing").classList.add("hidden");
-  document.getElementById("auth").classList.add("hidden");
+/* ================================================= */
+/* ========= 1. INITIALIZATION & NAVIGATION ======== */
+/* ================================================= */
 
-  // 2. SHOW Auction UI (Background)
-  document.getElementById("auctionUI").classList.remove("hidden"); 
+window.onload = () => {
+    // 1. Reconnection Logic
+    const sRoom = sessionStorage.getItem('ipl_room');
+    const sUser = sessionStorage.getItem('ipl_user');
+    const sTeam = sessionStorage.getItem('ipl_team');
 
-  // 3. SHOW Rules Popup
-  document.getElementById("rulesScreen").classList.remove("hidden");
-  
-  // LOCK SCROLLING so user can't scroll the background
-  document.body.style.overflow = "hidden"; 
-
-  document.getElementById("roomCodeText").innerText = code;
-  document.getElementById("roomCodeBar").classList.remove("hidden");
-});
-socket.on("joinedRoom", (data) => {
-    console.log("Joined Room Payload:", data);
-
-    // 1. Sync Rules (if sent)
-    if(data && data.rules) {
-        activeRules = data.rules;
-        // rules = data.rules; // Uncomment if needed
-        // updateRulesUI();    // Uncomment if needed
-    }
-    
-    // 2. Switch to Auction Screen
-    showScreen("auctionUI");
-
-    // --- 3. SHOW ROOM CODE (Critical Step) ---
-    if (data.roomCode) {
-        // Remove 'hidden' class so the box is visible
-        document.getElementById("roomCodeBar").classList.remove("hidden");
+    if (sRoom && sUser) {
+        console.log("🔄 Reconnecting...");
+        username = sUser;
+        roomCode = sRoom;
+        if(sTeam) myTeam = sTeam;
         
-        // Insert the actual code text
-        document.getElementById("roomCodeText").innerText = data.roomCode;
+        socket.emit('reconnectUser', { roomId: sRoom, username: sUser, team: sTeam });
+        
+        document.getElementById('landing').classList.add('hidden');
+        document.getElementById('auth').classList.add('hidden');
+        document.getElementById('auctionUI').classList.remove('hidden');
     }
 
-    // --- 4. HANDLE ADMIN BUTTONS ---
-    // Only show Start/Stop buttons if the user is the Host
-    const adminControls = document.getElementById("adminControls");
-    if (data.isHost) {
-        adminControls.classList.remove("hidden");
-    } else {
-        adminControls.classList.add("hidden");
-    }
+    // 2. Fetch Public Rooms
+    socket.emit('getPublicRooms');
+};
 
-    // 5. Sync State
-    socket.emit("checkAdmin");
-    socket.emit("getAuctionState");
-});
-
-
-// Listen for the answer
-socket.on("adminStatus", (isAdmin) => {
-    isHost = isAdmin;
-    if(isHost){
-        document.getElementById("adminControls").classList.remove("hidden");
-    } else {
-        document.getElementById("adminControls").classList.add("hidden");
-    }
-});
-
-socket.on("forceTeamPopup", ({ teams }) => {
-  if(myTeam) return;
-
-  const popup = document.getElementById("teamPopup");
-  popup.classList.remove("hidden");
-
-  renderTeamPopup(teams);
-});
-
-
-socket.on("startTeamSelection", ({ teams }) => {
-
-  if(myTeam) return; 
-
-  document.getElementById("teamPopup").classList.remove("hidden");
-
-  renderTeamPopup(teams);
-});
-
-socket.on("needTeamSelection", ({ teams }) => {
-
-  if(myTeam) return; // safety
-
-  console.log("Late joiner → opening team popup");
-
-  const popup = document.getElementById("teamPopup");
-  popup.classList.remove("hidden");
-
-  renderTeamPopup(teams);
-});
-
-
-/* ================= SET UPDATE ================= */
-socket.on("setUpdate", data => {
-  remainingSets = data; 
-
-  if(viewSetWindow && !viewSetWindow.closed){
-    viewSet(); 
-  }
-});
-
-
-/* ================= TEAM ================= */
-function renderTeams(teams){
-  teamSelect.innerHTML="";
-  teams.forEach(t=>{
-    const b=document.createElement("button");
-    b.innerText=t;
-    b.onclick=()=>pickTeam(t);
-    teamSelect.appendChild(b);
-  });
-}
-function pickTeam(team){
-  myTeam = team;
-  socket.emit("selectTeam", { team, user: username });
+// --- ENTER BUTTON ---
+if(enterBtn) {
+    enterBtn.onclick = () => {
+        document.getElementById("landing").classList.add("hidden");
+        document.getElementById("auth").classList.remove("hidden");
+        switchAuthTab('join'); 
+    };
 }
 
-/* ================= TEAM PICKED ================= */
-socket.on("teamPicked", ({ team, remaining }) => {
-  renderTeamPopup(remaining);
-  socket.emit("getSquads");
-  if(myTeam === team) {
-      const teamPopup = document.getElementById("teamPopup");
-      if(teamPopup) {
-          teamPopup.classList.add("hidden");
-          teamPopup.style.display = "none"; // Extra safety
-      }
-      const notice = document.getElementById("teamNotice");
-      if(notice) notice.innerText = `You are: ${team}`;
-  }
-});
-
-/* ================= RULES UPDATED ================= */
-/* ================= RULES UPDATED ================= */
-/* ================= RULES UPDATED ================= */
-socket.on("rulesUpdated", data => {
-  console.log("Rules Updated:", data);
-  
-  // 1. Update BOTH variables to ensure data is consistent
-  rules = data.rules;
-  activeRules = data.rules; 
-
-  // 2. Hide the Waiting Screen
-  document.getElementById("rulesScreen").classList.add("hidden");
-  document.body.style.overflow = "auto"; 
-  
-  // 3. Show Team Selection
-  document.getElementById("teamPopup").classList.remove("hidden");
-  renderTeamPopup(data.teams);
-  
-  // 4. Show Admin Controls (if host)
-  if(isHost){
-      document.getElementById("adminControls").classList.remove("hidden");
-  }
-
-  // 5. 🔥 IMPORTANT: Refresh the Rules Popup UI immediately
-  updateRulesUI();
-});
-
-
-
-function toggleRules(){
-    const el = document.getElementById("activeRulesPopup");
-    el.classList.toggle("hidden");
-    if(!el.classList.contains("hidden")) updateRulesUI();
-}
-function updateRulesUI() {
-    // Safety check
-    if (!activeRules) return;
-
-    // Helper to safely get value or show "---"
-    const getVal = (val) => (val !== undefined && val !== null) ? val : "---";
-
-    // Update the Popup Text
-    const elPurse = document.getElementById('viewPurse');
-    const elSquad = document.getElementById('viewSquadSize');
-    const elForeign = document.getElementById('viewForeign');
-
-    if(elPurse) elPurse.innerText = "₹" + getVal(activeRules.purse) + " Cr";
-    if(elSquad) elSquad.innerText = getVal(activeRules.maxPlayers);
-    if(elForeign) elForeign.innerText = getVal(activeRules.maxForeign);
+// --- TAB SWITCHING ---
+window.switchAuthTab = function(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab' + (tab === 'join' ? 'Join' : 'Create')).classList.add('active');
     
-    // Update Playing XI Requirements
-    if(document.getElementById('viewBat')) document.getElementById('viewBat').innerText = getVal(activeRules.minBat);
-    if(document.getElementById('viewBowl')) document.getElementById('viewBowl').innerText = getVal(activeRules.minBowl);
-    if(document.getElementById('viewWK')) document.getElementById('viewWK').innerText = getVal(activeRules.minWK);
-    if(document.getElementById('viewAR')) document.getElementById('viewAR').innerText = getVal(activeRules.minAll);
-}
-
-
-
-/* ================= ADMIN ================= */
-const startBtn = document.getElementById("startBtn");
-const togglePauseBtn = document.getElementById("togglePauseBtn"); // The Toggle Button
-const skipBtn = document.getElementById("skipBtn");
-const skipSetBtn = document.getElementById("skipSetBtn");         // The Skip Set Button
-
-if(startBtn) startBtn.onclick = () => socket.emit("adminAction", "start");
-if(skipBtn) skipBtn.onclick = () => socket.emit("adminAction", "skip");
-
-if(togglePauseBtn) togglePauseBtn.onclick = () => socket.emit("adminAction", "togglePause");
-
-if(skipSetBtn) skipSetBtn.onclick = () => {
-    if(confirm("⚠ Are you sure you want to skip the rest of this set?")) {
-        socket.emit("adminAction", "skipSet");
+    if(tab === 'create') {
+        document.getElementById('createSection').classList.remove('hidden');
+        document.getElementById('joinSection').classList.add('hidden');
+    } else {
+        document.getElementById('createSection').classList.add('hidden');
+        document.getElementById('joinSection').classList.remove('hidden');
+        socket.emit('getPublicRooms'); 
     }
 };
 
-function admin(action){
-    socket.emit("adminAction", action);
+// --- EXIT GAME ---
+window.exitToHome = function() {
+    if(confirm("Are you sure you want to exit?")) {
+        sessionStorage.clear();
+        window.location.href = "/";
+    }
 }
 
-/* ================= AUCTION ================= */
-socket.on("auctionStarted",()=>{
-  
-  auctionLive=true;
-  auctionPaused=false;
-  teamSelect.innerHTML="";
-  teamNotice.innerText="Auction Live 🔴";
-  socket.emit("getSquads");
-  if(isHost){
-    adminControls.classList.remove("hidden");
-  }  
+/* ================================================= */
+/* ============ 2. JOIN & CREATE ROOM ============== */
+/* ================================================= */
 
-});
-socket.on("auctionState", s => {
+if(createBtn) {
+    createBtn.onclick = () => {
+        username = usernameInput.value.trim();
+        const isPublic = document.getElementById('isPublicRoom').checked;
+        if(!username) return alert("Enter name");
 
-  auctionLive = s.live;
-  auctionPaused = s.paused;
-
-  if(s.player){
-    playerName.innerText = s.player.name;
-    bidEl.innerText = `₹${s.bid.toFixed(2)} Cr`;
-  }
-
-  updateBidButton(s);
-});
-
-function updateBidButton(state){
-  if(!myTeam || !auctionLive || auctionPaused){
-    bidBtn.disabled = true;
-    return;
-  }
-
-  if(teamPurse && teamPurse[myTeam] !== undefined && state){
-    const currentBid = state.bid || 0;
-    const nextBid = currentBid + 0.1; // Estimate next bid
-    
-    if(teamPurse[myTeam] < nextBid){
-      bidBtn.disabled = true;
-      return;
-    }
-  }
-
-  // last bidder cannot bid again
-  bidBtn.disabled = (lastBidTeam === myTeam);
+        sessionStorage.setItem('ipl_user', username);
+        socket.emit("createRoom", { user: username, isPublic: isPublic });
+    };
 }
 
-socket.on("auctionPaused", () => {
-    auctionPaused = true;
-    bidBtn.disabled = true;
-    lastTickSecond = null;
-    updateBidButton();
-    
-    // 👇 Change Admin Button Text
-    if(togglePauseBtn) {
-        togglePauseBtn.innerText = "Resume ▶";
-        togglePauseBtn.style.backgroundColor = "#22c55e"; // Green for Resume
-    }
-});
-
-socket.on("auctionResumed", () => {
-    auctionPaused = false;
-    bidBtn.disabled = false;
-    updateBidButton();
-    
-    // 👇 Change Admin Button Text
-    if(togglePauseBtn) {
-        togglePauseBtn.innerText = "Pause ⏸";
-        togglePauseBtn.style.backgroundColor = "#eab308"; // Yellow for Pause
-    }
-});
-
-/* ================= NEW PLAYER (RESET) ================= */
-socket.on("newPlayer", d => {
-  // 1. Reset Game State
-  auctionLive = true;
-  auctionPaused = false;
-  lastBidTeam = null;
-  lastTickSecond = null;
-  
-  updateBidButton({ bid: d.bid });
-
-  document.getElementById('resultOverlay').classList.add('hidden'); // Hide Stamp
-  document.getElementById('currentBidder').classList.add('hidden'); // Hide Badge
-
-  playerName.innerText = d.player.name;
-  playerMeta.innerText = `${d.player.role} • ⭐${d.player.rating}`;
-  bidEl.innerText = `₹${d.bid.toFixed(2)} Cr`;
-  bidBtn.disabled = !myTeam;
-});
-let activeRules = {
-    purse: 120,
-    maxPlayers: 25,
-    maxForeign: 8,
-    minBat: 3,
-    minBowl: 3,
-    minWK: 1,
-    minAll: 1
-};
-
-socket.on('syncRules', (serverRules) => {
-    console.log("Rules synced:", serverRules);
-    activeRules = serverRules;
-    // Update UI if the popup happens to be open
-    updateRulesUI(); 
-});
-
-function showRules() {
-    updateRulesUI();
-    document.getElementById('viewRulesOverlay').classList.remove('hidden');
+if(joinBtn) {
+    joinBtn.onclick = () => {
+        roomCode = document.getElementById('code').value.trim();
+        username = usernameInput.value.trim();
+        if(!roomCode || !username) return alert("Enter details");
+        
+        sessionStorage.setItem('ipl_room', roomCode);
+        sessionStorage.setItem('ipl_user', username);
+        socket.emit("joinRoom", { roomCode, user: username });
+    };
 }
-function updateRulesUI() {
-    // 1. Safety Check
-    const r = activeRules || {};
-    const val = (v) => (v !== undefined && v !== null) ? v : "---";
 
-    // 2. Update PLAYING XI SCREEN (Hidden screen)
-    const elPurse = document.getElementById('viewPurse');
-    const elSquad = document.getElementById('viewSquadSize');
-    const elForeign = document.getElementById('viewForeign');
+/* ================= PUBLIC ROOMS ================= */
+socket.on('publicRoomsList', ({ live, waiting }) => {
+    const box = document.getElementById('publicRoomList');
+    if(!box) return;
+    box.innerHTML = '';
 
-    if(elPurse) elPurse.innerText = val(r.purse);
-    if(elSquad) elSquad.innerText = val(r.maxPlayers);
-    if(elForeign) elForeign.innerText = val(r.maxForeign);
-
-    // 3. Update POPUP OVERLAY (The one you are looking at)
-    const popPurse = document.getElementById('pop_viewPurse');
-    const popSquad = document.getElementById('pop_viewSquadSize');
-    const popForeign = document.getElementById('pop_viewForeign');
-    
-    if(popPurse) popPurse.innerText = val(r.purse);
-    if(popSquad) popSquad.innerText = val(r.maxPlayers);
-    if(popForeign) popForeign.innerText = val(r.maxForeign);
-
-    // 4. Update POPUP REQUIREMENTS
-    const setTxt = (id, v) => {
-        const el = document.getElementById(id);
-        if(el) el.innerText = val(v);
+    const render = (list, title, type) => {
+        if(list.length > 0) {
+            const h = document.createElement("div");
+            h.className = "room-section-title";
+            h.innerText = title;
+            box.appendChild(h);
+            list.forEach(r => {
+                const div = document.createElement('div');
+                div.className = `room-tile ${type}`;
+                div.innerHTML = `<span class="r-name">${r.id}</span> <span class="r-count">👤 ${r.count}</span>`;
+                div.onclick = () => { document.getElementById('code').value = r.id; };
+                box.appendChild(div);
+            });
+        }
     };
 
-    setTxt('pop_viewBat', r.minBat);
-    setTxt('pop_viewBowl', r.minBowl);
-    setTxt('pop_viewSpin', r.minSpin);
-    setTxt('pop_viewWK', r.minWK);
-    setTxt('pop_viewAR', r.minAll); // Ensure your variable is minAll (or minAR)
+    render(waiting, "🟢 Waiting to Start", "waiting");
+    render(live, "🔴 Ongoing Auctions", "live");
+
+    if(waiting.length === 0 && live.length === 0) {
+        box.innerHTML = '<div style="padding:10px; color:#666;">No active rooms found.</div>';
+    }
+});
+
+/* ================================================= */
+/* ============= 3. ROOM STATE LOGIC =============== */
+/* ================================================= */
+
+socket.on("roomCreated", code => {
+    roomCode = code;
+    sessionStorage.setItem('ipl_room', code);
+    setupAuctionScreen();
+    document.getElementById("rulesScreen").classList.remove("hidden");
+});
+/* ================= ROOM STATE LOGIC ================= */
+
+socket.on("joinedRoom", (data) => {
+    console.log("Room Data:", data);
+    roomCode = data.roomCode;
+    sessionStorage.setItem('ipl_room', roomCode);
+    
+    if(data.rules) activeRules = data.rules;
+    if(data.squads) allSquads = data.squads;
+
+    isHost = data.isHost;
+    
+    // 1. Setup UI Background
+    setupAuctionScreen();
+
+    // 2. CHECK: Is Auction Over? (Refreshed Page)
+    if (data.auctionEnded) {
+        // Skip Auction UI, Go straight to Submit XI / Leaderboard
+        showScreen("playingXI");
+        document.body.style.overflow = "auto";
+        
+        // Trigger data fetch for the XI screen
+        socket.emit("getMySquad"); 
+        
+        // Ensure Rules UI (for top bar stats) is updated
+        updateRulesUI();
+        return; 
+    }
+
+    // 3. Normal Flow (Game Active or Waiting)
+    if (data.availableTeams) {
+        renderEmbeddedTeams(data.availableTeams);
+    }
+
+    if (data.auctionStarted) {
+        setGamePhase("AUCTION");
+    } else {
+        setGamePhase("TEAM_SELECT");
+    }
+    
+    updateAdminButtons(data.auctionStarted);
+});
+
+function setupAuctionScreen() {
+    document.getElementById("landing").classList.add("hidden");
+    document.getElementById("auth").classList.add("hidden");
+    document.getElementById("auctionUI").classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+
+    document.getElementById("roomCodeBar").classList.remove("hidden");
+    document.getElementById("roomCodeText").innerText = roomCode;
+
+    socket.emit("getAuctionState");
+    socket.emit("checkAdmin");
+    socket.emit("getSquads"); 
+}
+// Add this or update existing error handler
+socket.on("error", msg => {
+    alert("❌ " + msg);
+    // If room is invalid/closed, clear session so they don't get stuck in a loop
+    if(msg.includes("not found") || msg.includes("closed") || msg.includes("expired")) {
+        sessionStorage.clear();
+        window.location.href = "/";
+    }
+});
+
+/* ================================================= */
+/* ========= 4. SETS & SQUAD VIEWING =============== */
+/* ================================================= */
+
+// --- A. UPCOMING SETS ---
+socket.on("setUpdate", data => {
+    remainingSets = data; 
+    if(viewSetWindow && !viewSetWindow.closed){
+        viewSet(); 
+    }
+});
+
+window.viewSet = function() {
+    if(!remainingSets || remainingSets.length === 0){
+        alert("No sets remaining!");
+        return;
+    }
+    if(!viewSetWindow || viewSetWindow.closed){
+        viewSetWindow = window.open("", "ViewSetWindow", "width=480,height=650");
+    } else {
+        viewSetWindow.focus();
+    }
+
+    const activeSet = remainingSets[0]; 
+
+    viewSetWindow.document.open();
+    viewSetWindow.document.write(`
+        <html>
+        <head>
+            <title>Auction Sets</title>
+            <style>
+                body{font-family:sans-serif;padding:15px;background:#111;color:#fff}
+                h2.set-title { background: #222; padding: 10px; border-radius: 6px; margin-top: 20px; border-left: 5px solid #444; font-size: 1.1rem; text-transform: uppercase; }
+                h2.active { background: #2a1a00; border-left: 5px solid #facc15; color: #facc15; }
+                .p { display:flex; justify-content:space-between; padding: 6px 10px; border-bottom:1px solid #333; align-items:center; color: #ccc; }
+                .p.active-p { color: #fff; font-weight: bold; }
+                .role { background:#333; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.75rem; }
+                .rating { color:#facc15; font-size: 0.9rem; }
+                .meta { display:flex; align-items:center; gap: 8px; }
+            </style>
+        </head>
+        <body>
+            <h2 class="set-title active">🔥 ${activeSet.name} (${activeSet.players.length})</h2>
+            <div>
+                ${activeSet.players.map(p => `
+                    <div class="p active-p">
+                        <span>${p.name}</span>
+                        <div class="meta">
+                            <span class="role">${p.role}</span>
+                            <span class="rating">⭐ ${p.rating}</span>
+                        </div>
+                    </div>
+                `).join("")}
+                ${activeSet.players.length===0 ? '<div class="p" style="color:#666">Set Finished</div>' : ''}
+            </div>
+            ${remainingSets.slice(1).map(set => `
+                <h2 class="set-title">📦 ${set.name} (${set.players.length})</h2>
+                <div style="opacity: 0.6;"> ${set.players.map(p => `
+                    <div class="p">
+                        <span>${p.name}</span>
+                        <div class="meta"><span class="role">${p.role}</span></div>
+                    </div>
+                `).join("")}
+                </div>
+            `).join("")}
+        </body>
+        </html>
+    `);
+    viewSetWindow.document.close();
+};
+
+// --- B. SQUAD VIEWING (FIXED) ---
+socket.on("squadData", squads => {
+    allSquads = squads;
+
+    // Populate Dropdown
+    const sel = document.getElementById("squadSelect");
+    if(sel){
+        sel.innerHTML = `<option value="">🧢 View Team Squads</option>`;
+        Object.keys(squads).forEach(team => {
+            const opt = document.createElement("option");
+            opt.value = team;
+            opt.innerText = team;
+            sel.appendChild(opt);
+        });
+    }
+    
+    // Refresh Popup if open
+    if(squadWindow && !squadWindow.closed) renderSquadWindow();
+});
+
+window.showSelectedSquad = function() {
+    const team = document.getElementById("squadSelect").value;
+    if(!team) return;
+
+    selectedSquadTeam = team;
+
+    if(!squadWindow || squadWindow.closed){
+        squadWindow = window.open("", "_blank", "width=450,height=650");
+    }
+    renderSquadWindow();
+};
+
+// 1. FIX: Helper function to switch tabs from inside the popup
+window.switchSquadTab = function(team) {
+    selectedSquadTeam = team;
+    socket.emit("getSquads"); // Refresh data
+    renderSquadWindow();      // Re-render UI
+}
+/* ================= SQUAD WINDOW (FIXED STYLE) ================= */
+function renderSquadWindow() {
+    if(!squadWindow || squadWindow.closed || !selectedSquadTeam) return;
+
+    const squad = allSquads[selectedSquadTeam] || [];
+    const purse = teamPurse?.[selectedSquadTeam];
+    
+    const teams = Object.keys(allSquads).sort();
+    const tabsHtml = teams.map(t => 
+        `<button onclick="window.opener.switchSquadTab('${t}')" 
+         style="padding:6px 12px; margin:2px; background:${t===selectedSquadTeam?'#fff':'#222'}; color:${t===selectedSquadTeam?'#000':'#ccc'}; border:1px solid #444; border-radius:4px; cursor:pointer; font-weight:bold;">
+         ${t}
+         </button>`
+    ).join(" ");
+
+    const roles = { BAT: [], WK: [], ALL: [], BOWLER: [] };
+    squad.forEach(p => { 
+        if(p.role === "BAT") roles.BAT.push(p);
+        else if(p.role === "WK") roles.WK.push(p);
+        else if(p.role === "ALL") roles.ALL.push(p);
+        else roles.BOWLER.push(p);
+    });
+
+    squadWindow.document.open();
+    squadWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${selectedSquadTeam} Squad</title>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+            <style>
+                body { font-family: 'Segoe UI', sans-serif; padding:15px; background:#111; color:#eee; }
+                .tabs { overflow-x:auto; white-space:nowrap; padding-bottom:10px; border-bottom:1px solid #333; margin-bottom:15px; }
+                h2 { text-align:center; margin:0 0 5px 0; }
+                .stats { text-align:center; font-size:0.9rem; color:#aaa; margin-bottom:20px; }
+                h3 { margin:15px 0 5px 0; border-bottom:1px solid #444; color:#facc15; font-size:0.85rem; }
+                ul { list-style:none; padding:0; margin:0; }
+                li { padding:5px 0; border-bottom:1px solid #222; font-size:0.95rem; }
+                .price { color:#4ade80; font-weight:bold; float:right; }
+                
+                /* Download Button */
+                .dl-btn {
+                    display: block; width: 100%; padding: 12px; margin-top: 20px;
+                    background: #6366f1; color: white; border: none; border-radius: 8px;
+                    font-weight: bold; cursor: pointer; text-align: center;
+                }
+                .dl-btn:hover { background: #4f46e5; }
+            </style>
+        </head>
+        <body>
+            <div class="tabs">${tabsHtml}</div>
+            
+            <div id="captureTarget" style="padding:10px; background:#111;">
+                <h2 style="color:${TEAM_COLORS[selectedSquadTeam] || '#fff'}">${selectedSquadTeam}</h2>
+                <div class="stats">
+                    Purse: <span style="color:#fff; font-weight:bold;">${typeof purse==="number" ? `₹${purse.toFixed(2)} Cr` : "—"}</span> 
+                    | Players: ${squad.length}
+                </div>
+
+                ${Object.keys(roles).map(r => `
+                    <h3>${r}</h3>
+                    <ul>
+                        ${roles[r].length 
+                            ? roles[r].map(p => `<li>${p.name} <span style="color:#888; font-size:0.8em">⭐${p.rating}</span> <span class="price">₹${p.price?.toFixed(2)}</span></li>`).join("") 
+                            : "<li style='color:#444; font-style:italic;'>Empty</li>"
+                        }
+                    </ul>
+                `).join("")}
+            </div>
+
+            <button class="dl-btn" onclick="downloadImage()">📸 Download Squad List</button>
+
+            <script>
+                function downloadImage() {
+                    const el = document.getElementById('captureTarget');
+                    html2canvas(el, { backgroundColor: "#111" }).then(canvas => {
+                        const a = document.createElement('a');
+                        a.download = '${selectedSquadTeam}_Full_Squad.png';
+                        a.href = canvas.toDataURL();
+                        a.click();
+                    });
+                }
+            <\/script>
+        </body>
+        </html>
+    `);
+    squadWindow.document.close();
 }
 
 
-function closeRules(event) {
-    if (event.target.id === 'viewRulesOverlay') {
-        document.getElementById('viewRulesOverlay').classList.add('hidden');
+/* ================================================= */
+/* =========== 5. RULES & TEAM SELECTION =========== */
+/* ================================================= */
+
+// Save Rules
+document.getElementById("saveRules").onclick = () => {
+    socket.emit("setRules", {
+        maxPlayers: Number(document.getElementById("maxPlayers").value),
+        maxForeign: Number(document.getElementById("maxForeign").value),
+        purse: Number(document.getElementById("purse").value),
+        minBat: Number(document.getElementById("minBat").value),
+        minAll: Number(document.getElementById("minAll").value),
+        minBowl: Number(document.getElementById("minBowl").value),
+        minSpin: Number(document.getElementById("minSpin").value),
+        minWK: Number(document.getElementById("minWK").value),
+        minForeignXI: Number(document.getElementById("minForeignXI").value)
+    });
+};
+
+// Rules Locked
+socket.on("rulesUpdated", data => {
+    activeRules = data.rules;
+    document.getElementById("rulesScreen").classList.add("hidden");
+    setGamePhase("TEAM_SELECT");
+    renderEmbeddedTeams(data.teams);
+    updateAdminButtons(false);
+    updateRulesUI();
+});
+/* ================= TEAM SELECTION ================= */
+function renderEmbeddedTeams(teams) {
+    const box = document.getElementById("embeddedTeamList");
+    if(!box) return;
+    box.innerHTML = "";
+    
+    if(teams.length === 0) {
+        box.innerHTML = "<p style='color:#ccc; padding:20px;'>All teams taken! You are a spectator.</p>";
+        return;
+    }
+
+    teams.sort().forEach(team => {
+        const btn = document.createElement("button");
+        btn.innerText = team;
+        btn.className = "team-btn"; 
+        btn.style.setProperty("--team-color", TEAM_COLORS[team] || "#94a3b8");
+        btn.onclick = () => {
+            myTeam = team;
+            sessionStorage.setItem('ipl_team', team);
+            socket.emit("selectTeam", { team, user: username });
+            
+            // Hide list and show waiting message
+            document.getElementById("embeddedTeamList").classList.add("hidden");
+            document.getElementById("waitingForHostMsg").classList.remove("hidden");
+            document.getElementById("teamNotice").innerText = `You are: ${team}`;
+            
+            // If we joined late mid-game, hide the "Join Team" button now
+            const lateBtn = document.getElementById("lateJoinBtn");
+            if(lateBtn) lateBtn.classList.add("hidden");
+        };
+        box.appendChild(btn);
+    });
+    
+    // Ensure the box itself is visible
+    box.classList.remove("hidden");
+}
+
+socket.on("teamPicked", ({ team, remaining }) => {
+    if(myTeam === team) {
+        document.getElementById("embeddedTeamList").classList.add("hidden");
+        document.getElementById("waitingForHostMsg").classList.remove("hidden");
+        document.getElementById("teamNotice").innerText = `You are: ${team}`;
+    }
+    if(!myTeam) {
+        renderEmbeddedTeams(remaining);
+    }
+});
+
+/* ================================================= */
+/* =============== 6. ADMIN CONTROLS =============== */
+/* ================================================= */
+
+function updateAdminButtons(isStarted) {
+    const adminPanel = document.getElementById("adminControls");
+    if(!isHost) {
+        adminPanel.classList.add("hidden");
+        return;
+    }
+    adminPanel.classList.remove("hidden");
+    const startBtn = document.getElementById("startBtn");
+    const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn");
+
+    if (!isStarted) {
+        startBtn.classList.remove("hidden");
+        controls.forEach(b => b.classList.add("hidden"));
+    } else {
+        startBtn.classList.add("hidden");
+        controls.forEach(b => b.classList.remove("hidden"));
     }
 }
 
-/* ================= TIMER ================= */
-socket.on("timer", t => {
-  timerEl.innerText = "⏱ " + t;
-  
-  // ❌ no sound if auction paused or not live
-  if(!auctionLive || auctionPaused) return;
+window.admin = function(action) {
+    if(action === 'end' && !confirm("End Auction?")) return;
+    socket.emit("adminAction", action);
+};
 
-  // 🔔 beep ONLY at 3,2,1 and ONLY once per second
-  if(t <= 3 && t > 0 && t !== lastTickSecond){
-    lastTickSecond = t;
+const startBtn = document.getElementById("startBtn");
+if(startBtn) startBtn.onclick = () => socket.emit("adminAction", "start");
 
-    soundTick.pause();
-    soundTick.currentTime = 0;
-    soundTick.play().catch(()=>{});
-  }
+const togglePauseBtn = document.getElementById("togglePauseBtn");
+if(togglePauseBtn) togglePauseBtn.onclick = () => socket.emit("adminAction", "togglePause");
+
+const skipBtn = document.getElementById("skipBtn");
+if(skipBtn) skipBtn.onclick = () => socket.emit("adminAction", "skip");
+
+const skipSetBtn = document.getElementById("skipSetBtn");
+if(skipSetBtn) skipSetBtn.onclick = () => {
+    if(confirm("⚠ Skip set?")) socket.emit("adminAction", "skipSet");
+};
+
+/* ================================================= */
+/* ============ 7. AUCTION GAMEPLAY ================ */
+/* ================================================= */
+
+socket.on("auctionStarted", () => {
+    auctionLive = true;
+    auctionPaused = false;
+    document.getElementById("teamNotice").innerText = myTeam ? `You are: ${myTeam}` : "Spectating";
+    setGamePhase("AUCTION");
+    updateAdminButtons(true);
 });
 
-/* ================= BID ================= */
-function bid(){
-  if(!myTeam){
-    alert("Select a team");
-    return;
-  }
+socket.on("auctionState", s => {
+    auctionLive = s.live;
+    auctionPaused = s.paused;
+    lastBidTeam = s.lastBidTeam;
+    if(s.player) {
+        updatePlayerCard(s.player, s.bid);
+    }
+    updateBidButton(s);
+});
 
-  if(!auctionLive || auctionPaused) return;
-  if(lastBidTeam === myTeam) return;
-  if(bidBtn.disabled) return; // safety
+socket.on("newPlayer", d => {
+    auctionLive = true;
+    auctionPaused = false;
+    lastBidTeam = null;
+    lastTickSecond = null;
+    
+    document.getElementById('resultOverlay').classList.add('hidden');
+    document.getElementById('currentBidder').classList.add('hidden');
+    document.getElementById("auctionCard").classList.remove("pulse");
+    
+    updatePlayerCard(d.player, d.bid);
+    updateBidButton({ bid: d.bid });
+});
 
-  soundBid.currentTime = 0;
-  soundBid.play().catch(()=>{});
-
-  socket.emit("bid"); 
+function updatePlayerCard(player, bid) {
+    document.getElementById("playerName").innerText = player.name;
+    document.getElementById("playerMeta").innerText = `${player.role} • ⭐${player.rating}`;
+    document.getElementById("bid").innerText = `₹${bid.toFixed(2)} Cr`;
 }
 
-bidBtn.onclick=bid;
-
-/* ================= BID UPDATE ================= */
-socket.on("bidUpdate", data => {
-  bidEl.innerText = `₹${data.bid.toFixed(2)} Cr`;
-  lastBidTeam = data.team; 
-  updateBidButton({ bid: data.bid });
-  bidBtn.disabled = (myTeam === data.team); 
-  const color = TEAM_COLORS[data.team] || "#22c55e";
-  document.documentElement.style.setProperty("--accent", color);
-  const badge = document.getElementById('currentBidder');
-  const badgeName = document.getElementById('bidderName');
-  
-  badge.classList.remove('hidden'); // Reveal the badge
-  badgeName.innerText = data.team;
-  badge.style.borderColor = color;
-  badge.style.boxShadow = `0 0 15px ${color}66`; 
-  auctionCard.classList.add("pulse");
-  setTimeout(() => auctionCard.classList.remove("pulse"), 300);
+socket.on("timer", t => {
+    document.getElementById("timer").innerText = "⏱ " + t;
+    if(auctionLive && !auctionPaused && t <= 3 && t > 0 && t !== lastTickSecond) {
+        lastTickSecond = t;
+        soundTick.play().catch(()=>{});
+    }
 });
 
-/* ================= SOLD / UNSOLD ================= */
+const bidBtn = document.getElementById("bidBtn");
+if(bidBtn) {
+    bidBtn.onclick = () => {
+        if(!myTeam) return alert("Select a team first!");
+        if(bidBtn.disabled) return;
+        soundBid.play().catch(()=>{});
+        socket.emit("bid");
+    };
+}
+
+socket.on("bidUpdate", data => {
+    document.getElementById("bid").innerText = `₹${data.bid.toFixed(2)} Cr`;
+    lastBidTeam = data.team;
+    
+    const badge = document.getElementById('currentBidder');
+    badge.classList.remove('hidden');
+    document.getElementById('bidderName').innerText = data.team;
+    
+    const color = TEAM_COLORS[data.team] || "#22c55e";
+    badge.style.border = `1px solid ${color}`;
+    badge.style.setProperty("--team", color);
+    
+    const card = document.getElementById("auctionCard");
+    card.classList.add("pulse");
+    setTimeout(() => card.classList.remove("pulse"), 300);
+
+    updateBidButton({ bid: data.bid });
+});
+
+function updateBidButton(state) {
+    if(!myTeam || !auctionLive || auctionPaused) {
+        bidBtn.disabled = true;
+        return;
+    }
+    if(lastBidTeam === myTeam) {
+        bidBtn.disabled = true;
+        return;
+    }
+    if(state && teamPurse && teamPurse[myTeam] !== undefined) {
+        const nextBid = (state.bid || 0) + (state.bid < 10 ? 0.2 : 0.5);
+        if(teamPurse[myTeam] < nextBid) {
+            bidBtn.disabled = true;
+            return;
+        }
+    }
+    bidBtn.disabled = false;
+}
+
 socket.on("sold", d => {
-  soundHammer.pause();
-  soundHammer.currentTime = 0;
-  soundHammer.play();
-  const color = TEAM_COLORS[d.team] || "#22c55e";
-  const overlay = document.getElementById('resultOverlay');
-  const title = document.getElementById('stampTitle');
-  const detail = document.getElementById('stampDetail');
-  const container = document.querySelector('.stamp-container');
-
-  title.innerText = "SOLD";
-  detail.innerText = `TO ${d.team}`;
-  container.classList.remove('unsold'); // Ensure it's not red
-  container.style.borderColor = color; 
-  overlay.classList.remove('hidden');
-  allSquads[d.team] = allSquads[d.team] || [];
-  allSquads[d.team].push(d.player);
-
-  if(d.purse){
-    teamPurse = d.purse;
-  }
+    soundHammer.play();
+    showResultStamp("SOLD", `TO ${d.team}`, TEAM_COLORS[d.team], false);
+    if(d.purse) teamPurse = d.purse;
 });
 
 socket.on("unsold", () => {
-  soundUnsold.pause();
-  soundUnsold.currentTime = 0;
-  soundUnsold.play();
-  
-  bidBtn.disabled = true;
-  const overlay = document.getElementById('resultOverlay');
-  const title = document.getElementById('stampTitle');
-  const detail = document.getElementById('stampDetail');
-  const container = document.querySelector('.stamp-container');
-
-  title.innerText = "UNSOLD";
-  detail.innerText = "PASSED IN";
-  container.classList.add('unsold'); // Adds red styling
-  container.style.borderColor = "";  
-  overlay.classList.remove('hidden');
+    soundUnsold.play();
+    showResultStamp("UNSOLD", "PASSED IN", "#f43f5e", true);
 });
 
-socket.on("bidRejected", msg => {
-  alert("❌ " + msg);
-  bidBtn.disabled = true;
-});
+function showResultStamp(title, detail, color, isUnsold) {
+    bidBtn.disabled = true;
+    const overlay = document.getElementById('resultOverlay');
+    const t = document.getElementById('stampTitle');
+    const d = document.getElementById('stampDetail');
+    const c = document.querySelector('.stamp-container');
 
-/* ================= PLAYER SET ================= */
-
-socket.on("fullSet",players=>{
-  fullSetPlayers=players;
-});
-function viewSet(){
-  if(!remainingSets || remainingSets.length === 0){
-    alert("No sets remaining!");
-    return;
-  }
-  if(!viewSetWindow || viewSetWindow.closed){
-     viewSetWindow = window.open("", "ViewSetWindow", "width=480,height=650");
-  } else {
-     viewSetWindow.focus();
-  }
-
-  const activeSet = remainingSets[0]; // Topmost is current
-
-  viewSetWindow.document.open();
-  viewSetWindow.document.write(`
-    <html>
-    <head>
-      <title>Auction Sets</title>
-      <style>
-        body{font-family:sans-serif;padding:15px;background:#111;color:#fff}
-        
-        /* Set Headers */
-        h2.set-title {
-            background: #222; padding: 10px; border-radius: 6px;
-            margin-top: 20px; border-left: 5px solid #444;
-            font-size: 1.1rem; text-transform: uppercase;
-        }
-        h2.active {
-            background: #2a1a00; border-left: 5px solid #facc15; color: #facc15;
-        }
-        .p {
-          display:flex; justify-content:space-between;
-          padding: 6px 10px; border-bottom:1px solid #333;
-          align-items:center; color: #ccc;
-        }
-        .p.active-p { color: #fff; font-weight: bold; } /* Brighter for active set */
-        
-        .role {
-            background:#333; color:#fff; 
-            padding:2px 6px; border-radius:4px; font-size:0.75rem;
-        }
-        .rating { color:#facc15; font-size: 0.9rem; }
-        .meta { display:flex; align-items:center; gap: 8px; }
-      </style>
-    </head>
-    <body>
-      
-      <h2 class="set-title active">🔥 ${activeSet.name} (${activeSet.players.length})</h2>
-      <div>
-        ${activeSet.players.map(p => `
-          <div class="p active-p">
-            <span>${p.name}</span>
-            <div class="meta">
-                <span class="role">${p.role}</span>
-                <span class="rating">⭐ ${p.rating}</span>
-            </div>
-          </div>
-        `).join("")}
-        ${activeSet.players.length===0 ? '<div class="p" style="color:#666">Set Finished</div>' : ''}
-      </div>
-
-      ${remainingSets.slice(1).map(set => `
-          <h2 class="set-title">📦 ${set.name} (${set.players.length})</h2>
-          <div style="opacity: 0.6;"> ${set.players.map(p => `
-              <div class="p">
-                <span>${p.name}</span>
-                <div class="meta">
-                    <span class="role">${p.role}</span>
-                    <span class="rating">⭐ ${p.rating}</span>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-      `).join("")}
-
-    </body>
-    </html>
-  `);
-  viewSetWindow.document.close();
+    t.innerText = title;
+    d.innerText = detail;
+    c.style.borderColor = isUnsold ? "" : color;
+    if(isUnsold) c.classList.add('unsold'); else c.classList.remove('unsold');
+    overlay.classList.remove('hidden');
 }
 
+/* ================================================= */
+/* ============= 8. HELPER FUNCTIONS =============== */
+/* ================================================= */
 
-socket.on("squadData", squads => {
-  allSquads = squads;
+function setGamePhase(phase) {
+    const teamCard = document.getElementById("teamSelectionMain");
+    const auctionCard = document.getElementById("auctionCard");
+    const lateJoinBtn = document.getElementById("lateJoinBtn");
 
-  const sel = document.getElementById("squadSelect");
-  if(sel){
-    sel.innerHTML = `<option value="">🧢 View Squad</option>`;
-    Object.keys(squads).forEach(team=>{
-      const opt=document.createElement("option");
-      opt.value=team;
-      opt.innerText=team;
-      sel.appendChild(opt);
-    });
-  }
-  renderSquadWindow();
-});
-
-function showSelectedSquad(){
-
-  const team = document.getElementById("squadSelect").value;
-  if(!team) return;
-
-  selectedSquadTeam = team;
-
-  if(!squadWindow || squadWindow.closed){
-    squadWindow = window.open("", "_blank", "width=450,height=650");
-  }
-
-  renderSquadWindow();
-}
-function renderSquadWindow(){
-
-  if(!squadWindow || squadWindow.closed || !selectedSquadTeam) return;
-
-  const squad = allSquads[selectedSquadTeam] || [];
-  const purse = teamPurse?.[selectedSquadTeam];
-
-  const roles = { BAT: [], WK: [], ALL: [], BOWLER: [] };
-
-  squad.forEach(p => {
-    if(p.role === "BAT") roles.BAT.push(p);
-    else if(p.role === "WK") roles.WK.push(p);
-    else if(p.role === "ALL") roles.ALL.push(p);
-    else roles.BOWLER.push(p);
-  });
-
-  squadWindow.document.open();
-  squadWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>${selectedSquadTeam} Squad</title>
-      <style>
-        body{font-family:Arial;padding:15px;background:#111;color:#fff}
-        h2{text-align:center}
-        h3{margin-top:15px;border-bottom:1px solid #444}
-        li{padding:4px 0}
-      </style>
-    </head>
-    <body>
-      <h2>${selectedSquadTeam} Squad</h2>
-      <p><b>Remaining Purse:</b>
-        ${typeof purse==="number" ? `₹${purse.toFixed(2)} Cr` : "—"}
-      </p>
-
-      ${Object.keys(roles).map(r=>`
-        <h3>${r}</h3>
-        <ul>
-          ${roles[r].length
-            ? roles[r].map(p=>`
-              <li>${p.name} ⭐${p.rating} — ₹${p.price?.toFixed(2) ?? "—"} Cr</li>
-            `).join("")
-            : "<li>—</li>"
-          }
-        </ul>
-      `).join("")}
-    </body>
-    </html>
-  `);
-  squadWindow.document.close();
+    if (phase === "TEAM_SELECT") {
+        if(teamCard) teamCard.classList.remove("hidden");
+        if(auctionCard) auctionCard.classList.add("hidden");
+        if(lateJoinBtn) lateJoinBtn.classList.add("hidden");
+    } 
+    else if (phase === "AUCTION") {
+        if(teamCard) teamCard.classList.add("hidden");
+        if(auctionCard) auctionCard.classList.remove("hidden");
+        if(lateJoinBtn && !myTeam) lateJoinBtn.classList.remove("hidden");
+    }
 }
 
-
-/* ================= CHAT ================= */
-function sendChat(){
-  if(!msgInput.value.trim()) return;
-  socket.emit("chat",{user:username,team:myTeam||"Viewer",msg:msgInput.value});
-  msgInput.value="";
-}
-socket.on("chatUpdate",d=>{
-  chatBox.innerHTML+=`<b>${d.team} (${d.user}):</b> ${d.msg}<br>`;
-  chatBox.scrollTop=chatBox.scrollHeight;
-});
-
-/* ================= LOG ================= */
-socket.on("logUpdate",msg=>{
-  const div=document.createElement("div");
-  div.innerText=msg;
-  logBox.appendChild(div);
-  logBox.scrollTop=logBox.scrollHeight;
-});
-/* ================= PLAYING XI LOGIC ================= */
-let selectedXI = {
-  BAT: [],
-  BOWL: [], 
-  WK: [],
-  ALL: []
+window.toggleLateJoin = function() {
+    const teamCard = document.getElementById("teamSelectionMain");
+    const auctionCard = document.getElementById("auctionCard");
+    
+    if (teamCard.classList.contains("hidden")) {
+        teamCard.classList.remove("hidden");
+        auctionCard.classList.add("hidden");
+    } else {
+        teamCard.classList.add("hidden");
+        auctionCard.classList.remove("hidden");
+    }
 };
 
-socket.on("mySquad", ({ squad }) => {
-  const box = document.getElementById("mySquadList");
+window.showRules = function() {
+    document.getElementById('viewRulesOverlay').classList.remove('hidden');
+    updateRulesUI();
+};
 
-  if(!squad) return;
-  selectedXI = { BAT: [], BOWL: [], WK: [], ALL: [] };
-  box.style.pointerEvents = "auto";
-  box.style.opacity = "1";
-  const submitBtn = document.querySelector("button[onclick='submitXI()']");
-  if(submitBtn) {
-      submitBtn.innerText = "Submit XI (0/11)";
-      submitBtn.disabled = false;
-  }
+function updateRulesUI() {
+    if(!activeRules) return;
+    const r = activeRules;
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
-  box.innerHTML = `<div class="xi-container" id="xiContainer"></div>`;
-  const container = document.getElementById("xiContainer");
+    set('pop_viewPurse', r.purse);
+    set('pop_viewSquadSize', r.maxPlayers);
+    set('pop_viewForeign', r.maxForeign);
+    set('pop_viewBat', r.minBat);
+    set('pop_viewBowl', r.minBowl);
+    set('pop_viewWK', r.minWK);
+    set('pop_viewAR', r.minAll);
+    set('pop_viewSpin', r.minSpin);
+    set('pop_viewForeignXI', r.minForeignXI); // Ensure HTML has this ID
+    
+    set('viewPurse', r.purse);
+    set('viewSquadSize', r.maxPlayers);
+    set('viewForeign', r.maxForeign);
+}
 
-  const groups = {
-    WK: { title: "Wicket Keepers", players: [] },
-    BAT: { title: "Batsmen", players: [] },
-    ALL: { title: "All Rounders", players: [] },
-    BOWL: { title: "Bowlers", players: [] } 
-  };
-
-  squad.forEach(p => {
-    if(p.role === "WK") groups.WK.players.push(p);
-    else if(p.role === "BAT") groups.BAT.players.push(p);
-    else if(p.role === "ALL") groups.ALL.players.push(p);
-    else groups.BOWL.players.push(p);
-  });
-
-  Object.keys(groups).forEach(key => {
-    const g = groups[key];
-    const col = document.createElement("div");
-    col.className = "role-group";
-    col.innerHTML = `<div class="role-header">${g.title}</div>`;
-
-    g.players.forEach(p => {
-      const btn = document.createElement("button");
-      btn.className = "xi-player";
-      btn.innerHTML = `${p.name} <br><small>⭐${p.rating}</small>`; 
-      btn.onclick = (e) => {
-          e.preventDefault(); 
-          assignPlayer(p, btn, key);
-      };
-      
-      col.appendChild(btn);
-    });
-    container.appendChild(col);
-  });
-  
-  updateXIPreview();
+socket.on("chatUpdate", d => {
+    const chat = document.getElementById("chat");
+    chat.innerHTML += `<div><b style="color:${TEAM_COLORS[d.team] || '#aaa'}">${d.team} (${d.user})</b>: ${d.msg}</div>`;
+    chat.scrollTop = chat.scrollHeight;
 });
 
-function assignPlayer(p, btn, groupKey){
-  if(!selectedXI[groupKey]) selectedXI[groupKey] = [];
-  const list = selectedXI[groupKey];
-  const index = list.findIndex(x => x.name === p.name);
+window.sendChat = function() {
+    const msgInput = document.getElementById("msg");
+    if(!msgInput.value.trim()) return;
+    socket.emit("chat", { user: username, team: myTeam || "Viewer", msg: msgInput.value });
+    msgInput.value = "";
+};
 
-  if(index > -1){
-    list.splice(index, 1);
-    btn.classList.remove("picked");
-  } else {
-    const total = countTotalXI();
-    if(total >= 11) {
-        alert("⚠️ You have already selected 11 players!");
-        return;
+socket.on("logUpdate", msg => {
+    const log = document.getElementById("log");
+    const div = document.createElement("div");
+    div.className = "log-item";
+    div.innerText = msg;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+});
+
+/* ================================================= */
+/* ========= 9. PLAYING XI & LEADERBOARD =========== */
+/* ================================================= */
+
+socket.on("auctionEnded", () => {
+    showScreen("playingXI");
+    document.body.style.overflow = "auto"; 
+    socket.emit("getMySquad");
+});
+socket.on("mySquad", ({ squad, rules }) => {
+    if(rules) {
+        activeRules = rules;
+        updateRulesUI();
     }
-    list.push(p);
-    btn.classList.add("picked");
-  }
-  
-  updateXIPreview();
+
+    // Reset
+    selectedXI = { BAT: [], BOWL: [], WK: [], ALL: [] };
+    
+    const container = document.getElementById("mySquadList");
+    if(!container || !squad) return;
+    
+    container.innerHTML = "";
+    
+    // Create Grid Container
+    const grid = document.createElement("div");
+    grid.className = "xi-select-container";
+
+    // Define Roles
+    const roles = { WK: "Wicket Keepers", BAT: "Batsmen", ALL: "All Rounders", BOWL: "Bowlers" };
+
+    Object.keys(roles).forEach(key => {
+        // Filter players for this role
+        const players = squad.filter(p => {
+            if(key === "BOWL") return (p.role === "PACE" || p.role === "SPIN" || p.role === "BOWL");
+            return p.role === key;
+        });
+
+        if(players.length > 0) {
+            // Header
+            const title = document.createElement("div");
+            title.className = "role-group-title";
+            title.innerText = roles[key];
+            grid.appendChild(title);
+
+            // Buttons
+            players.forEach(p => {
+                const btn = document.createElement("div");
+                btn.className = "xi-player-btn";
+                // ID helps us find it to toggle class later
+                btn.id = `btn-${p.name.replace(/\s/g, '')}`; 
+                
+                btn.innerHTML = `
+                    <span>${p.name} ${p.foreign ? '✈️' : ''}</span>
+                    <small>⭐${p.rating}</small>
+                `;
+                
+                btn.onclick = () => togglePlayerXI(p, btn, key);
+                grid.appendChild(btn);
+            });
+        }
+    });
+    
+    container.appendChild(grid);
+    updateXIPreview();
+});
+function togglePlayerXI(p, btnElement, roleKey) {
+    const list = selectedXI[roleKey];
+    const idx = list.findIndex(x => x.name === p.name);
+
+    if(idx > -1) {
+        // Remove
+        list.splice(idx, 1);
+        btnElement.classList.remove("picked");
+    } else {
+        // Add
+        if(countTotalXI() >= 11) return alert("Squad full (11/11)");
+        list.push(p);
+        btnElement.classList.add("picked");
+    }
+    updateXIPreview();
 }
-function countTotalXI(){
-    return (selectedXI.BAT?.length || 0) + 
-           (selectedXI.WK?.length || 0) + 
-           (selectedXI.ALL?.length || 0) + 
-           (selectedXI.BOWL?.length || 0);
+
+function countTotalXI() {
+    return Object.values(selectedXI).reduce((acc, arr) => acc + arr.length, 0);
 }
+
+function countForeign() {
+    return Object.values(selectedXI).flat().filter(p => p.foreign).length;
+}
+function updateDashboard() {
+    // 1. UPDATE STATS BAR
+    const total = countTotalXI();
+    const foreign = countForeign();
+    const wk = selectedXI.WK.length;
+    const bat = selectedXI.BAT.length;
+    const bowl = selectedXI.BOWL.length;
+    const all = selectedXI.ALL.length;
+
+    const setStat = (id, val, min, max) => {
+        const el = document.getElementById(id);
+        const isValid = max ? val <= max : val >= min;
+        el.className = `stat-pill ${isValid ? 'valid' : 'invalid'}`;
+        el.innerHTML = `<b>${val}${max ? '/'+max : ''}</b> ${el.innerText.split(' ').slice(1).join(' ')}`;
+    };
+
+    setStat('stat-count', total, 11, 11); // Must be exactly 11
+    setStat('stat-foreign', foreign, 0, (activeRules.minForeignXI || 4)); // Using minForeignXI variable as max limit based on previous discussion
+    setStat('stat-wk', wk, activeRules.minWK || 1);
+    setStat('stat-bat', bat, activeRules.minBat || 3);
+    setStat('stat-bowl', bowl, activeRules.minBowl || 3);
+    setStat('stat-all', all, activeRules.minAll || 1);
+
+    // 2. UPDATE BUTTON
+    const btn = document.getElementById("submitXIBtn");
+    if(btn) {
+        btn.innerText = total === 11 ? "Submit XI (Ready)" : `Select ${11 - total} more`;
+        btn.disabled = total !== 11;
+        btn.style.opacity = total === 11 ? "1" : "0.5";
+    }
+    
+    // Show Save Button if not empty
+    const saveBtn = document.getElementById("saveXIBtn");
+    if(saveBtn) total > 0 ? saveBtn.classList.remove("hidden") : saveBtn.classList.add("hidden");
+
+    // 3. RENDER PITCH
+    renderPitch();
+}
+
+function renderPitch() {
+    const container = document.getElementById("xiCardTarget");
+    // Clear only player elements, keep background
+    container.innerHTML = "";
+
+    // Helper to create pitch row
+    const createRow = (players) => {
+        const row = document.createElement("div");
+        row.className = "pitch-row";
+        players.forEach(p => {
+            const pDiv = document.createElement("div");
+            pDiv.className = "pitch-player-icon";
+            pDiv.innerHTML = `
+                <div class="pp-img ${p.foreign ? 'is-foreign' : ''}">
+                    ${p.name.charAt(0)}
+                </div>
+                <div class="pp-name">${getShortName(p.name)}</div>
+            `;
+            row.appendChild(pDiv);
+        });
+        return row;
+    };
+
+    // Render in logical cricket order: WK -> BAT -> ALL -> BOWL
+    if(selectedXI.WK.length) container.appendChild(createRow(selectedXI.WK));
+    if(selectedXI.BAT.length) container.appendChild(createRow(selectedXI.BAT));
+    if(selectedXI.ALL.length) container.appendChild(createRow(selectedXI.ALL));
+    if(selectedXI.BOWL.length) container.appendChild(createRow(selectedXI.BOWL));
+}
+
+function getShortName(fullName) {
+    const parts = fullName.split(" ");
+    if(parts.length === 1) return parts[0];
+    return parts[parts.length - 1]; // Return last name
+}
+
+// --- DREAM11 PITCH RENDERER ---
+/* ================= TEAM SHEET RENDERING LOGIC ================= */
 function updateXIPreview() {
     const count = countTotalXI();
-    const submitBtn = document.getElementById("submitXIBtn") || document.querySelector("button[onclick='submitXI()']");
-    if(submitBtn) {
-        submitBtn.innerText = `Submit XI (${count}/11)`;
-        
-        // Visual cue on button
-        if(count === 11) {
-            submitBtn.style.backgroundColor = "#22c55e"; // Green
-            submitBtn.style.color = "#000";
-            submitBtn.disabled = false;
-        } else {
-            submitBtn.style.backgroundColor = ""; 
-            submitBtn.style.color = "";
-        }
+    const btn = document.getElementById("submitXIBtn");
+    const saveBtn = document.getElementById("saveXIBtn");
+    const placeholder = document.getElementById("xiPlaceholder");
+    const card = document.getElementById("xiCardTarget");
+    const content = document.getElementById("sheetContent");
+    const countLabel = document.getElementById("sheetCount");
+    const teamTitle = document.getElementById("sheetTeamName");
+
+    // 1. Button Logic
+    if(btn) {
+        btn.innerText = `Submit XI (${count}/11)`;
+        btn.disabled = count !== 11;
+        btn.style.background = count === 11 ? "var(--success)" : "";
+        btn.style.color = count === 11 ? "#000" : "#fff";
     }
-    const box = document.getElementById("xiPreviewContent");
-    if(!box) return;
-    box.innerHTML = "";
-    const displayConfig = [
-        { key: 'WK', label: 'Wicket Keepers' },
-        { key: 'BAT', label: 'Batsmen' },
-        { key: 'ALL', label: 'All-Rounders' },
-        { key: 'BOWL', label: 'Bowlers' }
-    ];
 
-    displayConfig.forEach(conf => {
-        const players = selectedXI[conf.key] || []; 
-        const row = document.createElement("div");
-        row.className = "preview-row";
-        const labelDiv = document.createElement("div");
-        labelDiv.className = "preview-label";
-        labelDiv.innerText = `${conf.label} (${players.length})`;
+    // 2. Toggle Placeholder vs Card
+    if (count === 0) {
+        placeholder.classList.remove("hidden");
+        card.classList.add("hidden");
+        if(saveBtn) saveBtn.classList.add("hidden");
+        return; 
+    } else {
+        placeholder.classList.add("hidden");
+        card.classList.remove("hidden");
+        if(saveBtn) saveBtn.classList.remove("hidden");
+    }
 
-        // Create the player names list
-        const namesDiv = document.createElement("div");
-        namesDiv.className = "preview-players";
+    // 3. Render Card Content (Pills)
+    if(teamTitle) teamTitle.innerText = myTeam ? `${myTeam} XI` : "MY TEAM";
+    if(countLabel) countLabel.innerText = `${count}/11 Players`;
+    
+    content.innerHTML = "";
 
-        if(players.length === 0) {
-            namesDiv.innerHTML = `<span style="color:#555">—</span>`;
-        } else {
-            // Map players to small tags
-            namesDiv.innerHTML = players.map(p => 
-                `<span class="p-tag">${p.name}</span>`
-            ).join(" ");
+    // Specific Order for "Cricket Sheet" feel
+    const renderOrder = ['WK', 'BAT', 'ALL', 'BOWL'];
+    
+    renderOrder.forEach(roleKey => {
+        const players = selectedXI[roleKey];
+        if(players && players.length > 0) {
+            const row = document.createElement("div");
+            row.className = "sheet-role-group";
+            
+            players.forEach(p => {
+                const pill = document.createElement("div");
+                pill.className = `sheet-player-pill ${p.foreign ? 'foreign' : ''}`;
+                const icon = p.foreign ? "✈️" : "";
+                pill.innerHTML = `<span>${p.name} ${icon}</span> <small>${p.rating}</small>`;
+                row.appendChild(pill);
+            });
+            content.appendChild(row);
         }
-
-        // Append to row, then to box
-        row.appendChild(labelDiv);
-        row.appendChild(namesDiv);
-        box.appendChild(row);
     });
 }
 
+window.downloadSheetPNG = function() {
+    const el = document.getElementById('xiCardTarget');
+    // Temporarily remove transform/scaling if any for better capture
+    html2canvas(el, { 
+        backgroundColor: null, 
+        scale: 3,
+        useCORS: true 
+    }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `My_Playing_XI.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    });
+};
 
-// 6. Submit Logic
-function submitXI(){
-  const total = countTotalXI();
-  
-  if(total !== 11){
-    alert(`❌ Incomplete XI. You have selected ${total} players. Need exactly 11.`);
-    return;
-  }
-  if(confirm("Confirm Playing XI? This cannot be changed.")){
-      socket.emit("submitXI", { xi: selectedXI });
-      const box = document.getElementById("mySquadList");
-      box.style.opacity = "0.5";
-      box.style.pointerEvents = "none"; // 👈 This locks it (Reset in step 2)
-      
-      const submitBtn = document.querySelector("button[onclick='submitXI()']");
-      if(submitBtn) submitBtn.innerText = "Submitted... Waiting for others";
-  }
-}
-/* ================= LOGIC: PLAYING XI & LEADERBOARD ================= */
+window.submitXI = function() {
+    if(countTotalXI() !== 11) return;
+    if(confirm("Submit Playing XI? This is final.")) {
+        socket.emit("submitXI", { xi: selectedXI });
+    }
+};
+
 socket.on("submitResult", (res) => {
-    document.getElementById("xiSelectionArea").classList.add("hidden");
     document.getElementById("submitXIBtn").classList.add("hidden");
-    const statusBox = document.getElementById("xiStatus");
-    statusBox.innerHTML = `
-        <div class="glass" style="text-align:center; padding:20px; border:1px solid ${res.disqualified ? 'red' : '#22c55e'}">
-            <h2 style="color:${res.disqualified ? '#ef4444' : '#22c55e'}">
-                ${res.disqualified ? '❌ DISQUALIFIED' : '✅ SUBMITTED'}
-            </h2>
-            <p style="font-size:1.2rem; margin:10px 0;">
-                Your Rating: <b>${res.rating}</b>
-            </p>
-            ${res.disqualified ? `<p style="color:#fca5a5">Reason: ${res.reason}</p>` : ''}
-            <div id="waitingMsg" style="margin-top:20px; color:#aaa; font-style:italic;">
-                ⏳ Waiting for other teams to finish...
-            </div>
-        </div>
-    `;
-    const btn = document.getElementById("submitXIBtn");
-    if(btn) { btn.disabled = true; btn.innerText = "Submitted"; }
+    const status = document.getElementById("xiStatus");
+    status.innerHTML = `
+        <div style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? 'red' : 'green'}; background:rgba(0,0,0,0.3); border-radius:10px; margin-top:20px;">
+            <h2 style="color:${res.disqualified ? 'red' : 'green'}">${res.disqualified ? 'DISQUALIFIED' : 'QUALIFIED'}</h2>
+            <p>Rating: <b>${res.rating}</b></p>
+            <p>${res.disqualified ? res.reason : "Waiting for results..."}</p>
+        </div>`;
 });
-
 socket.on("leaderboard", (board) => {
-    console.log("Board Update:", board);
-    const myTeamName = myTeam; 
-    const isMyTeamDone = board.find(t => t.team === myTeamName);
-    const miniBox = document.getElementById("leaderboardBox");
-    if(miniBox) {
-        miniBox.innerHTML = "<h4 style='border-bottom:1px solid #444; padding-bottom:5px; margin-bottom:10px;'>🔴 Live Standings</h4>";
+    // 1. Update Full Screen Table
+    const tbody = document.getElementById("leaderboardBody");
+    if(tbody) {
+        tbody.innerHTML = "";
         board.forEach((t, i) => {
-            miniBox.innerHTML += `
-                <div style="display:flex; justify-content:space-between; font-size:0.9rem; padding:4px 0;">
-                    <span>#${i+1} ${t.team}</span>
-                    <span style="font-weight:bold; color:${t.disqualified?'red':'#4ade80'}">${t.rating}</span>
-                </div>
+            const tr = document.createElement("tr");
+            tr.className = "clickable";
+            tr.innerHTML = `
+                <td>#${i+1}</td>
+                <td style="color:${TEAM_COLORS[t.team] || 'white'}; font-weight:bold;">${t.team}</td>
+                <td>${t.rating}</td>
+                <td>${t.disqualified ? '❌' : '✅'}</td>
+                <td>₹${t.purse} Cr</td>
+                <td><button onclick='openSquadView(${JSON.stringify(t)})' class="secondary-btn" style="padding:2px 8px; font-size:0.7rem;">👁️</button></td>
             `;
+            tbody.appendChild(tr);
         });
     }
-    if(isMyTeamDone) {
-        const waitingMsg = document.getElementById("waitingMsg");
-        if(waitingMsg) {
-            waitingMsg.innerHTML = `
-                <br>
-                📊 <b>Current Rank:</b> #${board.findIndex(t => t.team === myTeam) + 1} / ${board.length} Teams Submitted
-                <br><br>
-                <button onclick="showScreen('leaderboard')" class="primary-btn">View Full Leaderboard</button>
-            `;
+
+    // 2. Update Mini-Leaderboard (The one we just added back)
+    const mini = document.getElementById("leaderboardBox");
+    if(mini) {
+        mini.innerHTML = "<h4 style='margin:0 0 10px 0; color:#aaa; text-transform:uppercase; font-size:0.8rem;'>🔴 Live Standings</h4>";
+        
+        if(board.length === 0) {
+            mini.innerHTML += "<div style='color:#666; font-style:italic;'>No submissions yet...</div>";
         }
+
+        board.forEach((t, i) => {
+            mini.innerHTML += `
+                <div>
+                    <span>#${i+1} ${t.team}</span>
+                    <span>${t.rating}</span>
+                </div>`;
+        });
     }
 });
+/* ================= SHARED RENDERER (CREATIVE CARD) ================= */
+function generateCreativeCardHTML(teamName, players, rating, count) {
+    if(!players || players.length === 0) return `<div class="sheet-empty">No Players</div>`;
 
-socket.on("xiError", msg => alert(msg));
-function renderTeamPopup(teams){
-  const box = document.getElementById("teamSelectList");
-  if(!box) return;
-  box.innerHTML = "";
-  teams.sort(); // Keep alphabetical order
-  teams.forEach(team => {
-    const btn = document.createElement("button");
-    btn.innerText = team;
-    btn.className = "team-btn";
-    const color = TEAM_COLORS[team] || "#94a3b8";
-    btn.style.setProperty("--team-color", color);
-    btn.onclick = () => {
-      myTeam = team;
-      socket.emit("selectTeam", { team, user: username });
-    };
-    box.appendChild(btn);
-  });
+    // Group Roles
+    const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
+    players.forEach(p => {
+        if(p.role === "BAT") roles.BAT.push(p);
+        else if(p.role === "WK") roles.WK.push(p);
+        else if(p.role === "ALL") roles.ALL.push(p);
+        else roles.BOWL.push(p); // Catch-all for bowlers
+    });
+
+    // Build HTML
+    let html = `
+    <div id="generatedCard" class="team-sheet-card">
+        <div class="sheet-header">
+            <h2 class="sheet-title">${teamName}</h2>
+            <div class="sheet-subtitle">OFFICIAL PLAYING XI</div>
+            <div style="margin-top:5px; color:#4ade80; font-weight:bold;">Rating: ${rating}</div>
+        </div>
+        <div id="sheetContent">`;
+
+    // Render Groups
+    ['WK', 'BAT', 'ALL', 'BOWL'].forEach(role => {
+        if (roles[role].length > 0) {
+            html += `<div class="sheet-role-group">`;
+            roles[role].forEach(p => {
+                html += `
+                <div class="sheet-player-pill ${p.foreign ? 'foreign' : ''}">
+                    <span>${p.name} ${p.foreign ? '✈️' : ''}</span> 
+                    <small>⭐${p.rating}</small>
+                </div>`;
+            });
+            html += `</div>`;
+        }
+    });
+
+    html += `</div>
+        <div class="sheet-footer">
+            <span>IPL AUCTION LIVE</span>
+            <span>${count}/11 Selected</span>
+        </div>
+    </div>`;
+
+    return html;
 }
 
-/* ================= END ================= */
-socket.on("auctionEnded", () => {
-  showScreen("playingXI");
-  socket.emit("getMySquad");
-});
-socket.on("leaderboard", board => {
-  const box = document.getElementById("leaderboardBox");
-  box.innerHTML = "<h2>🏆 Final Leaderboard</h2>";
-  board.forEach((t,i)=>{
-    box.innerHTML += `
-      <div class="row">
-        <b>${i+1}. ${t.team}</b> —
-        ${t.disqualified
-          ? "❌ Disqualified"
-          : `⭐ Rating: ${t.rating}`
-        }
-      </div>
-    `;
-  });
-});
+
+function openSquadView(data) {
+    const overlay = document.getElementById("squadViewOverlay");
+    const container = document.getElementById("squadCaptureArea");
+    
+    // Use the shared renderer
+    container.innerHTML = generateCreativeCardHTML(
+        data.team, 
+        data.xi, 
+        data.rating, 
+        data.xi ? data.xi.length : 0
+    );
+
+    overlay.classList.remove("hidden");
+}
+
+window.downloadLeaderboardPNG = function() {
+    const el = document.getElementById('generatedCard'); // Target the card inside
+    html2canvas(el, { backgroundColor: null, scale: 3 }).then(canvas => {
+        const a = document.createElement('a');
+        a.download = `Squad_Card.png`;
+        a.href = canvas.toDataURL();
+        a.click();
+    });
+}
+
+function showScreen(id){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
+}
