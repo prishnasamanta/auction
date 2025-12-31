@@ -213,7 +213,7 @@ socket.on('publicRoomsList', ({ live, waiting }) => {
         }
     };
 
-    render(waiting, "🟢 Waiting to Start", "waiting");
+    render(waiting, "⏳ Waiting to Start", "waiting");
     render(live, "🔴 Ongoing Auctions", "live");
 
     if(waiting.length === 0 && live.length === 0) {
@@ -240,7 +240,19 @@ socket.on("roomCreated", code => {
 });
 
 /* ================= ROOM STATE LOGIC ================= */
+/* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
+    console.log("Room Data:", data);
+    
+    // --- FIX 1: IF AUCTION ENDED, REDIRECT TO HOME ---
+    if (data.auctionEnded) {
+        alert("⚠️ The Auction has ended. Returning to Main Screen.");
+        sessionStorage.clear();
+        window.location.href = "/";
+        return; 
+    }
+
+    // Normal Flow
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
     
@@ -248,38 +260,23 @@ socket.on("joinedRoom", (data) => {
     if(data.squads) allSquads = data.squads;
 
     isHost = data.isHost;
-    gameStarted = data.auctionStarted; // Sync global state
     
     setupAuctionScreen();
 
-    // 1. GAME ENDED CHECK
-    if (data.auctionEnded) {
-        showScreen("playingXI");
-        document.body.style.overflow = "auto";
-        socket.emit("getMySquad");
-        updateRulesUI();
-        return; 
+    // Render Teams
+    if (data.availableTeams) {
+        renderEmbeddedTeams(data.availableTeams);
     }
 
-    // 2. LOGIC: WHICH SCREEN TO SHOW?
-    if (gameStarted) {
-        // Auction is LIVE.
-        if (!myTeam && data.availableTeams && data.availableTeams.length > 0) {
-            // New player, teams available -> Show Selection First
-            setGamePhase("TEAM_SELECT");
-            renderEmbeddedTeams(data.availableTeams);
-        } else {
-            // Already has team OR no teams left -> Show Auction
-            setGamePhase("AUCTION");
-        }
+    if (data.auctionStarted) {
+        setGamePhase("AUCTION");
     } else {
-        // Auction NOT started -> Always show Selection
         setGamePhase("TEAM_SELECT");
-        if (data.availableTeams) renderEmbeddedTeams(data.availableTeams);
     }
     
-    updateAdminButtons(gameStarted);
+    updateAdminButtons(data.auctionStarted);
 });
+
 function setupAuctionScreen() {
     document.getElementById("landing").classList.add("hidden");
     document.getElementById("auth").classList.add("hidden");
@@ -521,7 +518,7 @@ document.getElementById("saveRules").onclick = () => {
         minBowl: Number(document.getElementById("minBowl").value),
         minSpin: Number(document.getElementById("minSpin").value),
         minWK: Number(document.getElementById("minWK").value),
-        minForeignXI: Number(document.getElementById("minForeignXI").value)
+        minForeignXI: Number(document.getElementById("maxForeignXI").value)
     });
 };
 
@@ -593,7 +590,7 @@ function renderEmbeddedTeams(teams) {
         specBtn.innerText = "👀 Watch as Spectator";
         specBtn.className = "secondary-btn";
         specBtn.style.width = "100%";
-        specBtn.style.marginTop = "10px";
+        specBtn.style.marginTop = "8px";
         specBtn.onclick = () => setGamePhase("AUCTION");
         box.appendChild(specBtn);
     }
@@ -829,7 +826,7 @@ function updateRulesUI() {
     set('pop_viewWK', r.minWK);
     set('pop_viewAR', r.minAll);
     set('pop_viewSpin', r.minSpin);
-    set('pop_viewForeignXI', r.minForeignXI); // Ensure HTML has this ID
+    set('pop_viewForeignXI', r.maxForeignXI); // Ensure HTML has this ID
     
     set('viewPurse', r.purse);
     set('viewSquadSize', r.maxPlayers);
@@ -964,7 +961,7 @@ function updateDashboard() {
     };
 
     setStat('stat-count', total, 11, 11); // Must be exactly 11
-    setStat('stat-foreign', foreign, 0, (activeRules.minForeignXI || 4)); // Using minForeignXI variable as max limit based on previous discussion
+    setStat('stat-foreign', foreign, 0, (activeRules.maxForeignXI || 4)); // Using minForeignXI variable as max limit based on previous discussion
     setStat('stat-wk', wk, activeRules.minWK || 1);
     setStat('stat-bat', bat, activeRules.minBat || 3);
     setStat('stat-bowl', bowl, activeRules.minBowl || 3);
@@ -1125,7 +1122,7 @@ socket.on("leaderboard", (board) => {
                 <td>#${i+1}</td>
                 <td style="color:${TEAM_COLORS[t.team] || 'white'}; font-weight:bold;">${t.team}</td>
                 <td>${t.rating}</td>
-                <td>${t.disqualified ? '❌' : '✅'}</td>
+                <td>${t.disqualified ? '❌' : '✔️'}</td>
                 <td>₹${t.purse} Cr</td>
                 <td><button onclick='openSquadView(${JSON.stringify(t)})' class="secondary-btn" style="padding:2px 8px; font-size:0.7rem;">👁️</button></td>
             `;
@@ -1134,7 +1131,7 @@ socket.on("leaderboard", (board) => {
     }
 
     // 2. Update Mini-Leaderboard (The one we just added back)
-    const mini = document.getElementById("leaderboardBox");
+  /*  const mini = document.getElementById("leaderboardBox");
     if(mini) {
         mini.innerHTML = "<h4 style='margin:0 0 10px 0; color:#aaa; text-transform:uppercase; font-size:0.8rem;'>🔴 Live Standings</h4>";
         
@@ -1149,7 +1146,7 @@ socket.on("leaderboard", (board) => {
                     <span>${t.rating}</span>
                 </div>`;
         });
-    }
+    }*/
 });
 /* ================= SHARED RENDERER (CREATIVE CARD) ================= */
 function generateCreativeCardHTML(teamName, players, rating, count) {
@@ -1229,4 +1226,5 @@ function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
+
 
