@@ -559,33 +559,26 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 /* ================= EARLY ACCESS BADGE ================= */
+/* ... inside @media (max-width: 900px) ... */
 
-/* 1. Ensure the Hero section stacks items vertically */
-.landing-hero {
-    flex-direction: column !important; /* Stack badge on top of card */
-    gap: 10px;
-}
+  /* FIX: LANDING PAGE VISIBILITY ON MOBILE */
+  #landing {
+    justify-content: flex-start !important; /* Don't force center vertically */
+    padding-top: 60px !important;           /* Push content down so badge is visible */
+    height: auto !important;                /* Allow scrolling */
+  }
 
-/* 2. Style the Badge */
-.early-access-badge {
-    background: rgba(251, 191, 36, 0.15); /* Gold transparent bg */
-    border: 1px solid rgba(251, 191, 36, 0.4); /* Gold border */
-    color: #fbbf24; /* Bright Gold text */
-    
-    padding: 8px 24px;
-    border-radius: 50px; /* Pill shape */
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    
-    backdrop-filter: blur(8px);
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.15); /* Glow effect */
-    
-    /* Animation */
-    animation: floatBadge 3s ease-in-out infinite;
-    cursor: default;
-    user-select: none;
-}
+  .landing-hero {
+    margin-bottom: 30px; /* Add space between card and info sections */
+  }
+
+  /* Adjust badge position if needed */
+  .early-access-badge {
+    margin-top: 10px;
+  }
+
+/* ... rest of your mobile styles ... */
+
 
 /* 3. Floating Animation */
 @keyframes floatBadge {
@@ -660,6 +653,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
         font-size: 0.9rem;
     }
 }
+
 
 
 
