@@ -122,12 +122,13 @@ input {
 input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
 
 /* ================= LANDING PAGE & AUTH ================= */
-#landing {
-    min-height: 100dvh; /* Fill screen */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-bottom: 60px; /* Space for footer */
+#landing, .auth-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 100%;
 }
 .landing-card, .auth-card {
   padding: 30px;
@@ -637,5 +638,6 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     max-height: 80vh;
   }
 }
+
 
 
