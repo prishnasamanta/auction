@@ -653,6 +653,91 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
         font-size: 0.9rem;
     }
 }
+/* ================= USER LIST DROPDOWN ================= */
+
+/* 1. The Button (Looks exactly like the previous pill) */
+.count-pill-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: background 0.2s;
+    margin-right: 10px;
+}
+
+.count-pill-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Green Pulse Dot */
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--success);
+    animation: blink 2s infinite;
+}
+
+/* 2. The Dropdown Container */
+.user-list-dropdown {
+    position: absolute;
+    top: 120%; /* Just below the button */
+    right: 0;  /* Align to right edge */
+    width: 220px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.95); /* Darker glass */
+    padding: 15px;
+    z-index: 1000;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    /* Mobile safe */
+    right: 10px; 
+}
+
+/* 3. User Items inside Dropdown */
+.ul-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.9rem;
+}
+.ul-item:last-child { border-bottom: none; }
+
+.ul-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-weight: 500;
+}
+
+.ul-dot {
+    width: 6px; height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+}
+
+.ul-team {
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    color: var(--gold);
+}
+
+
 
 
 
