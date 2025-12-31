@@ -171,12 +171,19 @@ io.on("connection", socket => {
     });
 
     // --- 3. RECONNECT USER ---
+    // --- 3. RECONNECT USER ---
     socket.on('reconnectUser', ({ roomId, username, team }) => {
         const room = rooms[roomId];
         if (room) {
-            // ... (Your existing logic to find user) ...
+            // Check if user exists in memory
             let oldSocketId = Object.keys(room.users).find(key => room.users[key].name === username);
             
+            // SECURITY: Block strangers if auction is already over
+            if (!oldSocketId && room.auctionEnded) {
+                return socket.emit("error", "Auction Closed.");
+            }
+
+            // Update User Data / Socket ID
             if(oldSocketId) {
                 const userData = room.users[oldSocketId];
                 delete room.users[oldSocketId];
@@ -184,20 +191,17 @@ io.on("connection", socket => {
                 userData.id = socket.id;
                 userData.connected = true;
             } else {
-                // If auction ended, DO NOT allow random reconnections from people who weren't tracked
-                if(room.auctionEnded) {
-                    return socket.emit("error", "Auction Closed.");
-                }
                 room.users[socket.id] = { name: username, team: team, id: socket.id, connected: true };
             }
 
+            // Socket Setup
             socket.join(roomId);
             socket.room = roomId;
             socket.user = username;
             socket.team = team;
             if(room.adminUser === username) socket.isAdmin = true;
 
-            // FIX: Send the auctionEnded flag so client knows where to go
+            // SEND STATE (Includes auctionEnded flag)
             socket.emit("joinedRoom", { 
                 rules: room.rules,
                 squads: room.squads,
@@ -205,17 +209,37 @@ io.on("connection", socket => {
                 isHost: socket.isAdmin,
                 auctionStarted: room.auctionStarted,
                 availableTeams: room.availableTeams,
-                auctionEnded: room.auctionEnded // <--- Critical Flag
+                auctionEnded: room.auctionEnded
             });
             
-            // ... (Rest of sync logic: setUpdate, teamPicked, etc.) ...
+            // SYNC DATA
             broadcastSets(room, roomId);
-            if(team) socket.emit("teamPicked", { team, remaining: room.availableTeams });
-            
-            // Force squad data update if ended
+
+            if(team) {
+                socket.emit("teamPicked", { team, remaining: room.availableTeams });
+            } 
+
+            // Sync Auction Status
+            socket.emit("auctionState", {
+                live: room.auction.live,
+                paused: room.auction.paused,
+                player: room.auction.player,
+                bid: room.auction.bid,
+                lastBidTeam: room.auction.lastBidTeam
+            });
+
+            // If a player is currently on screen
+            if(room.auction.player){
+                 socket.emit("newPlayer", { 
+                    player: room.auction.player, 
+                    bid: room.auction.bid 
+                 });
+            }
+
+            // If Auction Ended, ensure they get final data for Leaderboard/Squads
             if(room.auctionEnded) {
                 socket.emit("squadData", room.squads);
-                // Send leaderboard immediately if available
+                // Send leaderboard if data exists
                 if(Object.keys(room.playingXI).length > 0){
                     const board = Object.values(room.playingXI).sort((a,b) => {
                        if(b.rating !== a.rating) return b.rating - a.rating; 
@@ -337,7 +361,7 @@ socket.on("joinRoom", ({ roomCode, user }) => {
             nextPlayer(r, socket.room);
         }
 
-                if(action === "end"){
+                  if(action === "end"){
             if (r.auction.interval) {
                 clearInterval(r.auction.interval);
                 r.auction.interval = null;
@@ -345,16 +369,19 @@ socket.on("joinRoom", ({ roomCode, user }) => {
             r.auction.live = false;
             r.auction.paused = true;
             
-            // --- FIX: Mark ended so it disappears from public list ---
+            // 1. Mark ended and hide from public
             r.auctionEnded = true; 
-            r.isPublic = false; // Hide from Join Room list
+            r.isPublic = false; 
 
-            // Notify clients (Client will handle redirect)
-            io.to(socket.room).emit("joinedRoom", { auctionEnded: true });
+            // 2. TRIGGER TRANSITION TO SUBMIT XI SCREEN
+            // We use "auctionEnded" event which the client already knows means "Go to XI"
+            io.to(socket.room).emit("auctionEnded");
             
-            // Optional: Delete room after 1 minute to free code completely
-            // setTimeout(() => delete rooms[socket.room], 60000); 
+            // 3. Send final data
+            io.to(socket.room).emit("logUpdate", "🛑 Auction Ended. Prepare Playing XI.");
+            io.to(socket.room).emit("squadData", r.squads);
         }
+
 
     });
 
@@ -626,5 +653,6 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
