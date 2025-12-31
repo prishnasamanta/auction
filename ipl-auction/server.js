@@ -337,7 +337,7 @@ socket.on("joinRoom", ({ roomCode, user }) => {
             nextPlayer(r, socket.room);
         }
 
-        if(action === "end"){
+                if(action === "end"){
             if (r.auction.interval) {
                 clearInterval(r.auction.interval);
                 r.auction.interval = null;
@@ -345,14 +345,17 @@ socket.on("joinRoom", ({ roomCode, user }) => {
             r.auction.live = false;
             r.auction.paused = true;
             
-            // FIX: Mark room as ended and remove from public visibility
+            // --- FIX: Mark ended so it disappears from public list ---
             r.auctionEnded = true; 
-            r.isPublic = false; 
+            r.isPublic = false; // Hide from Join Room list
 
-            io.to(socket.room).emit("auctionEnded");
-            io.to(socket.room).emit("logUpdate", "🛑 Auction Ended. Prepare Playing XI.");
-            io.to(socket.room).emit("squadData", r.squads);
+            // Notify clients (Client will handle redirect)
+            io.to(socket.room).emit("joinedRoom", { auctionEnded: true });
+            
+            // Optional: Delete room after 1 minute to free code completely
+            // setTimeout(() => delete rooms[socket.room], 60000); 
         }
+
     });
 
     // --- 8. BIDDING ---
@@ -623,3 +626,4 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
