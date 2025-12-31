@@ -242,17 +242,6 @@ socket.on("roomCreated", code => {
 /* ================= ROOM STATE LOGIC ================= */
 /* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
-    console.log("Room Data:", data);
-    
-    // --- FIX 1: IF AUCTION ENDED, REDIRECT TO HOME ---
-    if (data.auctionEnded) {
-        alert("⚠️ The Auction has ended. Returning to Main Screen.");
-        sessionStorage.clear();
-        window.location.href = "/";
-        return; 
-    }
-
-    // Normal Flow
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
     
@@ -263,7 +252,16 @@ socket.on("joinedRoom", (data) => {
     
     setupAuctionScreen();
 
-    // Render Teams
+    // --- FIX: IF AUCTION ENDED (REFRESHED) -> GO TO SUBMIT XI ---
+    if (data.auctionEnded) {
+        showScreen("playingXI"); // Go directly to XI screen
+        document.body.style.overflow = "auto";
+        socket.emit("getMySquad"); 
+        updateRulesUI();
+        return; // Stop processing (Don't show auction screen)
+    }
+
+    // Normal Flow (Auction Live or Waiting)
     if (data.availableTeams) {
         renderEmbeddedTeams(data.availableTeams);
     }
@@ -858,12 +856,12 @@ socket.on("logUpdate", msg => {
 /* ================================================= */
 /* ========= 9. PLAYING XI & LEADERBOARD =========== */
 /* ================================================= */
-
 socket.on("auctionEnded", () => {
-    showScreen("playingXI");
+    showScreen("playingXI"); // Switches the screen immediately
     document.body.style.overflow = "auto"; 
     socket.emit("getMySquad");
 });
+
 socket.on("mySquad", ({ squad, rules }) => {
     if(rules) {
         activeRules = rules;
@@ -1226,5 +1224,6 @@ function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
+
 
 
