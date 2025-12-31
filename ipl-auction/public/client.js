@@ -224,13 +224,21 @@ socket.on('publicRoomsList', ({ live, waiting }) => {
 /* ================================================= */
 /* ============= 3. ROOM STATE LOGIC =============== */
 /* ================================================= */
-
+/* ================= ROOM CREATED EVENT ================= */
 socket.on("roomCreated", code => {
     roomCode = code;
     sessionStorage.setItem('ipl_room', code);
+    
+    // 1. Setup UI
     setupAuctionScreen();
+    
+    // 2. SHOW RULES IMMEDIATELY FOR HOST
     document.getElementById("rulesScreen").classList.remove("hidden");
+
+    // 3. --- FIX: UPDATE URL IMMEDIATELY ---
+    updateBrowserURL(code);
 });
+
 /* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
     roomCode = data.roomCode;
@@ -1221,3 +1229,4 @@ function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
+
