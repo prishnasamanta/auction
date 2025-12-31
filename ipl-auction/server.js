@@ -4,7 +4,7 @@ const { Server } = require("socket.io");
 
 // Make sure you have players.js file
 const PLAYERS = require("./players"); 
-
+const disconnectTimers = {};
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -175,6 +175,12 @@ io.on("connection", socket => {
         // --- 3. RECONNECT USER ---
     socket.on('reconnectUser', ({ roomId, username, team }) => {
         const room = rooms[roomId];
+        const timerKey = `${roomId}_${username}`;
+        if (disconnectTimers[timerKey]) {
+            console.log(`♻️ User ${username} reconnected. Cancelling disconnect timer.`);
+            clearTimeout(disconnectTimers[timerKey]);
+            delete disconnectTimers[timerKey];
+        }
         if (room) {
             // 1. FIND EXISTING USER IN MEMORY
             // We search for a user with the same name to see if they were already here.
@@ -474,50 +480,65 @@ io.on("connection", socket => {
 
     // --- 10. SUBMIT XI ---
         // --- 10. HANDLE DISCONNECT ---
+       // --- 10. HANDLE DISCONNECT (WITH GRACE PERIOD) ---
     socket.on("disconnect", () => {
         const r = rooms[socket.room];
         if (!r) return;
 
-        // 1. Remove User from Room
-        if (r.users[socket.id]) {
-            const userTeam = r.users[socket.id].team;
-            const userName = r.users[socket.id].name;
-            const wasAdmin = (r.adminUser === userName);
+        // Find the user who is disconnecting
+        const user = r.users[socket.id];
+        if (!user) return;
 
-            delete r.users[socket.id];
+        const userName = user.name;
+        const roomCode = socket.room;
+        
+        // Create a unique key for this user in this room
+        const timerKey = `${roomCode}_${userName}`;
 
-            // 2. LOGIC: IF HOST LEAVES
-            if (wasAdmin) {
-                // Hide room from public list immediately
-                r.isPublic = false; 
-                // Mark auction as ended (Game Over)
-                r.auctionEnded = true; 
-                
-                // Notify everyone remaining
-                io.to(socket.room).emit("logUpdate", "🛑 Host disconnected. Auction Ended.");
-                io.to(socket.room).emit("joinedRoom", { auctionEnded: true });
-            }
+        // START 60-SECOND TIMER
+        // We don't delete the user yet. We wait to see if they come back.
+        disconnectTimers[timerKey] = setTimeout(() => {
+            
+            // === 60 SECONDS LATER: THEY DID NOT RETURN ===
+            
+            // Check if room still exists
+            if (rooms[roomCode] && rooms[roomCode].users[socket.id]) {
+                const finalRoom = rooms[roomCode];
+                const wasAdmin = (finalRoom.adminUser === userName);
+                const userTeam = finalRoom.users[socket.id].team;
 
-            // 3. LOGIC: IF PLAYER LEAVES (Free up the team)
-            if (userTeam) {
-                // Add team back to available list if not already there
-                if (!r.availableTeams.includes(userTeam)) {
-                    r.availableTeams.push(userTeam);
-                    r.availableTeams.sort(); // Keep it tidy
+                // 1. Delete User
+                delete finalRoom.users[socket.id];
+
+                // 2. HOST LEFT -> KILL ROOM
+                if (wasAdmin) {
+                    finalRoom.isPublic = false; 
+                    finalRoom.auctionEnded = true; 
+                    
+                    // Force redirect all clients to home
+                    io.to(roomCode).emit("forceHome", "Host disconnected.");
                 }
-                // Clear the team purse/squad association if you want? 
-                // Usually we KEEP the squad so if they rejoin they get it back, 
-                // OR if someone else takes it, they inherit the squad. 
-                // For this logic, we assume someone else can take it and inherit the current state.
-                
-                io.to(socket.room).emit("teamPicked", { team: null, remaining: r.availableTeams });
-                io.to(socket.room).emit("logUpdate", `🏃 ${userTeam} is now available.`);
-            }
 
-            // 4. UPDATE PLAYER COUNT
-            io.to(socket.room).emit("updateUserCount", Object.keys(r.users).length);
-        }
+                // 3. PLAYER LEFT -> FREE TEAM
+                if (userTeam && !finalRoom.auctionEnded) {
+                    if (!finalRoom.availableTeams.includes(userTeam)) {
+                        finalRoom.availableTeams.push(userTeam);
+                        finalRoom.availableTeams.sort();
+                    }
+                    io.to(roomCode).emit("teamPicked", { team: null, remaining: finalRoom.availableTeams });
+                    io.to(roomCode).emit("logUpdate", `🏃 ${userTeam} is available (Player left).`);
+                }
+
+                // 4. Update Count
+                io.to(roomCode).emit("updateUserCount", Object.keys(finalRoom.users).length);
+            }
+            
+            // Clean up timer map
+            delete disconnectTimers[timerKey];
+
+        }, 30000); // 30 Seconds Grace Period
     });
+
 
     socket.on("submitXI", ({ xi }) => {
         const r = rooms[socket.room];
@@ -725,6 +746,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
