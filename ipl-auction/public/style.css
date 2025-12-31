@@ -602,6 +602,65 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     }
 }
 
+/* ================= COFFEE SUPPORT BANNER ================= */
+.coffee-banner {
+    background: #022c22; /* Dark Green Background */
+    border: 1px solid #14532d; /* Lighter Green Border */
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    width: 90%;
+    
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.coffee-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.coffee-icon {
+    font-size: 1.5rem;
+}
+
+.coffee-text {
+    color: #86efac; /* Light Green Text */
+    font-weight: 700;
+    font-family: var(--font-body);
+    font-size: 1rem;
+}
+
+.coffee-btn {
+    background-color: #15803d; /* Button Green */
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.coffee-btn:hover {
+    background-color: #166534;
+}
+
+/* Mobile Tweak for Banner */
+@media (max-width: 600px) {
+    .coffee-banner {
+        width: 95%;
+        padding: 10px 15px;
+    }
+    .coffee-text {
+        font-size: 0.9rem;
+    }
+}
+
 
 
 
