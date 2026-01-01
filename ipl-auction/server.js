@@ -40,11 +40,13 @@ const AVAILABLE_TEAMS_LIST = ["CSK", "MI", "RCB", "KKR", "RR", "SRH", "DC", "PBK
 function generateRoomCode() {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
-
 function startBid(rating) {
-    if (rating >= 90) return 2;
-    if (rating >= 80) return 1;
-    return 0.5;
+    if (rating >= 9) return 2;
+    if (rating >= 8.5) return 1.5;
+    if (rating >= 8) return 1;
+    if (rating >= 7.5) return 0.75;
+    if (rating >= 7) return 0.5;
+    return 0.3;
 }
 
 function createSets(allPlayers) {
@@ -765,6 +767,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
