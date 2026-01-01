@@ -351,9 +351,11 @@ socket.on("roomUsersUpdate", (users) => {
             // Store the "Target Time" (When they get kicked) in a data attribute
             const targetTime = u.disconnectTime + GRACE_PERIOD_MS;
             
-            timerHTML = `<span class="away-timer" data-target="${targetTime}" style="font-family:monospace; font-size:0.75rem; color:#fca5a5; margin-left:6px; background:rgba(255,0,0,0.15); padding:1px 5px; border-radius:4px; border:1px solid rgba(255,0,0,0.2);">
+           // NEW (Uses the CSS class we just made):
+            timerHTML = `<span class="away-timer" data-target="${targetTime}">
                 ${formatTime(remaining)}
             </span>`;
+
         }
 
         if (u.team) {
@@ -1325,6 +1327,7 @@ window.downloadLeaderboardPNG = function() {
         a.click();
     });
 }
+
 
 
 
