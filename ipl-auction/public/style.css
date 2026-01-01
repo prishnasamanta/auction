@@ -913,28 +913,28 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     font-size: 0.8rem; 
 }
 
-
-/* ================= TOP STATUS HUD (Minimal Strip) ================= */
+/* ================= TOP STATUS HUD (Compact Capsule) ================= */
 #teamNotice {
-    /* Layout & Spacing */
-    width: 100%;
-    max-width: 480px;
-    margin: 0 auto 10px auto; /* Reduced margin */
-    padding: 8px 0; /* Vertical padding only */
+    /* Tighter dimensions */
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px; /* Slightly rounded, not full pill */
     
-    /* Transparent Background with subtle separator */
-    background: transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0;
+    /* Spacing */
+    width: auto; /* Shrink to fit content */
+    display: inline-flex; /* Only takes necessary width */
+    min-width: 300px; /* Minimum width for consistency */
+    margin: 0 auto 10px auto; 
+    padding: 6px 15px; /* Drastically reduced padding */
     
-    /* Flex Layout */
-    display: flex;
+    /* Alignment */
     justify-content: space-between;
     align-items: center;
+    gap: 15px; /* Space between name and purse */
     
-    /* Remove old shadows/effects */
-    box-shadow: none;
-    backdrop-filter: none;
+    /* Subtle Shadow */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    position: relative;
 }
 
 /* Remove the Gloss Effect */
@@ -946,23 +946,25 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 #noticeTeam {
     font-family: 'Exo 2', sans-serif;
     font-weight: 700;
-    font-size: 1rem; /* Significantly smaller */
-    letter-spacing: 0.5px;
+    font-size: 1.1rem;
     text-transform: uppercase;
-    color: #e2e8f0; /* Soft white */
 }
 
 /* Right Text (Purse) */
 #noticePurse {
     font-family: 'Roboto Mono', monospace;
     font-weight: 600;
-    font-size: 0.95rem; /* Smaller tech font */
-    color: #4ade80; /* Keep green for visibility */
-    background: transparent; /* Remove background box */
-    padding: 0;
-    border: none;
+    font-size: 1rem;
+    color: #4ade80;
+    
+    /* Minimal border for the number */
+    border-left: 1px solid rgba(255,255,255,0.1);
+    padding-left: 15px;
+    background: none;
     box-shadow: none;
+    border-radius: 0;
 }
+
 
 
 
