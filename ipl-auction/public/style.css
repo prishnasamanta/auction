@@ -841,15 +841,15 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     /* Fix Command Center Cutting Off */
     .command-center {
         height: 80vh !important; /* Increased height slightly */
-        max-height: 800px;
-        margin-bottom: 5px; /* Extra space at bottom page scroll */
+        max-height: 750px;
+        margin-bottom: 1px; /* Extra space at bottom page scroll */
     }
     
     /* Fix Chat Input Visibility */
     #panel-feed {
         height: 100%;
         /* Add extra padding at the bottom of the internal panel */
-        padding-bottom: 6px; 
+        padding-bottom: 5px; 
     }
 
     /* Lift the chat box input specifically */
@@ -964,6 +964,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     box-shadow: none;
     border-radius: 0;
 }
+
 
 
 
