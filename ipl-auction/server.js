@@ -515,54 +515,47 @@ io.on("connection", socket => {
 
     // --- 10. HANDLE DISCONNECT (90 SECONDS LOGIC) ---
        // --- 10. HANDLE DISCONNECT (WITH TIMER) ---
+    // --- 10. HANDLE DISCONNECT (WITH YELLOW/RED LOGIC) ---
     socket.on("disconnect", () => {
         const r = rooms[socket.room];
         if (!r) return;
         const user = r.users[socket.id];
         if (!user) return;
 
-        // 1. MARK AS AWAY & START CLOCK
+        // 1. YELLOW STATUS (Away)
         user.isAway = true; 
-        user.disconnectTime = Date.now(); // <--- Save current server time
-        
-        broadcastUserList(r, socket.room); // Notify everyone immediately
+        user.disconnectTime = Date.now(); 
+        broadcastUserList(r, socket.room);
 
         const userName = user.name;
         const roomCode = socket.room;
         const timerKey = `${roomCode}_${userName}`;
-
-        // 90 Seconds (1.5 Minutes) Grace Period
-        const GRACE_PERIOD = 90000; 
+        const GRACE_PERIOD = 90000; // 1.5 Minutes
 
         disconnectTimers[timerKey] = setTimeout(() => {
             if (rooms[roomCode] && rooms[roomCode].users[socket.id]) {
                 const finalRoom = rooms[roomCode];
-                const wasAdmin = (finalRoom.admin === socket.id); // Check by ID, safer
-                const userTeam = finalRoom.users[socket.id].team;
+                const targetUser = finalRoom.users[socket.id];
+                const userTeam = targetUser.team;
 
-                // 1. Remove User
-                delete finalRoom.users[socket.id];
+                // 2. RED STATUS (Kicked / Timed Out)
+                // We do NOT delete the user yet, so they show as "Red Dot"
+                targetUser.isKicked = true; 
+                targetUser.team = null; // Strip team
 
-                // 2. HOST TRANSFER LOGIC
-                if (wasAdmin) {
-                    const remainingIDs = Object.keys(finalRoom.users);
+                // 3. HOST TRANSFER (If needed)
+                if (finalRoom.admin === socket.id) {
+                    const remainingIDs = Object.keys(finalRoom.users).filter(id => !finalRoom.users[id].isKicked);
                     if (remainingIDs.length > 0) {
-                        // Transfer to first available user
                         const newAdminID = remainingIDs[0];
                         finalRoom.admin = newAdminID;
                         finalRoom.adminUser = finalRoom.users[newAdminID].name;
-                        
-                        // Notify the new admin
                         io.to(newAdminID).emit("adminPromoted");
                         sendLog(finalRoom, roomCode, `👑 Host left. ${finalRoom.adminUser} is now Host.`);
-                    } else {
-                        // No one left? Kill room.
-                        finalRoom.isPublic = false; 
-                        finalRoom.auctionEnded = true; 
                     }
                 }
 
-                // 3. FREE TEAM LOGIC
+                // 4. FREE THE TEAM
                 if (userTeam && !finalRoom.auctionEnded) {
                     if (!finalRoom.availableTeams.includes(userTeam)) {
                         finalRoom.availableTeams.push(userTeam);
@@ -570,22 +563,24 @@ io.on("connection", socket => {
                     }
                     // Notify everyone that team is free
                     io.to(roomCode).emit("teamPicked", { team: null, remaining: finalRoom.availableTeams });
-                    sendLog(finalRoom, roomCode, `🏃 ${userTeam} is available (Player left).`);
+                    sendLog(finalRoom, roomCode, `🏃 ${userTeam} is available (Player Timed Out).`);
                 }
 
-                // 4. SYNC EVERYONE
+                // 5. REFRESH ALL CLIENTS
                 broadcastUserList(finalRoom, roomCode);
                 
-                // Force update owners for Squad View
+                // Force comprehensive update for everyone
                 io.to(roomCode).emit("joinedRoom", { 
-                    updateOnly: true, // Flag to tell client just update data, don't reset screen
+                    updateOnly: true, 
                     teamOwners: getTeamOwners(finalRoom),
-                    availableTeams: finalRoom.availableTeams
+                    availableTeams: finalRoom.availableTeams,
+                    userCount: Object.keys(finalRoom.users).length
                 });
             }
             delete disconnectTimers[timerKey];
         }, GRACE_PERIOD);
     });
+
     socket.on("submitXI", ({ xi }) => {
         const r = rooms[socket.room];
         if(!r || !socket.team) return;
@@ -792,20 +787,19 @@ function getTeamOwners(room) {
 }
 // --- HELPER: Broadcast User List ---
 // --- HELPER: Broadcast User List ---
+// --- HELPER: Broadcast User List ---
 function broadcastUserList(room, roomCode) {
     if (!room) return;
-    
-    // Map to simple objects to send to client
     const userList = Object.values(room.users).map(u => ({
         name: u.name,
         team: u.team,
-        status: u.isAway ? 'away' : 'online',
-        // Send the timestamp if they are away
+        // Status Priority: Kicked (Red) > Away (Yellow) > Online (Green)
+        status: u.isKicked ? 'kicked' : (u.isAway ? 'away' : 'online'),
         disconnectTime: u.disconnectTime || null 
     }));
-    
     io.to(roomCode).emit("roomUsersUpdate", userList);
 }
+
 
 // --- HELPER: Send Log & Store History ---
 function sendLog(room, code, msg) {
@@ -819,6 +813,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
