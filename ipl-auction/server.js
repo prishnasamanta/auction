@@ -585,7 +585,7 @@ io.on("connection", socket => {
             }
             delete disconnectTimers[timerKey];
         }, GRACE_PERIOD);
-
+    });
     socket.on("submitXI", ({ xi }) => {
         const r = rooms[socket.room];
         if(!r || !socket.team) return;
@@ -819,6 +819,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
