@@ -271,21 +271,14 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* --- CENTER CARDS --- */
 /* ================= PREMIUM AUCTION CARD ================= */
 /* ================= DARK GLOW THEME CARDS ================= */
-
-/* Shared Card Base */
+/* --- CENTER CARDS --- */
 #auctionCard, #teamSelectionMain {
-  width: 100%; 
-  max-width: 500px;
+  width: 100%; max-width: 500px;
   overflow: hidden;
-  /* Deep Dark Background */
-  background: #020617; 
-  /* Glowing Border */
-  border: 1px solid rgba(56, 189, 248, 0.3); /* Light Blue Tint */
-  border-radius: 16px;
-  /* Outer Glow Shadow */
-  box-shadow: 0 0 25px rgba(56, 189, 248, 0.15); 
-  transition: transform 0.3s, box-shadow 0.3s;
-  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 0 50px rgba(0,0,0,0.5);
+  transition: transform 0.3s;
+  background: rgba(30, 41, 59, 0.8);
 }
 
 #teamSelectionMain {
@@ -293,119 +286,48 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     flex-direction: column;
     justify-content: center;
     min-height: 350px;
-    padding: 25px;
+    padding: 20px;
     text-align: center;
 }
 
-/* Header (Role Badge) */
 .auction-header-role {
-  background: rgba(15, 23, 42, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 12px;
-  text-align: center;
+  background: #0f172a; color: var(--text-muted); text-transform: uppercase;
+  font-size: 0.8rem; letter-spacing: 2px; padding: 10px; text-align: center;
+  border-bottom: 1px solid var(--border);
 }
 
-#playerMeta { 
-  color: #facc15; /* Gold Text */
-  font-weight: 700; 
-  letter-spacing: 2px; 
-  font-size: 0.85rem; 
-  text-transform: uppercase;
-  /* Text Glow */
-  text-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
-}
-
-/* Player Info Area */
 #playerInfoBox {
-  padding: 40px 20px;
-  /* Subtle downward gradient */
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(56, 189, 248, 0.05) 100%);
+  padding: 30px 20px;
+  background: radial-gradient(circle at center, #1e293b, #0f172a);
   text-align: center;
-  position: relative;
+  border-bottom: 1px solid var(--border);
 }
 
-/* Glowing Player Name */
 #playerName {
   font-family: var(--font-display);
-  font-size: 2.2rem; 
-  font-weight: 800; 
-  color: #ffffff;
-  margin-bottom: 5px;
-  /* White Glow */
-  text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  font-size: 2rem; font-weight: 800; color: white;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin-bottom: 5px;
 }
+#playerMeta { color: var(--gold); font-weight: 700; letter-spacing: 1px; font-size: 0.9rem; }
 
-/* Price & Timer Row */
+/* Price Container */
 .price-container {
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center;
-  padding: 15px 25px; 
-  background: rgba(0, 0, 0, 0.4); 
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  gap: 15px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 15px 20px; background: rgba(0,0,0,0.2); gap: 10px;
 }
+#bid { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: white; }
+#timer { font-family: monospace; font-size: 1.2rem; background: #0f172a; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); color: var(--accent); }
 
-/* The Bid Price */
-#bid { 
-  font-family: 'Roboto Mono', monospace; 
-  font-size: 1.8rem; 
-  font-weight: 700; 
-  color: #4ade80; /* Neon Green */
-  text-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
-}
-
-/* The Timer Box */
-#timer { 
-  font-family: monospace; 
-  font-size: 1.4rem; 
-  background: rgba(220, 38, 38, 0.1); /* Red tint bg */
-  padding: 6px 14px; 
-  border-radius: 8px; 
-  border: 1px solid rgba(220, 38, 38, 0.4); 
-  color: #f87171; /* Red text */
-  box-shadow: 0 0 10px rgba(220, 38, 38, 0.2);
-}
-
-/* Button Container */
-.card-padding-area { 
-  padding: 20px; 
-  background: #020617; 
-}
-
-/* Neon Bid Button */
+/* Bid Button */
+.card-padding-area { padding: 15px; background: #1e293b; }
 #bidBtn {
-  width: 100%; 
-  padding: 16px; 
-  font-size: 1.1rem; 
-  font-weight: 800;
-  text-transform: uppercase; 
-  letter-spacing: 1px;
-  
-  /* Neon Green Gradient */
-  background: linear-gradient(135deg, #16a34a, #15803d); 
-  color: #fff; 
-  border: 1px solid #4ade80; /* Bright border */
-  border-radius: 12px; 
-  cursor: pointer;
-  
-  /* Green Glow Shadow */
-  box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
-  transition: all 0.2s ease;
+  width: 100%; padding: 15px; font-size: 1.2rem; font-weight: 800;
+  text-transform: uppercase; background: var(--success);
+  border: none; border-radius: 8px; color: #000; cursor: pointer;
+  transition: 0.1s; box-shadow: 0 4px 0 #15803d;
 }
-
-#bidBtn:active { 
-  transform: scale(0.98); 
-  box-shadow: 0 0 5px rgba(34, 197, 94, 0.6);
-}
-
-#bidBtn:disabled { 
-  background: #1e293b; 
-  color: #475569; 
-  border-color: #334155; 
-  box-shadow: none; 
-  cursor: not-allowed; 
-}
+#bidBtn:active { transform: translateY(4px); box-shadow: none; }
+#bidBtn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; }
 
 /* Chat */
 .chat-box { display: flex; gap: 5px; margin-top: 10px; }
@@ -992,64 +914,56 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 
-/* ================= TOP STATUS HUD (Team & Purse) ================= */
+/* ================= TOP STATUS HUD (Minimal Strip) ================= */
 #teamNotice {
-    /* Floating Pill Shape */
-    background: rgba(15, 23, 42, 0.85); /* Dark background */
-    backdrop-filter: blur(12px); /* Blur behind */
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 50px; /* Fully rounded ends */
-    
-    /* Spacing & Layout */
+    /* Layout & Spacing */
     width: 100%;
-    max-width: 480px; /* Match card width */
-    margin: 0 auto 15px auto; /* Center it */
-    padding: 12px 25px;
+    max-width: 480px;
+    margin: 0 auto 10px auto; /* Reduced margin */
+    padding: 8px 0; /* Vertical padding only */
+    
+    /* Transparent Background with subtle separator */
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0;
     
     /* Flex Layout */
     display: flex;
     justify-content: space-between;
     align-items: center;
     
-    /* Shadows for depth */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-    position: relative;
-    overflow: hidden;
+    /* Remove old shadows/effects */
+    box-shadow: none;
+    backdrop-filter: none;
 }
 
-/* Shiny gloss effect on the bar */
+/* Remove the Gloss Effect */
 #teamNotice::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 50%;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
-    border-radius: 50px 50px 0 0;
-    pointer-events: none;
+    display: none;
 }
 
 /* Left Text (Team Name) */
 #noticeTeam {
     font-family: 'Exo 2', sans-serif;
-    font-weight: 800;
-    font-size: 1.4rem;
-    letter-spacing: 1px;
+    font-weight: 700;
+    font-size: 1rem; /* Significantly smaller */
+    letter-spacing: 0.5px;
     text-transform: uppercase;
-    /* Text Glow is handled via JS setting color, but we add a base shadow */
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    color: #e2e8f0; /* Soft white */
 }
 
 /* Right Text (Purse) */
 #noticePurse {
-    font-family: 'Roboto Mono', monospace; /* Tech/Digital font for numbers */
-    font-weight: 700;
-    font-size: 1.2rem;
-    color: #4ade80; /* Bright Green */
-    background: rgba(34, 197, 94, 0.1);
-    padding: 4px 12px;
-    border-radius: 8px;
-    border: 1px solid rgba(34, 197, 94, 0.2);
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 600;
+    font-size: 0.95rem; /* Smaller tech font */
+    color: #4ade80; /* Keep green for visibility */
+    background: transparent; /* Remove background box */
+    padding: 0;
+    border: none;
+    box-shadow: none;
 }
+
 
 
 
