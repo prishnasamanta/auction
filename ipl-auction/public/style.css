@@ -814,12 +814,18 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 /* Responsive Fix */
 @media (max-width: 900px) {
-    .command-center {
-        height: 600px !important; /* Give it fixed height on mobile so internal scroll works */
-        margin-bottom: 100px;
+   .command-center {
+        /* Use VH units to fit screen better */
+        height: 75vh !important; 
+        max-height: 800px;
+        margin-bottom: 120px; /* Extra space for footer/fab */
     }
     
-    #panel-feed { height: 100%; }
+    /* Ensure the chat input sticks to bottom of that tile */
+    #panel-feed {
+        height: 100%;
+        padding-bottom: 10px;
+    }
 }
 /* ================= SETS VIEW STYLING ================= */
 .set-title { 
@@ -869,6 +875,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     color:#facc15; 
     font-size: 0.8rem; 
 }
+
 
 
 
