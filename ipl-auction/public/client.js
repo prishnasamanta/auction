@@ -228,9 +228,8 @@ socket.on("roomCreated", code => {
 
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
-    
-    // 1. SAVE METADATA
     if (data.teamOwners) teamOwners = data.teamOwners;
+    if (data.purses) teamPurse = data.purses; // <--- ADD THIS LINE (Syncs money immediately)
     if (data.userCount !== undefined) {
         const countEl = document.getElementById("liveUserCount");
         if(countEl) countEl.innerText = data.userCount;
@@ -254,6 +253,7 @@ socket.on("joinedRoom", (data) => {
             sessionStorage.clear();
             window.location.href = "/";
         }
+        
         return; 
     }
 
@@ -1272,4 +1272,5 @@ window.downloadLeaderboardPNG = function() {
         a.click();
     });
 }
+
 
