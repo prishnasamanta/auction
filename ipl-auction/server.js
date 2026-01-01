@@ -432,13 +432,16 @@ io.on("connection", socket => {
             nextBid = r.auction.bid; 
         } else {
             // Someone holds the bid -> Add Increment
-            const increment =
-  r.auction.bid < 1  ? 0.05 :
-  r.auction.bid < 5  ? 0.1  :
-  r.auction.bid < 10 ? 0.2  :
-  r.auction.bid < 20 ? 0.25 :
-  1;
+            // 1. Calculate Increment based on Current Bid
+            const b = r.auction.bid;
+            const increment = 
+                b < 1  ? 0.05 :  // Below 1 Cr -> 5 Lakhs
+                b < 5  ? 0.10 :  // 1 to 5 Cr  -> 10 Lakhs
+                b < 10 ? 0.20 :  // 5 to 10 Cr -> 20 Lakhs
+                b < 20 ? 0.25 :  // 10 to 20 Cr -> 25 Lakhs
+                1.0;             // 20 Cr+     -> 1 Crore
 
+            // 2. Calculate Next Bid
             nextBid = r.auction.bid + increment;
         }
 
@@ -767,6 +770,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
