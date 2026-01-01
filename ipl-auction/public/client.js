@@ -860,12 +860,15 @@ if(bidBtn) {
     bidBtn.onclick = () => {
         if(!myTeam) return alert("Select a team first!");
         if(bidBtn.disabled) return;
-        soundBid.play().catch(()=>{});
         socket.emit("bid");
     };
 }
 
 socket.on("bidUpdate", data => {
+    if (typeof soundBid !== 'undefined') {
+        soundBid.currentTime = 0; // Reset sound so it plays instantly even if already playing
+        soundBid.play().catch(()=>{});
+    }
     document.getElementById("bid").innerText = `₹${data.bid.toFixed(2)} Cr`;
     lastBidTeam = data.team;
     
@@ -999,15 +1002,24 @@ window.sendChat = function() {
     socket.emit("chat", { user: username, team: myTeam || "Viewer", msg: msgInput.value });
     msgInput.value = "";
 };
-
 socket.on("logUpdate", msg => {
     const log = document.getElementById("log");
     const div = document.createElement("div");
     div.className = "log-item";
     div.innerText = msg;
     log.appendChild(div);
+    
+    // Auto-scroll to bottom
     log.scrollTop = log.scrollHeight;
+
+    // --- FIX: Prevent Freezing ---
+    // If there are more than 50 logs, remove the oldest one at the top.
+    // This stops the browser memory from getting full.
+    if (log.children.length > 50) {
+        log.removeChild(log.firstChild);
+    }
 });
+
 
 /* ================================================= */
 /* ========= 9. PLAYING XI & LEADERBOARD =========== */
@@ -1393,6 +1405,7 @@ function showScreen(id){
     word-wrap: break-word;
     overflow-x: hidden;
 }
+
 
 
 
