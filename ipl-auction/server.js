@@ -365,7 +365,7 @@ io.on("connection", socket => {
 
         broadcastUserList(room, roomCode);
         broadcastSets(room, roomCode);
-        io.to(roomCode).emit('logUpdate', `👋 ${user} has joined.`);
+        sendLog(room, roomCode, `👋 ${user} has joined.`);
     });
 
     // --- 5. SELECT TEAM (STRICT CHECK) ---
@@ -394,7 +394,8 @@ io.on("connection", socket => {
             team,
             remaining: r.availableTeams
         });
-        io.to(socket.room).emit("logUpdate", `👕 ${user} selected ${team}`);
+        // OLD: io.to(socket.room).emit("logUpdate", `👕 ${user} selected ${team}`);
+        sendLog(r, socket.room, `👕 ${user} selected ${team}`);
         broadcastUserList(rooms[socket.room], socket.room);
     });
 
@@ -431,12 +432,14 @@ io.on("connection", socket => {
         if(action === "skip"){
             if(!r.auction.player) return;
             if(r.auction.interval) clearInterval(r.auction.interval);
-            io.to(socket.room).emit("logUpdate", `⏭ ${r.auction.player.name} skipped`);
+// OLD: io.to(socket.room).emit("logUpdate", `⏭ ${r.auction.player.name} skipped`);
+            sendLog(r, socket.room, `⏭ ${r.auction.player.name} skipped`);
             io.to(socket.room).emit("unsold", { player: r.auction.player });
             setTimeout(() => nextPlayer(r, socket.room), 800);
         }
         if(action === "skipSet"){
-            io.to(socket.room).emit("logUpdate", `⏩ SKIPPING SET: ${getSetName(r.sets[r.currentSetIndex])}`);
+// OLD: io.to(socket.room).emit("logUpdate", `⏩ SKIPPING SET: ${getSetName(r.sets[r.currentSetIndex])}`);
+            sendLog(r, socket.room, `⏩ SKIPPING SET: ${getSetName(r.sets[r.currentSetIndex])}`);
             r.sets[r.currentSetIndex] = []; 
             if(r.auction.interval) clearInterval(r.auction.interval);
             nextPlayer(r, socket.room);
@@ -484,7 +487,8 @@ io.on("connection", socket => {
             bid: r.auction.bid,
             team: socket.team
         });
-        io.to(socket.room).emit("logUpdate", `⚬ ${socket.team} bids ₹${r.auction.bid.toFixed(2)} Cr`);
+// OLD: io.to(socket.room).emit("logUpdate", `⚬ ${socket.team} bids ₹${r.auction.bid.toFixed(2)} Cr`);
+        sendLog(r, socket.room, `⚬ ${socket.team} bids ₹${r.auction.bid.toFixed(2)} Cr`);
     });
 
     // --- 9. CHAT & SQUADS ---
@@ -639,7 +643,8 @@ io.on("connection", socket => {
             reason: reason
         });
 
-        io.to(socket.room).emit("logUpdate", `📝 ${socket.team} submitted Playing XI`);
+// OLD: io.to(socket.room).emit("logUpdate", `📝 ${socket.team} submitted Playing XI`);
+        sendLog(r, socket.room, `📝 ${socket.team} submitted Playing XI`);
 
         const board = Object.values(r.playingXI).sort((a,b) => {
             if(b.rating !== a.rating) return b.rating - a.rating; 
@@ -688,7 +693,8 @@ function nextPlayer(r, room) {
             return;
         }
         set = r.sets[r.currentSetIndex];
-        io.to(room).emit("logUpdate", `🔔 NEW SET: ${getSetName(set)}`);
+// OLD: io.to(room).emit("logUpdate", `🔔 NEW SET: ${getSetName(set)}`);
+        sendLog(r, room, `🔔 NEW SET: ${getSetName(set)}`);
     }
 
     const randIdx = Math.floor(Math.random() * set.length);
@@ -746,7 +752,8 @@ function resolvePlayer(r, room) {
                 price: r.auction.bid,
                 purse: r.purse
             });
-            io.to(room).emit("logUpdate", `🔨 SOLD: ${p.name} → ${team} ₹${r.auction.bid.toFixed(2)} Cr`);
+// OLD: io.to(room).emit("logUpdate", `🔨 SOLD: ${p.name} → ${team} ₹${r.auction.bid.toFixed(2)} Cr`);
+            sendLog(r, room, `🔨 SOLD: ${p.name} → ${team} ₹${r.auction.bid.toFixed(2)} Cr`);
             io.to(room).emit("squadData", r.squads);
             
             r.availableTeams = r.availableTeams.filter(t => t !== team);
@@ -756,7 +763,8 @@ function resolvePlayer(r, room) {
         }
     } else {
         io.to(room).emit("unsold", { player: p });
-        io.to(room).emit("logUpdate", `❌ UNSOLD: ${p.name}`);
+// OLD: io.to(room).emit("logUpdate", `❌ UNSOLD: ${p.name}`);
+        sendLog(r, room, `❌ UNSOLD: ${p.name}`);
     }
 }
 
@@ -800,11 +808,19 @@ function broadcastUserList(room, roomCode) {
     io.to(roomCode).emit("roomUsersUpdate", userList);
 }
 
+// --- HELPER: Send Log & Store History ---
+function sendLog(room, code, msg) {
+    if (!room) return;
+    room.logs.push(msg);
+    if (room.logs.length > 20) room.logs.shift(); // Limit to last 20 logs
+    io.to(code).emit("logUpdate", msg);
+}
 
 const PORT = process.env.PORT || 2500; 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
