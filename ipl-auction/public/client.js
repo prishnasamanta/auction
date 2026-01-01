@@ -226,10 +226,29 @@ socket.on("roomCreated", code => {
     updateBrowserURL(code);
 });
 
+/* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
+    
+    // --- FIX: SYNC TEAM WITH SERVER ---
+    // If server says my team is different from what I thought (e.g. I timed out), update it.
+    if (data.yourTeam !== undefined) {
+        if (data.yourTeam === null && myTeam !== null) {
+            // I was downgraded to spectator
+            alert("⚠️ You were disconnected for too long. You are now a Spectator.");
+            sessionStorage.removeItem('ipl_team');
+            myTeam = null;
+        } else {
+            myTeam = data.yourTeam;
+            if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
+        }
+    }
+    // ----------------------------------
+
+    // 1. SAVE METADATA
     if (data.teamOwners) teamOwners = data.teamOwners;
-    if (data.purses) teamPurse = data.purses; // <--- ADD THIS LINE (Syncs money immediately)
+    if (data.purses) teamPurse = data.purses;
+    
     if (data.userCount !== undefined) {
         const countEl = document.getElementById("liveUserCount");
         if(countEl) countEl.innerText = data.userCount;
@@ -253,7 +272,6 @@ socket.on("joinedRoom", (data) => {
             sessionStorage.clear();
             window.location.href = "/";
         }
-        
         return; 
     }
 
@@ -276,17 +294,19 @@ socket.on("joinedRoom", (data) => {
 
     // 5. DETERMINE SCREEN PHASE
     if (data.auctionStarted) {
+        // If I don't have a team AND teams are available -> Show Select
         if (!myTeam && data.availableTeams && data.availableTeams.length > 0) {
             setGamePhase("TEAM_SELECT");
         } else {
+            // I have a team OR none left -> Show Auction
             setGamePhase("AUCTION");
-            if (myTeam) {
-                updateHeaderNotice();
-            }
+            updateHeaderNotice(); // Update top bar (Spectator or Team Name)
         }
     } else {
+        // Not started
         setGamePhase("TEAM_SELECT");
         if (myTeam) {
+             // Waiting mode
              document.getElementById("embeddedTeamList").classList.add("hidden");
              document.getElementById("waitingForHostMsg").classList.remove("hidden");
              updateHeaderNotice();
@@ -294,7 +314,13 @@ socket.on("joinedRoom", (data) => {
     }
     
     updateAdminButtons(data.auctionStarted);
+    
+    // Auto-Refresh Logic: Since we just got new state, re-render squad window if open
+    if(squadWindow && !squadWindow.closed) {
+        socket.emit("getSquads"); // Force refresh data
+    }
 });
+
 /* ================= USER LIST LOGIC ================= */
 
 let userListInterval = null; // Global interval for the timer
@@ -1327,6 +1353,7 @@ window.downloadLeaderboardPNG = function() {
         a.click();
     });
 }
+
 
 
 
