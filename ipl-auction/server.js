@@ -427,9 +427,13 @@ io.on("connection", socket => {
     });
 
     // 7. ADMIN ACTIONS
+       // --- 7. ADMIN ACTIONS ---
     socket.on("adminAction", action => {
         const r = rooms[socket.room];
-        if(!r || !socket.isAdmin) return;
+        
+        // FIX: Check if current socket ID matches the Room's Admin ID
+        // (Do not rely on socket.isAdmin which might be stale)
+        if (!r || r.admin !== socket.id) return; 
 
         if(action === "start"){
             if(r.auctionStarted) return;
@@ -803,6 +807,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
