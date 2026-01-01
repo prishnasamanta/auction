@@ -7,7 +7,10 @@ const PLAYERS = require("./players");
 const disconnectTimers = {};
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    pingTimeout: 60000, // Increase connection tolerance
+    pingInterval: 25000
+});
 
 app.use(express.static("public"));
 
@@ -85,6 +88,18 @@ function broadcastSets(r, roomCode) {
         });
     }
     io.to(roomCode).emit("setUpdate", payload);
+}
+
+// --- NEW: Helper to check if team is truly taken (even by disconnected user) ---
+function isTeamTaken(room, teamName) {
+    // Check available teams list
+    if (!room.availableTeams.includes(teamName)) return true;
+    
+    // Check if ANY user (connected or waiting for timeout) holds this team
+    const isHeldByUser = Object.values(room.users).some(u => u.team === teamName);
+    if (isHeldByUser) return true;
+
+    return false;
 }
 
 /* ================= SOCKET LOGIC ================= */
@@ -170,9 +185,9 @@ io.on("connection", socket => {
         const room = rooms[roomId];
         const timerKey = `${roomId}_${username}`;
         
-        // Fix: Always clear timer if it exists for this user
+        // --- KEY FIX: STOP TIMER IMMEDIATELY ---
         if (disconnectTimers[timerKey]) {
-            console.log(`♻️ User ${username} reconnected. Cancelling disconnect timer.`);
+            console.log(`♻️ User ${username} returned within time limit. Resetting timer.`);
             clearTimeout(disconnectTimers[timerKey]);
             delete disconnectTimers[timerKey];
         }
@@ -197,7 +212,7 @@ io.on("connection", socket => {
             socket.join(roomId);
             socket.room = roomId;
             socket.user = username;
-            socket.team = team; // Ensure socket.team is set
+            socket.team = team;
             if(room.adminUser === username) socket.isAdmin = true;
 
             socket.emit("joinedRoom", { 
@@ -250,7 +265,7 @@ io.on("connection", socket => {
         }
     });
 
-    // --- 4. JOIN ROOM (IMPROVED FIX FOR DUPLICATES) ---
+    // --- 4. JOIN ROOM ---
     socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
@@ -259,23 +274,20 @@ io.on("connection", socket => {
             return socket.emit("error", "This auction has ended and is closed.");
         }
 
-        // --- CRITICAL FIX: CHECK IF USER EXISTS (Disconnecting State) ---
-        // If a user refreshes and sends 'joinRoom' instead of 'reconnectUser',
-        // we must detect it here to stop the old timer from deleting their team.
+        // --- KEY FIX: Check if this is actually a reconnect ---
         const existingSocketId = Object.keys(room.users).find(id => room.users[id].name === user);
         
         if (existingSocketId) {
-            // Treat this as a RECONNECT
-            console.log(`♻️ User ${user} rejoined via joinRoom (Merged with old session).`);
+            console.log(`♻️ User ${user} rejoined via joinRoom. Merging session.`);
             
-            // 1. Cancel the 'disconnect' timer for the OLD socket
+            // 1. Cancel the 'disconnect' timer immediately
             const timerKey = `${roomCode}_${user}`;
             if (disconnectTimers[timerKey]) {
                 clearTimeout(disconnectTimers[timerKey]);
                 delete disconnectTimers[timerKey];
             }
 
-            // 2. Transfer data to new socket
+            // 2. Transfer data
             const userData = room.users[existingSocketId];
             delete room.users[existingSocketId];
             room.users[socket.id] = userData;
@@ -283,7 +295,6 @@ io.on("connection", socket => {
             userData.id = socket.id;
             userData.connected = true;
 
-            // 3. Update Socket properties
             socket.team = userData.team;
             if(room.adminUser === user) socket.isAdmin = true;
 
@@ -296,7 +307,6 @@ io.on("connection", socket => {
         socket.room = roomCode;
         socket.user = user;
         
-        // 1. Send State
         socket.emit("joinedRoom", { 
             rules: room.rules,
             squads: room.squads,
@@ -309,7 +319,6 @@ io.on("connection", socket => {
             teamOwners: getTeamOwners(room)
         });
 
-        // If they had a team (rejoin case), remind them
         if (socket.team) {
              socket.emit("teamPicked", { team: socket.team, remaining: room.availableTeams });
         }
@@ -319,16 +328,16 @@ io.on("connection", socket => {
         io.to(roomCode).emit('logUpdate', `👋 ${user} has joined.`);
     });
 
-    // --- 5. SELECT TEAM ---
+    // --- 5. SELECT TEAM (STRICT CHECK) ---
     socket.on("selectTeam", ({ team, user }) => {
         const r = rooms[socket.room];
         if(!r) return;
         if(socket.team) return; 
         
-        // Double check team availability to prevent race conditions
-        if(!r.availableTeams.includes(team)) {
-             socket.emit("error", "Team already taken.");
-             // Refresh their view of available teams
+        // --- FIX: Strict check for race conditions ---
+        if (isTeamTaken(r, team)) {
+             socket.emit("error", "Team is currently held by another player (or temporarily disconnected).");
+             // Refresh list just in case
              socket.emit("teamPicked", { team: null, remaining: r.availableTeams });
              return;
         }
@@ -356,17 +365,11 @@ io.on("connection", socket => {
         if(room.auctionStarted) return;
 
         room.rules = { ...room.rules, ...rules };
-        
         Object.keys(room.purse).forEach(t => {
             room.purse[t] = room.rules.purse;
         });
-
         room.rulesLocked = true;
-
-        io.to(socket.room).emit("rulesUpdated", {
-            rules: room.rules,
-            teams: room.availableTeams
-        });
+        io.to(socket.room).emit("rulesUpdated", { rules: room.rules, teams: room.availableTeams });
     });
 
     // --- 7. ADMIN ACTIONS ---
@@ -381,28 +384,23 @@ io.on("connection", socket => {
             io.to(socket.room).emit("auctionStarted");
             nextPlayer(r, socket.room);
         }
-
         if(action === "togglePause"){
             r.auction.paused = !r.auction.paused;
             io.to(socket.room).emit(r.auction.paused ? "auctionPaused" : "auctionResumed");
         }
-
         if(action === "skip"){
             if(!r.auction.player) return;
             if(r.auction.interval) clearInterval(r.auction.interval);
-            
             io.to(socket.room).emit("logUpdate", `⏭ ${r.auction.player.name} skipped`);
             io.to(socket.room).emit("unsold", { player: r.auction.player });
             setTimeout(() => nextPlayer(r, socket.room), 800);
         }
-
         if(action === "skipSet"){
             io.to(socket.room).emit("logUpdate", `⏩ SKIPPING SET: ${getSetName(r.sets[r.currentSetIndex])}`);
             r.sets[r.currentSetIndex] = []; 
             if(r.auction.interval) clearInterval(r.auction.interval);
             nextPlayer(r, socket.room);
         }
-
         if(action === "end"){
             endAuction(r, socket.room);
         }
@@ -419,16 +417,13 @@ io.on("connection", socket => {
         if (r.auction.team === null) {
             nextBid = r.auction.bid; 
         } else {
-            let currentBid = r.auction.bid;
-            currentBid = Math.round(currentBid * 100) / 100;
-
+            let currentBid = Math.round(r.auction.bid * 100) / 100;
             const increment = 
                 currentBid < 1  ? 0.05 : 
                 currentBid < 5  ? 0.10 : 
                 currentBid < 10 ? 0.20 : 
                 currentBid < 20 ? 0.25 : 
                 1.0;
-            
             nextBid = r.auction.bid + increment;
         }
 
@@ -444,6 +439,7 @@ io.on("connection", socket => {
         r.auction.team = socket.team; 
         r.auction.timer = 10;          
 
+        // EMIT EVENT FOR SOUND
         io.to(socket.room).emit("bidUpdate", {
             bid: r.auction.bid,
             team: socket.team
@@ -451,18 +447,15 @@ io.on("connection", socket => {
         io.to(socket.room).emit("logUpdate", `⚬ ${socket.team} bids ₹${r.auction.bid.toFixed(2)} Cr`);
     });
 
-
     // --- 9. CHAT & SQUADS ---
     socket.on("chat", data => {
         io.to(socket.room).emit("chatUpdate", data);
     });
-
     socket.on("getSquads", () => {
         const r = rooms[socket.room];
         if(!r) return;
         socket.emit("squadData", r.squads);
     });
-
     socket.on("getMySquad", () => {
         const r = rooms[socket.room];
         if(!r || !socket.team) return;
@@ -472,31 +465,30 @@ io.on("connection", socket => {
         });
     });
 
-    // --- 10. HANDLE DISCONNECT (WITH 90 SEC GRACE PERIOD) ---
+    // --- 10. HANDLE DISCONNECT (90 SECONDS LOGIC) ---
     socket.on("disconnect", () => {
         const r = rooms[socket.room];
         if (!r) return;
 
         const user = r.users[socket.id];
-        if (!user) return; // User might have already been cleaned up
+        if (!user) return; 
 
         const userName = user.name;
         const roomCode = socket.room;
-        
         const timerKey = `${roomCode}_${userName}`;
+
+        console.log(`⏳ User ${userName} disconnected. Starting 90s timer.`);
 
         // START 90-SECOND TIMER (1 min 30 sec)
         disconnectTimers[timerKey] = setTimeout(() => {
             
-            // Check if room still exists and USER IS STILL MISSING
-            // We check r.users[socket.id] specifically. 
-            // If they reconnected, this ID was deleted/replaced, so this block won't hurt the new connection.
+            // Re-check existence
             if (rooms[roomCode] && rooms[roomCode].users[socket.id]) {
                 const finalRoom = rooms[roomCode];
                 const wasAdmin = (finalRoom.adminUser === userName);
                 const userTeam = finalRoom.users[socket.id].team;
 
-                console.log(`❌ User ${userName} timed out. Removing.`);
+                console.log(`❌ User ${userName} timed out. Removing and freeing team.`);
 
                 // 1. Delete User
                 delete finalRoom.users[socket.id];
@@ -509,8 +501,8 @@ io.on("connection", socket => {
                 }
 
                 // 3. PLAYER LEFT -> FREE TEAM
+                // ONLY HERE do we free the team.
                 if (userTeam && !finalRoom.auctionEnded) {
-                    // Only push to available if not already there
                     if (!finalRoom.availableTeams.includes(userTeam)) {
                         finalRoom.availableTeams.push(userTeam);
                         finalRoom.availableTeams.sort();
@@ -521,11 +513,8 @@ io.on("connection", socket => {
 
                 broadcastUserList(finalRoom, roomCode);
             }
-            
-            // Clean up timer map
             delete disconnectTimers[timerKey];
-
-        }, 90000); // CHANGED TO 90 SECONDS
+        }, 90000); // 1 minute 30 seconds
     });
 
 
@@ -655,16 +644,22 @@ function nextPlayer(r, room) {
         paused: false
     });
 
+    // --- FIX: Try/Catch loop for stability ---
     r.auction.interval = setInterval(() => {
-        if (r.auction.paused) return;
+        try {
+            if (r.auction.paused) return;
 
-        io.to(room).emit("timer", r.auction.timer);
-        r.auction.timer--;
+            io.to(room).emit("timer", r.auction.timer);
+            r.auction.timer--;
 
-        if (r.auction.timer < 0) {
+            if (r.auction.timer < 0) {
+                clearInterval(r.auction.interval);
+                resolvePlayer(r, room);
+                setTimeout(() => nextPlayer(r, room), 2000); 
+            }
+        } catch (e) {
+            console.error("Auction Interval Error:", e);
             clearInterval(r.auction.interval);
-            resolvePlayer(r, room);
-            setTimeout(() => nextPlayer(r, room), 2000); 
         }
     }, 1000);
 }
@@ -676,7 +671,6 @@ function resolvePlayer(r, room) {
         const squad = r.squads[team];
         
         if (r.purse[team] >= r.auction.bid) {
-            // SOLD
             p.price = r.auction.bid;
             squad.push(p);
             r.squads[team] = squad;
@@ -691,10 +685,8 @@ function resolvePlayer(r, room) {
             io.to(room).emit("logUpdate", `🔨 SOLD: ${p.name} → ${team} ₹${r.auction.bid.toFixed(2)} Cr`);
             io.to(room).emit("squadData", r.squads);
             
-            // Remove team from available list if they exist there
             r.availableTeams = r.availableTeams.filter(t => t !== team);
         } else {
-            // UNSOLD
             io.to(room).emit("unsold", { player: p });
             io.to(room).emit("logUpdate", `❌ UNSOLD (Insufficient Funds): ${p.name}`);
         }
@@ -713,7 +705,6 @@ function endAuction(r, room) {
     r.auction.live = false;
     r.auction.paused = true;
     
-    // 1. Mark ended and hide from public
     r.auctionEnded = true; 
     r.isPublic = false; 
 
