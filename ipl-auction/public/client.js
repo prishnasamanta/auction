@@ -389,10 +389,21 @@ socket.on("roomUsersUpdate", (users) => {
     if (userListInterval) clearInterval(userListInterval);
     box.innerHTML = "";
     
-    // 2. Sort (Me -> Host -> Teams -> Spectators -> Kicked)
+    // 2. Check for Host Transfer (Am I the host now?)
+    const me = users.find(u => u.name === username);
+    if (me && me.isHost) {
+        if (!isHost) {
+            isHost = true;
+            alert("👑 You are now the Host!");
+            updateAdminButtons(gameStarted); // Show buttons immediately
+        }
+    }
+
+    // 3. Sort List
     users.sort((a, b) => {
         if (a.name === username) return -1;
-        if (a.status === 'kicked' && b.status !== 'kicked') return 1; // Kicked at bottom
+        if (a.isHost) return -1; // Host always on top
+        if (a.status === 'kicked' && b.status !== 'kicked') return 1;
         if (a.team && !b.team) return -1;
         if (!a.team && b.team) return 1;
         return a.name.localeCompare(b.name);
@@ -400,28 +411,27 @@ socket.on("roomUsersUpdate", (users) => {
 
     const GRACE_PERIOD_MS = 90000; 
 
-    // 3. Render
+    // 4. Render
     users.forEach(u => {
         const isMe = u.name === username;
         
-        // --- COLOR LOGIC ---
-        // Green (#22c55e), Yellow (#eab308), Red (#ef4444)
         let statusColor = '#22c55e'; 
         if (u.status === 'away') statusColor = '#eab308';
-        if (u.status === 'kicked') statusColor = '#ef4444'; // RED DOT
+        if (u.status === 'kicked') statusColor = '#ef4444';
 
         const statusShadow = (u.status === 'away' || u.status === 'kicked') ? 'none' : `0 0 8px ${statusColor}`;
-        let timerHTML = "";
-
-        // Timer for Away users
+        
+        let extraInfoHTML = "";
         if (u.status === 'away' && u.disconnectTime) {
             const targetTime = u.disconnectTime + GRACE_PERIOD_MS;
-            timerHTML = `<span class="away-timer" data-target="${targetTime}">...</span>`;
+            extraInfoHTML = `<span class="away-timer" data-target="${targetTime}">...</span>`;
         }
-        // Label for Kicked users
         if (u.status === 'kicked') {
-            timerHTML = `<span style="font-size:0.7rem; color:#ef4444; margin-left:5px;">(Inactive)</span>`;
+            extraInfoHTML = `<span style="font-size:0.7rem; color:#ef4444; margin-left:5px;">(Inactive)</span>`;
         }
+
+        // --- CROWN ICON ---
+        const crownHTML = u.isHost ? `<span title="Host" style="margin-right:4px;">👑</span>` : ``;
 
         let badgeHTML = u.team 
             ? `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`
@@ -432,17 +442,17 @@ socket.on("roomUsersUpdate", (users) => {
         div.innerHTML = `
             <div class="ul-name" style="color:${u.status === 'kicked' ? '#64748b' : '#fff'};">
                 <span class="ul-dot" style="background:${statusColor}; box-shadow:${statusShadow};"></span>
+                ${crownHTML}
                 ${u.name} ${isMe ? '(You)' : ''}
-                ${timerHTML}
+                ${extraInfoHTML}
             </div>
             ${badgeHTML}
         `;
         box.appendChild(div);
     });
 
-    // ... (Your existing setInterval logic for the timer ticking) ...
+    // ... (Keep existing setInterval logic for timers) ...
     userListInterval = setInterval(() => {
-        // ... (copy existing logic from previous turn) ...
         const timers = document.querySelectorAll('.away-timer');
         if (timers.length === 0) return;
         const now = Date.now();
@@ -459,10 +469,11 @@ socket.on("roomUsersUpdate", (users) => {
         });
     }, 1000);
     
-    // --- TRIGGER GLOBAL REFRESH ---
-    // Whenever the user list changes (someone joins/leaves/kicked), refresh the UI
-    refreshGlobalState(); 
+    // 5. TRIGGER GLOBAL REFRESH
+    // This ensures squad view gets the updated manager name if a user left/joined
+    refreshGlobalUI();
 });
+
 
 
 
@@ -558,10 +569,18 @@ function renderEmbeddedTeams(teams) {
 }
 
 socket.on("teamPicked", ({ team, user, remaining }) => {
+    // 1. UPDATE OWNERS LIST IMMEDIATELY
     if (team && user) {
-        teamOwners[team] = user;
+        teamOwners[team] = user; // <--- This fixes the Squad View "Available" bug
+    } else if (team === null) {
+        // Team was freed (user left/kicked)
+        // We might need to find which team was freed, or just rely on 'remaining' list
+        // Ideally, we reset the owner locally if we knew which team it was.
+        // For now, asking for full state is safer to clear the name.
+        socket.emit("getAuctionState"); 
     }
 
+    // 2. Logic for ME
     if(myTeam === team) {
         document.getElementById("teamSelectionMain").classList.add("hidden");
         if(gameStarted) {
@@ -573,18 +592,21 @@ socket.on("teamPicked", ({ team, user, remaining }) => {
         const lateBtn = document.getElementById("lateJoinBtn");
         if(lateBtn) lateBtn.classList.add("hidden");
     }
-    if (!myTeam) {
-            renderEmbeddedTeams(remaining);
-            const lateBtn = document.getElementById("lateJoinBtn");
-            // If auction started AND teams remain -> Show Button
-            if (gameStarted && remaining.length > 0) {
-                lateBtn.classList.remove("hidden");
-            } else {
-                lateBtn.classList.add("hidden");
-            }
+
+    // 3. Logic for OTHERS (Update buttons)
+    if(!myTeam) {
+        renderEmbeddedTeams(remaining);
+        // Show join button if spectators exist
+        const lateBtn = document.getElementById("lateJoinBtn");
+        if (gameStarted && remaining.length > 0) {
+            lateBtn.classList.remove("hidden");
         }
-    updateHeaderNotice();
+    }
+
+    // 4. FORCE UI REFRESH
+    refreshGlobalUI();
 });
+
 socket.on("adminPromoted", () => {
     isHost = true;
     updateAdminButtons(gameStarted);
@@ -1403,19 +1425,27 @@ window.downloadLeaderboardPNG = function() {
 }
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
-function refreshGlobalState() {
-    // 1. Re-render Team Selection Buttons (Shows/Hides "+ Join Team")
-    // We need the latest available teams for this. 
-    // Usually stored in 'latestAvailableTeams' variable or we request it.
-    // For now, we trigger a request to sync everything.
-    socket.emit("getAuctionState");
+/* ================= GLOBAL REFRESH LOGIC ================= */
+function refreshGlobalUI() {
+    // 1. Re-render Team Selection Buttons (to hide taken teams)
+    // We assume 'renderEmbeddedTeams' uses the latest data we have.
+    // If we need fresh data, we can ask server, but usually local state is enough if updated correctly.
+    const currentTab = document.querySelector('.info-tab-btn.active');
     
-    // 2. Refresh Squad Views (Update Manager Names)
-    socket.emit("getSquads");
+    // 2. Refresh Squad View if it's currently open
+    // This updates "Manager: Available" to "Manager: [Name]" instantly
+    if(currentTab && currentTab.id === 'tab-squads' && selectedSquadTeam) {
+        viewEmbeddedSquad(selectedSquadTeam);
+    }
+
+    // 3. Refresh Team Buttons if on selection screen
+    // We need to know which teams are remaining. 
+    // Usually 'teamPicked' updates this, but we can trigger a re-render if needed.
     
-    // 3. Update Header Info
+    // 4. Update Header
     updateHeaderNotice();
 }
+
 
 
 
