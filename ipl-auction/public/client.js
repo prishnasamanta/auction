@@ -167,12 +167,20 @@ window.shareRoomLink = async function() {
 /* ================================================= */
 /* ============ 2. JOIN & CREATE ROOM ============== */
 /* ================================================= */
+// --- 2. JOIN & CREATE ROOM LOGIC ---
 
 if(createBtn) {
-    createBtn.onclick = () => {
+    createBtn.onclick = (e) => {
+        if(e) e.preventDefault(); // STOP PAGE REFRESH
+        
         username = usernameInput.value.trim();
         const isPublic = document.getElementById('isPublicRoom').checked;
-        if(!username) return alert("Enter name");
+        
+        if(!username) return alert("Please enter your name!");
+
+        // Visual Feedback
+        createBtn.innerText = "Creating...";
+        createBtn.disabled = true;
 
         sessionStorage.setItem('ipl_user', username);
         socket.emit("createRoom", { user: username, isPublic: isPublic });
@@ -180,13 +188,25 @@ if(createBtn) {
 }
 
 if(joinBtn) {
-    joinBtn.onclick = () => {
-        roomCode = document.getElementById('code').value.trim();
-        username = usernameInput.value.trim();
-        if(!roomCode || !username) return alert("Enter details");
+    joinBtn.onclick = (e) => {
+        if(e) e.preventDefault(); // STOP PAGE REFRESH
+
+        // Ensure we get values directly from the element to be safe
+        roomCode = document.getElementById('code').value.trim().toUpperCase();
+        username = document.getElementById('username').value.trim(); // Match HTML ID
         
+        if(!username) return alert("Please enter your name!");
+        if(!roomCode) return alert("Please enter a Room Code!");
+        if(roomCode.length !== 5) return alert("Room Code must be 5 characters!");
+        
+        // Visual Feedback
+        joinBtn.innerText = "Joining...";
+        joinBtn.disabled = true;
+
         sessionStorage.setItem('ipl_room', roomCode);
         sessionStorage.setItem('ipl_user', username);
+        
+        console.log(`🚀 Sending join request: ${username} -> ${roomCode}`);
         socket.emit("joinRoom", { roomCode, user: username });
     };
 }
@@ -513,7 +533,6 @@ socket.on("squadData", squads => {
     // Refresh Popup if open
     if(squadWindow && !squadWindow.closed) renderSquadWindow();
 });
-
 window.showSelectedSquad = function() {
     const team = document.getElementById("squadSelect").value;
     if(!team) return;
@@ -521,10 +540,12 @@ window.showSelectedSquad = function() {
     selectedSquadTeam = team;
 
     if(!squadWindow || squadWindow.closed){
-        squadWindow = window.open("", "_blank", "width=450,height=650");
+        // CHANGED: Increased width to 1000 and height to 800
+        squadWindow = window.open("", "SquadWindow", "width=1000,height=800,scrollbars=yes,resizable=yes");
     }
     renderSquadWindow();
 };
+
 
 // 1. FIX: Helper function to switch tabs from inside the popup
 window.switchSquadTab = function(team) {
@@ -1405,6 +1426,7 @@ function showScreen(id){
     word-wrap: break-word;
     overflow-x: hidden;
 }
+
 
 
 
