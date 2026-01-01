@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
-// Make sure you have players.js file
+// Make sure you havunsolde players.js file
 const PLAYERS = require("./players"); 
 const disconnectTimers = {};
 const app = express();
@@ -759,8 +759,7 @@ function resolvePlayer(r, room) {
             r.availableTeams = r.availableTeams.filter(t => t !== team);
         } else {
             io.to(room).emit("unsold", { player: p });
-            io.to(room).emit("logUpdate", `❌ UNSOLD (Insufficient Funds): ${p.name}`);
-        }
+            sendLog(r, room, `❌ UNSOLD (Insufficient Funds): ${p.name}`);        }
     } else {
         io.to(room).emit("unsold", { player: p });
 // OLD: io.to(room).emit("logUpdate", `❌ UNSOLD: ${p.name}`);
@@ -781,7 +780,7 @@ function endAuction(r, room) {
     r.isPublic = false; 
 
     io.to(room).emit("auctionEnded");
-    io.to(room).emit("logUpdate", "🛑 Auction Ended. Prepare Playing XI.");
+    sendLog(r, room, "🛑 Auction Ended. Prepare Playing XI.");
     io.to(room).emit("squadData", r.squads);
 }
 function getTeamOwners(room) {
@@ -820,6 +819,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
