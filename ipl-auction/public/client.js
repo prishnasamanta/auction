@@ -295,7 +295,6 @@ socket.on("joinedRoom", (data) => {
     
     updateAdminButtons(data.auctionStarted);
 });
-
 socket.on("roomUsersUpdate", (users) => {
     const countEl = document.getElementById("liveUserCount");
     if (countEl) countEl.innerText = users.length;
@@ -304,28 +303,29 @@ socket.on("roomUsersUpdate", (users) => {
     if (box) {
         box.innerHTML = "";
         
+        // Sorting (Your existing logic)
         users.sort((a, b) => {
-            const isMeA = (a.name === username);
-            const isMeB = (b.name === username);
-            const hasTeamA = !!a.team;
-            const hasTeamB = !!b.team;
-
-            if (isMeA) return -1;
-            if (isMeB) return 1;
-            if (hasTeamA && !hasTeamB) return -1;
-            if (!hasTeamA && hasTeamB) return 1;
+            if (a.name === username) return -1;
+            if (a.team && !b.team) return -1;
+            if (!a.team && b.team) return 1;
             return a.name.localeCompare(b.name);
         });
 
         users.forEach(u => {
             const isMe = u.name === username;
+            
+            // --- STATUS COLOR LOGIC ---
+            // Green (#22c55e) if online, Yellow (#eab308) if away
+            const statusColor = u.status === 'away' ? '#eab308' : '#22c55e';
+            const statusShadow = u.status === 'away' ? 'none' : `0 0 8px ${statusColor}`;
+
             let badgeHTML = "";
             let nameColor = "#fff";
 
             if (u.team) {
                 badgeHTML = `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`;
             } else {
-                badgeHTML = `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.65rem; color:#94a3b8; text-transform:uppercase; letter-spacing:1px;">Spectator</span>`;
+                badgeHTML = `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.65rem; color:#94a3b8;">Spectator</span>`;
                 nameColor = "#cbd5e1";
             }
 
@@ -333,17 +333,13 @@ socket.on("roomUsersUpdate", (users) => {
             div.className = "ul-item";
             div.innerHTML = `
                 <div class="ul-name" style="color:${nameColor};">
-                    <span class="ul-dot" style="background:${u.team ? 'var(--success)' : '#64748b'}; box-shadow:${u.team ? '0 0 8px var(--success)' : 'none'}"></span>
+                    <span class="ul-dot" style="background:${statusColor}; box-shadow:${statusShadow};"></span>
                     ${u.name} ${isMe ? '<b style="color:var(--primary); margin-left:4px;">(You)</b>' : ''}
                 </div>
                 ${badgeHTML}
             `;
             box.appendChild(div);
         });
-        
-        if(users.length === 0) {
-            box.innerHTML = "<div style='padding:10px; text-align:center; color:#666; font-style:italic;'>No active players</div>";
-        }
     }
 });
 
@@ -699,8 +695,7 @@ window.viewEmbeddedSquad = function(team) {
     const box = document.getElementById("embeddedSquadView");
     const squad = allSquads[team] || [];
     const purse = teamPurse[team] || 0;
-    const owner = teamOwners[team] || "Available";
-
+    const owner = teamOwners[team] ? teamOwners[team] : "Available";
     box.innerHTML = `
         <div style="text-align:center; padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
             <h2 style="margin:0; color:${TEAM_COLORS[team] || '#fff'}">${team}</h2>
@@ -1272,5 +1267,6 @@ window.downloadLeaderboardPNG = function() {
         a.click();
     });
 }
+
 
 
