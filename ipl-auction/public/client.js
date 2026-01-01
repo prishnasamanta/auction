@@ -749,73 +749,117 @@ window.viewEmbeddedSquad = function(team) {
 /* ================================================= */
 /* =========== 6. POPUPS (SETS, RULES, ADMIN) ====== */
 /* ================================================= */
+/* ================================================= */
+/* ========= 4. SETS & SQUAD VIEWING =============== */
+/* ================================================= */
 
-// --- SETS ---
+// --- A. UPCOMING SETS LOGIC ---
+let isSetsViewOpen = false;
+
 socket.on("setUpdate", data => {
     remainingSets = data; 
-    if(viewSetWindow && !viewSetWindow.closed){
-        viewSet(); 
+    // If the view is currently open, refresh it live to show changes immediately
+    if(isSetsViewOpen){
+        renderSetsPanel(); 
     }
 });
 
-window.viewSet = function() {
-    if(!remainingSets || remainingSets.length === 0){
-        alert("No sets remaining!");
-        return;
-    }
-    if(!viewSetWindow || viewSetWindow.closed){
-        viewSetWindow = window.open("", "ViewSetWindow", "width=600,height=800");
+// Toggle between Normal View and Sets View
+window.toggleSetsView = function() {
+    const btn = document.getElementById("toggleSetsBtn");
+    const setsPanel = document.getElementById("panel-sets");
+    const tabs = document.getElementById("commandTabs");
+    
+    // Panels to hide/show
+    const feedPanel = document.getElementById("panel-feed");
+    const squadsPanel = document.getElementById("panel-squads");
+
+    // Toggle State
+    isSetsViewOpen = !isSetsViewOpen;
+
+    if (isSetsViewOpen) {
+        // --- CHECK IF DATA EXISTS ---
+        if(!remainingSets || remainingSets.length === 0){
+            alert("No sets available yet.");
+            isSetsViewOpen = false; // Reset state
+            return;
+        }
+
+        // --- SWITCH TO SETS VIEW ---
+        btn.innerText = "❌ Close Sets View";
+        btn.style.borderColor = "var(--accent)";
+        btn.style.color = "var(--accent)";
+        
+        // Hide normal tabs content & nav bar
+        if(feedPanel) feedPanel.classList.add("hidden");
+        if(squadsPanel) squadsPanel.classList.add("hidden");
+        if(tabs) tabs.classList.add("hidden"); 
+        
+        // Show Sets Panel
+        if(setsPanel) {
+            setsPanel.classList.remove("hidden");
+            renderSetsPanel();
+        }
+        
     } else {
-        viewSetWindow.focus();
+        // --- CLOSE SETS VIEW (Back to Normal) ---
+        btn.innerText = "📦 View Upcoming Sets";
+        btn.style.borderColor = "var(--gold)";
+        btn.style.color = "var(--gold)";
+
+        if(setsPanel) setsPanel.classList.add("hidden");
+        if(tabs) tabs.classList.remove("hidden"); 
+        
+        // Restore the "Feed" tab by default so the UI isn't empty
+        switchInfoTab('feed'); 
     }
+};
 
-    const activeSet = remainingSets[0]; 
+function renderSetsPanel() {
+    const container = document.getElementById("panel-sets");
+    if(!container || !remainingSets.length) return;
 
-    viewSetWindow.document.open();
-    viewSetWindow.document.write(`
-        <html>
-        <head>
-            <title>Auction Sets</title>
-            <style>
-                body{font-family:sans-serif;padding:15px;background:#111;color:#fff}
-                h2.set-title { background: #222; padding: 10px; border-radius: 6px; margin-top: 20px; border-left: 5px solid #444; font-size: 1.1rem; text-transform: uppercase; }
-                h2.active { background: #2a1a00; border-left: 5px solid #facc15; color: #facc15; }
-                .p { display:flex; justify-content:space-between; padding: 6px 10px; border-bottom:1px solid #333; align-items:center; color: #ccc; }
-                .p.active-p { color: #fff; font-weight: bold; }
-                .role { background:#333; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.75rem; }
-                .rating { color:#facc15; font-size: 0.9rem; }
-                .meta { display:flex; align-items:center; gap: 8px; }
-            </style>
-        </head>
-        <body>
+    const activeSet = remainingSets[0];
+
+    // Build the HTML for Active Set + Upcoming Sets
+    let html = `
+        <div style="padding:10px;">
             <h2 class="set-title active">🔥 ${activeSet.name} (${activeSet.players.length})</h2>
             <div>
                 ${activeSet.players.map(p => `
-                    <div class="p active-p">
+                    <div class="set-player-row active-p">
                         <span>${p.name}</span>
-                        <div class="meta">
-                            <span class="role">${p.role}</span>
-                            <span class="rating">⭐ ${p.rating}</span>
+                        <div>
+                            <span class="sp-role">${p.role}</span>
+                            <span class="sp-rating">⭐ ${p.rating}</span>
                         </div>
                     </div>
                 `).join("")}
-                ${activeSet.players.length===0 ? '<div class="p" style="color:#666">Set Finished</div>' : ''}
+                ${activeSet.players.length===0 ? '<div style="padding:10px; color:#666; text-align:center;">Set Finished</div>' : ''}
             </div>
-            ${remainingSets.slice(1).map(set => `
+    `;
+
+    // Append Upcoming Sets
+    if(remainingSets.length > 1) {
+        remainingSets.slice(1).forEach(set => {
+            html += `
                 <h2 class="set-title">📦 ${set.name} (${set.players.length})</h2>
-                <div style="opacity: 0.6;"> ${set.players.map(p => `
-                    <div class="p">
-                        <span>${p.name}</span>
-                        <div class="meta"><span class="role">${p.role}</span></div>
-                    </div>
-                `).join("")}
+                <div style="opacity: 0.6;">
+                    ${set.players.map(p => `
+                        <div class="set-player-row">
+                            <span>${p.name}</span>
+                            <div><span class="sp-role">${p.role}</span></div>
+                        </div>
+                    `).join("")}
                 </div>
-            `).join("")}
-        </body>
-        </html>
-    `);
-    viewSetWindow.document.close();
-};
+            `;
+        });
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
 
 // --- SQUADS DATA ---
 socket.on("squadData", squads => {
@@ -1228,3 +1272,4 @@ window.downloadLeaderboardPNG = function() {
         a.click();
     });
 }
+
