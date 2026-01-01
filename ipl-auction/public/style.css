@@ -667,6 +667,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ================= USER LIST DROPDOWN ================= */
 
 /* 1. The Button (Looks exactly like the previous pill) */
+/* Update this existing class */
 .count-pill-btn {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -681,7 +682,13 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     font-family: var(--font-body);
     transition: background 0.2s;
     margin-right: 10px;
+    
+    /* --- NEW FIXES FOR MOBILE --- */
+    white-space: nowrap; /* Prevents text from wrapping */
+    flex-shrink: 0;      /* Prevents the button from getting squashed */
+    min-width: max-content; /* Ensures it is always wide enough for content */
 }
+
 
 .count-pill-btn:hover {
     background: rgba(255, 255, 255, 0.2);
@@ -825,20 +832,35 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .sq-role { font-size:0.75rem; background:#333; padding:2px 5px; border-radius:4px; margin-right:5px; }
 
 /* Responsive Fix */
+/* ================= MOBILE RESPONSIVENESS ================= */
 @media (max-width: 900px) {
-   .command-center {
-        /* Use VH units to fit screen better */
-        height: 75vh !important; 
+    
+    /* Fix Command Center Cutting Off */
+    .command-center {
+        height: 80vh !important; /* Increased height slightly */
         max-height: 800px;
-        margin-bottom: 120px; /* Extra space for footer/fab */
+        margin-bottom: 150px; /* Extra space at bottom page scroll */
     }
     
-    /* Ensure the chat input sticks to bottom of that tile */
+    /* Fix Chat Input Visibility */
     #panel-feed {
         height: 100%;
-        padding-bottom: 10px;
+        /* Add extra padding at the bottom of the internal panel */
+        padding-bottom: 40px; 
+    }
+
+    /* Lift the chat box input specifically */
+    .chat-box {
+        margin-bottom: 20px; /* Pushes it up from the bottom edge */
+    }
+
+    /* Ensure Topbar doesn't shrink the logo too much */
+    .brand {
+        font-size: 1rem; /* Slightly smaller logo text on mobile if needed */
+        white-space: nowrap;
     }
 }
+
 /* ================= SETS VIEW STYLING ================= */
 .set-title { 
     background: #1e293b; 
@@ -887,6 +909,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     color:#facc15; 
     font-size: 0.8rem; 
 }
+
 
 
 
