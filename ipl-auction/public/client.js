@@ -295,53 +295,111 @@ socket.on("joinedRoom", (data) => {
     
     updateAdminButtons(data.auctionStarted);
 });
+/* ================= USER LIST LOGIC ================= */
+
+let userListInterval = null; // Global interval for the timer
+
 socket.on("roomUsersUpdate", (users) => {
+    // 1. Update Count
     const countEl = document.getElementById("liveUserCount");
     if (countEl) countEl.innerText = users.length;
 
     const box = document.getElementById("userListContent");
-    if (box) {
-        box.innerHTML = "";
+    if (!box) return;
+
+    // 2. Clear previous interval to prevent speeding up
+    if (userListInterval) clearInterval(userListInterval);
+
+    box.innerHTML = "";
+    
+    // 3. Sort List
+    users.sort((a, b) => {
+        if (a.name === username) return -1;
+        if (a.team && !b.team) return -1;
+        if (!a.team && b.team) return 1;
+        return a.name.localeCompare(b.name);
+    });
+
+    // 4. Helper to format MM:SS
+    const formatTime = (ms) => {
+        if (ms < 0) ms = 0;
+        const totalSec = Math.floor(ms / 1000);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
+
+    const GRACE_PERIOD_MS = 90000; // Must match server (1.5 mins)
+
+    // 5. Render Users
+    users.forEach(u => {
+        const isMe = u.name === username;
         
-        // Sorting (Your existing logic)
-        users.sort((a, b) => {
-            if (a.name === username) return -1;
-            if (a.team && !b.team) return -1;
-            if (!a.team && b.team) return 1;
-            return a.name.localeCompare(b.name);
-        });
+        // Color Logic: Green if online, Yellow if away
+        const statusColor = u.status === 'away' ? '#eab308' : '#22c55e';
+        const statusShadow = u.status === 'away' ? 'none' : `0 0 8px ${statusColor}`;
 
-        users.forEach(u => {
-            const isMe = u.name === username;
+        let badgeHTML = "";
+        let nameColor = "#fff";
+        let timerHTML = "";
+
+        // --- TIMER LOGIC ---
+        if (u.status === 'away' && u.disconnectTime) {
+            const elapsed = Date.now() - u.disconnectTime;
+            const remaining = GRACE_PERIOD_MS - elapsed;
             
-            // --- STATUS COLOR LOGIC ---
-            // Green (#22c55e) if online, Yellow (#eab308) if away
-            const statusColor = u.status === 'away' ? '#eab308' : '#22c55e';
-            const statusShadow = u.status === 'away' ? 'none' : `0 0 8px ${statusColor}`;
+            // Store the "Target Time" (When they get kicked) in a data attribute
+            const targetTime = u.disconnectTime + GRACE_PERIOD_MS;
+            
+            timerHTML = `<span class="away-timer" data-target="${targetTime}" style="font-family:monospace; font-size:0.75rem; color:#fca5a5; margin-left:6px; background:rgba(255,0,0,0.15); padding:1px 5px; border-radius:4px; border:1px solid rgba(255,0,0,0.2);">
+                ${formatTime(remaining)}
+            </span>`;
+        }
 
-            let badgeHTML = "";
-            let nameColor = "#fff";
+        if (u.team) {
+            badgeHTML = `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`;
+        } else {
+            badgeHTML = `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.65rem; color:#94a3b8;">Spectator</span>`;
+            nameColor = "#cbd5e1";
+        }
 
-            if (u.team) {
-                badgeHTML = `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`;
+        const div = document.createElement("div");
+        div.className = "ul-item";
+        div.innerHTML = `
+            <div class="ul-name" style="color:${nameColor}; display:flex; align-items:center; gap:6px;">
+                <span class="ul-dot" style="background:${statusColor}; box-shadow:${statusShadow};"></span>
+                ${u.name} ${isMe ? '<b style="color:var(--primary); margin-left:4px;">(You)</b>' : ''}
+                ${timerHTML}
+            </div>
+            ${badgeHTML}
+        `;
+        box.appendChild(div);
+    });
+
+    // 6. Start Client-Side Timer Interval
+    // This updates the numbers every second without waiting for server
+    userListInterval = setInterval(() => {
+        const timers = document.querySelectorAll('.away-timer');
+        if (timers.length === 0) {
+            clearInterval(userListInterval);
+            return;
+        }
+
+        const now = Date.now();
+        timers.forEach(span => {
+            const target = parseInt(span.getAttribute('data-target'));
+            const diff = target - now;
+            
+            if (diff <= 0) {
+                span.innerText = "0:00";
+                span.style.color = "red";
             } else {
-                badgeHTML = `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.65rem; color:#94a3b8;">Spectator</span>`;
-                nameColor = "#cbd5e1";
+                span.innerText = formatTime(diff);
             }
-
-            const div = document.createElement("div");
-            div.className = "ul-item";
-            div.innerHTML = `
-                <div class="ul-name" style="color:${nameColor};">
-                    <span class="ul-dot" style="background:${statusColor}; box-shadow:${statusShadow};"></span>
-                    ${u.name} ${isMe ? '<b style="color:var(--primary); margin-left:4px;">(You)</b>' : ''}
-                </div>
-                ${badgeHTML}
-            `;
-            box.appendChild(div);
         });
-    }
+    }, 1000);
 });
+
 
 function setupAuctionScreen() {
     document.getElementById("landing").classList.add("hidden");
@@ -1267,6 +1325,7 @@ window.downloadLeaderboardPNG = function() {
         a.click();
     });
 }
+
 
 
 
