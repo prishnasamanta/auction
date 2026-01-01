@@ -691,13 +691,14 @@ io.on("connection", socket => {
 function nextPlayer(r, room) {
     if (!r.auction.live) return;
 
+    // 1. Clear existing timer
     if (r.auction.interval) {
         clearInterval(r.auction.interval);
         r.auction.interval = null;
     }
 
+    // 2. Handle Sets
     let set = r.sets[r.currentSetIndex];
-
     if (!set || set.length === 0) {
         r.currentSetIndex++;
         if (r.currentSetIndex >= r.sets.length) {
@@ -708,17 +709,45 @@ function nextPlayer(r, room) {
         sendLog(r, room, `🔔 NEW SET: ${getSetName(set)}`);
     }
 
+    // 3. Select Player
     const randIdx = Math.floor(Math.random() * set.length);
     r.auction.player = set.splice(randIdx, 1)[0];
     
     broadcastSets(r, room); 
 
+    // 4. Reset State
     r.auction.lastBidTeam = null;
     r.auction.bid = r.auction.player.basePrice || startBid(r.auction.player.rating || 80);
     r.auction.team = null;
     r.auction.timer = 10;
 
-    // --- CINEMATIC ENTRY ---
+    // 5. SEND DATA IMMEDIATELY (No Delay)
+    io.to(room).emit("newPlayer", {
+        player: r.auction.player,
+        bid: r.auction.bid,
+        live: true,
+        paused: false
+    });
+
+    // 6. Start Timer
+    r.auction.interval = setInterval(() => {
+        try {
+            if (r.auction.paused) return;
+
+            io.to(room).emit("timer", r.auction.timer);
+            r.auction.timer--;
+
+            if (r.auction.timer < 0) {
+                clearInterval(r.auction.interval);
+                resolvePlayer(r, room);
+                // 2 second delay between players for "Sold" animation
+                setTimeout(() => nextPlayer(r, room), 2000); 
+            }
+        } catch (e) {
+            console.error("Auction Interval Error:", e);
+            clearInterval(r.auction.interval);
+        }
+    }, 1000);
 }
 
 function resolvePlayer(r, room) {
@@ -774,5 +803,6 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
