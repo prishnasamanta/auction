@@ -205,8 +205,9 @@ io.on("connection", socket => {
                 room.users[socket.id] = userData;
                 userData.id = socket.id;
                 userData.connected = true;
+                userData.isAway = false; // <--- MARK ACTIVE
             } else {
-                room.users[socket.id] = { name: username, team: team, id: socket.id, connected: true };
+                room.users[socket.id] = { name: username, team: team, id: socket.id, connected: true,isAway: false };
             }
 
             socket.join(roomId);
@@ -474,6 +475,8 @@ io.on("connection", socket => {
 
         const user = r.users[socket.id];
         if (!user) return; 
+        user.isAway = true; 
+        broadcastUserList(r, socket.room); // Notify clients immediately
 
         const userName = user.name;
         const roomCode = socket.room;
@@ -721,17 +724,23 @@ function getTeamOwners(room) {
     });
     return owners;
 }
+// --- HELPER: Broadcast User List ---
 function broadcastUserList(room, roomCode) {
     if (!room) return;
+    
     const userList = Object.values(room.users).map(u => ({
         name: u.name,
-        team: u.team
+        team: u.team,
+        status: u.isAway ? 'away' : 'online' // <--- SEND STATUS
     }));
+    
     io.to(roomCode).emit("roomUsersUpdate", userList);
 }
+
 
 const PORT = process.env.PORT || 2500; 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
