@@ -697,34 +697,6 @@ function nextPlayer(r, room) {
     r.auction.timer = 10;
 
     // --- CINEMATIC ENTRY ---
-    io.to(room).emit("playerEntry", { player: r.auction.player });
-
-    setTimeout(() => {
-        io.to(room).emit("newPlayer", {
-            player: r.auction.player,
-            bid: r.auction.bid,
-            live: true,
-            paused: false
-        });
-
-        r.auction.interval = setInterval(() => {
-            try {
-                if (r.auction.paused) return;
-
-                io.to(room).emit("timer", r.auction.timer);
-                r.auction.timer--;
-
-                if (r.auction.timer < 0) {
-                    clearInterval(r.auction.interval);
-                    resolvePlayer(r, room);
-                    setTimeout(() => nextPlayer(r, room), 2000); 
-                }
-            } catch (e) {
-                console.error("Auction Interval Error:", e);
-                clearInterval(r.auction.interval);
-            }
-        }, 1000);
-    }, 6000);
 }
 
 function resolvePlayer(r, room) {
@@ -780,3 +752,4 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
