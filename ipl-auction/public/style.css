@@ -842,19 +842,19 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     .command-center {
         height: 80vh !important; /* Increased height slightly */
         max-height: 800px;
-        margin-bottom: 150px; /* Extra space at bottom page scroll */
+        margin-bottom: 5px; /* Extra space at bottom page scroll */
     }
     
     /* Fix Chat Input Visibility */
     #panel-feed {
         height: 100%;
         /* Add extra padding at the bottom of the internal panel */
-        padding-bottom: 15px; 
+        padding-bottom: 6px; 
     }
 
     /* Lift the chat box input specifically */
     .chat-box {
-        margin-bottom: 10px; /* Pushes it up from the bottom edge */
+        margin-bottom: 5px; /* Pushes it up from the bottom edge */
     }
 
     /* Ensure Topbar doesn't shrink the logo too much */
@@ -964,6 +964,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     box-shadow: none;
     border-radius: 0;
 }
+
 
 
 
