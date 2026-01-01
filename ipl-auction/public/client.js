@@ -1380,6 +1380,21 @@ function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
+/* Make modals larger for Squads and Sets */
+.modal-content {
+    width: 90% !important;   /* Occupy 90% of screen width */
+    max-width: 900px !important; /* Cap at 900px */
+    height: 80vh;           /* 80% of screen height */
+    overflow-y: auto;       /* Enable scrolling inside */
+}
+
+/* Ensure the log window doesn't overflow horizontally */
+#logs {
+    word-wrap: break-word;
+    overflow-x: hidden;
+}
+
+
 
 
 
