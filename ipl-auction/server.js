@@ -219,6 +219,7 @@ io.on("connection", socket => {
                 rules: room.rules,
                 squads: room.squads,
                 roomCode: roomId,
+                purses: room.purse, // <--- ADD THIS LINE
                 isHost: socket.isAdmin,
                 auctionStarted: room.auctionStarted,
                 availableTeams: room.availableTeams,
@@ -310,6 +311,7 @@ io.on("connection", socket => {
         socket.emit("joinedRoom", { 
             rules: room.rules,
             squads: room.squads,
+            purses: room.purse, // <--- ADD THIS LINE
             roomCode: roomCode,
             isHost: (room.adminUser === user),
             auctionStarted: room.auctionStarted,
@@ -732,3 +734,4 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
