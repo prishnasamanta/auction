@@ -392,6 +392,7 @@ io.on("connection", socket => {
 
         io.to(socket.room).emit("teamPicked", {
             team,
+            user: user,
             remaining: r.availableTeams
         });
         // OLD: io.to(socket.room).emit("logUpdate", `👕 ${user} selected ${team}`);
@@ -556,27 +557,26 @@ io.on("connection", socket => {
                 }
 
                 // 4. FREE THE TEAM
+                 // 3. FREE TEAM LOGIC
                 if (userTeam && !finalRoom.auctionEnded) {
                     if (!finalRoom.availableTeams.includes(userTeam)) {
                         finalRoom.availableTeams.push(userTeam);
                         finalRoom.availableTeams.sort();
                     }
-                    // Notify everyone that team is free
+                    // Notify everyone team is null (freed)
                     io.to(roomCode).emit("teamPicked", { team: null, remaining: finalRoom.availableTeams });
                     sendLog(finalRoom, roomCode, `🏃 ${userTeam} is available (Player Timed Out).`);
+                    
+                    // Force refresh owners list on clients
+                    // We send a special update event to clear that team's owner
+                    io.to(roomCode).emit("joinedRoom", { 
+                        updateOnly: true, 
+                        teamOwners: getTeamOwners(finalRoom), // This will now show the team as ownerless
+                        availableTeams: finalRoom.availableTeams,
+                        userCount: Object.keys(finalRoom.users).length
+                    });
                 }
 
-                // 5. REFRESH ALL CLIENTS
-                broadcastUserList(finalRoom, roomCode);
-                
-                // Force comprehensive update for everyone
-                io.to(roomCode).emit("joinedRoom", { 
-                    updateOnly: true, 
-                    teamOwners: getTeamOwners(finalRoom),
-                    availableTeams: finalRoom.availableTeams,
-                    userCount: Object.keys(finalRoom.users).length
-                });
-            }
             delete disconnectTimers[timerKey];
         }, GRACE_PERIOD);
     });
@@ -813,6 +813,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
