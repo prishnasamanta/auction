@@ -258,6 +258,40 @@ socket.on("roomCreated", code => {
     // 3. --- FIX: UPDATE URL IMMEDIATELY ---
     updateBrowserURL(code);
 });
+// Add this helper function
+function updateHeaderNotice() {
+    if (!myTeam) {
+        document.getElementById("noticeTeam").innerText = "SPECTATOR";
+        document.getElementById("noticePurse").innerText = "";
+        return;
+    }
+    
+    const purse = teamPurse[myTeam] !== undefined ? teamPurse[myTeam] : 0;
+    
+    document.getElementById("noticeTeam").innerText = myTeam;
+    document.getElementById("noticeTeam").style.color = TEAM_COLORS[myTeam] || "white";
+    
+    document.getElementById("noticePurse").innerText = `₹${purse.toFixed(2)} Cr`;
+    document.getElementById("noticePurse").style.color = "#4ade80"; // Green for money
+}
+
+// Call it in 'sold' event
+socket.on("sold", d => {
+    // ... existing logic ...
+    if(d.purse) teamPurse = d.purse;
+    updateHeaderNotice(); // <--- ADD THIS
+    
+    // Refresh squad view if open
+    if(document.getElementById('tab-squads').classList.contains('active')) {
+        viewEmbeddedSquad(selectedSquadTeam);
+    }
+});
+
+// Call it in 'teamPicked'
+socket.on("teamPicked", (...) => {
+    // ... logic ...
+    updateHeaderNotice();
+});
 
 /* ================= ROOM STATE LOGIC ================= */
 /* ================= ROOM STATE LOGIC ================= */
@@ -265,7 +299,9 @@ socket.on("roomCreated", code => {
 /* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
-    
+    if (myTeam) {
+        updateHeaderNotice(); // Call helper
+    }
     // 1. SAVE METADATA (Owners & Count)
     if (data.teamOwners) teamOwners = data.teamOwners;
     
@@ -553,6 +589,113 @@ window.switchSquadTab = function(team) {
     socket.emit("getSquads"); // Refresh data
     renderSquadWindow();      // Re-render UI
 }
+/* ================= COMMAND CENTER LOGIC ================= */
+
+// 1. Tab Switcher
+window.switchInfoTab = function(tabName) {
+    // Buttons
+    document.querySelectorAll('.info-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+
+    // Content
+    document.getElementById('panel-feed').classList.add('hidden');
+    document.getElementById('panel-squads').classList.add('hidden');
+    
+    const target = document.getElementById(`panel-${tabName}`);
+    if(target) {
+        target.classList.remove('hidden');
+        target.style.display = "flex"; // Force flex layout
+    }
+
+    // If Squads tab, load the list
+    if (tabName === 'squads') {
+        renderSquadTabs();
+    }
+};
+
+// 2. Render Horizontal Team List
+function renderSquadTabs() {
+    const container = document.getElementById("squadTabList");
+    if(!container) return;
+    
+    // Sort teams
+    const teams = Object.keys(allSquads).sort();
+    
+    // Default to my team or first team if not set
+    if (!selectedSquadTeam && myTeam) selectedSquadTeam = myTeam;
+    if (!selectedSquadTeam && teams.length > 0) selectedSquadTeam = teams[0];
+
+    container.innerHTML = teams.map(t => 
+        `<button onclick="viewEmbeddedSquad('${t}')" 
+         class="h-team-btn ${t === selectedSquadTeam ? 'active' : ''}">
+         ${t}
+         </button>`
+    ).join("");
+
+    if(selectedSquadTeam) viewEmbeddedSquad(selectedSquadTeam);
+}
+
+// 3. Render Squad Details inside the Tile
+window.viewEmbeddedSquad = function(team) {
+    selectedSquadTeam = team;
+    
+    // Update active button state
+    document.querySelectorAll('.h-team-btn').forEach(b => b.classList.remove('active'));
+    // Find button by text content (simple way)
+    Array.from(document.querySelectorAll('.h-team-btn')).find(b => b.innerText === team)?.classList.add('active');
+
+    const box = document.getElementById("embeddedSquadView");
+    const squad = allSquads[team] || [];
+    const purse = teamPurse[team] || 0;
+    const owner = teamOwners[team] || "Available";
+
+    // Build HTML
+    box.innerHTML = `
+        <div style="text-align:center; padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
+            <h2 style="margin:0; color:${TEAM_COLORS[team] || '#fff'}">${team}</h2>
+            <div style="font-size:0.8rem; color:#aaa;">Manager: <span style="color:#fff;">${owner}</span></div>
+            <div style="font-size:1.1rem; margin-top:5px; font-weight:bold;">
+                Purse: <span style="color:#4ade80;">₹${purse.toFixed(2)} Cr</span> 
+                <span style="color:#666;">|</span> 
+                Players: ${squad.length}
+            </div>
+        </div>
+        <div id="sq-list-content"></div>
+    `;
+
+    // Group & List Players
+    const content = document.getElementById("sq-list-content");
+    const roles = { BAT: [], WK: [], ALL: [], BOWL: [] };
+    
+    squad.forEach(p => { 
+        if(p.role === "BAT") roles.BAT.push(p);
+        else if(p.role === "WK") roles.WK.push(p);
+        else if(p.role === "ALL") roles.ALL.push(p);
+        else roles.BOWL.push(p);
+    });
+
+    Object.keys(roles).forEach(r => {
+        if(roles[r].length > 0) {
+            const h = document.createElement("h4");
+            h.innerText = r;
+            h.style.color = "#facc15";
+            h.style.margin = "10px 0 5px 0";
+            h.style.fontSize = "0.8rem";
+            content.appendChild(h);
+
+            roles[r].forEach(p => {
+                const row = document.createElement("div");
+                row.className = "sq-row";
+                row.innerHTML = `
+                    <span>${p.name} <small style="color:#666">⭐${p.rating}</small></span>
+                    <span style="color:#4ade80; font-weight:bold;">₹${p.price.toFixed(2)}</span>
+                `;
+                content.appendChild(row);
+            });
+        }
+    });
+};
+
 /* ================= SQUAD WINDOW (FIXED STYLE) ================= */
 /* ================= SQUAD WINDOW POPUP ================= */
 function renderSquadWindow() {
@@ -1423,6 +1566,7 @@ function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
+
 
 
 
