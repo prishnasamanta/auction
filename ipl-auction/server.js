@@ -181,62 +181,92 @@ io.on("connection", socket => {
     });
 
     // --- 3. RECONNECT USER ---
+    // --- 3. RECONNECT USER (FIXED LOGIC) ---
     socket.on('reconnectUser', ({ roomId, username, team }) => {
         const room = rooms[roomId];
         const timerKey = `${roomId}_${username}`;
         
-        // --- KEY FIX: STOP TIMER IMMEDIATELY ---
+        // 1. CANCEL TIMER (If they made it back in time)
         if (disconnectTimers[timerKey]) {
-            console.log(`♻️ User ${username} returned within time limit. Resetting timer.`);
+            console.log(`♻️ User ${username} reconnected. Cancelling disconnect timer.`);
             clearTimeout(disconnectTimers[timerKey]);
             delete disconnectTimers[timerKey];
         }
 
         if (room) {
+            // 2. CHECK IF USER STILL EXISTS IN MEMORY
             let oldSocketId = Object.keys(room.users).find(key => room.users[key].name === username);
             
+            // SECURITY: Block strangers if auction ended
             if (!oldSocketId && room.auctionEnded) {
                 return socket.emit("error", "Auction Closed.");
             }
 
+            let assignedTeam = null;
+
             if(oldSocketId) {
+                // === SCENARIO A: CAME BACK IN TIME ===
+                // Swap socket ID, keep existing team
                 const userData = room.users[oldSocketId];
                 delete room.users[oldSocketId];
-                room.users[socket.id] = userData;
+                
                 userData.id = socket.id;
                 userData.connected = true;
-                userData.isAway = false; 
-                userData.disconnectTime = null; // <--- Clear time// <--- MARK ACTIVE
+                userData.isAway = false;     // Clear Yellow status
+                userData.disconnectTime = null; 
+                
+                room.users[socket.id] = userData;
+                assignedTeam = userData.team; // Keep their team
             } else {
-                room.users[socket.id] = { name: username, team: team, id: socket.id, connected: true,isAway: false };
+                // === SCENARIO B: TIMED OUT (OR NEW TAB) ===
+                // They were deleted from memory. Even if they sent a 'team' param,
+                // we IGNORE it and force them to be a Spectator (null).
+                // This prevents 2 people having the same team.
+                
+                room.users[socket.id] = { 
+                    name: username, 
+                    team: null, // <--- FORCE SPECTATOR
+                    id: socket.id, 
+                    connected: true, 
+                    isAway: false 
+                };
+                assignedTeam = null;
             }
 
+            // 3. SETUP SOCKET
             socket.join(roomId);
             socket.room = roomId;
             socket.user = username;
-            socket.team = team;
+            socket.team = assignedTeam; // Update socket session
             if(room.adminUser === username) socket.isAdmin = true;
 
+            // 4. SEND STATE (Include specific 'yourTeam' instruction)
             socket.emit("joinedRoom", { 
                 rules: room.rules,
                 squads: room.squads,
+                purses: room.purse,
                 roomCode: roomId,
-                purses: room.purse, // <--- ADD THIS LINE
                 isHost: socket.isAdmin,
                 auctionStarted: room.auctionStarted,
                 availableTeams: room.availableTeams,
                 auctionEnded: room.auctionEnded,
                 userCount: Object.keys(room.users).length,
-                teamOwners: getTeamOwners(room)
+                teamOwners: getTeamOwners(room),
+                
+                // CRITICAL: Tell client exactly who they are now
+                yourTeam: assignedTeam 
             });
             
-            broadcastUserList(room, roomId);
+            // 5. BROADCAST UPDATES
+            broadcastUserList(room, roomId); // Update Dots (Yellow -> Green)
             broadcastSets(room, roomId);
 
-            if(team) {
-                socket.emit("teamPicked", { team, remaining: room.availableTeams });
+            if(assignedTeam) {
+                // If they kept their team, refresh everyone's view just in case
+                socket.emit("teamPicked", { team: assignedTeam, remaining: room.availableTeams });
             } 
 
+            // Sync Auction State
             socket.emit("auctionState", {
                 live: room.auction.live,
                 paused: room.auction.paused,
@@ -252,6 +282,7 @@ io.on("connection", socket => {
                  });
             }
 
+            // Final Data if ended
             if(room.auctionEnded) {
                 socket.emit("squadData", room.squads);
                 if(Object.keys(room.playingXI).length > 0){
@@ -750,6 +781,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
