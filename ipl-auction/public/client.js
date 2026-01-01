@@ -227,43 +227,42 @@ socket.on("roomCreated", code => {
 });
 
 /* ================= ROOM STATE LOGIC ================= */
+/* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
+
+    // --- 1. SILENT AUTO-REFRESH (Update Data Only) ---
     if (data.updateOnly) {
+        // Update Owners & Count
         if(data.teamOwners) teamOwners = data.teamOwners;
-        if(data.availableTeams && !myTeam) renderEmbeddedTeams(data.availableTeams);
-        // Refresh Squad View if open
-        if(document.getElementById('tab-squads').classList.contains('active')) {
+        if(data.userCount !== undefined) {
+            const countEl = document.getElementById("liveUserCount");
+            if(countEl) countEl.innerText = data.userCount;
+        }
+
+        // KICK DETECTION: If my team is suddenly in the "Available" list, I timed out.
+        if (myTeam && data.availableTeams && data.availableTeams.includes(myTeam)) {
+             alert("⚠️ You were disconnected for too long. You are now a Spectator.");
+             sessionStorage.removeItem('ipl_team');
+             myTeam = null;
+             updateHeaderNotice();
+             // Switch view based on game state
+             if(gameStarted) setGamePhase("AUCTION");
+             else setGamePhase("TEAM_SELECT");
+        }
+
+        // Update Team Buttons (for everyone)
+        if(data.availableTeams) renderEmbeddedTeams(data.availableTeams);
+
+        // Refresh Squad View if currently open in the tab
+        if(document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
             viewEmbeddedSquad(selectedSquadTeam);
         }
-        return; 
+        return; // Stop here, do not re-render whole page
     }
 
-    // --- 2. LOAD HISTORY (Chat/Logs) ---
-    if (data.history) {
-        const chatBox = document.getElementById("chat");
-        const logBox = document.getElementById("log");
-        chatBox.innerHTML = "";
-        logBox.innerHTML = "";
-        
-        data.history.chat.forEach(m => {
-            const div = document.createElement("div");
-            div.innerHTML = `<b style="color:${TEAM_COLORS[m.team] || '#aaa'}">${m.team} (${m.user})</b>: ${m.msg}`;
-            chatBox.appendChild(div);
-        });
-        
-        data.history.logs.forEach(m => {
-            const div = document.createElement("div");
-            div.className = "log-item";
-            div.innerText = m;
-            logBox.appendChild(div);
-        });
-        
-        chatBox.scrollTop = chatBox.scrollHeight;
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-    // --- FIX: SYNC TEAM WITH SERVER ---
-    // If server says my team is different from what I thought (e.g. I timed out), update it.
+    // --- 2. SYNC TEAM WITH SERVER (On Connect/Reconnect) ---
+    // If server says my team is different from what I thought (e.g. I timed out while away), update it.
     if (data.yourTeam !== undefined) {
         if (data.yourTeam === null && myTeam !== null) {
             // I was downgraded to spectator
@@ -275,9 +274,35 @@ socket.on("joinedRoom", (data) => {
             if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
         }
     }
-    // ----------------------------------
 
-    // 1. SAVE METADATA
+    // --- 3. LOAD HISTORY (Chat/Logs) ---
+    if (data.history) {
+        const chatBox = document.getElementById("chat");
+        const logBox = document.getElementById("log");
+        if(chatBox) chatBox.innerHTML = "";
+        if(logBox) logBox.innerHTML = "";
+        
+        if(chatBox && data.history.chat) {
+            data.history.chat.forEach(m => {
+                const div = document.createElement("div");
+                div.innerHTML = `<b style="color:${TEAM_COLORS[m.team] || '#aaa'}">${m.team} (${m.user})</b>: ${m.msg}`;
+                chatBox.appendChild(div);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        
+        if(logBox && data.history.logs) {
+            data.history.logs.forEach(m => {
+                const div = document.createElement("div");
+                div.className = "log-item";
+                div.innerText = m;
+                logBox.appendChild(div);
+            });
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+    }
+
+    // --- 4. SAVE METADATA ---
     if (data.teamOwners) teamOwners = data.teamOwners;
     if (data.purses) teamPurse = data.purses;
     
@@ -286,7 +311,7 @@ socket.on("joinedRoom", (data) => {
         if(countEl) countEl.innerText = data.userCount;
     }
 
-    // 2. CHECK: HAS AUCTION ENDED?
+    // --- 5. CHECK: HAS AUCTION ENDED? ---
     if (data.auctionEnded) {
         const savedRoom = sessionStorage.getItem('ipl_room');
         if (savedRoom === data.roomCode) {
@@ -307,7 +332,7 @@ socket.on("joinedRoom", (data) => {
         return; 
     }
 
-    // 3. STANDARD SETUP
+    // --- 6. STANDARD SETUP ---
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
     
@@ -319,26 +344,22 @@ socket.on("joinedRoom", (data) => {
     
     setupAuctionScreen();
 
-    // 4. RENDER TEAMS
+    // Render Teams
     if (data.availableTeams) {
         renderEmbeddedTeams(data.availableTeams);
     }
 
-    // 5. DETERMINE SCREEN PHASE
+    // Determine Screen Phase
     if (data.auctionStarted) {
-        // If I don't have a team AND teams are available -> Show Select
         if (!myTeam && data.availableTeams && data.availableTeams.length > 0) {
             setGamePhase("TEAM_SELECT");
         } else {
-            // I have a team OR none left -> Show Auction
             setGamePhase("AUCTION");
-            updateHeaderNotice(); // Update top bar (Spectator or Team Name)
+            updateHeaderNotice(); 
         }
     } else {
-        // Not started
         setGamePhase("TEAM_SELECT");
         if (myTeam) {
-             // Waiting mode
              document.getElementById("embeddedTeamList").classList.add("hidden");
              document.getElementById("waitingForHostMsg").classList.remove("hidden");
              updateHeaderNotice();
@@ -347,9 +368,9 @@ socket.on("joinedRoom", (data) => {
     
     updateAdminButtons(data.auctionStarted);
     
-    // Auto-Refresh Logic: Since we just got new state, re-render squad window if open
+    // Auto-Refresh Squad Window if open
     if(squadWindow && !squadWindow.closed) {
-        socket.emit("getSquads"); // Force refresh data
+        socket.emit("getSquads"); 
     }
 });
 
@@ -365,70 +386,53 @@ socket.on("roomUsersUpdate", (users) => {
     const box = document.getElementById("userListContent");
     if (!box) return;
 
-    // 2. Clear previous interval to prevent speeding up
     if (userListInterval) clearInterval(userListInterval);
-
     box.innerHTML = "";
     
-    // 3. Sort List
+    // 2. Sort (Me -> Host -> Teams -> Spectators -> Kicked)
     users.sort((a, b) => {
         if (a.name === username) return -1;
+        if (a.status === 'kicked' && b.status !== 'kicked') return 1; // Kicked at bottom
         if (a.team && !b.team) return -1;
         if (!a.team && b.team) return 1;
         return a.name.localeCompare(b.name);
     });
 
-    // 4. Helper to format MM:SS
-    const formatTime = (ms) => {
-        if (ms < 0) ms = 0;
-        const totalSec = Math.floor(ms / 1000);
-        const m = Math.floor(totalSec / 60);
-        const s = totalSec % 60;
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-    };
+    const GRACE_PERIOD_MS = 90000; 
 
-    const GRACE_PERIOD_MS = 90000; // Must match server (1.5 mins)
-
-    // 5. Render Users
+    // 3. Render
     users.forEach(u => {
         const isMe = u.name === username;
         
-        // Color Logic: Green if online, Yellow if away
-        const statusColor = u.status === 'away' ? '#eab308' : '#22c55e';
-        const statusShadow = u.status === 'away' ? 'none' : `0 0 8px ${statusColor}`;
+        // --- COLOR LOGIC ---
+        // Green (#22c55e), Yellow (#eab308), Red (#ef4444)
+        let statusColor = '#22c55e'; 
+        if (u.status === 'away') statusColor = '#eab308';
+        if (u.status === 'kicked') statusColor = '#ef4444'; // RED DOT
 
-        let badgeHTML = "";
-        let nameColor = "#fff";
+        const statusShadow = (u.status === 'away' || u.status === 'kicked') ? 'none' : `0 0 8px ${statusColor}`;
         let timerHTML = "";
 
-        // --- TIMER LOGIC ---
+        // Timer for Away users
         if (u.status === 'away' && u.disconnectTime) {
-            const elapsed = Date.now() - u.disconnectTime;
-            const remaining = GRACE_PERIOD_MS - elapsed;
-            
-            // Store the "Target Time" (When they get kicked) in a data attribute
             const targetTime = u.disconnectTime + GRACE_PERIOD_MS;
-            
-           // NEW (Uses the CSS class we just made):
-            timerHTML = `<span class="away-timer" data-target="${targetTime}">
-                ${formatTime(remaining)}
-            </span>`;
-
+            timerHTML = `<span class="away-timer" data-target="${targetTime}">...</span>`;
+        }
+        // Label for Kicked users
+        if (u.status === 'kicked') {
+            timerHTML = `<span style="font-size:0.7rem; color:#ef4444; margin-left:5px;">(Inactive)</span>`;
         }
 
-        if (u.team) {
-            badgeHTML = `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`;
-        } else {
-            badgeHTML = `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.65rem; color:#94a3b8;">Spectator</span>`;
-            nameColor = "#cbd5e1";
-        }
+        let badgeHTML = u.team 
+            ? `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`
+            : `<span style="opacity:0.5; font-size:0.7rem;">Spectator</span>`;
 
         const div = document.createElement("div");
         div.className = "ul-item";
         div.innerHTML = `
-            <div class="ul-name" style="color:${nameColor}; display:flex; align-items:center; gap:6px;">
+            <div class="ul-name" style="color:${u.status === 'kicked' ? '#64748b' : '#fff'};">
                 <span class="ul-dot" style="background:${statusColor}; box-shadow:${statusShadow};"></span>
-                ${u.name} ${isMe ? '<b style="color:var(--primary); margin-left:4px;">(You)</b>' : ''}
+                ${u.name} ${isMe ? '(You)' : ''}
                 ${timerHTML}
             </div>
             ${badgeHTML}
@@ -436,29 +440,30 @@ socket.on("roomUsersUpdate", (users) => {
         box.appendChild(div);
     });
 
-    // 6. Start Client-Side Timer Interval
-    // This updates the numbers every second without waiting for server
+    // ... (Your existing setInterval logic for the timer ticking) ...
     userListInterval = setInterval(() => {
+        // ... (copy existing logic from previous turn) ...
         const timers = document.querySelectorAll('.away-timer');
-        if (timers.length === 0) {
-            clearInterval(userListInterval);
-            return;
-        }
-
+        if (timers.length === 0) return;
         const now = Date.now();
         timers.forEach(span => {
             const target = parseInt(span.getAttribute('data-target'));
             const diff = target - now;
-            
-            if (diff <= 0) {
-                span.innerText = "0:00";
-                span.style.color = "red";
-            } else {
-                span.innerText = formatTime(diff);
+            if (diff <= 0) span.innerText = "0:00";
+            else {
+                const totalSec = Math.floor(diff / 1000);
+                const m = Math.floor(totalSec / 60);
+                const s = totalSec % 60;
+                span.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
             }
         });
     }, 1000);
+    
+    // --- TRIGGER GLOBAL REFRESH ---
+    // Whenever the user list changes (someone joins/leaves/kicked), refresh the UI
+    refreshGlobalState(); 
 });
+
 
 
 function setupAuctionScreen() {
@@ -581,9 +586,9 @@ socket.on("teamPicked", ({ team, user, remaining }) => {
     updateHeaderNotice();
 });
 socket.on("adminPromoted", () => {
-    alert("👑 You are now the Host!");
     isHost = true;
     updateAdminButtons(gameStarted);
+    alert("👑 You are now the Host!");
 });
 
 // Save Rules
@@ -1395,6 +1400,21 @@ window.downloadLeaderboardPNG = function() {
         a.href = canvas.toDataURL();
         a.click();
     });
+}
+
+/* ================= GLOBAL REFRESH LOGIC ================= */
+function refreshGlobalState() {
+    // 1. Re-render Team Selection Buttons (Shows/Hides "+ Join Team")
+    // We need the latest available teams for this. 
+    // Usually stored in 'latestAvailableTeams' variable or we request it.
+    // For now, we trigger a request to sync everything.
+    socket.emit("getAuctionState");
+    
+    // 2. Refresh Squad Views (Update Manager Names)
+    socket.emit("getSquads");
+    
+    // 3. Update Header Info
+    updateHeaderNotice();
 }
 
 
