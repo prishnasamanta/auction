@@ -205,7 +205,8 @@ io.on("connection", socket => {
                 room.users[socket.id] = userData;
                 userData.id = socket.id;
                 userData.connected = true;
-                userData.isAway = false; // <--- MARK ACTIVE
+                userData.isAway = false; 
+                userData.disconnectTime = null; // <--- Clear time// <--- MARK ACTIVE
             } else {
                 room.users[socket.id] = { name: username, team: team, id: socket.id, connected: true,isAway: false };
             }
@@ -469,44 +470,45 @@ io.on("connection", socket => {
     });
 
     // --- 10. HANDLE DISCONNECT (90 SECONDS LOGIC) ---
+       // --- 10. HANDLE DISCONNECT (WITH TIMER) ---
     socket.on("disconnect", () => {
         const r = rooms[socket.room];
         if (!r) return;
-
         const user = r.users[socket.id];
-        if (!user) return; 
+        if (!user) return;
+
+        // 1. MARK AS AWAY & START CLOCK
         user.isAway = true; 
-        broadcastUserList(r, socket.room); // Notify clients immediately
+        user.disconnectTime = Date.now(); // <--- Save current server time
+        
+        broadcastUserList(r, socket.room); // Notify everyone immediately
 
         const userName = user.name;
         const roomCode = socket.room;
         const timerKey = `${roomCode}_${userName}`;
 
-        console.log(`⏳ User ${userName} disconnected. Starting 90s timer.`);
+        // 90 Seconds (1.5 Minutes) Grace Period
+        const GRACE_PERIOD = 90000; 
 
-        // START 90-SECOND TIMER (1 min 30 sec)
         disconnectTimers[timerKey] = setTimeout(() => {
             
-            // Re-check existence
+            // === TIME'S UP ===
             if (rooms[roomCode] && rooms[roomCode].users[socket.id]) {
                 const finalRoom = rooms[roomCode];
                 const wasAdmin = (finalRoom.adminUser === userName);
                 const userTeam = finalRoom.users[socket.id].team;
 
-                console.log(`❌ User ${userName} timed out. Removing and freeing team.`);
-
-                // 1. Delete User
+                // Remove User
                 delete finalRoom.users[socket.id];
 
-                // 2. HOST LEFT -> KILL ROOM
+                // Host Left Logic
                 if (wasAdmin) {
                     finalRoom.isPublic = false; 
                     finalRoom.auctionEnded = true; 
                     io.to(roomCode).emit("forceHome", "Host disconnected.");
                 }
 
-                // 3. PLAYER LEFT -> FREE TEAM
-                // ONLY HERE do we free the team.
+                // Player Left Logic
                 if (userTeam && !finalRoom.auctionEnded) {
                     if (!finalRoom.availableTeams.includes(userTeam)) {
                         finalRoom.availableTeams.push(userTeam);
@@ -519,8 +521,10 @@ io.on("connection", socket => {
                 broadcastUserList(finalRoom, roomCode);
             }
             delete disconnectTimers[timerKey];
-        }, 90000); // 1 minute 30 seconds
+
+        }, GRACE_PERIOD);
     });
+
 
 
     socket.on("submitXI", ({ xi }) => {
@@ -725,13 +729,17 @@ function getTeamOwners(room) {
     return owners;
 }
 // --- HELPER: Broadcast User List ---
+// --- HELPER: Broadcast User List ---
 function broadcastUserList(room, roomCode) {
     if (!room) return;
     
+    // Map to simple objects to send to client
     const userList = Object.values(room.users).map(u => ({
         name: u.name,
         team: u.team,
-        status: u.isAway ? 'away' : 'online' // <--- SEND STATUS
+        status: u.isAway ? 'away' : 'online',
+        // Send the timestamp if they are away
+        disconnectTime: u.disconnectTime || null 
     }));
     
     io.to(roomCode).emit("roomUsersUpdate", userList);
@@ -742,5 +750,6 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
