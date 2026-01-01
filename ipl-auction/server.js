@@ -11,10 +11,8 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-// --- NEW: Handle /room/:code requests ---
+// --- Handle /room/:code requests ---
 app.get('/room/:roomCode', (req, res) => {
-    // Send the main HTML file regardless of the room code
-    // The Client JS will extract the code from the URL
     res.sendFile(__dirname + '/public/index.html');
 });
 
@@ -62,7 +60,7 @@ function createSets(allPlayers) {
         const p = allPlayers[i];
         if (p.role !== lastP.role || p.foreign !== lastP.foreign) {
             sets.push(currentSet); 
-            currentSet = [];      
+            currentSet = [];       
         }
         currentSet.push(p);
         lastP = p;
@@ -94,13 +92,11 @@ function broadcastSets(r, roomCode) {
 io.on("connection", socket => {
 
     // --- 1. GET PUBLIC ROOMS ---
-   // Inside io.on('connection')
     socket.on('getPublicRooms', () => {
         const liveRooms = [];
         const waitingRooms = [];
         
         for (const [id, room] of Object.entries(rooms)) {
-            // Check !room.auctionEnded
             if (room.isPublic && !room.auctionEnded) { 
                 const info = { id: id, count: Object.keys(room.users).length };
                 if (room.auctionStarted) {
@@ -114,11 +110,10 @@ io.on("connection", socket => {
     });
 
 
-    // --- 2. CREATE ROOM (FIXED) ---
+    // --- 2. CREATE ROOM ---
     socket.on("createRoom", ({ user, isPublic }) => {
         const code = generateRoomCode();
         
-        // Initialize Room
         rooms[code] = {
             admin: socket.id,
             adminUser: user,
@@ -139,16 +134,13 @@ io.on("connection", socket => {
             }
         };
 
-        // FIX: Define 'room' variable here so we can use it below
         const room = rooms[code];
 
-        // Init Purses
         AVAILABLE_TEAMS_LIST.forEach(t => {
             room.squads[t] = [];
             room.purse[t] = room.rules.purse;
         });
 
-        // Join Socket
         socket.join(code);
         socket.room = code;
         socket.user = user;
@@ -158,7 +150,6 @@ io.on("connection", socket => {
 
         socket.emit("roomCreated", code);
         
-        // Use 'room' variable safely here
         socket.emit("joinedRoom", {
             squads: room.squads,
             rules: room.rules,
@@ -166,55 +157,49 @@ io.on("connection", socket => {
             isHost: true,
             auctionStarted: room.auctionStarted,
             availableTeams: room.availableTeams,
-            auctionEnded: (room.auctionStarted && !room.auction.live && room.auction.paused) // or check if room.phase === "xi"
+            auctionEnded: (room.auctionStarted && !room.auction.live && room.auction.paused),
+            userCount: 1,
+            teamOwners: getTeamOwners(room)
         });
 
         broadcastSets(room, code);
     });
 
     // --- 3. RECONNECT USER ---
-    // --- 3. RECONNECT USER ---
-        // --- 3. RECONNECT USER ---
     socket.on('reconnectUser', ({ roomId, username, team }) => {
         const room = rooms[roomId];
         const timerKey = `${roomId}_${username}`;
+        
+        // Fix: Always clear timer if it exists for this user
         if (disconnectTimers[timerKey]) {
             console.log(`♻️ User ${username} reconnected. Cancelling disconnect timer.`);
             clearTimeout(disconnectTimers[timerKey]);
             delete disconnectTimers[timerKey];
         }
+
         if (room) {
-            // 1. FIND EXISTING USER IN MEMORY
-            // We search for a user with the same name to see if they were already here.
             let oldSocketId = Object.keys(room.users).find(key => room.users[key].name === username);
             
-            // 2. SECURITY: BLOCK STRANGERS IF AUCTION ENDED
-            // If user is not found in memory AND the game is over, deny access.
             if (!oldSocketId && room.auctionEnded) {
                 return socket.emit("error", "Auction Closed.");
             }
 
-            // 3. UPDATE SOCKET MAPPING
             if(oldSocketId) {
-                // Existing user: Swap old socket data to the new socket ID
                 const userData = room.users[oldSocketId];
-                delete room.users[oldSocketId]; // Remove old ID
-                room.users[socket.id] = userData; // Add new ID
+                delete room.users[oldSocketId];
+                room.users[socket.id] = userData;
                 userData.id = socket.id;
                 userData.connected = true;
             } else {
-                // New user (only happens if game is NOT ended due to check above)
                 room.users[socket.id] = { name: username, team: team, id: socket.id, connected: true };
             }
 
-            // 4. SETUP SOCKET PROPERTIES
             socket.join(roomId);
             socket.room = roomId;
             socket.user = username;
-            socket.team = team;
+            socket.team = team; // Ensure socket.team is set
             if(room.adminUser === username) socket.isAdmin = true;
 
-            // 5. SEND STATE TO THE RECONNECTING USER
             socket.emit("joinedRoom", { 
                 rules: room.rules,
                 squads: room.squads,
@@ -222,24 +207,18 @@ io.on("connection", socket => {
                 isHost: socket.isAdmin,
                 auctionStarted: room.auctionStarted,
                 availableTeams: room.availableTeams,
-                auctionEnded: room.auctionEnded, // Critical flag for client logic
-                userCount: Object.keys(room.users).length, // <--- Send Count
-                teamOwners: getTeamOwners(room)            // <--- Send Owners
+                auctionEnded: room.auctionEnded,
+                userCount: Object.keys(room.users).length,
+                teamOwners: getTeamOwners(room)
             });
             
-            // 6. BROADCAST UPDATES TO EVERYONE ELSE
-            // Tell everyone the new user count immediately
-// REPLACE the old updateCount line with:
             broadcastUserList(room, roomId);
-
-            // 7. SYNC GAMEPLAY DATA
             broadcastSets(room, roomId);
 
             if(team) {
                 socket.emit("teamPicked", { team, remaining: room.availableTeams });
             } 
 
-            // Sync Auction Timer/Bids
             socket.emit("auctionState", {
                 live: room.auction.live,
                 paused: room.auction.paused,
@@ -248,7 +227,6 @@ io.on("connection", socket => {
                 lastBidTeam: room.auction.lastBidTeam
             });
 
-            // If a player is currently being auctioned, show them
             if(room.auction.player){
                  socket.emit("newPlayer", { 
                     player: room.auction.player, 
@@ -256,11 +234,8 @@ io.on("connection", socket => {
                  });
             }
 
-            // 8. FINAL DATA SYNC (IF GAME OVER)
-            // If they reconnect after the game ended, ensure they have data for the Leaderboard/XI screen
             if(room.auctionEnded) {
                 socket.emit("squadData", room.squads);
-                // Send leaderboard if calculated
                 if(Object.keys(room.playingXI).length > 0){
                     const board = Object.values(room.playingXI).sort((a,b) => {
                        if(b.rating !== a.rating) return b.rating - a.rating; 
@@ -275,9 +250,7 @@ io.on("connection", socket => {
         }
     });
 
-    // --- 4. JOIN ROOM ---
-    // 2. JOIN ROOM
-    // --- 4. JOIN ROOM ---
+    // --- 4. JOIN ROOM (IMPROVED FIX FOR DUPLICATES) ---
     socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
@@ -286,19 +259,49 @@ io.on("connection", socket => {
             return socket.emit("error", "This auction has ended and is closed.");
         }
 
+        // --- CRITICAL FIX: CHECK IF USER EXISTS (Disconnecting State) ---
+        // If a user refreshes and sends 'joinRoom' instead of 'reconnectUser',
+        // we must detect it here to stop the old timer from deleting their team.
+        const existingSocketId = Object.keys(room.users).find(id => room.users[id].name === user);
+        
+        if (existingSocketId) {
+            // Treat this as a RECONNECT
+            console.log(`♻️ User ${user} rejoined via joinRoom (Merged with old session).`);
+            
+            // 1. Cancel the 'disconnect' timer for the OLD socket
+            const timerKey = `${roomCode}_${user}`;
+            if (disconnectTimers[timerKey]) {
+                clearTimeout(disconnectTimers[timerKey]);
+                delete disconnectTimers[timerKey];
+            }
+
+            // 2. Transfer data to new socket
+            const userData = room.users[existingSocketId];
+            delete room.users[existingSocketId];
+            room.users[socket.id] = userData;
+            
+            userData.id = socket.id;
+            userData.connected = true;
+
+            // 3. Update Socket properties
+            socket.team = userData.team;
+            if(room.adminUser === user) socket.isAdmin = true;
+
+        } else {
+            // New User
+            room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
+        }
+
         socket.join(roomCode);
         socket.room = roomCode;
         socket.user = user;
         
-        // Add to user list
-        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
-
-        // 1. Send State to the NEW User
+        // 1. Send State
         socket.emit("joinedRoom", { 
             rules: room.rules,
             squads: room.squads,
             roomCode: roomCode,
-            isHost: false,
+            isHost: (room.adminUser === user),
             auctionStarted: room.auctionStarted,
             availableTeams: room.availableTeams,
             auctionEnded: false,
@@ -306,10 +309,12 @@ io.on("connection", socket => {
             teamOwners: getTeamOwners(room)
         });
 
-        // 2. BROADCAST UPDATES TO EVERYONE ELSE (The Fix)
-// REPLACE the old updateCount line with:
+        // If they had a team (rejoin case), remind them
+        if (socket.team) {
+             socket.emit("teamPicked", { team: socket.team, remaining: room.availableTeams });
+        }
+
         broadcastUserList(room, roomCode);
-        
         broadcastSets(room, roomCode);
         io.to(roomCode).emit('logUpdate', `👋 ${user} has joined.`);
     });
@@ -319,7 +324,14 @@ io.on("connection", socket => {
         const r = rooms[socket.room];
         if(!r) return;
         if(socket.team) return; 
-        if(!r.availableTeams.includes(team)) return;
+        
+        // Double check team availability to prevent race conditions
+        if(!r.availableTeams.includes(team)) {
+             socket.emit("error", "Team already taken.");
+             // Refresh their view of available teams
+             socket.emit("teamPicked", { team: null, remaining: r.availableTeams });
+             return;
+        }
 
         socket.team = team;
         if(r.users[socket.id]) r.users[socket.id].team = team;
@@ -334,9 +346,7 @@ io.on("connection", socket => {
             remaining: r.availableTeams
         });
         io.to(socket.room).emit("logUpdate", `👕 ${user} selected ${team}`);
-        // Add this at the end of selectTeam logic:
         broadcastUserList(rooms[socket.room], socket.room);
-
     });
 
     // --- 6. ADMIN: SET RULES ---
@@ -393,76 +403,46 @@ io.on("connection", socket => {
             nextPlayer(r, socket.room);
         }
 
-                  if(action === "end"){
-            if (r.auction.interval) {
-                clearInterval(r.auction.interval);
-                r.auction.interval = null;
-            }
-            r.auction.live = false;
-            r.auction.paused = true;
-            
-            // 1. Mark ended and hide from public
-            r.auctionEnded = true; 
-            r.isPublic = false; 
-
-            // 2. TRIGGER TRANSITION TO SUBMIT XI SCREEN
-            // We use "auctionEnded" event which the client already knows means "Go to XI"
-            io.to(socket.room).emit("auctionEnded");
-            
-            // 3. Send final data
-            io.to(socket.room).emit("logUpdate", "🛑 Auction Ended. Prepare Playing XI.");
-            io.to(socket.room).emit("squadData", r.squads);
+        if(action === "end"){
+            endAuction(r, socket.room);
         }
-
-
     });
 
     // --- 8. BIDDING ---
-        // --- 8. BIDDING ---
     socket.on("bid", () => {
         const r = rooms[socket.room];
         if(!r || !socket.team) return;
         if(!r.auction.live || r.auction.paused) return;
         if(r.auction.lastBidTeam === socket.team) return;
 
-        // 1. Calculate Next Bid (Base Price logic included)
         let nextBid;
         if (r.auction.team === null) {
-            // No one has bid yet -> Start at Base Price
             nextBid = r.auction.bid; 
         } else {
-            // Someone holds the bid -> Add Increment
-            // 1. Calculate Increment based on Current Bid
-  let currentBid = r.auction.bid;
-        
-        // FIX: Force precision to avoid 4.99999 < 5 issue
-        currentBid = Math.round(currentBid * 100) / 100;
+            let currentBid = r.auction.bid;
+            currentBid = Math.round(currentBid * 100) / 100;
 
-        // 2. Define Increment Logic
-        const increment = 
-            currentBid < 1  ? 0.05 :  // 0.00 to 0.95 -> +5L
-            currentBid < 5  ? 0.10 :  // 1.00 to 4.90 -> +10L (At 4.90, +0.10 = 5.00)
-            currentBid < 10 ? 0.20 :  // 5.00 to 9.80 -> +20L (At 5.00, +0.20 = 5.20)
-            currentBid < 20 ? 0.25 :  // 10.00 to 19.75 -> +25L
-            1.0;
-            // 2. Calculate Next Bid
+            const increment = 
+                currentBid < 1  ? 0.05 : 
+                currentBid < 5  ? 0.10 : 
+                currentBid < 10 ? 0.20 : 
+                currentBid < 20 ? 0.25 : 
+                1.0;
+            
             nextBid = r.auction.bid + increment;
         }
 
-        // 2. Define currentPurse (This line was missing!)
         const currentPurse = r.purse[socket.team]; 
         
-        // 3. Validate Purse
         if(currentPurse < nextBid){
             socket.emit("bidRejected", "Insufficient purse");
             return;
         }
 
-        // 4. Update State
         r.auction.bid = nextBid;
         r.auction.lastBidTeam = socket.team;
         r.auction.team = socket.team; 
-        r.auction.timer = 10;         
+        r.auction.timer = 10;          
 
         io.to(socket.room).emit("bidUpdate", {
             bid: r.auction.bid,
@@ -492,34 +472,31 @@ io.on("connection", socket => {
         });
     });
 
-    // --- 10. SUBMIT XI ---
-        // --- 10. HANDLE DISCONNECT ---
-       // --- 10. HANDLE DISCONNECT (WITH GRACE PERIOD) ---
+    // --- 10. HANDLE DISCONNECT (WITH 90 SEC GRACE PERIOD) ---
     socket.on("disconnect", () => {
         const r = rooms[socket.room];
         if (!r) return;
 
-        // Find the user who is disconnecting
         const user = r.users[socket.id];
-        if (!user) return;
+        if (!user) return; // User might have already been cleaned up
 
         const userName = user.name;
         const roomCode = socket.room;
         
-        // Create a unique key for this user in this room
         const timerKey = `${roomCode}_${userName}`;
 
-        // START 60-SECOND TIMER
-        // We don't delete the user yet. We wait to see if they come back.
+        // START 90-SECOND TIMER (1 min 30 sec)
         disconnectTimers[timerKey] = setTimeout(() => {
             
-            // === 60 SECONDS LATER: THEY DID NOT RETURN ===
-            
-            // Check if room still exists
+            // Check if room still exists and USER IS STILL MISSING
+            // We check r.users[socket.id] specifically. 
+            // If they reconnected, this ID was deleted/replaced, so this block won't hurt the new connection.
             if (rooms[roomCode] && rooms[roomCode].users[socket.id]) {
                 const finalRoom = rooms[roomCode];
                 const wasAdmin = (finalRoom.adminUser === userName);
                 const userTeam = finalRoom.users[socket.id].team;
+
+                console.log(`❌ User ${userName} timed out. Removing.`);
 
                 // 1. Delete User
                 delete finalRoom.users[socket.id];
@@ -528,13 +505,12 @@ io.on("connection", socket => {
                 if (wasAdmin) {
                     finalRoom.isPublic = false; 
                     finalRoom.auctionEnded = true; 
-                    
-                    // Force redirect all clients to home
                     io.to(roomCode).emit("forceHome", "Host disconnected.");
                 }
 
                 // 3. PLAYER LEFT -> FREE TEAM
                 if (userTeam && !finalRoom.auctionEnded) {
+                    // Only push to available if not already there
                     if (!finalRoom.availableTeams.includes(userTeam)) {
                         finalRoom.availableTeams.push(userTeam);
                         finalRoom.availableTeams.sort();
@@ -543,15 +519,13 @@ io.on("connection", socket => {
                     io.to(roomCode).emit("logUpdate", `🏃 ${userTeam} is available (Player left).`);
                 }
 
-                // 4. Update Count
-// REPLACE the old updateCount line with:
-                    broadcastUserList(finalRoom, roomCode);
+                broadcastUserList(finalRoom, roomCode);
             }
             
             // Clean up timer map
             delete disconnectTimers[timerKey];
 
-        }, 30000); // 30 Seconds Grace Period
+        }, 90000); // CHANGED TO 90 SECONDS
     });
 
 
@@ -580,23 +554,20 @@ io.on("connection", socket => {
         let disqualified = false;
         let reason = "";
         const R = r.rules;
-if (allPlayers.length !== 11) { 
-    disqualified = true; reason = `Selected ${allPlayers.length}/11 Players`; 
-}
-else if (counts.FOREIGN > R.maxForeign) { 
-    // Logic: Standard IPL is max 4 in XI usually, but using your dynamic rule variable
-    // If your variable 'minForeignXI' actually meant 'Max Foreign in XI', we use that limit.
-    // Assuming 'maxForeign' is total squad limit, and 'minForeignXI' is actually MAX in XI (based on your prompt)
-    disqualified = true; reason = `Max ${R.maxForeign} Overseas allowed in Squad`; 
-}
-// Specific check for XI foreign limit (renaming variable logic for clarity)
-else if (counts.FOREIGN > (R.minForeignXI || 4)) {
-    disqualified = true; reason = `Max ${R.minForeignXI || 4} Overseas allowed in XI`; 
-}
-else if (counts.WK < R.minWK) { disqualified = true; reason = `Need min ${R.minWK} Wicket Keeper`; }
-else if (counts.BAT < R.minBat) { disqualified = true; reason = `Need min ${R.minBat} Batsmen`; }
-else if (counts.ALL < R.minAll) { disqualified = true; reason = `Need min ${R.minAll} All-Rounders`; }
-else if (counts.BOWL < R.minBowl) { disqualified = true; reason = `Need min ${R.minBowl} Bowlers`; }
+        if (allPlayers.length !== 11) { 
+            disqualified = true; reason = `Selected ${allPlayers.length}/11 Players`; 
+        }
+        else if (counts.FOREIGN > R.maxForeign) { 
+            disqualified = true; reason = `Max ${R.maxForeign} Overseas allowed in Squad`; 
+        }
+        else if (counts.FOREIGN > (R.minForeignXI || 4)) {
+            disqualified = true; reason = `Max ${R.minForeignXI || 4} Overseas allowed in XI`; 
+        }
+        else if (counts.WK < R.minWK) { disqualified = true; reason = `Need min ${R.minWK} Wicket Keeper`; }
+        else if (counts.BAT < R.minBat) { disqualified = true; reason = `Need min ${R.minBat} Batsmen`; }
+        else if (counts.ALL < R.minAll) { disqualified = true; reason = `Need min ${R.minAll} All-Rounders`; }
+        else if (counts.BOWL < R.minBowl) { disqualified = true; reason = `Need min ${R.minBowl} Bowlers`; }
+        
         const finalRating = disqualified ? 0 : Number((totalRating / 11).toFixed(2));
 
         r.playingXI[socket.team] = {
@@ -673,7 +644,6 @@ function nextPlayer(r, room) {
     broadcastSets(r, room); 
 
     r.auction.lastBidTeam = null;
-// Use player's specific basePrice, or calculate it from rating if missing
     r.auction.bid = r.auction.player.basePrice || startBid(r.auction.player.rating || 80);
     r.auction.team = null;
     r.auction.timer = 10;
@@ -705,8 +675,6 @@ function resolvePlayer(r, room) {
         const team = r.auction.team;
         const squad = r.squads[team];
         
-        // --- FIX 2: REMOVED RULE BLOCKING ---
-        // Only check Purse. Rules are checked at Submit XI.
         if (r.purse[team] >= r.auction.bid) {
             // SOLD
             p.price = r.auction.bid;
@@ -723,10 +691,10 @@ function resolvePlayer(r, room) {
             io.to(room).emit("logUpdate", `🔨 SOLD: ${p.name} → ${team} ₹${r.auction.bid.toFixed(2)} Cr`);
             io.to(room).emit("squadData", r.squads);
             
-            // Remove team from available list if they exist there (just in case)
+            // Remove team from available list if they exist there
             r.availableTeams = r.availableTeams.filter(t => t !== team);
         } else {
-            // UNSOLD (Only if insufficient funds)
+            // UNSOLD
             io.to(room).emit("unsold", { player: p });
             io.to(room).emit("logUpdate", `❌ UNSOLD (Insufficient Funds): ${p.name}`);
         }
@@ -745,6 +713,10 @@ function endAuction(r, room) {
     r.auction.live = false;
     r.auction.paused = true;
     
+    // 1. Mark ended and hide from public
+    r.auctionEnded = true; 
+    r.isPublic = false; 
+
     io.to(room).emit("auctionEnded");
     io.to(room).emit("logUpdate", "🛑 Auction Ended. Prepare Playing XI.");
     io.to(room).emit("squadData", r.squads);
@@ -756,32 +728,16 @@ function getTeamOwners(room) {
     });
     return owners;
 }
-// --- HELPER: Broadcast User List ---
 function broadcastUserList(room, roomCode) {
     if (!room) return;
-    
-    // Map to simple objects to send to client
     const userList = Object.values(room.users).map(u => ({
         name: u.name,
         team: u.team
     }));
-    
     io.to(roomCode).emit("roomUsersUpdate", userList);
 }
-
 
 const PORT = process.env.PORT || 2500; 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
-
-
-
-
-
-
-
-
-
-
-
