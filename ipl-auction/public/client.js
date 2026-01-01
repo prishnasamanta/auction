@@ -380,8 +380,18 @@ let userListInterval = null; // Global interval for the timer
 
 socket.on("roomUsersUpdate", (users) => {
     // 1. Update Count
+    const activeCount = users.filter(u => u.status !== 'kicked').length;
     const countEl = document.getElementById("liveUserCount");
-    if (countEl) countEl.innerText = users.length;
+    if (countEl) {
+        countEl.innerText = `${activeCount} / 10`;
+        
+        // Optional: Change text color if room is full (10 or more)
+        if (activeCount >= 10) {
+            countEl.style.color = "#4ade80"; // Bright Green
+        } else {
+            countEl.style.color = ""; // Default
+        }
+    }
 
     const box = document.getElementById("userListContent");
     if (!box) return;
@@ -1445,6 +1455,7 @@ function refreshGlobalUI() {
     // 4. Update Header
     updateHeaderNotice();
 }
+
 
 
 
