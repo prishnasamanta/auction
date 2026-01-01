@@ -455,7 +455,7 @@ window.viewSet = function() {
         return;
     }
     if(!viewSetWindow || viewSetWindow.closed){
-        viewSetWindow = window.open("", "ViewSetWindow", "width=480,height=650");
+        viewSetWindow = window.open("", "ViewSetWindow", "width=600,height=800");
     } else {
         viewSetWindow.focus();
     }
@@ -1010,12 +1010,22 @@ function updateRulesUI() {
     set('viewSquadSize', r.maxPlayers);
     set('viewForeign', r.maxForeign);
 }
-
 socket.on("chatUpdate", d => {
     const chat = document.getElementById("chat");
-    chat.innerHTML += `<div><b style="color:${TEAM_COLORS[d.team] || '#aaa'}">${d.team} (${d.user})</b>: ${d.msg}</div>`;
+    
+    // Create element instead of editing innerHTML
+    const div = document.createElement("div");
+    div.innerHTML = `<b style="color:${TEAM_COLORS[d.team] || '#aaa'}">${d.team} (${d.user})</b>: ${d.msg}`;
+    
+    chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
+
+    // Limit chat history to 100 messages to prevent lag
+    if(chat.children.length > 100) {
+        chat.removeChild(chat.firstChild);
+    }
 });
+
 
 window.sendChat = function() {
     const msgInput = document.getElementById("msg");
@@ -1426,6 +1436,7 @@ function showScreen(id){
     word-wrap: break-word;
     overflow-x: hidden;
 }
+
 
 
 
