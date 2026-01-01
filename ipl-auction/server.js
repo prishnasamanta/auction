@@ -202,11 +202,13 @@ io.on("connection", socket => {
     });
 
     // 3. RECONNECT USER
+    // --- 3. RECONNECT USER ---
     socket.on('reconnectUser', ({ roomId, username, team }) => {
         const room = rooms[roomId];
         const timerKey = `${roomId}_${username}`;
         
         if (disconnectTimers[timerKey]) {
+            console.log(`♻️ User ${username} reconnected. Cancelling timer.`);
             clearTimeout(disconnectTimers[timerKey]);
             delete disconnectTimers[timerKey];
         }
@@ -221,6 +223,7 @@ io.on("connection", socket => {
             let assignedTeam = null;
 
             if(oldSocketId) {
+                // User existed: Swap data to new socket
                 const userData = room.users[oldSocketId];
                 delete room.users[oldSocketId];
                 
@@ -232,6 +235,13 @@ io.on("connection", socket => {
                 
                 room.users[socket.id] = userData;
                 assignedTeam = userData.team;
+
+                // --- FIX: UPDATE ADMIN POINTER ---
+                // If the old socket was the admin, the new socket is now the admin.
+                if (room.admin === oldSocketId) {
+                    room.admin = socket.id;
+                }
+                // ---------------------------------
             } else {
                 room.users[socket.id] = { 
                     name: username, 
@@ -247,8 +257,10 @@ io.on("connection", socket => {
             socket.room = roomId;
             socket.user = username;
             socket.team = assignedTeam;
+            // Ensure boolean flag is set based on room owner name
             if(room.adminUser === username) socket.isAdmin = true;
 
+            // Send State
             socket.emit("joinedRoom", { 
                 rules: room.rules,
                 squads: room.squads,
@@ -302,6 +314,7 @@ io.on("connection", socket => {
     });
 
     // 4. JOIN ROOM
+    // --- 4. JOIN ROOM ---
     socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
@@ -313,6 +326,7 @@ io.on("connection", socket => {
         const existingSocketId = Object.keys(room.users).find(id => room.users[id].name === user);
         
         if (existingSocketId) {
+            // Reconnect Logic
             const timerKey = `${roomCode}_${user}`;
             if (disconnectTimers[timerKey]) {
                 clearTimeout(disconnectTimers[timerKey]);
@@ -328,9 +342,16 @@ io.on("connection", socket => {
             userData.disconnectTime = null;
             userData.isKicked = false;
 
+            // --- FIX: UPDATE ADMIN POINTER ---
+            if (room.admin === existingSocketId) {
+                room.admin = socket.id;
+            }
+            // ---------------------------------
+
             socket.team = userData.team;
             if(room.adminUser === user) socket.isAdmin = true;
         } else {
+            // New User
             room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
         }
 
@@ -360,6 +381,7 @@ io.on("connection", socket => {
         broadcastSets(room, roomCode);
         sendLog(room, roomCode, `👋 ${user} has joined.`);
     });
+
 
     // 5. SELECT TEAM
     socket.on("selectTeam", ({ team, user }) => {
@@ -752,4 +774,5 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
