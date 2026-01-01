@@ -229,7 +229,39 @@ socket.on("roomCreated", code => {
 /* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
-    
+    if (data.updateOnly) {
+        if(data.teamOwners) teamOwners = data.teamOwners;
+        if(data.availableTeams && !myTeam) renderEmbeddedTeams(data.availableTeams);
+        // Refresh Squad View if open
+        if(document.getElementById('tab-squads').classList.contains('active')) {
+            viewEmbeddedSquad(selectedSquadTeam);
+        }
+        return; 
+    }
+
+    // --- 2. LOAD HISTORY (Chat/Logs) ---
+    if (data.history) {
+        const chatBox = document.getElementById("chat");
+        const logBox = document.getElementById("log");
+        chatBox.innerHTML = "";
+        logBox.innerHTML = "";
+        
+        data.history.chat.forEach(m => {
+            const div = document.createElement("div");
+            div.innerHTML = `<b style="color:${TEAM_COLORS[m.team] || '#aaa'}">${m.team} (${m.user})</b>: ${m.msg}`;
+            chatBox.appendChild(div);
+        });
+        
+        data.history.logs.forEach(m => {
+            const div = document.createElement("div");
+            div.className = "log-item";
+            div.innerText = m;
+            logBox.appendChild(div);
+        });
+        
+        chatBox.scrollTop = chatBox.scrollHeight;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
     // --- FIX: SYNC TEAM WITH SERVER ---
     // If server says my team is different from what I thought (e.g. I timed out), update it.
     if (data.yourTeam !== undefined) {
@@ -536,11 +568,22 @@ socket.on("teamPicked", ({ team, user, remaining }) => {
         const lateBtn = document.getElementById("lateJoinBtn");
         if(lateBtn) lateBtn.classList.add("hidden");
     }
-
-    if(!myTeam) {
-        renderEmbeddedTeams(remaining);
-    }
+    if (!myTeam) {
+            renderEmbeddedTeams(remaining);
+            const lateBtn = document.getElementById("lateJoinBtn");
+            // If auction started AND teams remain -> Show Button
+            if (gameStarted && remaining.length > 0) {
+                lateBtn.classList.remove("hidden");
+            } else {
+                lateBtn.classList.add("hidden");
+            }
+        }
     updateHeaderNotice();
+});
+socket.on("adminPromoted", () => {
+    alert("👑 You are now the Host!");
+    isHost = true;
+    updateAdminButtons(gameStarted);
 });
 
 // Save Rules
@@ -714,7 +757,7 @@ socket.on("chatUpdate", d => {
     div.innerHTML = `<b style="color:${TEAM_COLORS[d.team] || '#aaa'}">${d.team} (${d.user})</b>: ${d.msg}`;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
-    if(chat.children.length > 100) chat.removeChild(chat.firstChild);
+    if(chat.children.length > 20) chat.removeChild(chat.firstChild);
 });
 
 window.sendChat = function() {
@@ -731,7 +774,7 @@ socket.on("logUpdate", msg => {
     div.innerText = msg;
     log.appendChild(div);
     log.scrollTop = log.scrollHeight;
-    if (log.children.length > 50) log.removeChild(log.firstChild);
+    if (log.children.length > 20) log.removeChild(log.firstChild);
 });
 
 // --- COMMAND CENTER LOGIC ---
@@ -1353,6 +1396,7 @@ window.downloadLeaderboardPNG = function() {
         a.click();
     });
 }
+
 
 
 
