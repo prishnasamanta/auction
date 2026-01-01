@@ -142,6 +142,8 @@ io.on("connection", socket => {
             playingXI: {},
             rulesLocked: false,
             auctionStarted: false,
+            chat: [], 
+            logs: [], 
             rules: { ...DEFAULT_RULES },
             auction: {
                 live: false, paused: false, player: null, 
@@ -252,6 +254,8 @@ io.on("connection", socket => {
                 auctionEnded: room.auctionEnded,
                 userCount: Object.keys(room.users).length,
                 teamOwners: getTeamOwners(room),
+                history: { chat: room.chat, logs: room.logs }, // <--- SEND HISTORY
+        
                 
                 // CRITICAL: Tell client exactly who they are now
                 yourTeam: assignedTeam 
@@ -351,6 +355,7 @@ io.on("connection", socket => {
             availableTeams: room.availableTeams,
             auctionEnded: false,
             userCount: Object.keys(room.users).length,
+            history: { chat: room.chat, logs: room.logs }, // <--- SEND HISTORY
             teamOwners: getTeamOwners(room)
         });
 
@@ -484,6 +489,10 @@ io.on("connection", socket => {
 
     // --- 9. CHAT & SQUADS ---
     socket.on("chat", data => {
+        const r = rooms[socket.room];
+        if(!r) return;        // Store
+        r.chat.push(data);
+        if(r.chat.length > 20) r.chat.shift(); // Limit to 20
         io.to(socket.room).emit("chatUpdate", data);
     });
     socket.on("getSquads", () => {
@@ -522,41 +531,56 @@ io.on("connection", socket => {
         const GRACE_PERIOD = 90000; 
 
         disconnectTimers[timerKey] = setTimeout(() => {
-            
-            // === TIME'S UP ===
             if (rooms[roomCode] && rooms[roomCode].users[socket.id]) {
                 const finalRoom = rooms[roomCode];
-                const wasAdmin = (finalRoom.adminUser === userName);
+                const wasAdmin = (finalRoom.admin === socket.id); // Check by ID, safer
                 const userTeam = finalRoom.users[socket.id].team;
 
-                // Remove User
+                // 1. Remove User
                 delete finalRoom.users[socket.id];
 
-                // Host Left Logic
+                // 2. HOST TRANSFER LOGIC
                 if (wasAdmin) {
-                    finalRoom.isPublic = false; 
-                    finalRoom.auctionEnded = true; 
-                    io.to(roomCode).emit("forceHome", "Host disconnected.");
+                    const remainingIDs = Object.keys(finalRoom.users);
+                    if (remainingIDs.length > 0) {
+                        // Transfer to first available user
+                        const newAdminID = remainingIDs[0];
+                        finalRoom.admin = newAdminID;
+                        finalRoom.adminUser = finalRoom.users[newAdminID].name;
+                        
+                        // Notify the new admin
+                        io.to(newAdminID).emit("adminPromoted");
+                        sendLog(finalRoom, roomCode, `👑 Host left. ${finalRoom.adminUser} is now Host.`);
+                    } else {
+                        // No one left? Kill room.
+                        finalRoom.isPublic = false; 
+                        finalRoom.auctionEnded = true; 
+                    }
                 }
 
-                // Player Left Logic
+                // 3. FREE TEAM LOGIC
                 if (userTeam && !finalRoom.auctionEnded) {
                     if (!finalRoom.availableTeams.includes(userTeam)) {
                         finalRoom.availableTeams.push(userTeam);
                         finalRoom.availableTeams.sort();
                     }
+                    // Notify everyone that team is free
                     io.to(roomCode).emit("teamPicked", { team: null, remaining: finalRoom.availableTeams });
-                    io.to(roomCode).emit("logUpdate", `🏃 ${userTeam} is available (Player left).`);
+                    sendLog(finalRoom, roomCode, `🏃 ${userTeam} is available (Player left).`);
                 }
 
+                // 4. SYNC EVERYONE
                 broadcastUserList(finalRoom, roomCode);
+                
+                // Force update owners for Squad View
+                io.to(roomCode).emit("joinedRoom", { 
+                    updateOnly: true, // Flag to tell client just update data, don't reset screen
+                    teamOwners: getTeamOwners(finalRoom),
+                    availableTeams: finalRoom.availableTeams
+                });
             }
             delete disconnectTimers[timerKey];
-
         }, GRACE_PERIOD);
-    });
-
-
 
     socket.on("submitXI", ({ xi }) => {
         const r = rooms[socket.room];
@@ -781,6 +805,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
