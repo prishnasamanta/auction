@@ -419,7 +419,7 @@ socket.on("roomUsersUpdate", (users) => {
         return a.name.localeCompare(b.name);
     });
 
-    const GRACE_PERIOD_MS = 90000; 
+    const GRACE_PERIOD_MS = 60000; 
 
     // 4. Render
     users.forEach(u => {
@@ -441,7 +441,7 @@ socket.on("roomUsersUpdate", (users) => {
         }
 
         // --- CROWN ICON ---
-        const crownHTML = u.isHost ? `<span title="Host" style="margin-right:4px;">👑</span>` : ``;
+        const crownHTML = u.isHost ? `<span title="Host" style="margin-right:4px;">🜲</span>` : ``;
 
         let badgeHTML = u.team 
             ? `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`
@@ -1455,6 +1455,7 @@ function refreshGlobalUI() {
     // 4. Update Header
     updateHeaderNotice();
 }
+
 
 
 
