@@ -130,6 +130,7 @@ io.on("connection", socket => {
 
     // 1. GET PUBLIC ROOMS
     // --- 1. GET PUBLIC ROOMS ---
+        // --- 1. GET PUBLIC ROOMS (WITH EXPIRY DATA) ---
     socket.on('getPublicRooms', () => {
         const liveRooms = [];
         const waitingRooms = [];
@@ -137,18 +138,22 @@ io.on("connection", socket => {
         for (const [id, room] of Object.entries(rooms)) {
             // Include rooms even if empty, as long as they aren't deleted
             if (room.isPublic && !room.auctionEnded) { 
+                // Count only strictly connected users
                 const connectedCount = Object.values(room.users).filter(u => u.connected).length;
                 
                 const info = { 
                     id: id, 
                     count: Object.keys(room.users).length, // Total (including away)
                     active: connectedCount,
-                    // Send expiry timestamp if empty
+                    // Send expiry timestamp if empty and pending deletion
                     expiresAt: room.emptySince ? (room.emptySince + 600000) : null 
                 };
                 
-                if (room.auctionStarted) liveRooms.push(info);
-                else waitingRooms.push(info);
+                if (room.auctionStarted) {
+                    liveRooms.push(info);
+                } else {
+                    waitingRooms.push(info);
+                }
             }
         }
         socket.emit('publicRoomsList', { live: liveRooms, waiting: waitingRooms });
@@ -861,6 +866,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
