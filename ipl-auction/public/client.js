@@ -419,7 +419,7 @@ socket.on("roomUsersUpdate", (users) => {
         return a.name.localeCompare(b.name);
     });
 
-    const GRACE_PERIOD_MS = 60000; 
+    const GRACE_PERIOD_MS = 90000; 
 
     // 4. Render
     users.forEach(u => {
@@ -1455,6 +1455,7 @@ function refreshGlobalUI() {
     // 4. Update Header
     updateHeaderNotice();
 }
+
 
 
 
