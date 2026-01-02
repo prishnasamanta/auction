@@ -5,7 +5,6 @@ const { Server } = require("socket.io");
 const PLAYERS = require("./players"); 
 const disconnectTimers = {};
 const app = express();
-const roomDeletionTimers = {}; // Stores timers for empty rooms
 const server = http.createServer(app);
 const io = new Server(server, {
     pingTimeout: 60000, 
@@ -129,26 +128,12 @@ function getTeamOwners(room) {
 io.on("connection", socket => {
 
     // 1. GET PUBLIC ROOMS
-    // --- 1. GET PUBLIC ROOMS ---
-        // --- 1. GET PUBLIC ROOMS (WITH EXPIRY DATA) ---
     socket.on('getPublicRooms', () => {
         const liveRooms = [];
         const waitingRooms = [];
-        
         for (const [id, room] of Object.entries(rooms)) {
-            // Include rooms even if empty, as long as they aren't deleted
             if (room.isPublic && !room.auctionEnded) { 
-                // Count only strictly connected users
-                const connectedCount = Object.values(room.users).filter(u => u.connected).length;
-                
-                const info = { 
-                    id: id, 
-                    count: Object.keys(room.users).length, // Total (including away)
-                    active: connectedCount,
-                    // Send expiry timestamp if empty and pending deletion
-                    expiresAt: room.emptySince ? (room.emptySince + 600000) : null 
-                };
-                
+                const info = { id: id, count: Object.keys(room.users).length };
                 if (room.auctionStarted) {
                     liveRooms.push(info);
                 } else {
@@ -158,7 +143,6 @@ io.on("connection", socket => {
         }
         socket.emit('publicRoomsList', { live: liveRooms, waiting: waitingRooms });
     });
-
 
     // 2. CREATE ROOM
     socket.on("createRoom", ({ user, isPublic }) => {
@@ -331,93 +315,56 @@ io.on("connection", socket => {
 
     // 4. JOIN ROOM
     // --- 4. JOIN ROOM ---
-    // --- 4. JOIN ROOM (WITH REVIVAL & NAME CHECK) ---
     socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
         
-        // --- 1. REVIVE EMPTY ROOM (If pending deletion) ---
-        if (roomDeletionTimers[roomCode]) {
-            console.log(`⚡ Room ${roomCode} revived by ${user}!`);
-            clearTimeout(roomDeletionTimers[roomCode]);
-            delete roomDeletionTimers[roomCode];
-            room.emptySince = null;
-        }
-
         if(room.auctionEnded) {
             return socket.emit("error", "This auction has ended and is closed.");
         }
 
-        // --- 2. STRICT NAME CHECK ---
         const existingSocketId = Object.keys(room.users).find(id => room.users[id].name === user);
         
         if (existingSocketId) {
-             // Name already exists. Check if they are ONLINE or AWAY.
-             const target = room.users[existingSocketId];
-             
-             if (target && target.connected) {
-                 // They are online on another device -> BLOCK
-                 return socket.emit("error", `The name '${user}' is already taken by an active player.`);
-             }
-             // If they are AWAY (disconnected/tab closed), we proceed to the "Reconnect Logic" below.
-             console.log(`♻️ User ${user} rejoined via joinRoom (merging session).`);
-             
-             // Cancel 'disconnect' timer for the old socket
-             const timerKey = `${roomCode}_${user}`;
-             if (disconnectTimers[timerKey]) {
+            // Reconnect Logic
+            const timerKey = `${roomCode}_${user}`;
+            if (disconnectTimers[timerKey]) {
                 clearTimeout(disconnectTimers[timerKey]);
                 delete disconnectTimers[timerKey];
-             }
+            }
+            const userData = room.users[existingSocketId];
+            delete room.users[existingSocketId];
+            room.users[socket.id] = userData;
+            
+            userData.id = socket.id;
+            userData.connected = true;
+            userData.isAway = false;
+            userData.disconnectTime = null;
+            userData.isKicked = false;
 
-             // Transfer data from old socket to new socket
-             const userData = room.users[existingSocketId];
-             delete room.users[existingSocketId]; // Remove old entry
-             room.users[socket.id] = userData;    // Add new entry
-             
-             // Update user state
-             userData.id = socket.id;
-             userData.connected = true;
-             userData.isAway = false;
-             userData.disconnectTime = null;
-             userData.isKicked = false;
-
-             // FIX: UPDATE ADMIN POINTER IF NEEDED
-             if (room.admin === existingSocketId) {
+            // --- FIX: UPDATE ADMIN POINTER ---
+            if (room.admin === existingSocketId) {
                 room.admin = socket.id;
-             }
-             
-             // Restore session vars
-             socket.team = userData.team;
-             if(room.adminUser === user) socket.isAdmin = true;
+            }
+            // ---------------------------------
 
+            socket.team = userData.team;
+            if(room.adminUser === user) socket.isAdmin = true;
         } else {
-            // New User (Name not found)
+            // New User
             room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
         }
 
-        // --- 3. SOCKET JOIN & SETUP ---
         socket.join(roomCode);
         socket.room = roomCode;
         socket.user = user;
         
-        // --- 4. HOST ASSIGNMENT CHECK ---
-        // If this is the ONLY connected user (e.g. room revived), make them Host
-        const connectedCount = Object.values(room.users).filter(u => u.connected).length;
-        if (connectedCount === 1) {
-             room.admin = socket.id;
-             room.adminUser = user;
-             socket.isAdmin = true;
-             // Notify client immediately
-             socket.emit("adminPromoted");
-        }
-
-        // --- 5. SEND STATE TO CLIENT ---
         socket.emit("joinedRoom", { 
             rules: room.rules,
             squads: room.squads,
             purses: room.purse, 
             roomCode: roomCode,
-            isHost: (room.admin === socket.id), // Strict check
+            isHost: (room.adminUser === user),
             auctionStarted: room.auctionStarted,
             availableTeams: room.availableTeams,
             auctionEnded: false,
@@ -430,7 +377,6 @@ io.on("connection", socket => {
              socket.emit("teamPicked", { team: socket.team, remaining: room.availableTeams });
         }
 
-        // --- 6. BROADCAST UPDATES ---
         broadcastUserList(room, roomCode);
         broadcastSets(room, roomCode);
         sendLog(room, roomCode, `👋 ${user} has joined.`);
@@ -583,42 +529,21 @@ io.on("connection", socket => {
     });
 
     // 10. HANDLE DISCONNECT (WITH TIMER)
-    // --- 10. HANDLE DISCONNECT (WITH ROOM PERSISTENCE) ---
     socket.on("disconnect", () => {
         const r = rooms[socket.room];
         if (!r) return;
         const user = r.users[socket.id];
         if (!user) return;
 
-        // 1. Mark Away
-        user.isAway = true;
-        user.disconnectTime = Date.now();
-        user.connected = false; // Mark as strictly disconnected
-        
+        user.isAway = true; 
+        user.disconnectTime = Date.now(); 
         broadcastUserList(r, socket.room);
 
         const userName = user.name;
         const roomCode = socket.room;
         const timerKey = `${roomCode}_${userName}`;
-        const GRACE_PERIOD = 90000; // 1.5 Minutes for Player
+        const GRACE_PERIOD = 90000; 
 
-        // --- NEW: CHECK IF ROOM IS EMPTY ---
-        // Count users who are actually connected
-        const connectedCount = Object.values(r.users).filter(u => u.connected).length;
-        
-        if (connectedCount === 0) {
-            console.log(`Room ${roomCode} is empty. Starting 10-minute deletion timer.`);
-            r.emptySince = Date.now(); // Mark when it became empty
-            
-            // 10 Minutes (600,000 ms)
-            roomDeletionTimers[roomCode] = setTimeout(() => {
-                console.log(`❌ Room ${roomCode} expired (10 mins empty). Deleting.`);
-                delete rooms[roomCode];
-                delete roomDeletionTimers[roomCode];
-            }, 600000); 
-        }
-
-        // --- EXISTING PLAYER TIMEOUT LOGIC ---
         disconnectTimers[timerKey] = setTimeout(() => {
             if (rooms[roomCode] && rooms[roomCode].users[socket.id]) {
                 const finalRoom = rooms[roomCode];
@@ -628,18 +553,34 @@ io.on("connection", socket => {
                 targetUser.isKicked = true; 
                 targetUser.team = null; 
 
-                // HOST TRANSFER (Only if there are people left)
-                // If room is empty, we don't transfer host yet; next joiner becomes host.
-                const activeUsers = Object.values(finalRoom.users).filter(u => u.connected);
-                
-                if (activeUsers.length > 0 && finalRoom.admin === socket.id) {
-                    const newHost = activeUsers[0];
-                    finalRoom.admin = newHost.id;
-                    finalRoom.adminUser = newHost.name;
-                    io.to(newHost.id).emit("adminPromoted");
-                    sendLog(finalRoom, roomCode, `👑 Host timed out. ${finalRoom.adminUser} is now Host.`);
+                // HOST TRANSFER
+                if (finalRoom.admin === socket.id) {
+                    const remainingIDs = Object.keys(finalRoom.users).filter(id => !finalRoom.users[id].isKicked && !finalRoom.users[id].isAway);
+                    
+                    if (remainingIDs.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * remainingIDs.length);
+                        const newHostID = remainingIDs[randomIndex];
+                        finalRoom.admin = newHostID;
+                        finalRoom.adminUser = finalRoom.users[newHostID].name;
+                        
+                        io.to(newHostID).emit("adminPromoted");
+                        sendLog(finalRoom, roomCode, `👑 Host timed out. ${finalRoom.adminUser} is now Host.`);
+                    } else {
+                        const awayIDs = Object.keys(finalRoom.users).filter(id => !finalRoom.users[id].isKicked);
+                        if(awayIDs.length > 0) {
+                             const newHostID = awayIDs[0];
+                             finalRoom.admin = newHostID;
+                             finalRoom.adminUser = finalRoom.users[newHostID].name;
+                             sendLog(finalRoom, roomCode, `👑 Host timed out. ${finalRoom.adminUser} (Away) is now Host.`);
+                        } else {
+                             finalRoom.isPublic = false; 
+                             finalRoom.auctionEnded = true; 
+                             io.to(roomCode).emit("forceHome", "Auction ended (No active players).");
+                        }
+                    }
                 }
 
+                // FREE TEAM
                 if (userTeam && !finalRoom.auctionEnded) {
                     if (!finalRoom.availableTeams.includes(userTeam)) {
                         finalRoom.availableTeams.push(userTeam);
@@ -866,9 +807,6 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
-
-
-
 
 
 
