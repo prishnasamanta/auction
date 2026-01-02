@@ -48,7 +48,13 @@ window.onload = () => {
     const createBtn = document.getElementById("createBtn");
     const joinBtn = document.getElementById("joinBtn");
     const usernameInput = document.getElementById("username");
-
+    document.addEventListener("DOMContentLoaded", () => {
+    const savedName = localStorage.getItem("ipl_username");
+    const nameInput = document.getElementById("username"); 
+    if (savedName && nameInput) {
+        nameInput.value = savedName;
+    }
+});
     if(enterBtn) {
         enterBtn.onclick = () => {
             document.getElementById("landing").classList.add("hidden");
@@ -183,8 +189,56 @@ window.shareRoomLink = async function() {
         }
     } catch (err) { console.error("Share failed:", err); }
 };
+/* ================= GAME ENTRY LOGIC ================= */
+
+// 1. Join Existing Game
+function joinGame() {
+    const user = document.getElementById("username").value.trim();
+    const code = document.getElementById("roomCode").value.trim().toUpperCase();
+
+    // Validation
+    if (!user) {
+        alert("Please enter your name!");
+        return;
+    }
+    if (!code) {
+        alert("Please enter a Room Code!");
+        return;
+    }
+
+    // --- SAVE NAME TO STORAGE (Auto-Fill Feature) ---
+    localStorage.setItem("ipl_username", user);
+    
+    // Set global username variable
+    username = user;
+
+    // Send Request to Server
+    socket.emit("joinRoom", { roomCode: code, user: user });
+}
+
+// 2. Create New Game
+function createGame() {
+    const user = document.getElementById("username").value.trim();
+    
+    // Validation
+    if (!user) {
+        alert("Please enter your name!");
+        return;
+    }
+
+    // --- SAVE NAME TO STORAGE (Auto-Fill Feature) ---
+    localStorage.setItem("ipl_username", user);
+
+    // Set global username variable
+    username = user;
+
+    // Send Request to Server
+    // isPublic: true allows it to show up in the public lobby list
+    socket.emit("createRoom", { user: user, isPublic: true });
+}
 
 /* ================= PUBLIC ROOMS ================= */
+/* ================= PUBLIC ROOMS LIST ================= */
 socket.on('publicRoomsList', ({ live, waiting }) => {
     const box = document.getElementById('publicRoomList');
     if(!box) return;
@@ -196,11 +250,44 @@ socket.on('publicRoomsList', ({ live, waiting }) => {
             h.className = "room-section-title";
             h.innerText = title;
             box.appendChild(h);
+            
             list.forEach(r => {
                 const div = document.createElement('div');
                 div.className = `room-tile ${type}`;
-                div.innerHTML = `<span class="r-name">${r.id}</span> <span class="r-count">👤 ${r.count}</span>`;
-                div.onclick = () => { document.getElementById('code').value = r.id; };
+                
+                // Status Text Logic
+                let statusHtml = `<span class="r-count">👤 ${r.active} Active</span>`;
+                
+                // --- EXPIRY TIMER LOGIC ---
+                if (r.active === 0 && r.expiresAt) {
+                    const msLeft = r.expiresAt - Date.now();
+                    const minLeft = Math.max(0, Math.ceil(msLeft / 60000)); // Convert to minutes
+                    
+                    if (minLeft > 0) {
+                        statusHtml = `<span style="color:#f87171; font-weight:bold; font-size:0.8rem;">⚠️ Closing in ${minLeft}m</span>`;
+                    } else {
+                        statusHtml = `<span style="color:#ef4444; font-weight:bold;">Closing...</span>`;
+                    }
+                }
+
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <span class="r-name">${r.id}</span> 
+                        ${statusHtml}
+                    </div>
+                `;
+                
+                // Click to auto-fill code
+                div.onclick = () => { 
+                    const codeInput = document.getElementById('code');
+                    if(codeInput) {
+                        codeInput.value = r.id;
+                        // Optional: Flash input
+                        codeInput.style.borderColor = "var(--primary)";
+                        setTimeout(() => codeInput.style.borderColor = "", 500);
+                    }
+                };
+                
                 box.appendChild(div);
             });
         }
@@ -210,7 +297,7 @@ socket.on('publicRoomsList', ({ live, waiting }) => {
     render(live, "🔴 Ongoing Auctions", "live");
 
     if(waiting.length === 0 && live.length === 0) {
-        box.innerHTML = '<div style="padding:10px; color:#666;">No active rooms found.</div>';
+        box.innerHTML = '<div style="padding:20px; color:#666; text-align:center;">No active rooms found. Create one!</div>';
     }
 });
 
@@ -1032,30 +1119,72 @@ socket.on("squadData", squads => {
 });
 
 // --- ADMIN ---
+// --- ADMIN CONTROLS UI ---
 function updateAdminButtons(isStarted) {
     const adminPanel = document.getElementById("adminControls");
-    if(!isHost) {
-        adminPanel.classList.add("hidden");
-        return;
-    }
-    adminPanel.classList.remove("hidden");
-    const startBtn = document.getElementById("startBtn");
-    const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn");
+    if (!adminPanel) return;
 
-    if (!isStarted) {
-        startBtn.classList.remove("hidden");
-        controls.forEach(b => b.classList.add("hidden"));
+    // Show panel for everyone (to hold Leave/Rules buttons)
+    adminPanel.classList.remove("hidden");
+    
+    // HOST VIEW
+    if (isHost) {
+        const startBtn = document.getElementById("startBtn");
+        const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn");
+
+        if (!isStarted) {
+            if(startBtn) startBtn.classList.remove("hidden");
+            controls.forEach(b => b.classList.add("hidden"));
+        } else {
+            if(startBtn) startBtn.classList.add("hidden");
+            controls.forEach(b => b.classList.remove("hidden"));
+        }
+        
+        // Remove Leave button if it was added dynamically (Hosts end game via End button usually)
+        const leaveBtn = document.getElementById("leaveBtn");
+        if(leaveBtn) leaveBtn.remove();
+
     } else {
-        startBtn.classList.add("hidden");
-        controls.forEach(b => b.classList.remove("hidden"));
+        // NON-HOST VIEW (Spectators/Players)
+        // Hide Host Controls
+        const startBtn = document.getElementById("startBtn");
+        if(startBtn) startBtn.classList.add("hidden");
+        document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn").forEach(b => b.classList.add("hidden"));
+
+        // Add Leave Button if not present
+        if (!document.getElementById("leaveBtn")) {
+            const btn = document.createElement("button");
+            btn.id = "leaveBtn";
+            btn.className = "icon-btn";
+            btn.innerHTML = "🚪"; // Door icon
+            btn.title = "Leave Room";
+            btn.style.background = "rgba(239, 68, 68, 0.2)";
+            btn.style.color = "#fca5a5";
+            btn.style.borderColor = "rgba(239, 68, 68, 0.4)";
+            btn.style.marginLeft = "8px";
+            btn.onclick = leaveRoom;
+            
+            adminPanel.appendChild(btn);
+        }
     }
 }
 
-window.admin = function(action) {
-    if(action === 'end' && !confirm("End Auction?")) return;
-    socket.emit("adminAction", action);
-};
+// Leave Room Logic
+function leaveRoom() {
+    if(confirm("Are you sure you want to leave the room?")) {
+        socket.disconnect(); // Close socket
+        sessionStorage.clear(); // Clear session
+        window.location.href = "/"; // Go home
+    }
+}
 
+function leaveRoom() {
+    if(confirm("Are you sure you want to leave?")) {
+        socket.disconnect(); // Cut connection
+        sessionStorage.clear(); // Clear session
+        window.location.href = "/"; // Reload to home
+    }
+}
 const startBtn = document.getElementById("startBtn");
 if(startBtn) startBtn.onclick = () => socket.emit("adminAction", "start");
 
@@ -1455,6 +1584,7 @@ function refreshGlobalUI() {
     // 4. Update Header
     updateHeaderNotice();
 }
+
 
 
 
