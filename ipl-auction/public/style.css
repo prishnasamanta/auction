@@ -970,6 +970,53 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 
 
+/* Update .top-bar-right or .admin-controls styling */
+
+#adminControls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Base style for top bar buttons */
+.icon-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px; /* Slightly rounded square */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Mobile Tweak: Ensure the title doesn't overlap buttons */
+@media (max-width: 480px) {
+    .brand {
+        font-size: 0.9rem; /* Smaller logo */
+        margin-right: auto; /* Push buttons to right */
+    }
+    
+    #adminControls {
+        gap: 5px; /* Tighter spacing */
+    }
+    
+    .icon-btn {
+        width: 32px; /* Smaller buttons on mobile */
+        height: 32px;
+        font-size: 0.9rem;
+    }
+}
+
 
 
 
