@@ -42,20 +42,21 @@ const soundTick = new Audio("/sounds/beep.mp3");
 /* ========= 1. INITIALIZATION & NAVIGATION ======== */
 /* ================================================= */
 
-window.onload = () => {
-    // --- 1. SETUP EVENT LISTENERS (Moved inside onload to ensure elements exist) ---
+document.addEventListener("DOMContentLoaded", () => {
+    // --- 1. RESTORE SESSION DATA ---
+    const savedName = localStorage.getItem("ipl_username");
+    const nameInput = document.getElementById("username");
+    if (savedName && nameInput) {
+        nameInput.value = savedName;
+    }
+
+    // --- 2. SETUP EVENT LISTENERS ---
     const enterBtn = document.getElementById("enterBtn");
     const createBtn = document.getElementById("createBtn");
     const joinBtn = document.getElementById("joinBtn");
     const usernameInput = document.getElementById("username");
-    document.addEventListener("DOMContentLoaded", () => {
-    const savedName = localStorage.getItem("ipl_username");
-    const nameInput = document.getElementById("username"); 
-    if (savedName && nameInput) {
-        nameInput.value = savedName;
-    }
-});
-    if(enterBtn) {
+
+    if (enterBtn) {
         enterBtn.onclick = () => {
             document.getElementById("landing").classList.add("hidden");
             document.getElementById("auth").classList.remove("hidden");
@@ -63,13 +64,13 @@ window.onload = () => {
         };
     }
 
-    if(createBtn) {
+    if (createBtn) {
         createBtn.onclick = (e) => {
-            if(e) e.preventDefault();
+            if (e) e.preventDefault();
             const uName = usernameInput.value.trim();
             const isPublic = document.getElementById('isPublicRoom').checked;
-            if(!uName) return alert("Please enter your name!");
-            
+            if (!uName) return alert("Please enter your name!");
+
             // Visual Feedback
             createBtn.innerText = "Creating...";
             createBtn.disabled = true;
@@ -80,16 +81,16 @@ window.onload = () => {
         };
     }
 
-    if(joinBtn) {
+    if (joinBtn) {
         joinBtn.onclick = (e) => {
-            if(e) e.preventDefault();
+            if (e) e.preventDefault();
             const rCode = document.getElementById('code').value.trim().toUpperCase();
             const uName = document.getElementById('username').value.trim();
-            
-            if(!uName) return alert("Please enter your name!");
-            if(!rCode) return alert("Please enter a Room Code!");
-            if(rCode.length !== 5) return alert("Room Code must be 5 characters!");
-            
+
+            if (!uName) return alert("Please enter your name!");
+            if (!rCode) return alert("Please enter a Room Code!");
+            if (rCode.length !== 5) return alert("Room Code must be 5 characters!");
+
             // Visual Feedback
             joinBtn.innerText = "Joining...";
             joinBtn.disabled = true;
@@ -98,13 +99,13 @@ window.onload = () => {
             roomCode = rCode;
             sessionStorage.setItem('ipl_room', roomCode);
             sessionStorage.setItem('ipl_user', username);
-            
+
             console.log(`🚀 Sending join request: ${username} -> ${roomCode}`);
             socket.emit("joinRoom", { roomCode, user: username });
         };
     }
 
-    // --- 2. URL & SESSION HANDLING ---
+    // --- 3. URL & SESSION HANDLING ---
     const path = window.location.pathname;
     const urlCode = path.startsWith('/room/') ? path.split('/')[2] : null;
 
@@ -117,12 +118,12 @@ window.onload = () => {
         console.log("🔄 Reconnecting...");
         username = sUser;
         roomCode = sRoom;
-        if(sTeam) myTeam = sTeam;
-        
+        if (sTeam) myTeam = sTeam;
+
         updateBrowserURL(sRoom);
-        
+
         socket.emit('reconnectUser', { roomId: sRoom, username: sUser, team: sTeam });
-        
+
         document.getElementById('landing').classList.add('hidden');
         document.getElementById('auth').classList.add('hidden');
         document.getElementById('auctionUI').classList.remove('hidden');
@@ -137,9 +138,9 @@ window.onload = () => {
         document.getElementById('code').style.borderColor = "var(--primary)";
     }
 
-    // 3. Fetch Public Rooms
+    // 4. Fetch Public Rooms
     socket.emit('getPublicRooms');
-};
+});
 
 function updateBrowserURL(code) {
     const newUrl = `/room/${code}`;
@@ -151,21 +152,21 @@ function updateBrowserURL(code) {
 window.switchAuthTab = function(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab' + (tab === 'join' ? 'Join' : 'Create')).classList.add('active');
-    
-    if(tab === 'create') {
+
+    if (tab === 'create') {
         document.getElementById('createSection').classList.remove('hidden');
         document.getElementById('joinSection').classList.add('hidden');
     } else {
         document.getElementById('createSection').classList.add('hidden');
         document.getElementById('joinSection').classList.remove('hidden');
-        socket.emit('getPublicRooms'); 
+        socket.emit('getPublicRooms');
     }
 };
 
 window.exitToHome = function() {
-    if(confirm("Are you sure you want to exit?")) {
+    if (confirm("Are you sure you want to exit?")) {
         sessionStorage.clear();
-        window.location.href = "/"; 
+        window.location.href = "/";
     }
 }
 
@@ -187,82 +188,36 @@ window.shareRoomLink = async function() {
             btn.innerHTML = `<span style="color:#4ade80; font-size:0.8rem; font-weight:bold;">COPIED!</span>`;
             setTimeout(() => btn.innerHTML = originalHTML, 2000);
         }
-    } catch (err) { console.error("Share failed:", err); }
+    } catch (err) {
+        console.error("Share failed:", err);
+    }
 };
-/* ================= GAME ENTRY LOGIC ================= */
 
-// 1. Join Existing Game
-function joinGame() {
-    const user = document.getElementById("username").value.trim();
-    const code = document.getElementById("roomCode").value.trim().toUpperCase();
-
-    // Validation
-    if (!user) {
-        alert("Please enter your name!");
-        return;
-    }
-    if (!code) {
-        alert("Please enter a Room Code!");
-        return;
-    }
-
-    // --- SAVE NAME TO STORAGE (Auto-Fill Feature) ---
-    localStorage.setItem("ipl_username", user);
-    
-    // Set global username variable
-    username = user;
-
-    // Send Request to Server
-    socket.emit("joinRoom", { roomCode: code, user: user });
-}
-
-// 2. Create New Game
-function createGame() {
-    const user = document.getElementById("username").value.trim();
-    
-    // Validation
-    if (!user) {
-        alert("Please enter your name!");
-        return;
-    }
-
-    // --- SAVE NAME TO STORAGE (Auto-Fill Feature) ---
-    localStorage.setItem("ipl_username", user);
-
-    // Set global username variable
-    username = user;
-
-    // Send Request to Server
-    // isPublic: true allows it to show up in the public lobby list
-    socket.emit("createRoom", { user: user, isPublic: true });
-}
-
-/* ================= PUBLIC ROOMS ================= */
 /* ================= PUBLIC ROOMS LIST ================= */
 socket.on('publicRoomsList', ({ live, waiting }) => {
     const box = document.getElementById('publicRoomList');
-    if(!box) return;
+    if (!box) return;
     box.innerHTML = '';
 
     const render = (list, title, type) => {
-        if(list.length > 0) {
+        if (list.length > 0) {
             const h = document.createElement("div");
             h.className = "room-section-title";
             h.innerText = title;
             box.appendChild(h);
-            
+
             list.forEach(r => {
                 const div = document.createElement('div');
                 div.className = `room-tile ${type}`;
-                
+
                 // Status Text Logic
                 let statusHtml = `<span class="r-count">👤 ${r.active} Active</span>`;
-                
+
                 // --- EXPIRY TIMER LOGIC ---
                 if (r.active === 0 && r.expiresAt) {
                     const msLeft = r.expiresAt - Date.now();
                     const minLeft = Math.max(0, Math.ceil(msLeft / 60000)); // Convert to minutes
-                    
+
                     if (minLeft > 0) {
                         statusHtml = `<span style="color:#f87171; font-weight:bold; font-size:0.8rem;">⚠️ Closing in ${minLeft}m</span>`;
                     } else {
@@ -276,18 +231,17 @@ socket.on('publicRoomsList', ({ live, waiting }) => {
                         ${statusHtml}
                     </div>
                 `;
-                
+
                 // Click to auto-fill code
-                div.onclick = () => { 
+                div.onclick = () => {
                     const codeInput = document.getElementById('code');
-                    if(codeInput) {
+                    if (codeInput) {
                         codeInput.value = r.id;
-                        // Optional: Flash input
                         codeInput.style.borderColor = "var(--primary)";
                         setTimeout(() => codeInput.style.borderColor = "", 500);
                     }
                 };
-                
+
                 box.appendChild(div);
             });
         }
@@ -296,7 +250,7 @@ socket.on('publicRoomsList', ({ live, waiting }) => {
     render(waiting, "⏳ Waiting to Start", "waiting");
     render(live, "🔴 Ongoing Auctions", "live");
 
-    if(waiting.length === 0 && live.length === 0) {
+    if (waiting.length === 0 && live.length === 0) {
         box.innerHTML = '<div style="padding:20px; color:#666; text-align:center;">No active rooms found. Create one!</div>';
     }
 });
@@ -313,52 +267,45 @@ socket.on("roomCreated", code => {
     updateBrowserURL(code);
 });
 
-/* ================= ROOM STATE LOGIC ================= */
-/* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
 
     // --- 1. SILENT AUTO-REFRESH (Update Data Only) ---
     if (data.updateOnly) {
         // Update Owners & Count
-        if(data.teamOwners) teamOwners = data.teamOwners;
-        if(data.userCount !== undefined) {
+        if (data.teamOwners) teamOwners = data.teamOwners;
+        if (data.userCount !== undefined) {
             const countEl = document.getElementById("liveUserCount");
-            if(countEl) countEl.innerText = data.userCount;
+            if (countEl) countEl.innerText = data.userCount;
         }
 
-        // KICK DETECTION: If my team is suddenly in the "Available" list, I timed out.
+        // KICK DETECTION
         if (myTeam && data.availableTeams && data.availableTeams.includes(myTeam)) {
-             alert("⚠️ You were disconnected for too long. You are now a Spectator.");
-             sessionStorage.removeItem('ipl_team');
-             myTeam = null;
-             updateHeaderNotice();
-             // Switch view based on game state
-             if(gameStarted) setGamePhase("AUCTION");
-             else setGamePhase("TEAM_SELECT");
+            alert("⚠️ You were disconnected for too long. You are now a Spectator.");
+            sessionStorage.removeItem('ipl_team');
+            myTeam = null;
+            updateHeaderNotice();
+            if (gameStarted) setGamePhase("AUCTION");
+            else setGamePhase("TEAM_SELECT");
         }
 
-        // Update Team Buttons (for everyone)
-        if(data.availableTeams) renderEmbeddedTeams(data.availableTeams);
+        if (data.availableTeams) renderEmbeddedTeams(data.availableTeams);
 
-        // Refresh Squad View if currently open in the tab
-        if(document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
+        if (document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
             viewEmbeddedSquad(selectedSquadTeam);
         }
-        return; // Stop here, do not re-render whole page
+        return;
     }
 
-    // --- 2. SYNC TEAM WITH SERVER (On Connect/Reconnect) ---
-    // If server says my team is different from what I thought (e.g. I timed out while away), update it.
+    // --- 2. SYNC TEAM WITH SERVER ---
     if (data.yourTeam !== undefined) {
         if (data.yourTeam === null && myTeam !== null) {
-            // I was downgraded to spectator
             alert("⚠️ You were disconnected for too long. You are now a Spectator.");
             sessionStorage.removeItem('ipl_team');
             myTeam = null;
         } else {
             myTeam = data.yourTeam;
-            if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
+            if (myTeam) sessionStorage.setItem('ipl_team', myTeam);
         }
     }
 
@@ -366,10 +313,10 @@ socket.on("joinedRoom", (data) => {
     if (data.history) {
         const chatBox = document.getElementById("chat");
         const logBox = document.getElementById("log");
-        if(chatBox) chatBox.innerHTML = "";
-        if(logBox) logBox.innerHTML = "";
-        
-        if(chatBox && data.history.chat) {
+        if (chatBox) chatBox.innerHTML = "";
+        if (logBox) logBox.innerHTML = "";
+
+        if (chatBox && data.history.chat) {
             data.history.chat.forEach(m => {
                 const div = document.createElement("div");
                 div.innerHTML = `<b style="color:${TEAM_COLORS[m.team] || '#aaa'}">${m.team} (${m.user})</b>: ${m.msg}`;
@@ -377,8 +324,8 @@ socket.on("joinedRoom", (data) => {
             });
             chatBox.scrollTop = chatBox.scrollHeight;
         }
-        
-        if(logBox && data.history.logs) {
+
+        if (logBox && data.history.logs) {
             data.history.logs.forEach(m => {
                 const div = document.createElement("div");
                 div.className = "log-item";
@@ -392,10 +339,10 @@ socket.on("joinedRoom", (data) => {
     // --- 4. SAVE METADATA ---
     if (data.teamOwners) teamOwners = data.teamOwners;
     if (data.purses) teamPurse = data.purses;
-    
+
     if (data.userCount !== undefined) {
         const countEl = document.getElementById("liveUserCount");
-        if(countEl) countEl.innerText = data.userCount;
+        if (countEl) countEl.innerText = data.userCount;
     }
 
     // --- 5. CHECK: HAS AUCTION ENDED? ---
@@ -403,32 +350,32 @@ socket.on("joinedRoom", (data) => {
         const savedRoom = sessionStorage.getItem('ipl_room');
         if (savedRoom === data.roomCode) {
             roomCode = data.roomCode;
-            if(data.squads) allSquads = data.squads;
-            if(data.rules) activeRules = data.rules;
-            
+            if (data.squads) allSquads = data.squads;
+            if (data.rules) activeRules = data.rules;
+
             setupAuctionScreen();
             showScreen("playingXI");
             document.body.style.overflow = "auto";
-            socket.emit("getMySquad"); 
+            socket.emit("getMySquad");
             updateRulesUI();
         } else {
             alert("⚠️ The Auction has ended. Returning to Main Screen.");
             sessionStorage.clear();
             window.location.href = "/";
         }
-        return; 
+        return;
     }
 
     // --- 6. STANDARD SETUP ---
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
-    
-    if(data.rules) activeRules = data.rules;
-    if(data.squads) allSquads = data.squads;
+
+    if (data.rules) activeRules = data.rules;
+    if (data.squads) allSquads = data.squads;
 
     isHost = data.isHost;
     gameStarted = data.auctionStarted;
-    
+
     setupAuctionScreen();
 
     // Render Teams
@@ -442,28 +389,28 @@ socket.on("joinedRoom", (data) => {
             setGamePhase("TEAM_SELECT");
         } else {
             setGamePhase("AUCTION");
-            updateHeaderNotice(); 
+            updateHeaderNotice();
         }
     } else {
         setGamePhase("TEAM_SELECT");
         if (myTeam) {
-             document.getElementById("embeddedTeamList").classList.add("hidden");
-             document.getElementById("waitingForHostMsg").classList.remove("hidden");
-             updateHeaderNotice();
+            document.getElementById("embeddedTeamList").classList.add("hidden");
+            document.getElementById("waitingForHostMsg").classList.remove("hidden");
+            updateHeaderNotice();
         }
     }
-    
+
     updateAdminButtons(data.auctionStarted);
-    
+
     // Auto-Refresh Squad Window if open
-    if(squadWindow && !squadWindow.closed) {
-        socket.emit("getSquads"); 
+    if (squadWindow && !squadWindow.closed) {
+        socket.emit("getSquads");
     }
 });
 
 /* ================= USER LIST LOGIC ================= */
 
-let userListInterval = null; // Global interval for the timer
+let userListInterval = null;
 
 socket.on("roomUsersUpdate", (users) => {
     // 1. Update Count
@@ -471,12 +418,10 @@ socket.on("roomUsersUpdate", (users) => {
     const countEl = document.getElementById("liveUserCount");
     if (countEl) {
         countEl.innerText = `${activeCount} / 10`;
-        
-        // Optional: Change text color if room is full (10 or more)
         if (activeCount >= 10) {
-            countEl.style.color = "#4ade80"; // Bright Green
+            countEl.style.color = "#4ade80";
         } else {
-            countEl.style.color = ""; // Default
+            countEl.style.color = "";
         }
     }
 
@@ -485,39 +430,38 @@ socket.on("roomUsersUpdate", (users) => {
 
     if (userListInterval) clearInterval(userListInterval);
     box.innerHTML = "";
-    
-    // 2. Check for Host Transfer (Am I the host now?)
+
+    // 2. Check for Host Transfer
     const me = users.find(u => u.name === username);
     if (me && me.isHost) {
         if (!isHost) {
             isHost = true;
             alert("👑 You are now the Host!");
-            updateAdminButtons(gameStarted); // Show buttons immediately
+            updateAdminButtons(gameStarted);
         }
     }
 
     // 3. Sort List
     users.sort((a, b) => {
         if (a.name === username) return -1;
-        if (a.isHost) return -1; // Host always on top
+        if (a.isHost) return -1;
         if (a.status === 'kicked' && b.status !== 'kicked') return 1;
         if (a.team && !b.team) return -1;
         if (!a.team && b.team) return 1;
         return a.name.localeCompare(b.name);
     });
 
-    const GRACE_PERIOD_MS = 90000; 
+    const GRACE_PERIOD_MS = 90000;
 
     // 4. Render
     users.forEach(u => {
         const isMe = u.name === username;
-        
-        let statusColor = '#22c55e'; 
+        let statusColor = '#22c55e';
         if (u.status === 'away') statusColor = '#eab308';
         if (u.status === 'kicked') statusColor = '#ef4444';
 
         const statusShadow = (u.status === 'away' || u.status === 'kicked') ? 'none' : `0 0 8px ${statusColor}`;
-        
+
         let extraInfoHTML = "";
         if (u.status === 'away' && u.disconnectTime) {
             const targetTime = u.disconnectTime + GRACE_PERIOD_MS;
@@ -527,12 +471,11 @@ socket.on("roomUsersUpdate", (users) => {
             extraInfoHTML = `<span style="font-size:0.7rem; color:#ef4444; margin-left:5px;">(Inactive)</span>`;
         }
 
-        // --- CROWN ICON ---
         const crownHTML = u.isHost ? `<span title="Host" style="margin-right:4px;">🜲</span>` : ``;
 
-        let badgeHTML = u.team 
-            ? `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`
-            : `<span style="opacity:0.5; font-size:0.7rem;">Spectator</span>`;
+        let badgeHTML = u.team ?
+            `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>` :
+            `<span style="opacity:0.5; font-size:0.7rem;">Spectator</span>`;
 
         const div = document.createElement("div");
         div.className = "ul-item";
@@ -548,7 +491,6 @@ socket.on("roomUsersUpdate", (users) => {
         box.appendChild(div);
     });
 
-    // ... (Keep existing setInterval logic for timers) ...
     userListInterval = setInterval(() => {
         const timers = document.querySelectorAll('.away-timer');
         if (timers.length === 0) return;
@@ -565,14 +507,9 @@ socket.on("roomUsersUpdate", (users) => {
             }
         });
     }, 1000);
-    
-    // 5. TRIGGER GLOBAL REFRESH
-    // This ensures squad view gets the updated manager name if a user left/joined
+
     refreshGlobalUI();
 });
-
-
-
 
 function setupAuctionScreen() {
     document.getElementById("landing").classList.add("hidden");
@@ -587,12 +524,12 @@ function setupAuctionScreen() {
 
     socket.emit("getAuctionState");
     socket.emit("checkAdmin");
-    socket.emit("getSquads"); 
+    socket.emit("getSquads");
 }
 
 socket.on("error", msg => {
     alert("❌ " + msg);
-    if(msg.includes("not found") || msg.includes("closed") || msg.includes("expired")) {
+    if (msg.includes("not found") || msg.includes("closed") || msg.includes("expired")) {
         sessionStorage.clear();
         window.location.href = "/";
     }
@@ -610,12 +547,12 @@ socket.on("forceHome", (msg) => {
 
 function renderEmbeddedTeams(teams) {
     const box = document.getElementById("embeddedTeamList");
-    if(!box) return;
+    if (!box) return;
     box.innerHTML = "";
-    
-    if(teams.length === 0) {
+
+    if (teams.length === 0) {
         box.innerHTML = "<p style='color:#ccc; padding:20px;'>All teams taken! You are a spectator.</p>";
-        if(gameStarted) {
+        if (gameStarted) {
             const btn = document.createElement("button");
             btn.className = "primary-btn";
             btn.innerText = "Watch Auction";
@@ -629,15 +566,15 @@ function renderEmbeddedTeams(teams) {
     teams.sort().forEach(team => {
         const btn = document.createElement("button");
         btn.innerText = team;
-        btn.className = "team-btn"; 
+        btn.className = "team-btn";
         btn.style.setProperty("--team-color", TEAM_COLORS[team] || "#94a3b8");
-        
+
         btn.onclick = () => {
             myTeam = team;
             sessionStorage.setItem('ipl_team', team);
             socket.emit("selectTeam", { team, user: username });
-            
-            if(gameStarted) {
+
+            if (gameStarted) {
                 setGamePhase("AUCTION");
                 updateHeaderNotice();
             } else {
@@ -645,14 +582,14 @@ function renderEmbeddedTeams(teams) {
                 document.getElementById("waitingForHostMsg").classList.remove("hidden");
                 updateHeaderNotice();
             }
-            
+
             const lateBtn = document.getElementById("lateJoinBtn");
-            if(lateBtn) lateBtn.classList.add("hidden");
+            if (lateBtn) lateBtn.classList.add("hidden");
         };
         box.appendChild(btn);
     });
-    
-    if(gameStarted) {
+
+    if (gameStarted) {
         const specBtn = document.createElement("button");
         specBtn.innerText = "👀 Watch as Spectator";
         specBtn.className = "secondary-btn";
@@ -661,46 +598,37 @@ function renderEmbeddedTeams(teams) {
         specBtn.onclick = () => setGamePhase("AUCTION");
         box.appendChild(specBtn);
     }
-    
+
     box.classList.remove("hidden");
 }
 
 socket.on("teamPicked", ({ team, user, remaining }) => {
-    // 1. UPDATE OWNERS LIST IMMEDIATELY
     if (team && user) {
-        teamOwners[team] = user; // <--- This fixes the Squad View "Available" bug
+        teamOwners[team] = user;
     } else if (team === null) {
-        // Team was freed (user left/kicked)
-        // We might need to find which team was freed, or just rely on 'remaining' list
-        // Ideally, we reset the owner locally if we knew which team it was.
-        // For now, asking for full state is safer to clear the name.
-        socket.emit("getAuctionState"); 
+        socket.emit("getAuctionState");
     }
 
-    // 2. Logic for ME
-    if(myTeam === team) {
+    if (myTeam === team) {
         document.getElementById("teamSelectionMain").classList.add("hidden");
-        if(gameStarted) {
+        if (gameStarted) {
             setGamePhase("AUCTION");
         } else {
             document.getElementById("waitingForHostMsg").classList.remove("hidden");
         }
         updateHeaderNotice();
         const lateBtn = document.getElementById("lateJoinBtn");
-        if(lateBtn) lateBtn.classList.add("hidden");
+        if (lateBtn) lateBtn.classList.add("hidden");
     }
 
-    // 3. Logic for OTHERS (Update buttons)
-    if(!myTeam) {
+    if (!myTeam) {
         renderEmbeddedTeams(remaining);
-        // Show join button if spectators exist
         const lateBtn = document.getElementById("lateJoinBtn");
         if (gameStarted && remaining.length > 0) {
             lateBtn.classList.remove("hidden");
         }
     }
 
-    // 4. FORCE UI REFRESH
     refreshGlobalUI();
 });
 
@@ -710,9 +638,8 @@ socket.on("adminPromoted", () => {
     alert("👑 You are now the Host!");
 });
 
-// Save Rules
 const saveRulesBtn = document.getElementById("saveRules");
-if(saveRulesBtn) {
+if (saveRulesBtn) {
     saveRulesBtn.onclick = () => {
         socket.emit("setRules", {
             maxPlayers: Number(document.getElementById("maxPlayers").value),
@@ -745,7 +672,7 @@ socket.on("auctionStarted", () => {
     auctionLive = true;
     auctionPaused = false;
     gameStarted = true;
-    
+
     if (myTeam) updateHeaderNotice();
     setGamePhase("AUCTION");
     updateAdminButtons(true);
@@ -755,7 +682,7 @@ socket.on("auctionState", s => {
     auctionLive = s.live;
     auctionPaused = s.paused;
     lastBidTeam = s.lastBidTeam;
-    if(s.player) {
+    if (s.player) {
         updatePlayerCard(s.player, s.bid);
     }
     updateBidButton(s);
@@ -766,11 +693,11 @@ socket.on("newPlayer", d => {
     auctionPaused = false;
     lastBidTeam = null;
     lastTickSecond = null;
-    
+
     document.getElementById('resultOverlay').classList.add('hidden');
     document.getElementById('currentBidder').classList.add('hidden');
     document.getElementById("auctionCard").classList.remove("pulse");
-    
+
     updatePlayerCard(d.player, d.bid);
     updateBidButton({ bid: d.bid });
 });
@@ -783,37 +710,37 @@ function updatePlayerCard(player, bid) {
 
 socket.on("timer", t => {
     document.getElementById("timer").innerText = "⏱ " + t;
-    if(auctionLive && !auctionPaused && t <= 3 && t > 0 && t !== lastTickSecond) {
+    if (auctionLive && !auctionPaused && t <= 3 && t > 0 && t !== lastTickSecond) {
         lastTickSecond = t;
-        soundTick.play().catch(()=>{});
+        soundTick.play().catch(() => {});
     }
 });
 
 const bidBtn = document.getElementById("bidBtn");
-if(bidBtn) {
+if (bidBtn) {
     bidBtn.onclick = () => {
-        if(!myTeam) return alert("Select a team first!");
-        if(bidBtn.disabled) return;
+        if (!myTeam) return alert("Select a team first!");
+        if (bidBtn.disabled) return;
         socket.emit("bid");
     };
 }
 
 socket.on("bidUpdate", data => {
     if (typeof soundBid !== 'undefined') {
-        soundBid.currentTime = 0; 
-        soundBid.play().catch(()=>{});
+        soundBid.currentTime = 0;
+        soundBid.play().catch(() => {});
     }
     document.getElementById("bid").innerText = `₹${data.bid.toFixed(2)} Cr`;
     lastBidTeam = data.team;
-    
+
     const badge = document.getElementById('currentBidder');
     badge.classList.remove('hidden');
     document.getElementById('bidderName').innerText = data.team;
-    
+
     const color = TEAM_COLORS[data.team] || "#22c55e";
     badge.style.border = `1px solid ${color}`;
     badge.style.setProperty("--team", color);
-    
+
     const card = document.getElementById("auctionCard");
     card.classList.add("pulse");
     setTimeout(() => card.classList.remove("pulse"), 300);
@@ -822,18 +749,17 @@ socket.on("bidUpdate", data => {
 });
 
 function updateBidButton(state) {
-    if(!myTeam || !auctionLive || auctionPaused) {
+    if (!myTeam || !auctionLive || auctionPaused) {
         bidBtn.disabled = true;
         return;
     }
-    if(lastBidTeam === myTeam) {
+    if (lastBidTeam === myTeam) {
         bidBtn.disabled = true;
         return;
     }
-    if(state && teamPurse && teamPurse[myTeam] !== undefined) {
-        // Simple client-side check, server does real check
-        const nextBid = (state.bid || 0) + 0.05; 
-        if(teamPurse[myTeam] < nextBid) {
+    if (state && teamPurse && teamPurse[myTeam] !== undefined) {
+        const nextBid = (state.bid || 0) + 0.05;
+        if (teamPurse[myTeam] < nextBid) {
             bidBtn.disabled = true;
             return;
         }
@@ -844,10 +770,9 @@ function updateBidButton(state) {
 socket.on("sold", d => {
     soundHammer.play();
     showResultStamp("SOLD", `TO ${d.team}`, TEAM_COLORS[d.team], false);
-    if(d.purse) teamPurse = d.purse;
+    if (d.purse) teamPurse = d.purse;
     updateHeaderNotice();
-    // Refresh squad view if open in tabs
-    if(document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
+    if (document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
         viewEmbeddedSquad(selectedSquadTeam);
     }
 });
@@ -867,7 +792,8 @@ function showResultStamp(title, detail, color, isUnsold) {
     t.innerText = title;
     d.innerText = detail;
     c.style.borderColor = isUnsold ? "" : color;
-    if(isUnsold) c.classList.add('unsold'); else c.classList.remove('unsold');
+    if (isUnsold) c.classList.add('unsold');
+    else c.classList.remove('unsold');
     overlay.classList.remove('hidden');
 }
 
@@ -881,12 +807,12 @@ socket.on("chatUpdate", d => {
     div.innerHTML = `<b style="color:${TEAM_COLORS[d.team] || '#aaa'}">${d.team} (${d.user})</b>: ${d.msg}`;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
-    if(chat.children.length > 20) chat.removeChild(chat.firstChild);
+    if (chat.children.length > 20) chat.removeChild(chat.firstChild);
 });
 
 window.sendChat = function() {
     const msgInput = document.getElementById("msg");
-    if(!msgInput.value.trim()) return;
+    if (!msgInput.value.trim()) return;
     socket.emit("chat", { user: username, team: myTeam || "Viewer", msg: msgInput.value });
     msgInput.value = "";
 };
@@ -908,11 +834,11 @@ window.switchInfoTab = function(tabName) {
 
     document.getElementById('panel-feed').classList.add('hidden');
     document.getElementById('panel-squads').classList.add('hidden');
-    
+
     const target = document.getElementById(`panel-${tabName}`);
-    if(target) {
+    if (target) {
         target.classList.remove('hidden');
-        target.style.display = "flex"; 
+        target.style.display = "flex";
     }
 
     if (tabName === 'squads') {
@@ -922,26 +848,26 @@ window.switchInfoTab = function(tabName) {
 
 function renderSquadTabs() {
     const container = document.getElementById("squadTabList");
-    if(!container) return;
-    
+    if (!container) return;
+
     const teams = Object.keys(allSquads).sort();
-    
+
     if (!selectedSquadTeam && myTeam) selectedSquadTeam = myTeam;
     if (!selectedSquadTeam && teams.length > 0) selectedSquadTeam = teams[0];
 
-    container.innerHTML = teams.map(t => 
+    container.innerHTML = teams.map(t =>
         `<button onclick="viewEmbeddedSquad('${t}')" 
          class="h-team-btn ${t === selectedSquadTeam ? 'active' : ''}">
          ${t}
          </button>`
     ).join("");
 
-    if(selectedSquadTeam) viewEmbeddedSquad(selectedSquadTeam);
+    if (selectedSquadTeam) viewEmbeddedSquad(selectedSquadTeam);
 }
 
 window.viewEmbeddedSquad = function(team) {
     selectedSquadTeam = team;
-    
+
     document.querySelectorAll('.h-team-btn').forEach(b => b.classList.remove('active'));
     Array.from(document.querySelectorAll('.h-team-btn')).find(b => b.innerText === team)?.classList.add('active');
 
@@ -964,16 +890,16 @@ window.viewEmbeddedSquad = function(team) {
 
     const content = document.getElementById("sq-list-content");
     const roles = { BAT: [], WK: [], ALL: [], BOWL: [] };
-    
-    squad.forEach(p => { 
-        if(p.role === "BAT") roles.BAT.push(p);
-        else if(p.role === "WK") roles.WK.push(p);
-        else if(p.role === "ALL") roles.ALL.push(p);
+
+    squad.forEach(p => {
+        if (p.role === "BAT") roles.BAT.push(p);
+        else if (p.role === "WK") roles.WK.push(p);
+        else if (p.role === "ALL") roles.ALL.push(p);
         else roles.BOWL.push(p);
     });
 
     Object.keys(roles).forEach(r => {
-        if(roles[r].length > 0) {
+        if (roles[r].length > 0) {
             const h = document.createElement("h4");
             h.innerText = r;
             h.style.color = "#facc15";
@@ -995,9 +921,6 @@ window.viewEmbeddedSquad = function(team) {
 };
 
 /* ================================================= */
-/* =========== 6. POPUPS (SETS, RULES, ADMIN) ====== */
-/* ================================================= */
-/* ================================================= */
 /* ========= 4. SETS & SQUAD VIEWING =============== */
 /* ================================================= */
 
@@ -1005,10 +928,9 @@ window.viewEmbeddedSquad = function(team) {
 let isSetsViewOpen = false;
 
 socket.on("setUpdate", data => {
-    remainingSets = data; 
-    // If the view is currently open, refresh it live to show changes immediately
-    if(isSetsViewOpen){
-        renderSetsPanel(); 
+    remainingSets = data;
+    if (isSetsViewOpen) {
+        renderSetsPanel();
     }
 });
 
@@ -1017,7 +939,7 @@ window.toggleSetsView = function() {
     const btn = document.getElementById("toggleSetsBtn");
     const setsPanel = document.getElementById("panel-sets");
     const tabs = document.getElementById("commandTabs");
-    
+
     // Panels to hide/show
     const feedPanel = document.getElementById("panel-feed");
     const squadsPanel = document.getElementById("panel-squads");
@@ -1027,9 +949,9 @@ window.toggleSetsView = function() {
 
     if (isSetsViewOpen) {
         // --- CHECK IF DATA EXISTS ---
-        if(!remainingSets || remainingSets.length === 0){
+        if (!remainingSets || remainingSets.length === 0) {
             alert("No sets available yet.");
-            isSetsViewOpen = false; // Reset state
+            isSetsViewOpen = false;
             return;
         }
 
@@ -1037,35 +959,33 @@ window.toggleSetsView = function() {
         btn.innerText = "❌ Close Sets View";
         btn.style.borderColor = "var(--accent)";
         btn.style.color = "var(--accent)";
-        
-        // Hide normal tabs content & nav bar
-        if(feedPanel) feedPanel.classList.add("hidden");
-        if(squadsPanel) squadsPanel.classList.add("hidden");
-        if(tabs) tabs.classList.add("hidden"); 
-        
+
+        if (feedPanel) feedPanel.classList.add("hidden");
+        if (squadsPanel) squadsPanel.classList.add("hidden");
+        if (tabs) tabs.classList.add("hidden");
+
         // Show Sets Panel
-        if(setsPanel) {
+        if (setsPanel) {
             setsPanel.classList.remove("hidden");
             renderSetsPanel();
         }
-        
+
     } else {
         // --- CLOSE SETS VIEW (Back to Normal) ---
         btn.innerText = "📦 View Upcoming Sets";
         btn.style.borderColor = "var(--gold)";
         btn.style.color = "var(--gold)";
 
-        if(setsPanel) setsPanel.classList.add("hidden");
-        if(tabs) tabs.classList.remove("hidden"); 
-        
-        // Restore the "Feed" tab by default so the UI isn't empty
-        switchInfoTab('feed'); 
+        if (setsPanel) setsPanel.classList.add("hidden");
+        if (tabs) tabs.classList.remove("hidden");
+
+        switchInfoTab('feed');
     }
 };
 
 function renderSetsPanel() {
     const container = document.getElementById("panel-sets");
-    if(!container || !remainingSets.length) return;
+    if (!container || !remainingSets.length) return;
 
     const activeSet = remainingSets[0];
 
@@ -1088,7 +1008,7 @@ function renderSetsPanel() {
     `;
 
     // Append Upcoming Sets
-    if(remainingSets.length > 1) {
+    if (remainingSets.length > 1) {
         remainingSets.slice(1).forEach(set => {
             html += `
                 <h2 class="set-title">📦 ${set.name} (${set.players.length})</h2>
@@ -1113,57 +1033,52 @@ function renderSetsPanel() {
 socket.on("squadData", squads => {
     allSquads = squads;
     // Refresh embedded view if active
-    if(document.getElementById('tab-squads').classList.contains('active')) {
+    if (document.getElementById('tab-squads').classList.contains('active')) {
         viewEmbeddedSquad(selectedSquadTeam);
     }
 });
 
-// --- ADMIN ---
 // --- ADMIN CONTROLS UI ---
 function updateAdminButtons(isStarted) {
     const adminPanel = document.getElementById("adminControls");
     if (!adminPanel) return;
 
-    // Show panel for everyone (to hold Leave/Rules buttons)
     adminPanel.classList.remove("hidden");
-    
+
     // HOST VIEW
     if (isHost) {
         const startBtn = document.getElementById("startBtn");
         const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn");
 
         if (!isStarted) {
-            if(startBtn) startBtn.classList.remove("hidden");
+            if (startBtn) startBtn.classList.remove("hidden");
             controls.forEach(b => b.classList.add("hidden"));
         } else {
-            if(startBtn) startBtn.classList.add("hidden");
+            if (startBtn) startBtn.classList.add("hidden");
             controls.forEach(b => b.classList.remove("hidden"));
         }
-        
-        // Remove Leave button if it was added dynamically (Hosts end game via End button usually)
+
         const leaveBtn = document.getElementById("leaveBtn");
-        if(leaveBtn) leaveBtn.remove();
+        if (leaveBtn) leaveBtn.remove();
 
     } else {
-        // NON-HOST VIEW (Spectators/Players)
-        // Hide Host Controls
+        // NON-HOST VIEW
         const startBtn = document.getElementById("startBtn");
-        if(startBtn) startBtn.classList.add("hidden");
+        if (startBtn) startBtn.classList.add("hidden");
         document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn").forEach(b => b.classList.add("hidden"));
 
-        // Add Leave Button if not present
         if (!document.getElementById("leaveBtn")) {
             const btn = document.createElement("button");
             btn.id = "leaveBtn";
             btn.className = "icon-btn";
-            btn.innerHTML = "🚪"; // Door icon
+            btn.innerHTML = "🚪";
             btn.title = "Leave Room";
             btn.style.background = "rgba(239, 68, 68, 0.2)";
             btn.style.color = "#fca5a5";
             btn.style.borderColor = "rgba(239, 68, 68, 0.4)";
             btn.style.marginLeft = "8px";
             btn.onclick = leaveRoom;
-            
+
             adminPanel.appendChild(btn);
         }
     }
@@ -1171,32 +1086,25 @@ function updateAdminButtons(isStarted) {
 
 // Leave Room Logic
 function leaveRoom() {
-    if(confirm("Are you sure you want to leave the room?")) {
-        socket.disconnect(); // Close socket
-        sessionStorage.clear(); // Clear session
-        window.location.href = "/"; // Go home
+    if (confirm("Are you sure you want to leave the room?")) {
+        socket.disconnect();
+        sessionStorage.clear();
+        window.location.href = "/";
     }
 }
 
-function leaveRoom() {
-    if(confirm("Are you sure you want to leave?")) {
-        socket.disconnect(); // Cut connection
-        sessionStorage.clear(); // Clear session
-        window.location.href = "/"; // Reload to home
-    }
-}
 const startBtn = document.getElementById("startBtn");
-if(startBtn) startBtn.onclick = () => socket.emit("adminAction", "start");
+if (startBtn) startBtn.onclick = () => socket.emit("adminAction", "start");
 
 const togglePauseBtn = document.getElementById("togglePauseBtn");
-if(togglePauseBtn) togglePauseBtn.onclick = () => socket.emit("adminAction", "togglePause");
+if (togglePauseBtn) togglePauseBtn.onclick = () => socket.emit("adminAction", "togglePause");
 
 const skipBtn = document.getElementById("skipBtn");
-if(skipBtn) skipBtn.onclick = () => socket.emit("adminAction", "skip");
+if (skipBtn) skipBtn.onclick = () => socket.emit("adminAction", "skip");
 
 const skipSetBtn = document.getElementById("skipSetBtn");
-if(skipSetBtn) skipSetBtn.onclick = () => {
-    if(confirm("⚠ Skip set?")) socket.emit("adminAction", "skipSet");
+if (skipSetBtn) skipSetBtn.onclick = () => {
+    if (confirm("⚠ Skip set?")) socket.emit("adminAction", "skipSet");
 };
 
 /* ================================================= */
@@ -1209,21 +1117,20 @@ function setGamePhase(phase) {
     const lateJoinBtn = document.getElementById("lateJoinBtn");
 
     if (phase === "TEAM_SELECT") {
-        if(teamCard) teamCard.classList.remove("hidden");
-        if(auctionCard) auctionCard.classList.add("hidden");
-        if(lateJoinBtn) lateJoinBtn.classList.add("hidden");
-    } 
-    else if (phase === "AUCTION") {
-        if(teamCard) teamCard.classList.add("hidden");
-        if(auctionCard) auctionCard.classList.remove("hidden");
-        if(lateJoinBtn && !myTeam) lateJoinBtn.classList.remove("hidden");
+        if (teamCard) teamCard.classList.remove("hidden");
+        if (auctionCard) auctionCard.classList.add("hidden");
+        if (lateJoinBtn) lateJoinBtn.classList.add("hidden");
+    } else if (phase === "AUCTION") {
+        if (teamCard) teamCard.classList.add("hidden");
+        if (auctionCard) auctionCard.classList.remove("hidden");
+        if (lateJoinBtn && !myTeam) lateJoinBtn.classList.remove("hidden");
     }
 }
 
 window.toggleLateJoin = function() {
     const teamCard = document.getElementById("teamSelectionMain");
     const auctionCard = document.getElementById("auctionCard");
-    
+
     if (teamCard.classList.contains("hidden")) {
         teamCard.classList.remove("hidden");
         auctionCard.classList.add("hidden");
@@ -1260,7 +1167,7 @@ function updateHeaderNotice() {
     document.getElementById("noticeTeam").innerText = myTeam;
     document.getElementById("noticeTeam").style.color = TEAM_COLORS[myTeam] || "white";
     document.getElementById("noticePurse").innerText = `₹${purse.toFixed(2)} Cr`;
-    document.getElementById("noticePurse").style.color = "#4ade80"; 
+    document.getElementById("noticePurse").style.color = "#4ade80";
 }
 
 window.showRules = function() {
@@ -1269,9 +1176,12 @@ window.showRules = function() {
 };
 
 function updateRulesUI() {
-    if(!activeRules) return;
+    if (!activeRules) return;
     const r = activeRules;
-    const set = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+    const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+    };
 
     set('pop_viewPurse', r.purse);
     set('pop_viewSquadSize', r.maxPlayers);
@@ -1281,15 +1191,15 @@ function updateRulesUI() {
     set('pop_viewWK', r.minWK);
     set('pop_viewAR', r.minAll);
     set('pop_viewSpin', r.minSpin);
-    set('pop_viewForeignXI', r.maxForeignXI); 
-    
+    set('pop_viewForeignXI', r.maxForeignXI);
+
     set('viewPurse', r.purse);
     set('viewSquadSize', r.maxPlayers);
     set('viewForeign', r.maxForeign);
 }
 
-function showScreen(id){
-    document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
+function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
 
@@ -1299,22 +1209,22 @@ function showScreen(id){
 
 socket.on("auctionEnded", () => {
     showScreen("playingXI");
-    document.body.style.overflow = "auto"; 
+    document.body.style.overflow = "auto";
     socket.emit("getMySquad");
 });
 
 socket.on("mySquad", ({ squad, rules }) => {
-    if(rules) {
+    if (rules) {
         activeRules = rules;
         updateRulesUI();
     }
 
     selectedXI = { BAT: [], BOWL: [], WK: [], ALL: [] };
     const container = document.getElementById("mySquadList");
-    if(!container || !squad) return;
-    
+    if (!container || !squad) return;
+
     container.innerHTML = "";
-    
+
     const grid = document.createElement("div");
     grid.className = "xi-select-container";
 
@@ -1322,11 +1232,11 @@ socket.on("mySquad", ({ squad, rules }) => {
 
     Object.keys(roles).forEach(key => {
         const players = squad.filter(p => {
-            if(key === "BOWL") return (p.role === "PACE" || p.role === "SPIN" || p.role === "BOWL");
+            if (key === "BOWL") return (p.role === "PACE" || p.role === "SPIN" || p.role === "BOWL");
             return p.role === key;
         });
 
-        if(players.length > 0) {
+        if (players.length > 0) {
             const title = document.createElement("div");
             title.className = "role-group-title";
             title.innerText = roles[key];
@@ -1335,13 +1245,13 @@ socket.on("mySquad", ({ squad, rules }) => {
             players.forEach(p => {
                 const btn = document.createElement("div");
                 btn.className = "xi-player-btn";
-                btn.id = `btn-${p.name.replace(/\s/g, '')}`; 
-                
+                btn.id = `btn-${p.name.replace(/\s/g, '')}`;
+
                 btn.innerHTML = `
                     <span>${p.name} ${p.foreign ? '✈️' : ''}</span>
                     <small>⭐${p.rating}</small>
                 `;
-                
+
                 btn.onclick = () => togglePlayerXI(p, btn, key);
                 grid.appendChild(btn);
             });
@@ -1355,11 +1265,11 @@ function togglePlayerXI(p, btnElement, roleKey) {
     const list = selectedXI[roleKey];
     const idx = list.findIndex(x => x.name === p.name);
 
-    if(idx > -1) {
+    if (idx > -1) {
         list.splice(idx, 1);
         btnElement.classList.remove("picked");
     } else {
-        if(countTotalXI() >= 11) return alert("Squad full (11/11)");
+        if (countTotalXI() >= 11) return alert("Squad full (11/11)");
         list.push(p);
         btnElement.classList.add("picked");
     }
@@ -1382,7 +1292,7 @@ function updateXIPreview() {
 
     // --- LIVE STATS BAR ---
     const statsBar = document.getElementById("xiStatsBar");
-    if(statsBar) {
+    if (statsBar) {
         const foreign = Object.values(selectedXI).flat().filter(p => p.foreign).length;
         const wk = selectedXI.WK.length;
         const bat = selectedXI.BAT.length;
@@ -1405,7 +1315,7 @@ function updateXIPreview() {
         `;
     }
 
-    if(btn) {
+    if (btn) {
         btn.innerText = `Submit XI (${count}/11)`;
         btn.disabled = count !== 11;
         btn.style.background = count === 11 ? "var(--success)" : "";
@@ -1415,26 +1325,26 @@ function updateXIPreview() {
     if (count === 0) {
         placeholder.classList.remove("hidden");
         card.classList.add("hidden");
-        if(saveBtn) saveBtn.classList.add("hidden");
-        return; 
+        if (saveBtn) saveBtn.classList.add("hidden");
+        return;
     } else {
         placeholder.classList.add("hidden");
         card.classList.remove("hidden");
-        if(saveBtn) saveBtn.classList.remove("hidden");
+        if (saveBtn) saveBtn.classList.remove("hidden");
     }
 
-    if(teamTitle) teamTitle.innerText = myTeam ? `${myTeam} XI` : "MY TEAM";
-    if(countLabel) countLabel.innerText = `${count}/11 Players`;
-    
+    if (teamTitle) teamTitle.innerText = myTeam ? `${myTeam} XI` : "MY TEAM";
+    if (countLabel) countLabel.innerText = `${count}/11 Players`;
+
     content.innerHTML = "";
     const renderOrder = ['WK', 'BAT', 'ALL', 'BOWL'];
-    
+
     renderOrder.forEach(roleKey => {
         const players = selectedXI[roleKey];
-        if(players && players.length > 0) {
+        if (players && players.length > 0) {
             const row = document.createElement("div");
             row.className = "sheet-role-group";
-            
+
             players.forEach(p => {
                 const pill = document.createElement("div");
                 pill.className = `sheet-player-pill ${p.foreign ? 'foreign' : ''}`;
@@ -1458,8 +1368,8 @@ window.downloadSheetPNG = function() {
 };
 
 window.submitXI = function() {
-    if(countTotalXI() !== 11) return;
-    if(confirm("Submit Playing XI? This is final.")) {
+    if (countTotalXI() !== 11) return;
+    if (confirm("Submit Playing XI? This is final.")) {
         socket.emit("submitXI", { xi: selectedXI });
     }
 };
@@ -1477,7 +1387,7 @@ socket.on("submitResult", (res) => {
 
 socket.on("leaderboard", (board) => {
     const tbody = document.getElementById("leaderboardBody");
-    if(tbody) {
+    if (tbody) {
         tbody.innerHTML = "";
         board.forEach((t, i) => {
             const tr = document.createElement("tr");
@@ -1496,14 +1406,14 @@ socket.on("leaderboard", (board) => {
 });
 
 function generateCreativeCardHTML(teamName, players, rating, count) {
-    if(!players || players.length === 0) return `<div class="sheet-empty">No Players</div>`;
+    if (!players || players.length === 0) return `<div class="sheet-empty">No Players</div>`;
 
     const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
     players.forEach(p => {
-        if(p.role === "BAT") roles.BAT.push(p);
-        else if(p.role === "WK") roles.WK.push(p);
-        else if(p.role === "ALL") roles.ALL.push(p);
-        else roles.BOWL.push(p); 
+        if (p.role === "BAT") roles.BAT.push(p);
+        else if (p.role === "WK") roles.WK.push(p);
+        else if (p.role === "ALL") roles.ALL.push(p);
+        else roles.BOWL.push(p);
     });
 
     let html = `
@@ -1542,11 +1452,11 @@ function generateCreativeCardHTML(teamName, players, rating, count) {
 function openSquadView(data) {
     const overlay = document.getElementById("squadViewOverlay");
     const container = document.getElementById("squadCaptureArea");
-    
+
     container.innerHTML = generateCreativeCardHTML(
-        data.team, 
-        data.xi, 
-        data.rating, 
+        data.team,
+        data.xi,
+        data.rating,
         data.xi ? data.xi.length : 0
     );
 
@@ -1564,35 +1474,16 @@ window.downloadLeaderboardPNG = function() {
 }
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
-/* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
     // 1. Re-render Team Selection Buttons (to hide taken teams)
-    // We assume 'renderEmbeddedTeams' uses the latest data we have.
-    // If we need fresh data, we can ask server, but usually local state is enough if updated correctly.
     const currentTab = document.querySelector('.info-tab-btn.active');
-    
+
     // 2. Refresh Squad View if it's currently open
     // This updates "Manager: Available" to "Manager: [Name]" instantly
-    if(currentTab && currentTab.id === 'tab-squads' && selectedSquadTeam) {
+    if (currentTab && currentTab.id === 'tab-squads' && selectedSquadTeam) {
         viewEmbeddedSquad(selectedSquadTeam);
     }
 
-    // 3. Refresh Team Buttons if on selection screen
-    // We need to know which teams are remaining. 
-    // Usually 'teamPicked' updates this, but we can trigger a re-render if needed.
-    
-    // 4. Update Header
+    // 3. Update Header
     updateHeaderNotice();
 }
-
-
-
-
-
-
-
-
-
-
-
-
