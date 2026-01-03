@@ -123,6 +123,15 @@
                 <button onclick="showRules()" class="secondary-btn" style="padding:6px 12px; font-size:0.8rem;">
                     📜 Rules
                 </button>
+            <span id="adminControls" class="admin-mini hidden" style="display:flex; align-items:center; gap: 5px;">
+            <span style="border-left:1px solid var(--border); height:20px; display:inline-block; margin: 0 5px;"></span>
+            
+            <button id="startBtn" class="primary-btn" style="padding:6px 12px; font-size:0.8rem;">START</button>
+            <button id="togglePauseBtn" class="secondary-btn" style="padding:6px;">⏸</button>
+            <button id="skipBtn" class="secondary-btn" style="padding:6px;">⏭</button>
+            <button id="skipSetBtn" class="secondary-btn" style="color: #fca5a5; padding:6px;">⏩ Set</button>
+            <button onclick="admin('end')" class="secondary-btn" style="color:var(--accent); padding:6px;">⛔ End</button>
+        </span>
             </div>
         </header>
 
@@ -149,7 +158,7 @@
         </div>
     </div>
 
-    <div class="auction glass hidden" id="auctionCard" style="margin-bottom: 10px;">
+    <div class="auction glass hidden" id="auctionCard">
         
         <div class="auction-header-role">
             <span id="playerMeta">WAITING FOR AUCTION...</span>
@@ -185,23 +194,6 @@
             </div>
         </div>
     </div>
-
-    <div id="adminControls" class="glass hidden" style="width: 100%; max-width: 500px; padding: 10px; margin-top: auto;">
-        
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
-            <button id="startBtn" class="primary-btn" style="grid-column: span 4; width: 100%;">START AUCTION</button>
-            
-            <button id="togglePauseBtn" class="secondary-btn hidden">⏯</button>
-            <button id="skipBtn" class="secondary-btn hidden">⏭</button>
-            <button id="skipSetBtn" class="secondary-btn hidden" style="color: #fca5a5;">Set</button>
-            <button id="endBtn" onclick="admin('end')" class="secondary-btn hidden" style="color:var(--accent);">⛔</button>
-        </div>
-
-        <button id="leaveBtn" class="hidden" style="width: 100%; background-color: #ef4444; color: white; font-weight: bold; border: none; padding: 12px; border-radius: 8px; margin-top: 5px;">
-            🏃 Leave Auction
-        </button>
-    </div>
-
 </div>
 
 
@@ -464,6 +456,7 @@
 </body>
 
 </html>
+
 
 
 
