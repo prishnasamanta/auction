@@ -1033,25 +1033,69 @@ socket.on("squadData", squads => {
 });
 
 // --- ADMIN ---
+/* ================= UPDATED ADMIN & LEAVE LOGIC ================= */
+
+// 1. Logic for the NEW Leave Button (Non-Hosts)
+const leaveBtn = document.getElementById("leaveBtn");
+if (leaveBtn) {
+    leaveBtn.onclick = () => {
+        if (confirm("⚠️ LEAVE AUCTION?\n\nYou will lose your spot immediately and be marked as 'Away'.\nDo you want to continue?")) {
+            // 1. Clear Local Session Data
+            sessionStorage.clear();
+            
+            // 2. Force Socket Disconnect (Server marks you as 'Away' -> 'Kicked')
+            socket.disconnect();
+            
+            // 3. Redirect to Main Screen
+            window.location.href = "/";
+        }
+    };
+}
+
+// 2. Updated Visibility Logic
 function updateAdminButtons(isStarted) {
     const adminPanel = document.getElementById("adminControls");
-    if(!isHost) {
-        adminPanel.classList.add("hidden");
-        return;
-    }
-    adminPanel.classList.remove("hidden");
     const startBtn = document.getElementById("startBtn");
-    const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn");
+    // Select all admin buttons (Pause, Skip, Set, End)
+    const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn, #endBtn"); 
+    const leaveBtn = document.getElementById("leaveBtn");
 
-    if (!isStarted) {
-        startBtn.classList.remove("hidden");
+    if (!adminPanel) return;
+
+    // --- SCENARIO A: I AM THE HOST ---
+    if (isHost) {
+        adminPanel.classList.remove("hidden"); // Host always sees the panel
+        if (leaveBtn) leaveBtn.classList.add("hidden"); // Host CANNOT see Leave button
+
+        if (!isStarted) {
+            // Game not started: Show Start, Hide others
+            if (startBtn) startBtn.classList.remove("hidden");
+            controls.forEach(b => b.classList.add("hidden"));
+        } else {
+            // Game started: Hide Start, Show Admin Controls
+            if (startBtn) startBtn.classList.add("hidden");
+            controls.forEach(b => b.classList.remove("hidden"));
+        }
+    } 
+    // --- SCENARIO B: I AM A PLAYER (Non-Host) ---
+    else {
+        // 1. Hide all Admin Tools first
+        if (startBtn) startBtn.classList.add("hidden");
         controls.forEach(b => b.classList.add("hidden"));
-    } else {
-        startBtn.classList.add("hidden");
-        controls.forEach(b => b.classList.remove("hidden"));
+
+        // 2. Check if I should see the Leave Button
+        // We show the panel ONLY if the user actually has a team (is playing)
+        if (myTeam && leaveBtn) {
+            adminPanel.classList.remove("hidden"); // Keep space occupied
+            leaveBtn.classList.remove("hidden");   // Show Red Leave Button
+        } else {
+            // If I am just a spectator or waiting to pick a team, hide the whole bar
+            adminPanel.classList.add("hidden");
+        }
     }
 }
 
+// 3. Existing Admin Event Listeners (Kept Intact)
 window.admin = function(action) {
     if(action === 'end' && !confirm("End Auction?")) return;
     socket.emit("adminAction", action);
@@ -1070,6 +1114,10 @@ const skipSetBtn = document.getElementById("skipSetBtn");
 if(skipSetBtn) skipSetBtn.onclick = () => {
     if(confirm("⚠ Skip set?")) socket.emit("adminAction", "skipSet");
 };
+
+// Optional: If you have an End Button in HTML
+const endBtn = document.getElementById("endBtn");
+if(endBtn) endBtn.onclick = () => window.admin('end');
 
 /* ================================================= */
 /* ========= 7. UTILS & HELPERS ==================== */
@@ -1456,3 +1504,4 @@ function refreshGlobalUI() {
     // 4. Update Header
     updateHeaderNotice();
 }
+
