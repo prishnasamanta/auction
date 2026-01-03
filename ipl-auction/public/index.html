@@ -89,42 +89,43 @@
     <section id="auctionUI" class="screen hidden">
 
         <header class="topbar">
-            <div class="top-left" style="display:flex; align-items:center; gap: 10px;">
-                <span class="brand">⚡LIVE AUCTION⚡</span>
-                
-                <div id="roomCodeBar" class="hidden" style="font-family:monospace; font-size: 0.75rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">
-                    CODE: <span id="roomCodeText" style="color:var(--primary); font-weight:bold;"></span>
-                </div>
+    <div class="top-left" style="display:flex; align-items:center; gap: 10px;">
+        <span class="brand">⚡LIVE AUCTION⚡</span>
+        
+        <div id="roomCodeBar" class="hidden" style="font-family:monospace; font-size: 0.75rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">
+            CODE: <span id="roomCodeText" style="color:var(--primary); font-weight:bold;"></span>
+        </div>
 
-                <button id="shareBtn" onclick="shareRoomLink()" class="secondary-btn hidden" style="padding:4px; border:none; display:flex; align-items:center; justify-content:center;">
-                    <img width="24" height="24" src="https://img.icons8.com/material-outlined/24/share.png" alt="share" style="filter: invert(1); display:block;"/>
-                </button>
+        <button id="shareBtn" onclick="shareRoomLink()" class="secondary-btn hidden" style="padding:4px; border:none; display:flex; align-items:center; justify-content:center;">
+            <img width="24" height="24" src="https://img.icons8.com/material-outlined/24/share.png" alt="share" style="filter: invert(1); display:block;"/>
+        </button>
 
-                <div style="position: relative; display: inline-block;">
-                    <button onclick="toggleUserList()" class="count-pill-btn">
-                        <span class="pulse-dot"></span>
-                        <span id="liveUserCount">1</span>
-                    </button>
+        <div style="position: relative; display: inline-block;">
+            <button onclick="toggleUserList()" class="count-pill-btn">
+                <span class="pulse-dot"></span>
+                <span id="liveUserCount">1</span>
+            </button>
 
-                    <div id="userListDropdown" class="user-list-dropdown hidden glass">
-                        <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
-                            Active Players
-                        </h4>
-                        <div id="userListContent"></div>
-                    </div>
-                </div>
+            <div id="userListDropdown" class="user-list-dropdown hidden glass">
+                <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
+                    Active Players
+                </h4>
+                <div id="userListContent"></div>
             </div>
+        </div>
+    </div>
 
-            <div class="top-right" style="display:flex; align-items:center; gap: 8px;">
-                <button id="lateJoinBtn" onclick="toggleLateJoin()" class="secondary-btn hidden" style="color:var(--gold); border-color:var(--gold); padding:6px 12px; font-size:0.8rem;">
-                    + Join Team
-                </button>
+    <div class="top-right" style="display:flex; align-items:center; gap: 8px;">
+        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="secondary-btn hidden" style="color:var(--gold); border-color:var(--gold); padding:6px 12px; font-size:0.8rem;">
+            + Join Team
+        </button>
 
-                <button onclick="showRules()" class="secondary-btn" style="padding:6px 12px; font-size:0.8rem;">
-                    📜 Rules
-                </button>
-            </div>
-        </header>
+        <button onclick="showRules()" class="secondary-btn" style="padding:6px 12px; font-size:0.8rem;">
+            📜 Rules
+        </button>
+        
+        </div>
+</header>
 
         <div class="auction-wrapper">
 
@@ -149,51 +150,60 @@
                     </div>
                 </div>
 
-                <div class="auction glass hidden" id="auctionCard">
-                    
-                    <div class="auction-header-role">
-                        <span id="playerMeta">WAITING FOR AUCTION...</span>
-                    </div>
+<div class="auction glass hidden" id="auctionCard">
+    
+    <div class="auction-header-role">
+        <span id="playerMeta">WAITING FOR AUCTION...</span>
+    </div>
 
-                    <div class="auction-body">
-                        <div id="playerInfoBox" style="position: relative;"> 
-                            <div id="resultOverlay" class="result-overlay hidden">
-                                <div class="stamp-container">
-                                    <div id="stampTitle" class="stamp-title">SOLD</div>
-                                    <div id="stampDetail" class="stamp-detail">TO CSK</div>
-                                </div>
-                            </div>
-                            <div id="playerName">---</div>
-                            <div style="margin-top:5px; font-size:0.8rem; opacity:0.6;">CURRENT PLAYER</div>
-                        </div>
-
-                        <div class="price-container">
-                            <div style="text-align:left;">
-                                <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">CURRENT BID</div>
-                                <div id="bid" style="line-height:1;">₹0.00 Cr</div>
-                            </div>
-                            <div id="currentBidder" class="bidder-badge hidden">
-                                <span id="bidderName">CSK</span>
-                            </div>
-                            <div style="text-align:right;">
-                                <div id="timer">10</div>
-                            </div>
-                        </div>
-
-                        <div class="card-padding-area">
-                            <button id="bidBtn">PLACE BID</button>
-                        </div>
-
-                        <div id="adminControls" class="admin-mini hidden" style="display:flex; justify-content:center; gap: 5px; padding: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
-                            <button id="startBtn" class="primary-btn" style="padding:6px 12px; font-size:0.8rem;">START</button>
-                            <button id="togglePauseBtn" class="secondary-btn" style="padding:6px;">⏯</button>
-                            <button id="skipBtn" class="secondary-btn" style="padding:6px;">⏭</button>
-                            <button id="skipSetBtn" class="secondary-btn" style="color: #fca5a5; padding:6px;">Skip Set</button>
-                            <button id="endBtn" onclick="admin('end')" class="secondary-btn" style="color:var(--accent); padding:6px;">⛔ End</button>
-                            <button id="leaveBtn" class="hidden" style="width: 100%; background-color: #ef4444; color: white; font-weight: bold; border: none; padding: 12px; border-radius: 8px;"> 🏃 Leave Auction </button>
-                        </div>
-                    </div>
+    <div class="auction-body">
+        <div id="playerInfoBox" style="position: relative;"> 
+            <div id="resultOverlay" class="result-overlay hidden">
+                <div class="stamp-container">
+                    <div id="stampTitle" class="stamp-title">SOLD</div>
+                    <div id="stampDetail" class="stamp-detail">TO CSK</div>
                 </div>
+            </div>
+            <div id="playerName">---</div>
+            <div style="margin-top:5px; font-size:0.8rem; opacity:0.6;">CURRENT PLAYER</div>
+        </div>
+
+        <div class="price-container">
+            <div style="text-align:left;">
+                <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">CURRENT BID</div>
+                <div id="bid" style="line-height:1;">₹0.00 Cr</div>
+            </div>
+            <div id="currentBidder" class="bidder-badge hidden">
+                <span id="bidderName">CSK</span>
+            </div>
+            <div style="text-align:right;">
+                <div id="timer">10</div>
+            </div>
+        </div>
+
+        <div class="card-padding-area">
+            <button id="bidBtn">PLACE BID</button>
+        </div>
+
+        <div id="adminControls" class="hidden" style="padding: 10px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.1);">
+            
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+                <button id="startBtn" class="primary-btn" style="grid-column: span 4; width: 100%;">START AUCTION</button>
+                
+                <button id="togglePauseBtn" class="secondary-btn hidden">⏯</button>
+                <button id="skipBtn" class="secondary-btn hidden">⏭</button>
+                <button id="skipSetBtn" class="secondary-btn hidden" style="color: #fca5a5;">Set</button>
+                <button id="endBtn" onclick="admin('end')" class="secondary-btn hidden" style="color:var(--accent);">⛔</button>
+            </div>
+
+            <button id="leaveBtn" class="hidden" style="width: 100%; background-color: #ef4444; color: white; font-weight: bold; border: none; padding: 12px; border-radius: 8px; margin-top: 5px;">
+                🏃 Leave Auction
+            </button>
+        </div>
+
+    </div>
+</div>
+
             </div>
 
             <div class="panel glass right command-center" style="position:relative; overflow:hidden; display: flex; flex-direction: column;">
@@ -437,3 +447,4 @@
 
 </body>
 </html>
+
