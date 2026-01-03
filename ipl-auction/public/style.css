@@ -44,6 +44,17 @@ body {
   display: flex;
   flex-direction: column;
 }
+/* --- SCROLLABLE CONTENT AREA --- */
+.screen { 
+  width: 100%;
+  flex: 1; /* Takes all available space between header/footer */
+  overflow-y: auto; /* Enables scrolling inside this area */
+  -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+  padding-bottom: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
 
 .screen.hidden { display: none !important; }
 
@@ -952,115 +963,5 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     box-shadow: none;
     border-radius: 0;
 }
-/* --- MOBILE "ONE SCREEN" APP LAYOUT --- */
-@media (max-width: 768px) {
-    /* 1. Lock the Screen Height */
-    html, body {
-        height: 100%;
-        overflow: hidden; /* Prevent body scroll */
-    }
-
-    #auctionUI {
-        height: 100dvh; /* Dynamic viewport height */
-        display: flex;
-        flex-direction: column;
-        padding-top: 50px; /* Space for fixed Header */
-    }
-
-    /* 2. Header stays Fixed at Top */
-    header.topbar {
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        z-index: 100;
-        height: 50px;
-        background: #0f172a; /* Match body bg */
-    }
-
-    /* 3. The Main Wrapper splits space */
-    .auction-wrapper {
-        display: flex;
-        flex-direction: column;
-        flex: 1; /* Fill remaining height */
-        overflow: hidden; /* No scroll on wrapper itself */
-        gap: 0; /* Remove gap */
-        padding: 0;
-    }
-
-    /* 4. TOP HALF: Auction Card (Fixed Size) */
-    .auction-center {
-        flex: 0 0 auto; /* Don't grow/shrink */
-        padding: 5px;
-        background: #0f172a; /* Solid bg behind it */
-        z-index: 20;
-        border-bottom: 1px solid #334155;
-    }
-
-    /* Compact the Auction Card Internals */
-    #auctionCard {
-        margin: 0;
-        padding: 8px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .auction-header-role { display: none; } /* Hide Role Header to save space */
-    
-    #playerInfoBox { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-    }
-    #playerName { font-size: 1.2rem; margin: 0; }
-    
-    .price-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 5px 0;
-    }
-    #bid { font-size: 1.6rem; margin: 0; }
-    
-    #bidBtn {
-        padding: 10px;
-        font-size: 1rem;
-        width: 100%;
-    }
-
-    /* 5. BOTTOM HALF: Chat/Logs Panel (Scrollable) */
-    .panel.right.command-center {
-        flex: 1; /* Take ALL remaining space */
-        margin: 0;
-        border-radius: 0;
-        background: #1e293b;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden; /* Contain scroll */
-    }
-
-    /* Force Chat Panel to fit */
-    #panel-feed {
-        height: 100% !important; /* Override inline styles */
-        padding-bottom: 0;
-    }
-
-    /* Make inner chat scrollable */
-    #chat {
-        flex: 1;
-        overflow-y: auto;
-        padding-bottom: 50px; /* Space for input bar */
-    }
-
-    /* Sticky Input Bar */
-    .chat-box {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        background: #1e293b;
-        padding: 8px;
-        border-top: 1px solid #334155;
-        z-index: 50;
-    }
-}
-
-
-
 
 
