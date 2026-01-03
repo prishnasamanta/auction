@@ -490,6 +490,36 @@ socket.on("roomUsersUpdate", (data) => {
 
     refreshGlobalUI();
 });
+// --- FEED LOGIC ---
+
+// 1. Toggle Expand/Collapse
+window.toggleFeed = function() {
+    const feed = document.getElementById('unifiedFeed');
+    const btn = document.getElementById('expandHandle');
+    
+    feed.classList.toggle('expanded');
+    
+    if(feed.classList.contains('expanded')) {
+        btn.innerText = "▲"; // Show Up arrow when open
+    } else {
+        btn.innerText = "▼"; // Show Down arrow when closed
+    }
+};
+
+// 2. Ensure Feed is visible when auction starts
+// Add this line inside your existing 'auctionStarted' or 'joinedRoom' socket events:
+// document.getElementById('unifiedFeed').classList.remove('hidden');
+
+// 3. Map Enter Key to Send Chat (Optional convenience)
+const msgInput = document.getElementById("msg");
+if(msgInput) {
+    msgInput.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            sendChat();
+        }
+    });
+}
 
 function setupAuctionScreen() {
     document.getElementById("landing").classList.add("hidden");
@@ -1544,6 +1574,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
