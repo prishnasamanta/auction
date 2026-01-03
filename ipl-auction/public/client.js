@@ -376,55 +376,64 @@ socket.on("joinedRoom", (data) => {
 
 /* ================= USER LIST LOGIC ================= */
 
+
 let userListInterval = null; // Global interval for the timer
 
-socket.on("roomUsersUpdate", (users) => {
-    // 1. Update Count
-    const activeCount = users.filter(u => u.status !== 'kicked').length;
+socket.on("roomUsersUpdate", (data) => {
+    // Handle both old format (array) and new format (object) for safety
+    const users = Array.isArray(data) ? data : data.users;
+    const counts = data.counts || null;
+
+    // --- 1. UPDATE BADGE (New Logic) ---
     const countEl = document.getElementById("liveUserCount");
     if (countEl) {
-        countEl.innerText = `${activeCount} / 10`;
-        
-        // Optional: Change text color if room is full (10 or more)
-        if (activeCount >= 10) {
-            countEl.style.color = "#4ade80"; // Bright Green
+        if (counts) {
+            // Format: "3 / 8" (3 Active Owners / 8 Teams Picked)
+            countEl.innerText = `${counts.activeOwners} / ${counts.totalTeams}`;
+            
+            // Color Logic
+            if (counts.activeOwners === 0 && counts.totalTeams > 0) {
+                 countEl.style.color = "#ef4444"; // Red (All Away)
+            } else if (counts.activeOwners === counts.totalTeams && counts.totalTeams > 0) {
+                 countEl.style.color = "#4ade80"; // Green (All Present)
+            } else {
+                 countEl.style.color = ""; // Default
+            }
         } else {
-            countEl.style.color = ""; // Default
+            // Fallback if counts missing
+            const activeCount = users.filter(u => u.status !== 'kicked').length;
+            countEl.innerText = activeCount;
         }
     }
 
     const box = document.getElementById("userListContent");
     if (!box) return;
-
     if (userListInterval) clearInterval(userListInterval);
     box.innerHTML = "";
-    
-    // 2. Check for Host Transfer (Am I the host now?)
+
+    // ... (Keep your existing Host Detection Logic) ...
     const me = users.find(u => u.name === username);
-    if (me && me.isHost) {
-        if (!isHost) {
-            isHost = true;
-            alert("👑 You are now the Host!");
-            updateAdminButtons(gameStarted); // Show buttons immediately
-        }
+    if (me && me.isHost && !isHost) {
+        isHost = true;
+        updateAdminButtons(gameStarted);
+        alert("🜲 You are now the Host!");
     }
 
-    // 3. Sort List
+    // ... (Keep your existing Sort Logic) ...
     users.sort((a, b) => {
         if (a.name === username) return -1;
-        if (a.isHost) return -1; // Host always on top
+        if (a.isHost) return -1;
         if (a.status === 'kicked' && b.status !== 'kicked') return 1;
         if (a.team && !b.team) return -1;
         if (!a.team && b.team) return 1;
         return a.name.localeCompare(b.name);
     });
 
-    const GRACE_PERIOD_MS = 60000; 
+    const GRACE_PERIOD_MS = 90000; 
 
-    // 4. Render
+    // ... (Keep your existing Render Logic) ...
     users.forEach(u => {
         const isMe = u.name === username;
-        
         let statusColor = '#22c55e'; 
         if (u.status === 'away') statusColor = '#eab308';
         if (u.status === 'kicked') statusColor = '#ef4444';
@@ -436,13 +445,9 @@ socket.on("roomUsersUpdate", (users) => {
             const targetTime = u.disconnectTime + GRACE_PERIOD_MS;
             extraInfoHTML = `<span class="away-timer" data-target="${targetTime}">...</span>`;
         }
-        if (u.status === 'kicked') {
-            extraInfoHTML = `<span style="font-size:0.7rem; color:#ef4444; margin-left:5px;">(Inactive)</span>`;
-        }
-
-        // --- CROWN ICON ---
+        
         const crownHTML = u.isHost ? `<span title="Host" style="margin-right:4px;">🜲</span>` : ``;
-
+        
         let badgeHTML = u.team 
             ? `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`
             : `<span style="opacity:0.5; font-size:0.7rem;">Spectator</span>`;
@@ -461,7 +466,7 @@ socket.on("roomUsersUpdate", (users) => {
         box.appendChild(div);
     });
 
-    // ... (Keep existing setInterval logic for timers) ...
+    // ... (Keep your existing Interval Logic for timers) ...
     userListInterval = setInterval(() => {
         const timers = document.querySelectorAll('.away-timer');
         if (timers.length === 0) return;
@@ -478,14 +483,9 @@ socket.on("roomUsersUpdate", (users) => {
             }
         });
     }, 1000);
-    
-    // 5. TRIGGER GLOBAL REFRESH
-    // This ensures squad view gets the updated manager name if a user left/joined
+
     refreshGlobalUI();
 });
-
-
-
 
 function setupAuctionScreen() {
     document.getElementById("landing").classList.add("hidden");
@@ -1455,6 +1455,7 @@ function refreshGlobalUI() {
     // 4. Update Header
     updateHeaderNotice();
 }
+
 
 
 
