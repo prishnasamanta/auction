@@ -989,25 +989,69 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-radius: 0;
 }
 /* Update or Add this to style.css */
-
+/* --- Admin Controls Container --- */
 #adminControls {
-    transition: all 0.3s ease;
-}
-
-#adminControls .secondary-btn {
-    width: 100%;
     display: flex;
-    align-items: center;
     justify-content: center;
-    padding: 12px 0; /* Taller touch targets */
-    font-size: 1.1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    align-items: center;
+    gap: 8px; /* Space between buttons */
+    margin-top: 10px;
+    flex-wrap: wrap; /* Allows wrapping on small screens */
 }
 
-#adminControls .secondary-btn:active {
-    background: rgba(255, 255, 255, 0.2);
+/* --- General Style for All Admin Buttons --- */
+#adminControls button {
+    padding: 6px 12px;       /* Smaller padding top/bottom, left/right */
+    font-size: 0.75rem;      /* Smaller text size */
+    font-weight: 700;        /* Bold text */
+    border-radius: 20px;     /* Rounded "Pill" shape */
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: transform 0.1s ease, opacity 0.2s;
+    width: auto;             /* Prevent them from stretching full width */
+    min-width: 80px;         /* Minimum width so text fits */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
+
+#adminControls button:active {
+    transform: scale(0.95);  /* Click effect */
+}
+
+/* --- Specific Colors for Function --- */
+
+/* Pause Button (Amber/Yellow) */
+#togglePauseBtn {
+    background-color: #f59e0b; 
+    color: #000;
+}
+
+/* Skip Button (Blue) */
+#skipBtn {
+    background-color: #3b82f6; 
+    color: #fff;
+}
+
+/* Skip Set Button (Gray/Slate) */
+#skipSetBtn {
+    background-color: #475569; 
+    color: #fff;
+}
+
+/* End Button (Red) */
+#endBtn {
+    background-color: #ef4444; 
+    color: #fff;
+}
+
+/* Leave Button (For players, outlined) */
+#leaveBtn {
+    background-color: transparent;
+    border: 1px solid #ef4444 !important;
+    color: #ef4444;
+}
+
 
 
 
