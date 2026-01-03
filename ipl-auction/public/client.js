@@ -690,10 +690,29 @@ socket.on("newPlayer", d => {
 });
 
 function updatePlayerCard(player, bid) {
-    document.getElementById("playerName").innerText = player.name;
-    document.getElementById("playerMeta").innerText = `${player.role} • ⭐${player.rating}`;
-    document.getElementById("bid").innerText = `₹${bid.toFixed(2)} Cr`;
+    // 1. Update Name (Big Text)
+    const nameEl = document.getElementById("playerName");
+    if(nameEl) nameEl.innerText = player.name;
+
+    // 2. Update Meta (Center Item: Role & Rating)
+    const metaEl = document.getElementById("playerMeta");
+    if(metaEl) {
+        // Format: "BAT • ⭐85"
+        metaEl.innerText = `${player.role} • ⭐${player.rating}`;
+        
+        // Optional: Color code the Role
+        if(player.role === "BAT") metaEl.style.color = "#facc15"; // Yellow
+        else if(player.role === "BOWL" || player.role === "PACE" || player.role === "SPIN") metaEl.style.color = "#38bdf8"; // Blue
+        else if(player.role === "ALL") metaEl.style.color = "#a855f7"; // Purple
+        else if(player.role === "WK") metaEl.style.color = "#fb923c"; // Orange
+        else metaEl.style.color = "#cbd5e1"; // Default
+    }
+
+    // 3. Update Bid Amount
+    const bidEl = document.getElementById("bid");
+    if(bidEl) bidEl.innerText = `₹${bid.toFixed(2)} Cr`;
 }
+
 
 socket.on("timer", t => {
     document.getElementById("timer").innerText = "⏱" + t;
@@ -1171,17 +1190,40 @@ function closeUserListOutside(e) {
 }
 
 function updateHeaderNotice() {
+    // 1. Handle Spectator Mode
     if (!myTeam) {
-        document.getElementById("noticeTeam").innerText = "SPECTATOR";
-        document.getElementById("noticePurse").innerText = "";
+        const teamEl = document.getElementById("noticeTeam");
+        const purseEl = document.getElementById("noticePurse");
+        
+        if(teamEl) {
+            teamEl.innerText = "SPECTATOR";
+            teamEl.style.color = "#94a3b8"; // Muted gray
+        }
+        if(purseEl) {
+            purseEl.innerText = ""; // Hide purse for spectators
+        }
         return;
     }
+
+    // 2. Handle Team Owner Mode
     const purse = teamPurse[myTeam] !== undefined ? teamPurse[myTeam] : 0;
-    document.getElementById("noticeTeam").innerText = myTeam;
-    document.getElementById("noticeTeam").style.color = TEAM_COLORS[myTeam] || "white";
-    document.getElementById("noticePurse").innerText = `₹${purse.toFixed(2)} Cr`;
-    document.getElementById("noticePurse").style.color = "#4ade80"; 
+    const teamEl = document.getElementById("noticeTeam");
+    const purseEl = document.getElementById("noticePurse");
+
+    if(teamEl) {
+        teamEl.innerText = myTeam;
+        // Use the team color for the name
+        teamEl.style.color = TEAM_COLORS[myTeam] || "white";
+        // Optional: Add a text shadow for better visibility
+        teamEl.style.textShadow = `0 0 10px ${TEAM_COLORS[myTeam] || 'rgba(0,0,0,0)'}`;
+    }
+
+    if(purseEl) {
+        purseEl.innerText = `₹${purse.toFixed(2)} Cr`;
+        purseEl.style.color = "#4ade80"; // Keep Green for money
+    }
 }
+
 
 window.showRules = function() {
     document.getElementById('viewRulesOverlay').classList.remove('hidden');
@@ -1502,6 +1544,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
