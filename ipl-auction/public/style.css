@@ -963,5 +963,27 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     box-shadow: none;
     border-radius: 0;
 }
+/* Update or Add this to style.css */
+
+#adminControls {
+    transition: all 0.3s ease;
+}
+
+#adminControls .secondary-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0; /* Taller touch targets */
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#adminControls .secondary-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+
 
 
