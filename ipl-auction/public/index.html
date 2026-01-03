@@ -163,42 +163,33 @@
         </div>
     </div>
 
-    <div class="auction glass hidden" id="auctionCard">
+<div id="auctionCard" class="card">
+    
+    <div class="auction-header-row">
+        <div id="noticeTeam" class="meta-item align-left">--</div>
         
-        <div class="auction-header-role">
-            <span id="playerMeta">WAITING FOR AUCTION...</span>
-        </div>
-
-        <div class="auction-body">
-            <div id="playerInfoBox" style="position: relative;"> 
-                <div id="resultOverlay" class="result-overlay hidden">
-                    <div class="stamp-container">
-                        <div id="stampTitle" class="stamp-title">SOLD</div>
-                        <div id="stampDetail" class="stamp-detail">TO CSK</div>
-                    </div>
-                </div>
-                <div id="playerName">---</div>
-                <div style="margin-top:5px; font-size:0.8rem; opacity:0.6;">CURRENT PLAYER</div>
-            </div>
-
-            <div class="price-container">
-                <div style="text-align:left;">
-                    <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">CURRENT BID</div>
-                    <div id="bid" style="line-height:1;">₹0.00 Cr</div>
-                </div>
-                <div id="currentBidder" class="bidder-badge hidden">
-                    <span id="bidderName">CSK</span>
-                </div>
-                <div style="text-align:right;">
-                    <div id="timer">10</div>
-                </div>
-            </div>
-
-            <div class="card-padding-area">
-                <button id="bidBtn">PLACE BID</button>
-            </div>
-        </div>
+        <div id="playerMeta" class="meta-item align-center">Waiting...</div>
+        
+        <div id="noticePurse" class="meta-item align-right">₹0.00 Cr</div>
     </div>
+
+    <div class="name-container">
+        <h1 id="playerName">Waiting for Auction...</h1>
+    </div>
+
+    <div class="bid-timer-area">
+        <div class="bid-box">
+            <span class="label">CURRENT BID</span>
+            <span id="bid" class="amount">₹0.00 Cr</span>
+        </div>
+        <div id="timer" class="timer-box">00</div>
+    </div>
+    
+    <div style="margin-top: 15px;">
+        <button id="bidBtn" class="primary-btn full-width">BID</button>
+    </div>
+</div>
+
 </div>
 
 
@@ -461,6 +452,7 @@
 </body>
 
 </html>
+
 
 
 
