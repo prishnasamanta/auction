@@ -197,58 +197,56 @@
           </div>
         </div>
       </div>
-    <div id="unifiedFeed" class="glass hidden">
+<div id="commandCenter" class="glass">
     
-    <div id="logArea">
-        <div id="log">
-            <div class="log-item">Waiting for auction...</div>
-        </div>
+    <div class="cc-tabs">
+        <button class="cc-tab-btn" onclick="switchCcTab('sets')">📦 Sets</button>
+        <button class="cc-tab-btn active" onclick="switchCcTab('feed')">💬 Feed</button>
+        <button class="cc-tab-btn" onclick="switchCcTab('squads')">👥 Squads</button>
     </div>
 
-    <div id="chatArea">
-        <div id="chat">
-            </div>
+    <div id="ccContent" class="cc-content">
         
-        <div class="feed-input-row">
-            <input type="text" id="msg" placeholder="Chat with room..." autocomplete="off">
-            <button class="primary-btn" onclick="sendChat()">➤</button>
+        <div id="view-sets" class="cc-view hidden">
+            <div id="panel-sets" class="scroll-view">
+                <div style="padding:10px; color:#aaa; text-align:center;">Loading Sets...</div>
+            </div>
         </div>
+
+        <div id="view-feed" class="cc-view">
+            <div id="miniLog">
+                <div id="log">
+                    <div class="log-item">Waiting for auction...</div>
+                </div>
+            </div>
+            <div id="feedChat">
+                <div id="chat"></div>
+                <div class="feed-input-wrapper">
+                    <input type="text" id="msg" placeholder="Chat..." autocomplete="off">
+                    <button class="primary-btn" onclick="sendChat()">➤</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-squads" class="cc-view hidden">
+            <div id="squadTabList" class="horizontal-tabs"></div>
+            <div id="embeddedSquadView" class="scroll-view">
+                <div style="padding:10px; color:#aaa; text-align:center;">Select a team</div>
+            </div>
+        </div>
+
     </div>
 
-    <button id="expandHandle" onclick="toggleFeed()">
-        ▼
-    </button>
+    <button id="ccExpandBtn" onclick="toggleCcExpand()">▼</button>
+</div>
+
+
 </div>
 
 </div>
 
-</div>
 
-
-            <div class="panel glass right command-center" style="position:relative; overflow:hidden; display: flex; flex-direction: column;">
-                
-                <button id="toggleSetsBtn" onclick="toggleSetsView()" class="secondary-btn" style="width:100%; margin-bottom:10px; border-style:dashed; color:var(--gold); border-color:var(--gold); z-index:10; flex-shrink: 0;">
-                    📦 View Upcoming Sets
-                </button>
-
-                <div id="commandTabs" class="info-tabs" style="flex-shrink: 0;">
-                    <button onclick="switchInfoTab('feed')" id="tab-feed" class="info-tab-btn active">📢 Live Feed</button>
-                    <button onclick="switchInfoTab('squads')" id="tab-squads" class="info-tab-btn">🧢 Squads</button>
-                </div>
-
-
-                <div id="panel-squads" class="tab-content hidden" style="flex: 1; display:flex; flex-direction:column; min-height: 0; overflow: hidden;">
-                    <div id="squadTabList" class="horizontal-tabs" style="flex-shrink: 0;"></div>
-                    <div id="embeddedSquadView" class="scroll" style="flex:1; background:rgba(0,0,0,0.2); border-radius:8px; padding:10px; margin-top:10px; overflow-y: auto;">
-                        <div style="text-align:center; color:#666; margin-top:50px;">Select a team...</div>
-                    </div>
-                </div>
-
-                <div id="panel-sets" class="tab-content hidden scroll" style="flex: 1; background:rgba(15, 23, 42, 0.5); border-radius:8px; overflow-y: auto;">
-                </div>
-
-            </div>
-            
+             
             </div>
     </section>
 
@@ -467,6 +465,7 @@
 </body>
 
 </html>
+
 
 
 
