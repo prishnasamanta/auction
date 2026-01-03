@@ -1503,5 +1503,7 @@ function refreshGlobalUI() {
     
     // 4. Update Header
     updateHeaderNotice();
+    updateAdminButtons(gameStarted);
 }
+
 
