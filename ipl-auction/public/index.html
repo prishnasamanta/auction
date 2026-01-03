@@ -88,52 +88,57 @@
 
     <section id="auctionUI" class="screen hidden">
 
-        <header class="topbar">
-            <div class="top-left" style="display:flex; align-items:center; gap: 10px;">
-                <span class="brand">⚡LIVE AUCTION⚡</span>
-                
-                <div id="roomCodeBar" class="hidden" style="font-family:monospace; font-size: 0.75rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">
-                    CODE: <span id="roomCodeText" style="color:var(--primary); font-weight:bold;"></span>
-                </div>
+   <header class="topbar">
+    <div class="top-left" style="display:flex; align-items:center; gap: 8px;">
+        <span class="brand">⚡<span class="desktop-only">LIVE </span>IPL</span>
+        
+        <div id="roomCodeBar" class="hidden" style="font-family:monospace; font-size: 0.75rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">
+            <span id="roomCodeText" style="color:var(--primary); font-weight:bold;"></span>
+        </div>
 
-                <button id="shareBtn" onclick="shareRoomLink()" class="secondary-btn hidden" style="padding:4px; border:none; display:flex; align-items:center; justify-content:center;">
-                    <img width="24" height="24" src="https://img.icons8.com/material-outlined/24/share.png" alt="share" style="filter: invert(1); display:block;"/>
-                </button>
+        <button id="shareBtn" onclick="shareRoomLink()" class="secondary-btn hidden" style="padding:4px; border:none; display:flex; align-items:center; justify-content:center;">
+            <img width="18" height="18" src="https://img.icons8.com/material-outlined/24/share.png" alt="share" style="filter: invert(1); display:block;"/>
+        </button>
 
-                <div style="position: relative; display: inline-block;">
-                    <button onclick="toggleUserList()" class="count-pill-btn">
-                        <span class="pulse-dot"></span>
-                        <span id="liveUserCount">1</span>
-                    </button>
-
-                    <div id="userListDropdown" class="user-list-dropdown hidden glass">
-                        <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
-                            Active Players
-                        </h4>
-                        <div id="userListContent"></div>
-                    </div>
-                </div>
+        <div style="position: relative; display: inline-block;">
+            <button onclick="toggleUserList()" class="count-pill-btn">
+                <span class="pulse-dot"></span>
+                <span id="liveUserCount">1</span>
+            </button>
+            <div id="userListDropdown" class="user-list-dropdown hidden glass">
+                <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">Active Players</h4>
+                <div id="userListContent"></div>
             </div>
+        </div>
+    </div>
 
-            <div class="top-right" style="display:flex; align-items:center; gap: 8px;">
-                <button id="lateJoinBtn" onclick="toggleLateJoin()" class="secondary-btn hidden" style="color:var(--gold); border-color:var(--gold); padding:6px 12px; font-size:0.8rem;">
-                    + Join Team
-                </button>
+    <div class="top-right" style="display:flex; align-items:center; gap: 5px;">
+        
+        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="secondary-btn hidden">
+            <span>+</span> <span class="desktop-only">Join</span>
+        </button>
 
-                <button onclick="showRules()" class="secondary-btn" style="padding:6px 12px; font-size:0.8rem;">
-                    📜 Rules
-                </button>
-            <span id="adminControls" class="admin-mini hidden" style="display:flex; align-items:center; gap: 5px;">
-            <span style="border-left:1px solid var(--border); height:20px; display:inline-block; margin: 0 5px;"></span>
+        <button onclick="showRules()" class="secondary-btn">
+            <span>📜</span> <span class="desktop-only">Rules</span>
+        </button>
+        
+        <span id="adminControls" class="admin-mini hidden">
+            <span class="divider-vertical"></span>
             
-            <button id="startBtn" class="primary-btn" style="padding:6px 12px; font-size:0.8rem;">START</button>
-            <button id="togglePauseBtn" class="secondary-btn" style="padding:6px;">⏸</button>
-            <button id="skipBtn" class="secondary-btn" style="padding:6px;">⏭</button>
-            <button id="skipSetBtn" class="secondary-btn" style="color: #fca5a5; padding:6px;">⏩ Set</button>
-            <button onclick="admin('end')" class="secondary-btn" style="color:var(--accent); padding:6px;">⛔ End</button>
+            <button id="startBtn" class="primary-btn">▶ <span class="desktop-only">START</span></button>
+            <button id="togglePauseBtn" class="secondary-btn hidden">⏯</button>
+            <button id="skipBtn" class="secondary-btn hidden">⏭</button>
+            <button id="skipSetBtn" class="secondary-btn hidden" style="color: #fca5a5;">⏩<span class="desktop-only"> Set</span></button>
+            <button id="endBtn" onclick="admin('end')" class="secondary-btn hidden" style="color:var(--accent);">⛔</button>
+            
+            <button id="leaveBtn" class="hidden leave-btn">
+                🏃 <span class="desktop-only">Leave</span>
+            </button>
         </span>
-            </div>
-        </header>
+
+    </div>
+</header>
+
 
         <div class="auction-wrapper">
 
@@ -456,6 +461,7 @@
 </body>
 
 </html>
+
 
 
 
