@@ -197,6 +197,29 @@
           </div>
         </div>
       </div>
+    <div id="unifiedFeed" class="glass hidden">
+    
+    <div id="logArea">
+        <div id="log">
+            <div class="log-item">Waiting for auction...</div>
+        </div>
+    </div>
+
+    <div id="chatArea">
+        <div id="chat">
+            </div>
+        
+        <div class="feed-input-row">
+            <input type="text" id="msg" placeholder="Chat with room..." autocomplete="off">
+            <button class="primary-btn" onclick="sendChat()">➤</button>
+        </div>
+    </div>
+
+    <button id="expandHandle" onclick="toggleFeed()">
+        ▼
+    </button>
+</div>
+
 </div>
 
 </div>
@@ -461,6 +484,7 @@
 </body>
 
 </html>
+
 
 
 
