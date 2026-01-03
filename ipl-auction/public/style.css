@@ -964,66 +964,157 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     box-shadow: none;
     border-radius: 0;
 }
-
-/* --- MOBILE OPTIMIZATIONS --- */
-@media (max-width: 768px) {
-    
-    /* 1. Shrink the main Auction Card */
-    #auctionCard {
-        padding: 10px;          /* Reduce padding */
-        margin: 10px auto;      /* Reduce margin */
-        max-width: 95%;         /* Use full width */
-    }
-
-    /* 2. Make the Player Image/Name section tighter */
-    .player-card-header {
-        flex-direction: row;    /* Keep side-by-side if possible, or adjust */
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 5px;
-    }
-
-    #playerName {
-        font-size: 1.2rem;      /* Smaller Name */
-    }
-
-    #playerMeta {
-        font-size: 0.8rem;      /* Smaller Role/Rating */
-        margin-bottom: 5px;
-    }
-
-    /* 3. Make the BID Amount smaller and compact */
-    #bid {
-        font-size: 1.8rem;      /* Reduce from huge size */
-        margin: 5px 0;
-    }
-
-    /* 4. Compact the Action Buttons (Bid, Admin controls) */
-    .action-bar {
-        gap: 8px;
-        flex-wrap: nowrap;      /* Keep on one line */
-    }
-
-    .action-bar button {
-        padding: 8px 12px;
-        font-size: 0.9rem;
-    }
-
-    /* 5. Adjust the Chat/Log container height */
-    /* This ensures the bottom section is visible without scrolling */
-    .info-panel {
-        height: 35vh;           /* Fix height to ~35% of screen */
-        min-height: 200px;
-    }
-
-    /* 6. Hide non-essential elements on mobile if needed */
-    .auction-header-logo {
-        display: none;          /* Optional: Hide logo to save space */
-    }
+/* --- RESET & APP SHELL --- */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* CRITICAL: Disables body scroll */
+    background: #0f172a;
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
 }
 
+/* --- MAIN CONTAINER (The "One Screen") --- */
+#auctionUI {
+    display: flex;
+    flex-direction: column; /* Stack top to bottom */
+    height: 100dvh;         /* dynamic viewport height (fixes mobile url bar issue) */
+    max-width: 1200px;
+    margin: 0 auto;
+}
 
-/*
+/* --- TOP SECTION: Auction Card --- */
+#auctionCard {
+    flex: 0 0 auto; /* Don't grow, don't shrink. Take only needed space */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 10px;
+    z-index: 10;
+}
+
+.player-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#playerName { font-size: 1.4rem; font-weight: 800; color: #fff; margin: 0; }
+#playerMeta { font-size: 0.9rem; color: #94a3b8; }
+#bid { font-size: 2rem; font-weight: 900; color: #facc15; margin: 5px 0; text-align: center; }
+
+/* Compact Stats Row */
+.stat-badges {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+.stat-badge { background: #334155; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; }
+
+/* --- MIDDLE SECTION: Action Bar --- */
+.action-bar {
+    display: flex;
+    gap: 10px;
+    padding: 0 10px 10px 10px;
+    justify-content: center;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white; border: none; padding: 12px 30px; font-size: 1.1rem;
+    font-weight: bold; border-radius: 8px; cursor: pointer; flex: 1;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+.primary-btn:disabled { background: #334155; color: #64748b; box-shadow: none; }
+
+/* --- BOTTOM SECTION: Tabs & Chat (Fills remaining space) --- */
+.info-panel {
+    flex: 1; /* GROW to fill all remaining space! */
+    display: flex;
+    flex-direction: column;
+    background: #1e293b;
+    border-radius: 16px 16px 0 0;
+    overflow: hidden; /* Contain inner scrolls */
+    margin-top: -10px; /* Slight overlap for styling */
+    position: relative;
+    z-index: 5;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+}
+
+/* Tabs Header */
+.tabs-header {
+    display: flex;
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+}
+.info-tab-btn {
+    flex: 1;
+    background: none; border: none; color: #94a3b8;
+    padding: 12px; font-weight: bold; cursor: pointer;
+    border-bottom: 3px solid transparent;
+}
+.info-tab-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; background: #1e293b; }
+
+/* Scrollable Content Area */
+.panel-content {
+    flex: 1;
+    overflow-y: auto; /* SCROLL HERE ONLY */
+    padding: 10px;
+    position: relative;
+}
+
+/* Chat Styling */
+#chat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 60px; /* Space for input bar */
+}
+#chat div { font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; }
+
+/* Sticky Chat Input */
+.chat-input-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 10px;
+    background: #1e293b;
+    border-top: 1px solid #334155;
+    display: flex;
+    gap: 8px;
+}
+.chat-input-bar input {
+    flex: 1; background: #0f172a; border: 1px solid #334155;
+    color: white; padding: 10px; border-radius: 6px; outline: none;
+}
+.chat-input-bar button {
+    background: #38bdf8; color: #000; border: none;
+    padding: 0 15px; border-radius: 6px; font-weight: bold;
+}
+
+/* --- DESKTOP TWEAKS (Keep layout bigger on PC) --- */
+@media (min-width: 769px) {
+    #auctionUI {
+        flex-direction: row; /* Side by side on PC */
+        gap: 20px;
+        padding: 20px;
+    }
+    #auctionCard {
+        flex: 1;
+        background: #1e293b;
+        border-radius: 16px;
+        border: 1px solid #334155;
+    }
+    .info-panel {
+        width: 350px; /* Fixed width sidebar */
+        flex: none;
+        height: 100%;
+        margin-top: 0;
+        border-radius: 16px;
+    }
+}
 
 
 
@@ -1074,6 +1165,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 */
+
 
 
 
