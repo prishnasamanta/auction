@@ -238,8 +238,78 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   position: sticky; /* Sticky header within the flex column */
   top: 0;
 }
-.topbar .admin-mini { flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
-.topbar .admin-mini button { padding: 4px 8px !important; font-size: 0.75rem !important; }
+/* --- HEADER BUTTON OPTIMIZATION --- */
+
+/* Base Button Styles for Header */
+.topbar button {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 32px; /* Fixed height for uniformity */
+}
+
+/* Admin Container */
+.admin-mini {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Vertical Divider line between Rules and Admin */
+.divider-vertical {
+    border-left: 1px solid rgba(255,255,255,0.2);
+    height: 18px;
+    margin: 0 4px;
+}
+
+/* Specific Button Colors */
+.leave-btn {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid #ef4444;
+}
+.leave-btn:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* --- MOBILE TWEAKS (The Magic Part) --- */
+@media (max-width: 600px) {
+    /* 1. Hide Text, Show Icons Only */
+    .desktop-only {
+        display: none !important;
+    }
+
+    /* 2. Make buttons square-ish and smaller */
+    .topbar button {
+        padding: 0;
+        width: 32px; /* Square button */
+        height: 32px;
+        justify-content: center;
+        font-size: 1rem; /* Larger icon */
+    }
+
+    /* 3. Adjust spacing */
+    .top-left, .top-right {
+        gap: 4px !important;
+    }
+    
+    /* 4. Ensure admin container stays horizontal */
+    .admin-mini {
+        gap: 3px;
+    }
+
+    /* 5. Start button special styling for mobile */
+    #startBtn {
+        width: auto; /* Allow start button to be slightly wider if needed */
+        padding: 0 10px;
+        background: var(--success);
+    }
+}
+
 .brand { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; color: var(--primary); letter-spacing: 1px; }
 
 .auction-wrapper {
@@ -983,6 +1053,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 #adminControls .secondary-btn:active {
     background: rgba(255, 255, 255, 0.2);
 }
+
 
 
 
