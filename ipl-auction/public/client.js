@@ -43,7 +43,7 @@ const soundTick = new Audio("/sounds/beep.mp3");
 /* ================================================= */
 
 window.onload = () => {
-    // --- 1. SETUP EVENT LISTENERS (Moved inside onload to ensure elements exist) ---
+    // --- 1. SETUP EVENT LISTENERS ---
     const enterBtn = document.getElementById("enterBtn");
     const createBtn = document.getElementById("createBtn");
     const joinBtn = document.getElementById("joinBtn");
@@ -227,19 +227,14 @@ socket.on("roomCreated", code => {
 });
 
 /* ================= ROOM STATE LOGIC ================= */
-/* ================= ROOM STATE LOGIC ================= */
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
 
     // --- 1. SILENT AUTO-REFRESH (Update Data Only) ---
     if (data.updateOnly) {
-        // Update Owners & Count
+        // Update Owners
         if(data.teamOwners) teamOwners = data.teamOwners;
-        if(data.userCount !== undefined) {
-            const countEl = document.getElementById("liveUserCount");
-            if(countEl) countEl.innerText = data.userCount;
-        }
-
+        
         // KICK DETECTION: If my team is suddenly in the "Available" list, I timed out.
         if (myTeam && data.availableTeams && data.availableTeams.includes(myTeam)) {
              alert("⚠️ You were disconnected for too long. You are now a Spectator.");
@@ -306,11 +301,6 @@ socket.on("joinedRoom", (data) => {
     if (data.teamOwners) teamOwners = data.teamOwners;
     if (data.purses) teamPurse = data.purses;
     
-    if (data.userCount !== undefined) {
-        const countEl = document.getElementById("liveUserCount");
-        if(countEl) countEl.innerText = data.userCount;
-    }
-
     // --- 5. CHECK: HAS AUCTION ENDED? ---
     if (data.auctionEnded) {
         const savedRoom = sessionStorage.getItem('ipl_room');
@@ -374,35 +364,49 @@ socket.on("joinedRoom", (data) => {
     }
 });
 
-/* ================= USER LIST LOGIC ================= */
-
+/* ================= USER LIST LOGIC (UPDATED PILL) ================= */
 
 let userListInterval = null; // Global interval for the timer
 
 socket.on("roomUsersUpdate", (data) => {
     // Handle both old format (array) and new format (object) for safety
     const users = Array.isArray(data) ? data : data.users;
-    const counts = data.counts || null;
 
-    // --- 1. UPDATE BADGE (New Logic) ---
+    // --- 1. UPDATE BADGE (Unique Active Players / Total Teams) ---
     const countEl = document.getElementById("liveUserCount");
     if (countEl) {
-        if (counts) {
-            // Format: "3 / 8" (3 Active Owners / 8 Teams Picked)
-            countEl.innerText = `${counts.activeOwners} / ${counts.totalTeams}`;
-            
-            // Color Logic
-            if (counts.activeOwners === 0 && counts.totalTeams > 0) {
-                 countEl.style.color = "#ef4444"; // Red (All Away)
-            } else if (counts.activeOwners === counts.totalTeams && counts.totalTeams > 0) {
-                 countEl.style.color = "#4ade80"; // Green (All Present)
+        // A. Calculate Total Distinct Teams Taken
+        const distinctTeams = new Set();
+        users.forEach(u => {
+            if (u.team) distinctTeams.add(u.team);
+        });
+        const totalTeamsTaken = distinctTeams.size;
+
+        // B. Calculate Active Unique Players (Has Team AND Green Dot)
+        const activeOwners = new Set();
+        users.forEach(u => {
+            // Must have a team (excludes spectators)
+            // Must not be away or kicked (Green dot logic)
+            if (u.team && u.status !== 'away' && u.status !== 'kicked') {
+                activeOwners.add(u.name); // Using Name to deduplicate devices
+            }
+        });
+        const activeUniqueCount = activeOwners.size;
+
+        // C. Render
+        countEl.innerText = `${activeUniqueCount} / ${totalTeamsTaken}`;
+
+        // D. Color Logic
+        if (totalTeamsTaken > 0) {
+            if (activeUniqueCount === 0) {
+                countEl.style.color = "#ef4444"; // Red (All active players gone)
+            } else if (activeUniqueCount === totalTeamsTaken) {
+                countEl.style.color = "#4ade80"; // Green (Everyone is here)
             } else {
-                 countEl.style.color = ""; // Default
+                countEl.style.color = "#fbbf24"; // Yellow (Some missing)
             }
         } else {
-            // Fallback if counts missing
-            const activeCount = users.filter(u => u.status !== 'kicked').length;
-            countEl.innerText = activeCount;
+            countEl.style.color = ""; // Default
         }
     }
 
@@ -411,7 +415,7 @@ socket.on("roomUsersUpdate", (data) => {
     if (userListInterval) clearInterval(userListInterval);
     box.innerHTML = "";
 
-    // ... (Keep your existing Host Detection Logic) ...
+    // ... (Host Detection Logic) ...
     const me = users.find(u => u.name === username);
     if (me && me.isHost && !isHost) {
         isHost = true;
@@ -419,7 +423,7 @@ socket.on("roomUsersUpdate", (data) => {
         alert("🜲 You are now the Host!");
     }
 
-    // ... (Keep your existing Sort Logic) ...
+    // ... (Sort Logic) ...
     users.sort((a, b) => {
         if (a.name === username) return -1;
         if (a.isHost) return -1;
@@ -431,7 +435,7 @@ socket.on("roomUsersUpdate", (data) => {
 
     const GRACE_PERIOD_MS = 90000; 
 
-    // ... (Keep your existing Render Logic) ...
+    // ... (Render Logic) ...
     users.forEach(u => {
         const isMe = u.name === username;
         let statusColor = '#22c55e'; 
@@ -466,7 +470,7 @@ socket.on("roomUsersUpdate", (data) => {
         box.appendChild(div);
     });
 
-    // ... (Keep your existing Interval Logic for timers) ...
+    // ... (Interval Logic for timers) ...
     userListInterval = setInterval(() => {
         const timers = document.querySelectorAll('.away-timer');
         if (timers.length === 0) return;
@@ -584,9 +588,6 @@ socket.on("teamPicked", ({ team, user, remaining }) => {
         teamOwners[team] = user; // <--- This fixes the Squad View "Available" bug
     } else if (team === null) {
         // Team was freed (user left/kicked)
-        // We might need to find which team was freed, or just rely on 'remaining' list
-        // Ideally, we reset the owner locally if we knew which team it was.
-        // For now, asking for full state is safer to clear the name.
         socket.emit("getAuctionState"); 
     }
 
@@ -1455,13 +1456,3 @@ function refreshGlobalUI() {
     // 4. Update Header
     updateHeaderNotice();
 }
-
-
-
-
-
-
-
-
-
-
