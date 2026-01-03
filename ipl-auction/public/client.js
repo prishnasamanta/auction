@@ -491,35 +491,48 @@ socket.on("roomUsersUpdate", (data) => {
     refreshGlobalUI();
 });
 // --- FEED LOGIC ---
+// --- COMMAND CENTER LOGIC ---
 
-// 1. Toggle Expand/Collapse
-window.toggleFeed = function() {
-    const feed = document.getElementById('unifiedFeed');
-    const btn = document.getElementById('expandHandle');
-    
-    feed.classList.toggle('expanded');
-    
-    if(feed.classList.contains('expanded')) {
-        btn.innerText = "▲"; // Show Up arrow when open
-    } else {
-        btn.innerText = "▼"; // Show Down arrow when closed
+// 1. Switch Tabs (Sets / Feed / Squads)
+window.switchCcTab = function(tabName) {
+    // A. Update Buttons
+    const buttons = document.querySelectorAll('.cc-tab-btn');
+    buttons.forEach(b => {
+        b.classList.remove('active');
+        if(b.innerText.toLowerCase().includes(tabName)) b.classList.add('active');
+    });
+
+    // B. Show View
+    document.querySelectorAll('.cc-view').forEach(v => v.classList.add('hidden'));
+    document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+    // C. Trigger Data Refresh if needed
+    if (tabName === 'squads') {
+        if(typeof renderSquadTabs === 'function') renderSquadTabs();
+        socket.emit("getSquads");
+    }
+    if (tabName === 'sets') {
+        if(typeof renderSetsPanel === 'function') renderSetsPanel();
     }
 };
 
-// 2. Ensure Feed is visible when auction starts
-// Add this line inside your existing 'auctionStarted' or 'joinedRoom' socket events:
-// document.getElementById('unifiedFeed').classList.remove('hidden');
+// 2. Expand Toggle (Arrow)
+window.toggleCcExpand = function() {
+    const box = document.getElementById('commandCenter');
+    const btn = document.getElementById('ccExpandBtn');
+    
+    box.classList.toggle('expanded');
+    
+    if(box.classList.contains('expanded')) {
+        btn.innerText = "▲";
+    } else {
+        btn.innerText = "▼";
+    }
+};
 
-// 3. Map Enter Key to Send Chat (Optional convenience)
-const msgInput = document.getElementById("msg");
-if(msgInput) {
-    msgInput.addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            sendChat();
-        }
-    });
-}
+// 3. Initialize Feed as Active
+// (Optional: Call this on load if it doesn't default correctly)
+// switchCcTab('feed');
 
 function setupAuctionScreen() {
     document.getElementById("landing").classList.add("hidden");
@@ -1574,6 +1587,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
