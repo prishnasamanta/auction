@@ -1071,101 +1071,127 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 
 /* ========================================= */
-/* ====== COMPACT UNIFIED FEED STYLES ====== */
+/* ====== COMMAND CENTER (Tabs + Expand) === */
 /* ========================================= */
 
-/* 1. Container - Sits right below Auction Card */
-#unifiedFeed {
-    width: 100%; 
+#commandCenter {
+    width: 100%;
     max-width: 500px;
-    margin-top: 8px; /* Minimal gap as requested */
+    margin-top: 15px;
     display: flex;
     flex-direction: column;
-    background: rgba(15, 23, 42, 0.8);
-    transition: all 0.3s ease;
-    position: relative;
     border: 1px solid var(--border);
-    /* Default: Compact Mode */
-    height: auto; 
+    background: rgba(15, 23, 42, 0.85); /* Slightly opaque background */
+    transition: all 0.3s ease;
+    /* DEFAULT COMPACT HEIGHT */
+    height: 320px; 
 }
 
-/* 2. Game Log Area (Top Section) */
-/* "Keep log only 5 msgs" -> Approx 80px height */
-#logArea {
-    height: 80px; 
-    overflow-y: auto;
-    padding: 5px 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    font-size: 0.75rem;
-    color: #94a3b8; /* Muted text for logs */
+/* EXPANDED STATE */
+#commandCenter.expanded {
+    height: 600px; /* Tall enough for full history/squads */
+}
+
+/* --- 1. TABS ROW --- */
+.cc-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
     background: rgba(0,0,0,0.2);
-    font-family: monospace;
 }
-.log-item { margin-bottom: 2px; }
+.cc-tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    padding: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: 0.2s;
+}
+.cc-tab-btn:hover { color: #fff; background: rgba(255,255,255,0.02); }
+.cc-tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: rgba(99, 102, 241, 0.05);
+}
 
-/* 3. Chat Area (Bottom Section) */
-/* "Chat of 10 msgs" -> Approx 180px height */
-#chatArea {
+/* --- 2. CONTENT AREA --- */
+.cc-content {
+    flex: 1;
+    overflow: hidden; /* Important for animations */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.cc-view {
     flex: 1;
     display: flex;
     flex-direction: column;
-    height: 180px; /* Fixed height for compact view */
-    transition: height 0.3s ease;
+    height: 100%;
+}
+.cc-view.hidden { display: none !important; }
+
+/* GENERIC SCROLL AREA (For Sets & Squads) */
+.scroll-view {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
 }
 
+/* --- SPECIFIC: FEED VIEW (Log + Chat) --- */
+#miniLog {
+    height: 70px; /* Small Log Area (~4 lines) */
+    overflow-y: auto;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-family: monospace;
+}
+#feedChat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 #chat {
     flex: 1;
     overflow-y: auto;
     padding: 10px;
-    font-size: 0.85rem;
-    color: #e2e8f0;
+    font-size: 0.9rem;
 }
-
-/* Chat Input Bar */
-.feed-input-row {
+.feed-input-wrapper {
     display: flex;
     padding: 8px;
     gap: 8px;
-    background: rgba(255,255,255,0.05);
-    border-top: 1px solid rgba(255,255,255,0.05);
+    border-top: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
 }
-.feed-input-row input {
-    padding: 8px;
-    font-size: 0.85rem;
+.feed-input-wrapper input {
+    flex: 1;
     background: rgba(0,0,0,0.3);
-    border: 1px solid #334155;
-    border-radius: 4px;
-}
-.feed-input-row button {
-    padding: 0 12px;
-    border-radius: 4px;
-    font-size: 1rem;
+    border: 1px solid var(--border);
+    padding: 8px;
+    border-radius: 6px;
+    color: white;
 }
 
-/* 4. Expand Handle (The Small Arrow) */
-#expandHandle {
-    width: 100%;
-    height: 20px;
+/* --- 3. EXPAND BUTTON --- */
+#ccExpandBtn {
+    height: 24px;
     background: rgba(0,0,0,0.4);
     border: none;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    border-top: 1px solid var(--border);
     color: #64748b;
-    font-size: 0.7rem;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
+    font-size: 0.7rem;
 }
-#expandHandle:hover { background: rgba(0,0,0,0.6); color: #fff; }
-
-/* 5. EXPANDED STATE (Triggered via JS) */
-#unifiedFeed.expanded #chatArea {
-    height: 400px; /* Expands to show history */
-}
-#unifiedFeed.expanded #logArea {
-    height: 150px; /* Expands log slightly too */
-}
+#ccExpandBtn:hover { color: white; background: rgba(255,255,255,0.05); }
 
 
 
