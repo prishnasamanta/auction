@@ -999,57 +999,54 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     flex-wrap: wrap; /* Allows wrapping on small screens */
 }
 
-/* --- General Style for All Admin Buttons --- */
+/* --- Admin Controls Container --- */
+#adminControls {
+    display: flex;
+    justify-content: flex-end; /* Pushes buttons to the right to keep space empty */
+    gap: 8px; 
+    margin-top: 8px;
+    align-items: center;
+}
+
+/* --- The "Glass" Button Style (Pause, Skip, Skip Set) --- */
 #adminControls button {
-    padding: 6px 12px;       /* Smaller padding top/bottom, left/right */
-    font-size: 0.75rem;      /* Smaller text size */
-    font-weight: 700;        /* Bold text */
-    border-radius: 20px;     /* Rounded "Pill" shape */
-    border: none;
+    background: rgba(255, 255, 255, 0.05); /* Dark Glassy Background */
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Subtle Light Border */
+    border-radius: 8px;     /* "Rules Button" Shape (Not Pill, Not Square) */
+    color: #94a3b8;         /* Muted Text Color */
+    padding: 6px 12px;      /* Compact Size */
+    font-size: 0.75rem;
+    font-weight: 600;
     cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: transform 0.1s ease, opacity 0.2s;
-    width: auto;             /* Prevent them from stretching full width */
-    min-width: 80px;         /* Minimum width so text fits */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    box-shadow: none;       /* Flat look */
+    min-width: auto;
 }
 
-#adminControls button:active {
-    transform: scale(0.95);  /* Click effect */
-}
-
-/* --- Specific Colors for Function --- */
-
-/* Pause Button (Amber/Yellow) */
-#togglePauseBtn {
-    background-color: #f59e0b; 
-    color: #000;
-}
-
-/* Skip Button (Blue) */
-#skipBtn {
-    background-color: #3b82f6; 
+/* Hover Effect: Slightly brighter */
+#adminControls button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
     color: #fff;
 }
 
-/* Skip Set Button (Gray/Slate) */
-#skipSetBtn {
-    background-color: #475569; 
-    color: #fff;
-}
-
-/* End Button (Red) */
-#endBtn {
-    background-color: #ef4444; 
-    color: #fff;
-}
-
-/* Leave Button (For players, outlined) */
+/* --- Leave Button Special Styling --- */
+/* You asked to keep this "same" (red outline) but change the shape */
 #leaveBtn {
-    background-color: transparent;
-    border: 1px solid #ef4444 !important;
-    color: #ef4444;
+    background: transparent !important;
+    border: 1px solid #ef4444 !important; /* Keep Red Border */
+    color: #ef4444 !important;            /* Keep Red Text */
+    border-radius: 8px !important;        /* Update to Rules Shape */
+}
+
+#leaveBtn:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* --- HIDING THE END BUTTON --- */
+/* As per your request to remove it and keep space empty */
+#endBtn {
+    display: none !important; 
 }
 
 
