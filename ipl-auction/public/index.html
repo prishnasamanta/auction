@@ -128,81 +128,82 @@
 
         <div class="auction-wrapper">
 
-            <div class="auction-center">
-                
-                <div id="teamNotice" class="notice" style="margin-bottom:15px; color:var(--gold); font-weight:bold; text-transform:uppercase; letter-spacing:1px; display:flex; justify-content:space-between; width:100%; max-width:500px;">
-                    <span id="noticeTeam">SPECTATOR</span>
-                    <span id="noticePurse"></span>
-                </div>
+<div class="auction-center">
+    
+    <div id="teamNotice" class="notice" style="margin-bottom:15px; color:var(--gold); font-weight:bold; text-transform:uppercase; letter-spacing:1px; display:flex; justify-content:space-between; width:100%; max-width:500px;">
+        <span id="noticeTeam">SPECTATOR</span>
+        <span id="noticePurse"></span>
+    </div>
 
-                <div id="teamSelectionMain" class="glass" style="width: 100%; max-width: 500px;">
-                    <h2 style="color:var(--primary); margin-top:0;">CHOOSE YOUR TEAM</h2>
-                    <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">
-                        Select a team to participate.
-                    </p>
-                    
-                    <div id="embeddedTeamList" class="team-list"></div>
+    <div id="teamSelectionMain" class="glass" style="width: 100%; max-width: 500px; margin-bottom: 10px;">
+        <h2 style="color:var(--primary); margin-top:0;">CHOOSE YOUR TEAM</h2>
+        <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">
+            Select a team to participate.
+        </p>
+        
+        <div id="embeddedTeamList" class="team-list"></div>
 
-                    <div id="waitingForHostMsg" class="hidden" style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                        <h3 style="margin:0 0 5px 0; color:#22c55e;">✅ Team Selected</h3>
-                        <p style="color:#aaa; font-size:0.9rem; margin:0;">Waiting for Host to start...</p>
+        <div id="waitingForHostMsg" class="hidden" style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px;">
+            <h3 style="margin:0 0 5px 0; color:#22c55e;">✅ Team Selected</h3>
+            <p style="color:#aaa; font-size:0.9rem; margin:0;">Waiting for Host to start...</p>
+        </div>
+    </div>
+
+    <div class="auction glass hidden" id="auctionCard" style="margin-bottom: 10px;">
+        
+        <div class="auction-header-role">
+            <span id="playerMeta">WAITING FOR AUCTION...</span>
+        </div>
+
+        <div class="auction-body">
+            <div id="playerInfoBox" style="position: relative;"> 
+                <div id="resultOverlay" class="result-overlay hidden">
+                    <div class="stamp-container">
+                        <div id="stampTitle" class="stamp-title">SOLD</div>
+                        <div id="stampDetail" class="stamp-detail">TO CSK</div>
                     </div>
                 </div>
+                <div id="playerName">---</div>
+                <div style="margin-top:5px; font-size:0.8rem; opacity:0.6;">CURRENT PLAYER</div>
+            </div>
 
-                <div class="auction glass hidden" id="auctionCard">
-                    
-                    <div class="auction-header-role">
-                        <span id="playerMeta">WAITING FOR AUCTION...</span>
-                    </div>
-
-                    <div class="auction-body">
-                        <div id="playerInfoBox" style="position: relative;"> 
-                            <div id="resultOverlay" class="result-overlay hidden">
-                                <div class="stamp-container">
-                                    <div id="stampTitle" class="stamp-title">SOLD</div>
-                                    <div id="stampDetail" class="stamp-detail">TO CSK</div>
-                                </div>
-                            </div>
-                            <div id="playerName">---</div>
-                            <div style="margin-top:5px; font-size:0.8rem; opacity:0.6;">CURRENT PLAYER</div>
-                        </div>
-
-                        <div class="price-container">
-                            <div style="text-align:left;">
-                                <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">CURRENT BID</div>
-                                <div id="bid" style="line-height:1;">₹0.00 Cr</div>
-                            </div>
-                            <div id="currentBidder" class="bidder-badge hidden">
-                                <span id="bidderName">CSK</span>
-                            </div>
-                            <div style="text-align:right;">
-                                <div id="timer">10</div>
-                            </div>
-                        </div>
-
-                        <div class="card-padding-area">
-                            <button id="bidBtn">PLACE BID</button>
-                        </div>
-
-                        <div id="adminControls" class="hidden" style="padding: 10px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.1);">
-                            
-                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
-                                <button id="startBtn" class="primary-btn" style="grid-column: span 4; width: 100%;">START AUCTION</button>
-                                
-                                <button id="togglePauseBtn" class="secondary-btn hidden">⏯</button>
-                                <button id="skipBtn" class="secondary-btn hidden">⏭</button>
-                                <button id="skipSetBtn" class="secondary-btn hidden" style="color: #fca5a5;">Set</button>
-                                <button id="endBtn" onclick="admin('end')" class="secondary-btn hidden" style="color:var(--accent);">⛔</button>
-                            </div>
-
-                            <button id="leaveBtn" class="hidden" style="width: 100%; background-color: #ef4444; color: white; font-weight: bold; border: none; padding: 12px; border-radius: 8px; margin-top: 5px;">
-                                🏃 Leave Auction
-                            </button>
-                        </div>
-
-                    </div>
+            <div class="price-container">
+                <div style="text-align:left;">
+                    <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">CURRENT BID</div>
+                    <div id="bid" style="line-height:1;">₹0.00 Cr</div>
+                </div>
+                <div id="currentBidder" class="bidder-badge hidden">
+                    <span id="bidderName">CSK</span>
+                </div>
+                <div style="text-align:right;">
+                    <div id="timer">10</div>
                 </div>
             </div>
+
+            <div class="card-padding-area">
+                <button id="bidBtn">PLACE BID</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminControls" class="glass hidden" style="width: 100%; max-width: 500px; padding: 10px; margin-top: auto;">
+        
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+            <button id="startBtn" class="primary-btn" style="grid-column: span 4; width: 100%;">START AUCTION</button>
+            
+            <button id="togglePauseBtn" class="secondary-btn hidden">⏯</button>
+            <button id="skipBtn" class="secondary-btn hidden">⏭</button>
+            <button id="skipSetBtn" class="secondary-btn hidden" style="color: #fca5a5;">Set</button>
+            <button id="endBtn" onclick="admin('end')" class="secondary-btn hidden" style="color:var(--accent);">⛔</button>
+        </div>
+
+        <button id="leaveBtn" class="hidden" style="width: 100%; background-color: #ef4444; color: white; font-weight: bold; border: none; padding: 12px; border-radius: 8px; margin-top: 5px;">
+            🏃 Leave Auction
+        </button>
+    </div>
+
+</div>
+
 
             <div class="panel glass right command-center" style="position:relative; overflow:hidden; display: flex; flex-direction: column;">
                 
@@ -463,5 +464,6 @@
 </body>
 
 </html>
+
 
 
