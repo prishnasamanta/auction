@@ -696,7 +696,7 @@ function updatePlayerCard(player, bid) {
 }
 
 socket.on("timer", t => {
-    document.getElementById("timer").innerText = "⏱ " + t;
+    document.getElementById("timer").innerText = "⏱" + t;
     if(auctionLive && !auctionPaused && t <= 3 && t > 0 && t !== lastTickSecond) {
         lastTickSecond = t;
         soundTick.play().catch(()=>{});
@@ -1505,5 +1505,6 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
