@@ -1485,24 +1485,21 @@ window.downloadLeaderboardPNG = function() {
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
+/* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
-    // 1. Re-render Team Selection Buttons (to hide taken teams)
-    // We assume 'renderEmbeddedTeams' uses the latest data we have.
-    // If we need fresh data, we can ask server, but usually local state is enough if updated correctly.
+    // 1. Refresh Squad View if active
+    // This updates "Manager: Available" to "Manager: [Name]" instantly if someone picks a team
     const currentTab = document.querySelector('.info-tab-btn.active');
-    
-    // 2. Refresh Squad View if it's currently open
-    // This updates "Manager: Available" to "Manager: [Name]" instantly
     if(currentTab && currentTab.id === 'tab-squads' && selectedSquadTeam) {
         viewEmbeddedSquad(selectedSquadTeam);
     }
 
-    // 3. Refresh Team Buttons if on selection screen
-    // We need to know which teams are remaining. 
-    // Usually 'teamPicked' updates this, but we can trigger a re-render if needed.
-    
-    // 4. Update Header
+    // 2. Update Header (Spectator vs Team View)
     updateHeaderNotice();
+
+    // 3. Force Admin Button Update
+    // This ensures the "Leave" button appears immediately after picking a team
+    // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
 
