@@ -1055,41 +1055,41 @@ if (leaveBtn) {
 // 2. Updated Visibility Logic
 function updateAdminButtons(isStarted) {
     const adminPanel = document.getElementById("adminControls");
-    const startBtn = document.getElementById("startBtn");
-    // Select all admin buttons (Pause, Skip, Set, End)
-    const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn, #endBtn"); 
     const leaveBtn = document.getElementById("leaveBtn");
+    const startBtn = document.getElementById("startBtn");
+    
+    // --- FIX: Add '#endBtn' to this list so it gets hidden for players ---
+    const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn, #endBtn"); 
 
     if (!adminPanel) return;
 
-    // --- SCENARIO A: I AM THE HOST ---
+    // --- HOST LOGIC ---
     if (isHost) {
-        adminPanel.classList.remove("hidden"); // Host always sees the panel
-        if (leaveBtn) leaveBtn.classList.add("hidden"); // Host CANNOT see Leave button
+        adminPanel.classList.remove("hidden");
+        if (leaveBtn) leaveBtn.classList.add("hidden");
 
         if (!isStarted) {
-            // Game not started: Show Start, Hide others
+            // Before Game: Show Start, Hide Controls
             if (startBtn) startBtn.classList.remove("hidden");
             controls.forEach(b => b.classList.add("hidden"));
         } else {
-            // Game started: Hide Start, Show Admin Controls
+            // During Game: Hide Start, Show Controls
             if (startBtn) startBtn.classList.add("hidden");
             controls.forEach(b => b.classList.remove("hidden"));
         }
     } 
-    // --- SCENARIO B: I AM A PLAYER (Non-Host) ---
+    // --- PLAYER LOGIC ---
     else {
-        // 1. Hide all Admin Tools first
+        // 1. Hide Host Buttons (Start, Pause, Skip, END)
         if (startBtn) startBtn.classList.add("hidden");
-        controls.forEach(b => b.classList.add("hidden"));
+        controls.forEach(b => b.classList.add("hidden")); // <--- This now hides the End button too
 
-        // 2. Check if I should see the Leave Button
-        // We show the panel ONLY if the user actually has a team (is playing)
+        // 2. Show Leave Button (Only if they have a team)
         if (myTeam && leaveBtn) {
-            adminPanel.classList.remove("hidden"); // Keep space occupied
-            leaveBtn.classList.remove("hidden");   // Show Red Leave Button
+            adminPanel.classList.remove("hidden");
+            leaveBtn.classList.remove("hidden");
         } else {
-            // If I am just a spectator or waiting to pick a team, hide the whole bar
+            // Spectators see nothing
             adminPanel.classList.add("hidden");
         }
     }
@@ -1505,6 +1505,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
