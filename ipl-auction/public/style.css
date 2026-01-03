@@ -45,18 +45,6 @@ body {
   flex-direction: column;
 }
 
-/* --- SCROLLABLE CONTENT AREA --- */
-.screen { 
-  width: 100%;
-  flex: 1; /* Takes all available space between header/footer */
-  overflow-y: auto; /* Enables scrolling inside this area */
-  -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
-  padding-bottom: 20px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
 .screen.hidden { display: none !important; }
 
 /* ================= UTILITIES ================= */
@@ -964,165 +952,103 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     box-shadow: none;
     border-radius: 0;
 }
-/* --- RESET & APP SHELL --- */
+
+/* ================================================= */
+/* ========= FORCE ONE-SCREEN APP LAYOUT =========== */
+/* ================================================= */
+
+/* 1. LOCK THE VIEWPORT */
 html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow: hidden; /* CRITICAL: Disables body scroll */
+    margin: 0; padding: 0;
+    height: 100%; width: 100%;
+    overflow: hidden; /* No scroll on body */
     background: #0f172a;
-    font-family: 'Segoe UI', sans-serif;
-    color: white;
 }
 
-/* --- MAIN CONTAINER (The "One Screen") --- */
+/* 2. MAIN CONTAINER (Flex Column) */
 #auctionUI {
     display: flex;
-    flex-direction: column; /* Stack top to bottom */
-    height: 100dvh;         /* dynamic viewport height (fixes mobile url bar issue) */
-    max-width: 1200px;
-    margin: 0 auto;
+    flex-direction: column;
+    height: 100dvh; /* Exact mobile screen height */
+    width: 100%;
+    overflow: hidden;
 }
 
-/* --- TOP SECTION: Auction Card --- */
+/* 3. HEADER (Fixed height, no shrinking) */
+.topbar {
+    flex: 0 0 auto; /* Don't grow/shrink */
+    width: 100%;
+    z-index: 50;
+    /* Your existing styles... */
+}
+
+/* 4. WRAPPER (Fills space between Header and Bottom) */
+.auction-wrapper {
+    flex: 1; /* Grow to fill remaining space */
+    display: flex;
+    flex-direction: column; /* Stack top/bottom on mobile */
+    overflow: hidden; /* IMPORTANT: Stop wrapper from scrolling */
+    padding: 0 !important; /* Remove padding to fit edges */
+    gap: 0 !important;
+}
+
+/* 5. TOP HALF: AUCTION CARD (Fixed Size) */
+.auction-center {
+    flex: 0 0 auto; /* Take only needed space */
+    width: 100%;
+    z-index: 20;
+    padding: 5px;
+}
+
+/* Ensure the card fits */
 #auctionCard {
-    flex: 0 0 auto; /* Don't grow, don't shrink. Take only needed space */
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: 10px;
-    z-index: 10;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 0 0 16px 16px; /* Round bottom corners only */
+    border-top: none;
 }
 
-.player-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#playerName { font-size: 1.4rem; font-weight: 800; color: #fff; margin: 0; }
-#playerMeta { font-size: 0.9rem; color: #94a3b8; }
-#bid { font-size: 2rem; font-weight: 900; color: #facc15; margin: 5px 0; text-align: center; }
-
-/* Compact Stats Row */
-.stat-badges {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-bottom: 8px;
-}
-.stat-badge { background: #334155; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; }
-
-/* --- MIDDLE SECTION: Action Bar --- */
-.action-bar {
-    display: flex;
-    gap: 10px;
-    padding: 0 10px 10px 10px;
-    justify-content: center;
-}
-
-.primary-btn {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: white; border: none; padding: 12px 30px; font-size: 1.1rem;
-    font-weight: bold; border-radius: 8px; cursor: pointer; flex: 1;
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
-}
-.primary-btn:disabled { background: #334155; color: #64748b; box-shadow: none; }
-
-/* --- BOTTOM SECTION: Tabs & Chat (Fills remaining space) --- */
-.info-panel {
-    flex: 1; /* GROW to fill all remaining space! */
+/* 6. BOTTOM HALF: CHAT/LOGS (Fills rest & Scrolls) */
+.panel.right.command-center {
+    flex: 1; /* GROW to hit bottom of screen */
     display: flex;
     flex-direction: column;
+    min-height: 0; /* Crucial for flex scrolling */
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0; /* Round top corners */
     background: #1e293b;
-    border-radius: 16px 16px 0 0;
-    overflow: hidden; /* Contain inner scrolls */
-    margin-top: -10px; /* Slight overlap for styling */
-    position: relative;
-    z-index: 5;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-bottom: none;
 }
 
-/* Tabs Header */
-.tabs-header {
-    display: flex;
-    background: #0f172a;
-    border-bottom: 1px solid #334155;
-}
-.info-tab-btn {
+/* 7. INNER SCROLLING (The magic part) */
+#panel-feed, #panel-squads {
     flex: 1;
-    background: none; border: none; color: #94a3b8;
-    padding: 12px; font-weight: bold; cursor: pointer;
-    border-bottom: 3px solid transparent;
-}
-.info-tab-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; background: #1e293b; }
-
-/* Scrollable Content Area */
-.panel-content {
-    flex: 1;
-    overflow-y: auto; /* SCROLL HERE ONLY */
-    padding: 10px;
-    position: relative;
+    overflow-y: auto; /* Scroll ONLY inside here */
+    height: 100%;
+    padding-bottom: 60px; /* Space for chat input */
 }
 
-/* Chat Styling */
-#chat {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding-bottom: 60px; /* Space for input bar */
-}
-#chat div { font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; }
-
-/* Sticky Chat Input */
-.chat-input-bar {
+/* 8. CHAT INPUT (Sticky Bottom) */
+.chat-box {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     padding: 10px;
     background: #1e293b;
     border-top: 1px solid #334155;
-    display: flex;
-    gap: 8px;
-}
-.chat-input-bar input {
-    flex: 1; background: #0f172a; border: 1px solid #334155;
-    color: white; padding: 10px; border-radius: 6px; outline: none;
-}
-.chat-input-bar button {
-    background: #38bdf8; color: #000; border: none;
-    padding: 0 15px; border-radius: 6px; font-weight: bold;
+    z-index: 100;
 }
 
-/* --- DESKTOP TWEAKS (Keep layout bigger on PC) --- */
-@media (min-width: 769px) {
-    #auctionUI {
-        flex-direction: row; /* Side by side on PC */
-        gap: 20px;
-        padding: 20px;
+/* --- PC OVERRIDE (Side-by-Side) --- */
+@media (min-width: 901px) {
+    .auction-wrapper {
+        flex-direction: row; /* Back to side-by-side */
+        padding: 20px !important;
+        gap: 20px !important;
     }
-    #auctionCard {
-        flex: 1;
-        background: #1e293b;
-        border-radius: 16px;
-        border: 1px solid #334155;
-    }
-    .info-panel {
-        width: 350px; /* Fixed width sidebar */
-        flex: none;
-        height: 100%;
-        margin-top: 0;
-        border-radius: 16px;
-    }
-}
-
-
-
-
-#adminControls {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+    .auction-center { flex: 1; }
+    .panel.right { flex: 0 0 350px; height: 100%; border-radius: 16px; }
 }
 
 /* Base style for top bar buttons 
@@ -1165,6 +1091,7 @@ html, body {
 }
 
 */
+
 
 
 
