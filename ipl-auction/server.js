@@ -105,15 +105,42 @@ function sendLog(room, code, msg) {
 
 function broadcastUserList(room, roomCode) {
     if (!room) return;
+    
+    // 1. Calculate Custom Counts
+    const uniqueOwners = new Set();
+    const uniqueTeams = new Set();
+
+    Object.values(room.users).forEach(u => {
+        if (u.team) {
+            uniqueTeams.add(u.team); // Count taken teams
+            if (!u.isAway && !u.isKicked) {
+                uniqueOwners.add(u.name); // Count active owners (by name, so 2 devices = 1 count)
+            }
+        }
+    });
+
+    const activeOwnersCount = uniqueOwners.size;
+    const totalTeamsCount = uniqueTeams.size;
+
+    // 2. Prepare List
     const userList = Object.values(room.users).map(u => ({
         name: u.name,
         team: u.team,
         status: u.isKicked ? 'kicked' : (u.isAway ? 'away' : 'online'),
         disconnectTime: u.disconnectTime || null,
-        isHost: (room.admin === u.id)
+        isHost: (room.adminUser === u.name) // Check by name to support multi-device host
     }));
-    io.to(roomCode).emit("roomUsersUpdate", userList);
+    
+    // 3. Send Update with EXTRA data
+    io.to(roomCode).emit("roomUsersUpdate", { 
+        users: userList,
+        counts: {
+            activeOwners: activeOwnersCount,
+            totalTeams: totalTeamsCount
+        }
+    });
 }
+
 
 function getTeamOwners(room) {
     const owners = {};
@@ -807,6 +834,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
