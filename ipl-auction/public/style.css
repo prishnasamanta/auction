@@ -965,6 +965,62 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-radius: 0;
 }
 
+/* --- MOBILE OPTIMIZATIONS --- */
+@media (max-width: 768px) {
+    
+    /* 1. Shrink the main Auction Card */
+    #auctionCard {
+        padding: 10px;          /* Reduce padding */
+        margin: 10px auto;      /* Reduce margin */
+        max-width: 95%;         /* Use full width */
+    }
+
+    /* 2. Make the Player Image/Name section tighter */
+    .player-card-header {
+        flex-direction: row;    /* Keep side-by-side if possible, or adjust */
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    #playerName {
+        font-size: 1.2rem;      /* Smaller Name */
+    }
+
+    #playerMeta {
+        font-size: 0.8rem;      /* Smaller Role/Rating */
+        margin-bottom: 5px;
+    }
+
+    /* 3. Make the BID Amount smaller and compact */
+    #bid {
+        font-size: 1.8rem;      /* Reduce from huge size */
+        margin: 5px 0;
+    }
+
+    /* 4. Compact the Action Buttons (Bid, Admin controls) */
+    .action-bar {
+        gap: 8px;
+        flex-wrap: nowrap;      /* Keep on one line */
+    }
+
+    .action-bar button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    /* 5. Adjust the Chat/Log container height */
+    /* This ensures the bottom section is visible without scrolling */
+    .info-panel {
+        height: 35vh;           /* Fix height to ~35% of screen */
+        min-height: 200px;
+    }
+
+    /* 6. Hide non-essential elements on mobile if needed */
+    .auction-header-logo {
+        display: none;          /* Optional: Hide logo to save space */
+    }
+}
 
 
 /*
@@ -1018,6 +1074,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 */
+
 
 
 
