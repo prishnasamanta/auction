@@ -1118,40 +1118,54 @@ if (leaveBtn) {
 function updateAdminButtons(isStarted) {
     const adminPanel = document.getElementById("adminControls");
     const leaveBtn = document.getElementById("leaveBtn");
+    const endBtn = document.getElementById("endBtn");
     const startBtn = document.getElementById("startBtn");
-    
-    // --- FIX: Add '#endBtn' to this list so it gets hidden for players ---
-    const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn, #endBtn"); 
+
+    // All controls (Pause, Skip, etc.)
+    const controls = document.querySelectorAll("#togglePauseBtn, #skipBtn, #skipSetBtn");
 
     if (!adminPanel) return;
 
-    // --- HOST LOGIC ---
+    // --- CASE 1: YOU ARE HOST ---
     if (isHost) {
         adminPanel.classList.remove("hidden");
-        if (leaveBtn) leaveBtn.classList.add("hidden");
+        
+        // Host never sees "Leave", they must End the game
+        if(leaveBtn) leaveBtn.classList.add("hidden"); 
+        
+        // Show "End" button for Host
+        if(endBtn) {
+            endBtn.classList.remove("hidden");
+            endBtn.style.display = "inline-block"; // Force display
+        }
 
         if (!isStarted) {
-            // Before Game: Show Start, Hide Controls
+            // Pre-Game: Show Start
             if (startBtn) startBtn.classList.remove("hidden");
             controls.forEach(b => b.classList.add("hidden"));
         } else {
-            // During Game: Hide Start, Show Controls
+            // In-Game: Hide Start, Show Controls
             if (startBtn) startBtn.classList.add("hidden");
             controls.forEach(b => b.classList.remove("hidden"));
         }
     } 
-    // --- PLAYER LOGIC ---
+    // --- CASE 2: YOU ARE A PLAYER/SPECTATOR ---
     else {
-        // 1. Hide Host Buttons (Start, Pause, Skip, END)
+        // STRICTLY HIDE END BUTTON & CONTROLS
+        if(endBtn) {
+            endBtn.classList.add("hidden");
+            endBtn.style.setProperty("display", "none", "important"); // CSS Override
+        }
         if (startBtn) startBtn.classList.add("hidden");
-        controls.forEach(b => b.classList.add("hidden")); // <--- This now hides the End button too
+        controls.forEach(b => b.classList.add("hidden"));
 
-        // 2. Show Leave Button (Only if they have a team)
+        // HANDLE LEAVE BUTTON
+        // Only show if I have a team (Player) -> Hide if I am just watching (Spectator)
         if (myTeam && leaveBtn) {
-            adminPanel.classList.remove("hidden");
+            adminPanel.classList.remove("hidden"); // Panel must be visible for the button
             leaveBtn.classList.remove("hidden");
         } else {
-            // Spectators see nothing
+            // Spectators see no admin panel at all
             adminPanel.classList.add("hidden");
         }
     }
@@ -1587,6 +1601,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
