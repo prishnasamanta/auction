@@ -1,1244 +1,402 @@
 /* ================================================= */
-/* ================= ROOT & THEME ================== */
+/* ============= THEME: NEBULA GLASS =============== */
 /* ================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Inter:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800&family=Outfit:wght@300;400;600&display=swap');
 
 :root {
-  --bg-dark: #0f172a;
-  --bg-card: rgba(30, 41, 59, 0.7);
-  --primary: #6366f1; /* Indigo */
-  --accent: #f43f5e;  /* Rose */
+  /* Core Colors */
+  --bg-deep: #030712; /* Almost black */
+  --primary: #6366f1; /* Electric Indigo */
+  --primary-glow: rgba(99, 102, 241, 0.6);
+  --accent: #f472b6; /* Neon Pink */
   --gold: #fbbf24;
-  --success: #22c55e;
+  --success: #34d399;
+  
+  /* Text */
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --border: rgba(255, 255, 255, 0.1);
-  --glow: 0 0 20px rgba(99, 102, 241, 0.5);
 
+  /* Glass Vars */
+  --glass-bg: rgba(17, 25, 40, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
+  --blur-strength: 20px;
+
+  /* Fonts */
   --font-display: 'Exo 2', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-body: 'Outfit', sans-serif; /* Cleaner than Inter for modern UI */
 }
 
-* { 
-  box-sizing: border-box; 
-  outline: none; 
-}
+* { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
 
-/* --- GLOBAL LAYOUT SETUP (FIXED FOOTER LOGIC) --- */
 body {
   margin: 0;
-  background-color: var(--bg-dark);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(244, 63, 94, 0.15) 0px, transparent 50%),
-    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-color: var(--bg-deep);
   color: var(--text-main);
   font-family: var(--font-body);
-  
-  /* Critical for Mobile: Fix body height to viewport */
-  height: 100vh; 
-  height: 100dvh; /* Dynamic Height for Mobile Browsers */
+  height: 100vh;
+  height: 100dvh;
   width: 100vw;
-  overflow: hidden; /* Prevent body scroll, we scroll internal elements */
-  display: flex;
-  flex-direction: column;
-}
-/* --- SCROLLABLE CONTENT AREA --- */
-.screen { 
-  width: 100%;
-  flex: 1; /* Takes all available space between header/footer */
-  overflow-y: auto; /* Enables scrolling inside this area */
-  -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
-  padding-bottom: 20px;
-  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.screen.hidden { display: none !important; }
+/* ================= AMBIENT BACKGROUND ANIMATION ================= */
+.ambient-background {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: var(--bg-deep);
+}
 
-/* ================= UTILITIES ================= */
+.ambient-background::before, .ambient-background::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: floatOrb 15s infinite alternate ease-in-out;
+}
 
-.hidden { display: none !important; opacity: 0; pointer-events: none; }
+/* Orb 1: Blue/Indigo */
+.ambient-background::before {
+    width: 60vw; height: 60vw;
+    background: radial-gradient(circle, var(--primary), transparent 70%);
+    top: -10%; left: -10%;
+}
 
-/* Glass Effect */
+/* Orb 2: Pink/Purple */
+.ambient-background::after {
+    width: 50vw; height: 50vw;
+    background: radial-gradient(circle, var(--accent), transparent 70%);
+    bottom: -10%; right: -10%;
+    animation-delay: -5s;
+    animation-duration: 20s;
+}
+
+@keyframes floatOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, 50px) scale(1.1); }
+    100% { transform: translate(-20px, -30px) scale(0.9); }
+}
+
+/* ================= ULTRA GLASS COMPONENTS ================= */
+
 .glass {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-strength));
+    -webkit-backdrop-filter: blur(var(--blur-strength));
+    border: 1px solid var(--glass-border);
+    border-top: 1px solid var(--glass-highlight); /* Subtle top light */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+.screen { 
+    width: 100%; 
+    flex: 1; 
+    overflow-y: auto; 
+    padding-bottom: 20px;
+    display: flex; 
+    flex-direction: column;
+    scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+.screen::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome */
 
-/* Buttons */
+.hidden { display: none !important; }
+
+/* ================= MODERN BUTTONS ================= */
+
+button { font-family: var(--font-display); user-select: none; }
+
 .primary-btn {
-  background: linear-gradient(135deg, var(--primary), #4f46e5);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-family: var(--font-display);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px var(--primary-glow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
 }
-.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6); }
-.primary-btn:active { transform: translateY(0); }
-.primary-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; opacity: 0.7; }
+
+/* Shine effect on hover */
+.primary-btn::after {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: 0.5s;
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--primary-glow);
+}
+.primary-btn:hover::after { left: 100%; }
 
 .secondary-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    padding: 10px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
-.secondary-btn:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(255,255,255,0.05); }
+
+.secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
 
 /* Inputs */
 input {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border);
-  color: white;
-  padding: 12px;
-  border-radius: 8px;
-  width: 100%;
-  font-size: 1rem;
-  transition: 0.3s;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    color: white;
+    padding: 14px;
+    border-radius: 12px;
+    width: 100%;
+    font-size: 1rem;
+    font-family: var(--font-body);
+    transition: 0.3s;
 }
-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+input:focus {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
 
-/* ================= LANDING PAGE & AUTH ================= */
+/* ================= LANDING PAGE ================= */
 #landing, .auth-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  min-height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%;
 }
 .landing-card, .auth-card {
-  padding: 30px;
-  max-width: 450px;
-  width: 90%;
-  border-top: 4px solid var(--primary);
-  margin: 20px auto;
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float { 
-  0%, 100% { transform: translateY(0); } 
-  50% { transform: translateY(-10px); } 
+    padding: 40px;
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    z-index: 2;
 }
 
 .title {
-  font-family: var(--font-display);
-  font-size: 3rem;
-  margin: 0;
-  background: linear-gradient(to right, #fff, #94a3b8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1.1;
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: linear-gradient(to bottom, #fff 40%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
+    margin: 0;
+    line-height: 1;
 }
-.subtitle { color: var(--text-muted); margin: 15px 0 30px; font-size: 1rem; }
-.features { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
+
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin: 20px 0 30px;
+    line-height: 1.6;
+}
+
 .features span {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  border: 1px solid var(--border);
+    background: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
 }
 
-.divider { margin: 20px 0; font-size: 0.8rem; color: var(--text-muted); position: relative; }
-.divider::before, .divider::after {
-  content: ""; position: absolute; top: 50%; width: 40%; height: 1px; background: var(--border);
-}
-.divider::before { left: 0; } .divider::after { right: 0; }
-
-/* Auth Tabs & Toggle */
-.tab-btn { background:none; border:none; color:#666; padding:10px; cursor:pointer; font-weight:bold; border-bottom: 2px solid transparent; }
-.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-.toggle-switch { display: flex; align-items: center; gap: 10px; cursor: pointer; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-.toggle-switch input { display: none; }
-.toggle-switch .slider { width: 40px; height: 20px; background: #334155; border-radius: 20px; position: relative; transition:0.3s; }
-.toggle-switch .slider::before { content:""; position:absolute; left:2px; top:2px; width:16px; height:16px; background:white; border-radius:50%; transition:0.3s; }
-.toggle-switch input:checked + .slider { background: var(--success); }
-.toggle-switch input:checked + .slider::before { transform: translateX(20px); }
-.toggle-switch .label-text { color: #fff; font-size: 0.9rem; }
-
-/* Public Room List */
-.room-list-box { max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top: 10px; padding: 5px; }
-.room-section-title { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; margin: 10px 0 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-.room-tile { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); margin-bottom: 5px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-.room-tile:hover { background: rgba(99, 102, 241, 0.2); border: 1px solid var(--primary); }
-.room-tile.live { border-left: 3px solid #ef4444; background: rgba(239, 68, 68, 0.1); }
-.room-tile.waiting { border-left: 3px solid #22c55e; }
-
-/* ================= RULES & MODALS ================= */
-
-.rules-overlay {
-    position: fixed; inset: 0;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(5px);
-    z-index: 10000;
-    display: flex; justify-content: center; align-items: center;
-}
-
-.overlay-card, .rules-card {
-    background: #1e293b;
-    width: 90%; max-width: 500px;
-    max-height: 85vh;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    display: flex; flex-direction: column;
-    overflow: hidden;
-}
-
-.overlay-card h2, .rules-card h3 {
-    margin: 0; padding: 20px; text-align: center;
-    color: #818cf8; font-size: 1.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    background: #1e293b;
-}
-
-.rules-scroll-area { padding: 20px; overflow-y: auto; flex: 1; }
-.rules-footer { padding: 20px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
-
-.rules-section { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-.rules-section h4 { margin: 0 0 10px 0; color: var(--gold); text-transform: uppercase; font-size: 0.9rem; }
-.rule-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
-.rule-row label { color: #cbd5e1; font-size: 0.9rem; }
-.rule-row input { width: 70px; padding: 6px; text-align: center; background: #0f172a; border: 1px solid #334155; }
-
-/* ================= AUCTION UI ================= */
-
-.topbar {
-  flex-shrink: 0; 
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 15px; 
-  background: rgba(15, 23, 42, 0.95);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(10px);
-  z-index: 100;
-  position: sticky; /* Sticky header within the flex column */
-  top: 0;
-}
-.topbar .admin-mini { flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
-
-.topbar .admin-mini button { padding: 4px 8px !important; font-size: 0.75rem !important; } 
-/* --- LEAVE BUTTON STYLE --- */
-#leaveBtn {
-    background-color: rgba(239, 68, 68, 0.2); /* Faint Red Background */
-    border: 1px solid #ef4444;               /* Bright Red Border */
-    color: #fca5a5;                          /* Light Red Text */
-    border-radius: 4px;                      /* Match your other buttons */
-    font-weight: bold;
-    cursor: pointer;
-    
-    /* Ensure it matches the size of other admin buttons */
-    padding: 4px 8px !important;
-    font-size: 0.75rem !important;
-    
-    /* Flex alignment for icon + text */
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-#leaveBtn:hover {
-    background-color: #ef4444; /* Solid Red on Hover */
-    color: white;
-}
-
-.brand { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; color: var(--primary); letter-spacing: 1px; }
+/* ================= AUCTION UI LAYOUT ================= */
 
 .auction-wrapper {
-  display: grid;
-  grid-template-columns: 300px 1fr 300px;
-  gap: 20px;
-  max-width: 1600px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 20px; 
-}
-
-.panel { 
-    display: flex; flex-direction: column; 
-    height: 600px; /* Fixed height for desktop panels */
-    overflow: hidden; padding: 15px; 
-}
-.panel h3 { margin: 0; margin-bottom:10px; font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-
-.scroll { flex: 1; overflow-y: auto; font-size: 0.9rem; color: #cbd5e1; }
-.log-item { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-.auction-center {
-  display: flex; flex-direction: column;
-  justify-content: flex-start; align-items: center;
-}
-
-/* --- CENTER CARDS --- */
-/* ================= PREMIUM AUCTION CARD ================= */
-/* ================= DARK GLOW THEME CARDS ================= */
-/* --- CENTER CARDS --- */
-#auctionCard, #teamSelectionMain {
-  width: 100%; max-width: 500px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: 0 0 50px rgba(0,0,0,0.5);
-  transition: transform 0.3s;
-  background: rgba(30, 41, 59, 0.8);
-}
-
-#teamSelectionMain {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 350px;
+    display: grid;
+    grid-template-columns: 320px 1fr 320px; /* Wider side panels */
+    gap: 25px;
+    max-width: 1600px;
+    width: 100%;
+    margin: 0 auto;
     padding: 20px;
-    text-align: center;
+    height: calc(100vh - 70px); /* Fill screen minus header */
 }
 
-.auction-header-role {
-  background: #0f172a; color: var(--text-muted); text-transform: uppercase;
-  font-size: 0.8rem; letter-spacing: 2px; padding: 10px; text-align: center;
-  border-bottom: 1px solid var(--border);
+/* Header */
+.topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 25px;
+    background: rgba(3, 7, 18, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+    z-index: 50;
+}
+.brand {
+    font-size: 1.2rem;
+    color: white;
+    text-shadow: 0 0 15px var(--primary);
+}
+
+/* Center Column */
+.auction-center {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start;
+}
+
+/* The Main Auction Card */
+#auctionCard, #teamSelectionMain {
+    width: 100%;
+    max-width: 550px;
+    background: linear-gradient(160deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 1px var(--glass-border);
 }
 
 #playerInfoBox {
-  padding: 30px 20px;
-  background: radial-gradient(circle at center, #1e293b, #0f172a);
-  text-align: center;
-  border-bottom: 1px solid var(--border);
+    padding: 40px 20px;
+    text-align: center;
+    position: relative;
+    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15), transparent 70%);
 }
-
 
 #playerName {
-  font-family: var(--font-display);
-  font-size: 2rem; font-weight: 800; color: white;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin-bottom: 5px;
-}
-#playerMeta { color: var(--gold); font-weight: 700; letter-spacing: 1px; font-size: 0.9rem; }
-
-/* Price Container */
-.price-container {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 15px 20px; background: rgba(0,0,0,0.2); gap: 10px;
-}
-#bid { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: white; }
-#timer { font-family: monospace; font-size: 1.2rem; background: #0f172a; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); color: var(--accent); }
-
-/* Bid Button */
-.card-padding-area { padding: 15px; background: #1e293b; }
-#bidBtn {
-  width: 100%; padding: 15px; font-size: 1.2rem; font-weight: 800;
-  text-transform: uppercase; background: var(--success);
-  border: none; border-radius: 8px; color: #000; cursor: pointer;
-  transition: 0.1s; box-shadow: 0 4px 0 #15803d;
-}
-#bidBtn:active { transform: translateY(4px); box-shadow: none; }
-#bidBtn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; }
-
-/* Chat */
-.chat-box { display: flex; gap: 5px; margin-top: 10px; }
-.chat-box input { padding: 10px; font-size: 0.9rem; background: #1e293b; border: 1px solid #334155; }
-.chat-box button { padding: 0 15px; background: var(--primary); border-radius: 8px; border:none; color:white; cursor:pointer;}
-
-/* Bidder Badge */
-.bidder-badge {
-  border-radius: 6px; 
-  border: 1px solid var(--team, #475569);
-  background: rgba(15, 23, 42, 0.95);
-  box-shadow: 0 0 20px -5px var(--team, rgba(0,0,0,0));
-  padding: 5px 15px; 
-  font-size: 0.8rem; font-weight: 600; color: #fff;
-  text-transform: uppercase; letter-spacing: 1px;
-  display: flex; align-items: center; gap: 8px;
-  text-shadow: 0 0 10px var(--team, transparent);
-}
-.bidder-badge .dot {
-  height: 6px; width: 6px; border-radius: 50%; 
-  background-color: var(--team, #94a3b8); 
-  box-shadow: 0 0 8px 1px var(--team, transparent);
-  animation: blink 1s infinite;
-}
-@keyframes blink { 50% { opacity: 0.4; } }
-
-/* Result Overlay */
-.result-overlay {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);
-  z-index: 50; display: flex; justify-content: center; align-items: center;
-  pointer-events: none;
-}
-.stamp-container {
-  text-align: center; transform: rotate(-12deg);
-  border: 4px solid var(--success); padding: 10px 20px; border-radius: 12px;
-  box-shadow: 0 0 30px var(--success) inset, 0 0 20px var(--success);
-  background: rgba(34, 197, 94, 0.1);
-  animation: stampSlam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  opacity: 0;
-}
-.stamp-title { font-family: var(--font-display); font-size: 2.5rem; font-weight: 900; color: var(--success); line-height: 1; text-transform: uppercase; }
-.stamp-detail { font-family: var(--font-body); font-size: 1.2rem; font-weight: 600; color: #fff; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; }
-.stamp-container.unsold { border-color: var(--accent); box-shadow: 0 0 30px var(--accent) inset, 0 0 20px var(--accent); background: rgba(244, 63, 94, 0.1); }
-.stamp-container.unsold .stamp-title { color: var(--accent); }
-@keyframes stampSlam { 0% { transform: scale(3) rotate(0deg); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1) rotate(-12deg); opacity: 1; } }
-
-.auction-card.pulse { animation: neonPulse 0.4s ease-in-out; }
-@keyframes neonPulse { 0% { box-shadow: 0 0 0 rgba(255,255,255,0); border-color: white; } 50% { box-shadow: 0 0 30px var(--accent); border-color: var(--accent); } 100% { box-shadow: 0 0 0 rgba(255,255,255,0); } }
-
-/* Team Select Grid (Embedded) */
-.team-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; padding: 10px 0; }
-.team-btn {
-  width: 100%; padding: 12px 5px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--team-color);
-  border-radius: 8px; color: #fff;
-  font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; letter-spacing: 1px;
-  cursor: pointer; transition: all 0.2s ease;
-}
-.team-btn:hover { background: var(--team-color); color: #000; }
-
-/* ================= XI DASHBOARD LAYOUT ================= */
-
-/* 1. THE CREATIVE CARD (PREVIEW) */
-.team-sheet-card {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    border: 2px solid var(--gold);
-    border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-    position: relative;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    margin: 0 auto 20px auto;
-    max-width: 500px;
-    overflow: hidden;
-}
-.team-sheet-card::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at center, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 24px 24px; pointer-events: none; }
-
-.sheet-header { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; position: relative; z-index: 2; }
-.sheet-title { font-family: var(--font-display); color: var(--gold); font-size: 1.8rem; text-transform: uppercase; margin: 0; letter-spacing: 2px; }
-.sheet-subtitle { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 3px; }
-
-/* 2. PLAYER PILLS */
-.sheet-role-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 12px; position: relative; z-index: 2; }
-.sheet-player-pill {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: #fff;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: flex; align-items: center; gap: 6px;
-    backdrop-filter: blur(4px);
-}
-.sheet-player-pill small { color: var(--gold); font-size: 0.75em; }
-.sheet-player-pill.foreign { border-color: var(--accent); background: rgba(244, 63, 94, 0.15); }
-.sheet-footer { margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; }
-
-/* 3. SELECTION LIST (COMPACT) */
-.xi-select-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
-    gap: 8px; 
-    padding-bottom: 40px;
-    margin-top: 5px;
-}
-.role-group-title {
-    grid-column: 1 / -1;
-    color: var(--gold);
-    background: rgba(255, 255, 255, 0.03);
-    padding: 6px 10px;
-    border-radius: 4px;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    border-left: 3px solid var(--gold);
-}
-.xi-player-btn {
-    background: #1e293b; border: 1px solid #475569; color: #f8fafc;
-    padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;
-    text-align: left; cursor: pointer; transition: all 0.2s ease;
-    display: flex; justify-content: space-between; align-items: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-.xi-player-btn.picked { background: var(--success); color: #000; border-color: #166534; font-weight: 700; box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
-.xi-player-btn small { font-size: 0.75em; color: #cbd5e1; background: rgba(0,0,0,0.4); padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
-.xi-player-btn.picked small { color: #000; background: rgba(255,255,255,0.3); }
-
-/* Placeholder */
-.xi-placeholder { text-align: center; padding: 40px; border: 2px dashed #334155; border-radius: 16px; color: #64748b; margin-bottom: 20px; }
-
-/* ================= LEADERBOARD ================= */
-.leaderboard-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; min-width: 600px; }
-.leaderboard-table th { background: rgba(30, 41, 59, 0.8); color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; padding: 15px; border-bottom: 2px solid var(--border); }
-.leaderboard-table tr.clickable { background: rgba(255, 255, 255, 0.03); cursor: pointer; }
-.leaderboard-table td { padding: 15px; border: 1px solid rgba(255, 255, 255, 0.05); border-style: solid none; }
-.leaderboard-table td:first-child { border-left: 1px solid rgba(255, 255, 255, 0.05); border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
-.leaderboard-table td:last-child { border-right: 1px solid rgba(255, 255, 255, 0.05); border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
-
-/* Rank Badge */
-.rank-badge { background: #334155; color: #fff; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: bold; font-size: 0.9rem; }
-.rank-1 { background: #eab308; color: #000; } .rank-2 { background: #94a3b8; color: #000; } .rank-3 { background: #b45309; color: #fff; }
-.status-tag { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
-.status-q { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
-.status-dq { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid #f43f5e; }
-
-/* ================= FOOTER (FIXED) ================= */
-.app-footer {
-    width: 100%;
-    background: #0f172a; /* Solid background */
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px 0;
-    margin-top: auto; /* Pushes to bottom of flex container */
-    z-index: 2000;
-    font-size: 0.8rem;
-    color: #94a3b8;
-    text-align: center;
-    /* Safe Area for Mobile */
-    padding-bottom: env(safe-area-inset-bottom, 12px);
-}
-.footer-content { display: flex; justify-content: center; align-items: center; gap: 10px; }
-.footer-link { color: var(--gold); text-decoration: none; font-weight: 600; }
-.social-links { display: flex; gap: 8px; }
-.social-links a { text-decoration: none; font-size: 1rem; opacity: 0.7; }
-
-/* ================= MOBILE RESPONSIVENESS ================= */
-
-@media (max-width: 900px) {
-
-  /* 1. LAYOUT & SCROLLING */
-  .screen {
-    height: auto !important; 
-    overflow-y: auto !important;
-    display: block; 
-    padding-bottom: 20px; /* Space above footer */
-  }
-
-  /* 2. AUCTION PAGE */
-  .auction-wrapper {
-    display: flex;
-    flex-direction: column;
-    padding: 10px;
-    padding-bottom: 80px; /* Space for buttons */
-  }
-  
-  .auction-center { order: 1; margin-bottom: 20px; }
-  .panel { height: 250px; order: 2; margin-bottom: 20px; flex: none; }
-
-  .modal-content {
-        width: 95% !important;      /* Almost full width */
-        max-width: none !important; /* Remove desktop limits */
-        height: 90vh !important;    /* 90% of screen height */
-        top: 5% !important;         /* Center it vertically */
-    }
-
-    /* 7. Landing Page & Inputs */
-    .landing-card, .auth-card {
-        width: 95%;
-        padding: 20px;
-    }
-  /* 3. PLAYING XI PAGE */
-  /* Ensure container pushes content up */
-  #playingXI > div { padding-bottom: 120px !important; }
-  
-  /* Buttons Stack */
-  #playingXI .primary-btn, #playingXI .secondary-btn {
-    width: 100%;
-    margin-bottom: 8px;
-  }
-  
-  /* 4. LEADERBOARD */
-  #leaderboard .glass {
-    overflow-x: auto; /* Enable horizontal scroll */
-    margin: 0 -10px;  /* Edge to edge */
-    width: 100vw;
-  }
-  
-  /* 5. TOPBAR */
-  .topbar {
-    flex-direction: column;
-    height: auto;
-    position: relative;
-  }
-#roomCodeBar { 
-    display: block !important; /* Force Visible */
-    font-size: 0.7rem;
-    padding: 6px 9px;
-    background: rgba(255,255,255,0.15);
-  }  
-  /* 6. MODALS */
-  .rules-overlay { align-items: flex-end; padding: 0; }
-  .rules-card, .overlay-card {
-    width: 100%;
-    border-radius: 16px 16px 0 0;
-    margin: 0;
-    max-height: 80vh;
-  }
-}
-
-/* ================= EARLY ACCESS BADGE ================= */
-/* ... inside @media (max-width: 900px) ... */
-
-  /* FIX: LANDING PAGE VISIBILITY ON MOBILE */
-  #landing {
-    justify-content: flex-start !important; /* Don't force center vertically */
-    padding-top: 60px !important;           /* Push content down so badge is visible */
-    height: auto !important;                /* Allow scrolling */
-  }
-
-  .landing-hero {
-    margin-bottom: 30px; /* Add space between card and info sections */
-  }
-
-  /* Adjust badge position if needed */
-  .early-access-badge {
-    margin-top: 10px;
-  }
-
-/* ... rest of your mobile styles ... */
-
-
-/* 3. Floating Animation */
-@keyframes floatBadge {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); } /* Moves up slightly */
-}
-
-/* Mobile Tweaks */
-@media (max-width: 900px) {
-    .early-access-badge {
-        font-size: 0.8rem;
-        padding: 6px 16px;
-        margin-bottom: 5px;
-    }
-}
-
-/* ================= COFFEE SUPPORT BANNER ================= */
-.coffee-banner {
-    background: #022c22; /* Dark Green Background */
-    border: 1px solid #14532d; /* Lighter Green Border */
-    border-radius: 12px;
-    padding: 12px 20px;
-    margin: 20px auto;
-    max-width: 600px;
-    width: 90%;
-    
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-.coffee-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.coffee-icon {
-    font-size: 1.5rem;
-}
-
-.coffee-text {
-    color: #86efac; /* Light Green Text */
-    font-weight: 700;
-    font-family: var(--font-body);
-    font-size: 1rem;
-}
-
-.coffee-btn {
-    background-color: #15803d; /* Button Green */
-    color: #ffffff;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: background 0.2s;
-}
-
-.coffee-btn:hover {
-    background-color: #166534;
-}
-
-/* Mobile Tweak for Banner */
-@media (max-width: 600px) {
-    .coffee-banner {
-        width: 95%;
-        padding: 10px 15px;
-    }
-    .coffee-text {
-        font-size: 0.9rem;
-    }
-}
-/* ================= USER LIST DROPDOWN ================= */
-
-/* 1. The Button (Looks exactly like the previous pill) */
-/* Update this existing class */
-.count-pill-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-main);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-family: var(--font-body);
-    transition: background 0.2s;
-    margin-right: 10px;
-    
-    /* --- NEW FIXES FOR MOBILE --- */
-    white-space: nowrap; /* Prevents text from wrapping */
-    flex-shrink: 0;      /* Prevents the button from getting squashed */
-    min-width: max-content; /* Ensures it is always wide enough for content */
-}
-
-
-.count-pill-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Green Pulse Dot */
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    background: var(--success);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--success);
-    animation: blink 2s infinite;
-}
-
-/* 2. The Dropdown Container */
-.user-list-dropdown {
-    position: absolute;
-    top: 120%; /* Just below the button */
-    right: 0;  /* Align to right edge */
-    width: 220px;
-    max-height: 300px;
-    overflow-y: auto;
-    background: rgba(15, 23, 42, 0.95); /* Darker glass */
-    padding: 15px;
-    z-index: 1000;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    /* Mobile safe */
-    right: 10px; 
-}
-
-/* 3. User Items inside Dropdown */
-.ul-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 0.9rem;
-}
-.ul-item:last-child { border-bottom: none; }
-
-.ul-name {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #fff;
-    font-weight: 500;
-}
-
-.ul-dot {
-    width: 6px; height: 6px;
-    background: var(--success);
-    border-radius: 50%;
-    flex-shrink: 0; /* Don't squash the dot */
-}
-
-.ul-team {
-    font-size: 0.75rem;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(255,255,255,0.1);
-    color: var(--gold);
-}
-/* User Away Timer (Yellow/Red Countdown) */
-.away-timer {
-    font-family: monospace;
-    font-size: 0.75rem;
-    color: #fca5a5; /* Light Red text */
-    margin-left: 6px;
-    background: rgba(255, 0, 0, 0.15); /* Reddish tint background */
-    padding: 1px 5px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 0, 0, 0.2);
-}
-
-
-/* ================= COMMAND CENTER (Tabs & Layout) ================= */
-
-/* Tabs Styling */
-.info-tabs {
-    display: flex;
-    border-bottom: 1px solid var(--border);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -1px;
     margin-bottom: 10px;
 }
 
-.info-tab-btn {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    padding: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-}
-
-.info-tab-btn:hover { color: #fff; background: rgba(255,255,255,0.02); }
-.info-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
-
-/* Horizontal Team Scroll */
-.horizontal-tabs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 5px;
-    white-space: nowrap;
-    /* Hide scrollbar but keep functionality */
-    scrollbar-width: thin; 
-}
-.horizontal-tabs::-webkit-scrollbar { height: 4px; }
-
-.h-team-btn {
-    padding: 6px 12px;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 20px;
-    color: #cbd5e1;
-    cursor: pointer;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-}
-.h-team-btn.active {
-    background: var(--gold);
-    color: #000;
-    border-color: var(--gold);
-    font-weight: bold;
-}
-
-/* Squad List inside Tile */
-.sq-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    font-size: 0.9rem;
-}
-.sq-role { font-size:0.75rem; background:#333; padding:2px 5px; border-radius:4px; margin-right:5px; }
-
-/* Responsive Fix */
-/* ================= MOBILE RESPONSIVENESS ================= */
-@media (max-width: 900px) {
-    
-    /* Fix Command Center Cutting Off */
-    .command-center {
-        height: 80vh !important; /* Increased height slightly */
-        max-height: 750px;
-        margin-bottom: 1px; /* Extra space at bottom page scroll */
-    }
-    
-    /* Fix Chat Input Visibility */
-    #panel-feed {
-        height: 100%;
-        /* Add extra padding at the bottom of the internal panel */
-        padding-bottom: 5px; 
-    }
-
-    /* Lift the chat box input specifically */
-    .chat-box {
-        margin-bottom: 5px; /* Pushes it up from the bottom edge */
-    }
-
-    /* Ensure Topbar doesn't shrink the logo too much */
-    .brand {
-        font-size: 1rem; /* Slightly smaller logo text on mobile if needed */
-        white-space: nowrap;
-    }
-}
-
-/* ================= SETS VIEW STYLING ================= */
-.set-title { 
-    background: #1e293b; 
-    padding: 10px; 
-    border-radius: 6px; 
-    margin-top: 15px; 
-    margin-bottom: 5px;
-    border-left: 4px solid #475569; 
-    font-size: 0.9rem; 
-    text-transform: uppercase; 
-    color: #cbd5e1;
-}
-
-.set-title.active { 
-    background: rgba(250, 204, 21, 0.1); 
-    border-left: 4px solid #facc15; 
-    color: #facc15; 
-}
-
-.set-player-row { 
-    display:flex; 
-    justify-content:space-between; 
-    padding: 8px 10px; 
-    border-bottom:1px solid rgba(255,255,255,0.05); 
-    align-items:center; 
-    color: #94a3b8; 
-    font-size: 0.9rem;
-}
-
-.set-player-row.active-p { 
-    color: #fff; 
-    font-weight: 600; 
-    background: rgba(255,255,255,0.02);
-}
-
-.sp-role { 
-    background:#334155; 
-    color:#fff; 
-    padding:2px 6px; 
-    border-radius:4px; 
-    font-size:0.7rem; 
-    margin-right: 5px;
-}
-
-.sp-rating { 
-    color:#facc15; 
-    font-size: 0.8rem; 
-}
-/* ========================================= */
-/* ====== NEW COMPACT AUCTION CARD ========= */
-/* ========================================= */
-
-/* 1. The 3-Column Header (Team - Role - Purse) */
-/* ========================================= */
-/* ====== COMPACT AUCTION CARD STYLES ====== */
-/* ========================================= */
-
-/* 1. The 3-Column Header Row */
-/* Matches your previous 'auction-header-role' style but flexible */
-.auction-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #0f172a; /* Keep original dark header bg */
-    border-bottom: 1px solid var(--border);
-    padding: 8px 12px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Alignments */
-.meta-item.left {
-    text-align: left;
-    flex: 1;
-    color: var(--team-color, #fff); /* Uses JS team color */
-}
-.meta-item.center {
-    text-align: center;
-    flex: 1;
-    color: var(--text-muted); /* Your muted text color */
-    font-size: 0.75rem; /* Slightly smaller for role */
-}
-.meta-item.right {
-    text-align: right;
-    flex: 1;
-    color: #4ade80; /* Green purse */
-}
-
-/* 2. Minimize the Name Tile Height */
-/* We target the existing ID but force smaller padding */
-#playerInfoBox.compact-name {
-    padding: 18px 0 !important; /* REDUCED from 30px to 10px */
-    min-height: auto !important;
-    /* Keep your existing radial-gradient background from style.css */
-}
-
-/* Adjust the Name Font specifically for this compact view */
-#playerInfoBox.compact-name #playerName {
+.price-container {
+    background: rgba(0,0,0,0.3);
     margin: 0;
-    font-size: 1.8rem; /* Slightly smaller than 2rem to save space */
-    line-height: 1.1;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    padding: 20px;
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+    display: flex; justify-content: space-between; align-items: center;
 }
 
-/* Ensure the Reset of Old Styles */
-#noticeTeam, #noticePurse {
-    /* Reset the old 'Capsule' styles so they fit inside the card */
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: auto !important;
-    min-width: auto !important;
-    display: block; /* Reset flex if needed */
+#bid {
+    font-size: 2rem;
+    color: var(--success);
+    text-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
 }
 
-
-/* Update or Add this to style.css */
-/* --- Admin Controls Container --- */
-#adminControls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px; /* Space between buttons */
-    margin-top: 10px;
-    flex-wrap: wrap; /* Allows wrapping on small screens */
-}
-
-/* --- Admin Controls Container --- */
-#adminControls {
-    display: flex;
-    justify-content: flex-end; /* Pushes buttons to the right to keep space empty */
-    gap: 8px; 
-    margin-top: 8px;
-    align-items: center;
-}
-
-/* --- The "Glass" Button Style (Pause, Skip, Skip Set) --- */
-#adminControls button {
-    background: rgba(255, 255, 255, 0.05); /* Dark Glassy Background */
-    border: 1px solid rgba(255, 255, 255, 0.15); /* Subtle Light Border */
-    border-radius: 8px;     /* "Rules Button" Shape (Not Pill, Not Square) */
-    color: #94a3b8;         /* Muted Text Color */
-    padding: 6px 12px;      /* Compact Size */
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: none;       /* Flat look */
-    min-width: auto;
-}
-
-/* Hover Effect: Slightly brighter */
-#adminControls button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.4);
-    color: #fff;
-}
-
-/* --- Leave Button Special Styling --- */
-/* You asked to keep this "same" (red outline) but change the shape */
-#leaveBtn {
-    background: transparent !important;
-    border: 1px solid #ef4444 !important; /* Keep Red Border */
-    color: #ef4444 !important;            /* Keep Red Text */
-    border-radius: 8px !important;        /* Update to Rules Shape */
-}
-
-#leaveBtn:hover {
-    background: rgba(239, 68, 68, 0.1) !important;
-}
-
-/* --- HIDING THE END BUTTON --- */
-/* As per your request to remove it and keep space empty */
-#endBtn {
-    display: none !important; 
-}
-
-
-/* ========================================= */
-/* ====== COMMAND CENTER (Tabs + Expand) === */
-/* ========================================= */
-/* ========================================= */
-/* ====== PREMIUM COMMAND CENTER STYLES ==== */
-/* ========================================= */
-
-#commandCenter {
+.card-padding-area { padding: 20px; }
+#bidBtn {
     width: 100%;
-    max-width: 500px;
-    margin-top: 15px;
-    display: flex;
-    flex-direction: column;
-    /* Glass Effect Base */
-    background: rgba(15, 23, 42, 0.85); 
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background: var(--success);
+    color: #022c22;
+    font-size: 1.3rem;
+    padding: 16px;
     border-radius: 12px;
+    border: none;
+    font-weight: 900;
+    box-shadow: 0 0 25px rgba(52, 211, 153, 0.3);
+    transition: 0.2s;
+}
+#bidBtn:hover { transform: scale(1.02); box-shadow: 0 0 40px rgba(52, 211, 153, 0.5); }
+#bidBtn:active { transform: scale(0.98); }
+
+/* ================= COMMAND CENTER (Right Panel) ================= */
+#commandCenter {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    display: flex; flex-direction: column;
+    height: 100%;
     overflow: hidden;
-    transition: height 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth springy animation */
-    
-    /* DEFAULT COMPACT HEIGHT */
-    height: 340px; 
 }
 
-/* EXPANDED STATE */
-#commandCenter.expanded {
-    height: 600px; 
-}
-
-/* --- 1. PREMIUM TABS ROW --- */
 .cc-tabs {
-    display: flex;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 4px;
-    gap: 4px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0,0,0,0.2);
+    padding: 8px;
+    gap: 8px;
 }
 
 .cc-tab-btn {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    padding: 10px;
+    border-radius: 8px;
+    padding: 8px;
     font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    position: relative;
+    transition: 0.3s;
 }
-
-.cc-tab-btn:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.05);
-}
-
-/* Active Tab: Bright with subtle glow */
 .cc-tab-btn.active {
-    color: #fff;
-    background: rgba(99, 102, 241, 0.2); /* Indigo Tint */
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
-}
-.cc-tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -5px; /* Visual indicator line */
-    left: 20%; right: 20%;
-    height: 2px;
-    background: #6366f1;
-    border-radius: 2px;
-}
-
-/* --- 2. CONTENT AREA --- */
-.cc-content {
-    flex: 1;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(to bottom, rgba(15, 23, 42, 0) 0%, rgba(0,0,0,0.2) 100%);
-    overflow: hidden;
-}
-
-.cc-view {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-.cc-view.hidden { display: none !important; }
-
-/* GENERIC SCROLL AREA (Sets & Squads) */
-.scroll-view {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-}
-
-/* --- VIEW: FEED STYLING --- */
-#miniLog {
-    height: 85px; /* Fixed height for log */
-    overflow-y: auto;
-    padding: 8px 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    background: rgba(0,0,0,0.4);
-    color: #64748b;
-    font-size: 0.75rem;
-    font-family: monospace;
-}
-.log-item { margin-bottom: 3px; border-left: 2px solid transparent; padding-left: 5px; }
-.log-item:last-child { border-left-color: #22c55e; color: #cbd5e1; } /* Highlight latest log */
-
-#feedChat {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-#chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    font-size: 0.9rem;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-}
-
-/* Input Area */
-.feed-input-wrapper {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    gap: 8px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    background: rgba(30, 41, 59, 0.4);
-}
-.feed-input-wrapper input {
-    flex: 1;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 10px 12px;
-    border-radius: 8px;
+    background: var(--glass-highlight);
     color: white;
-    font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
-.feed-input-wrapper input:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+.cc-tab-btn.active::after { display: none; } /* Remove old underline */
+
+/* Chat */
+#feedChat { background: transparent; }
+.log-item {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-left: 2px solid var(--primary);
+    background: rgba(0,0,0,0.2);
+    margin-bottom: 4px;
+    border-radius: 0 4px 4px 0;
 }
 
-/* --- 3. EXPAND HANDLE --- */
-#ccExpandBtn {
-    height: 28px;
-    background: rgba(0,0,0,0.5);
-    border: none;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    color: #94a3b8;
-    cursor: pointer;
-    font-size: 0.7rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
+/* ================= TEAM SHEET (XI) ================= */
+.team-sheet-card {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--gold);
+    box-shadow: 0 0 40px rgba(251, 191, 36, 0.1);
 }
-#ccExpandBtn:hover {
-    background: rgba(255,255,255,0.1);
+
+.xi-player-btn {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    transition: 0.2s;
+}
+.xi-player-btn:hover { background: rgba(255,255,255,0.08); }
+.xi-player-btn.picked {
+    background: rgba(52, 211, 153, 0.2);
+    border-color: var(--success);
     color: #fff;
 }
 
+/* ================= MOBILE RESPONSIVE ================= */
+@media (max-width: 900px) {
+    .auction-wrapper {
+        display: flex; flex-direction: column;
+        padding: 10px;
+        height: auto;
+    }
+    .topbar { padding: 10px 15px; }
+    
+    #commandCenter {
+        height: 600px; /* Fixed height on mobile */
+        margin-top: 20px;
+    }
+    
+    .screen { overflow-y: visible; height: auto; }
+}
+
+/* ================= UTILS & ANIMATION CLASSES ================= */
+.pulse-dot {
+    background: var(--success);
+    box-shadow: 0 0 10px var(--success);
+}
+
+@keyframes neonPulse {
+    0% { box-shadow: 0 0 0 var(--accent); border-color: white; }
+    50% { box-shadow: 0 0 40px var(--accent); border-color: var(--accent); }
+    100% { box-shadow: 0 0 0 transparent; }
+}
+
+/* Custom Scrollbar for inner elements */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
