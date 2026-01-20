@@ -492,46 +492,45 @@ socket.on("roomUsersUpdate", (data) => {
 });
 // --- FEED LOGIC ---
 // --- COMMAND CENTER LOGIC ---
-function toggleCcExpand() {
-    const cc = document.getElementById('commandCenter');
-    const trigger = document.getElementById('ccTrigger');
-    
-    // Toggle the slide-in class
-    const isClosed = cc.classList.contains('translate-x-full');
-    
-    if (isClosed) {
-        cc.classList.remove('translate-x-full');
-        // Optional: Hide trigger when open
-        trigger.classList.add('scale-0', 'opacity-0');
-    } else {
-        cc.classList.add('translate-x-full');
-        // Show trigger when closed
-        trigger.classList.remove('scale-0', 'opacity-0');
-    }
-}
+// --- FEED LOGIC ---
+// --- COMMAND CENTER LOGIC ---
 
-function switchCcTab(tabName) {
-    // 1. Hide all views
-    document.querySelectorAll('.cc-view').forEach(el => el.classList.add('hidden'));
-    // 2. Show selected view
-    document.getElementById(`view-${tabName}`).classList.remove('hidden');
-
-    // 3. Update Bottom Nav Styling
-    // Reset all buttons
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('nav-active');
-        btn.classList.add('border-transparent');
-        btn.querySelector('span:last-child').classList.remove('text-cyan-400');
-        btn.querySelector('span:last-child').classList.add('text-gray-500');
+// 1. Switch Tabs (Sets / Feed / Squads)
+window.switchCcTab = function(tabName) {
+    // A. Update Buttons
+    const buttons = document.querySelectorAll('.cc-tab-btn');
+    buttons.forEach(b => {
+        b.classList.remove('active');
+        if(b.innerText.toLowerCase().includes(tabName)) b.classList.add('active');
     });
 
-    // Highlight active button
-    const activeBtn = document.getElementById(`tab-btn-${tabName}`);
-    activeBtn.classList.add('nav-active');
-    activeBtn.classList.remove('border-transparent');
-    activeBtn.querySelector('span:last-child').classList.remove('text-gray-500');
-    activeBtn.querySelector('span:last-child').classList.add('text-cyan-400');
-}
+    // B. Show View
+    document.querySelectorAll('.cc-view').forEach(v => v.classList.add('hidden'));
+    document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+    // C. Trigger Data Refresh if needed
+    if (tabName === 'squads') {
+        if(typeof renderSquadTabs === 'function') renderSquadTabs();
+        socket.emit("getSquads");
+    }
+    if (tabName === 'sets') {
+        if(typeof renderSetsPanel === 'function') renderSetsPanel();
+    }
+};
+
+// 2. Expand Toggle (Arrow)
+window.toggleCcExpand = function() {
+    const box = document.getElementById('commandCenter');
+    const btn = document.getElementById('ccExpandBtn');
+    
+    box.classList.toggle('expanded');
+    
+    if(box.classList.contains('expanded')) {
+        btn.innerText = "▲";
+    } else {
+        btn.innerText = "▼";
+    }
+};
 
 // 3. Initialize Feed as Active
 // (Optional: Call this on load if it doesn't default correctly)
@@ -1638,6 +1637,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
