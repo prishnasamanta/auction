@@ -492,30 +492,45 @@ socket.on("roomUsersUpdate", (data) => {
 });
 // --- FEED LOGIC ---
 // --- COMMAND CENTER LOGIC ---
+function toggleCcExpand() {
+    const cc = document.getElementById('commandCenter');
+    const trigger = document.getElementById('ccTrigger');
+    
+    // Toggle the slide-in class
+    const isClosed = cc.classList.contains('translate-x-full');
+    
+    if (isClosed) {
+        cc.classList.remove('translate-x-full');
+        // Optional: Hide trigger when open
+        trigger.classList.add('scale-0', 'opacity-0');
+    } else {
+        cc.classList.add('translate-x-full');
+        // Show trigger when closed
+        trigger.classList.remove('scale-0', 'opacity-0');
+    }
+}
+
 function switchCcTab(tabName) {
     // 1. Hide all views
     document.querySelectorAll('.cc-view').forEach(el => el.classList.add('hidden'));
-    
     // 2. Show selected view
     document.getElementById(`view-${tabName}`).classList.remove('hidden');
 
-    // 3. Update Tab Buttons Visuals
-    const tabs = ['sets', 'feed', 'squads'];
-    tabs.forEach(t => {
-        const btn = document.getElementById(`tab-btn-${t}`);
-        if (t === tabName) {
-            // Apply Active Classes
-            btn.className = "cc-tab flex-1 py-2 text-[10px] font-bold rounded-lg transition-all tracking-widest border tab-active";
-        } else {
-            // Apply Inactive Classes
-            btn.className = "cc-tab flex-1 py-2 text-[10px] font-bold rounded-lg transition-all tracking-widest border tab-inactive";
-        }
+    // 3. Update Bottom Nav Styling
+    // Reset all buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('nav-active');
+        btn.classList.add('border-transparent');
+        btn.querySelector('span:last-child').classList.remove('text-cyan-400');
+        btn.querySelector('span:last-child').classList.add('text-gray-500');
     });
-}
 
-function toggleCcExpand() {
-    const cc = document.getElementById('commandCenter');
-    cc.classList.toggle('cc-minimized');
+    // Highlight active button
+    const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+    activeBtn.classList.add('nav-active');
+    activeBtn.classList.remove('border-transparent');
+    activeBtn.querySelector('span:last-child').classList.remove('text-gray-500');
+    activeBtn.querySelector('span:last-child').classList.add('text-cyan-400');
 }
 
 // 3. Initialize Feed as Active
@@ -1623,6 +1638,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
