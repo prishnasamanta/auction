@@ -1070,41 +1070,30 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-6px); }
 }
-/* Custom Scrollbar Hiding for sleek look */
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
+/* Hide default scrollbar but keep functionality */
+.custom-scroll::-webkit-scrollbar {
+    width: 4px;
 }
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+.custom-scroll::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.3);
 }
-
-/* Tab Active Styles (We will toggle these classes in JS) */
-.tab-active {
-    background-color: rgba(22, 78, 99, 0.4); /* Cyan-900/40 */
-    color: #22d3ee; /* Cyan-400 */
-    border-color: rgba(6, 182, 212, 0.3);
-    box-shadow: 0 0 15px rgba(34, 211, 238, 0.15);
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(34, 211, 238, 0.6);
 }
 
-.tab-inactive {
-    color: #9ca3af; /* Gray-400 */
-    border-color: transparent;
+/* Active State for Bottom Nav */
+.nav-active {
+    background: rgba(255, 255, 255, 0.05);
+    border-top-color: #22d3ee !important; /* Cyan-400 */
 }
-.tab-inactive:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.05);
+.nav-active span {
+    color: #22d3ee;
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
 }
 
-/* Minimized State */
-.cc-minimized #ccContent {
-    height: 0px;
-    opacity: 0;
-    pointer-events: none;
-    border: none;
-}
-.cc-minimized #ccExpandBtn {
-    transform: rotate(180deg);
-}
 
 
