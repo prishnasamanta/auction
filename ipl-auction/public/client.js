@@ -492,43 +492,31 @@ socket.on("roomUsersUpdate", (data) => {
 });
 // --- FEED LOGIC ---
 // --- COMMAND CENTER LOGIC ---
-
-// 1. Switch Tabs (Sets / Feed / Squads)
-window.switchCcTab = function(tabName) {
-    // A. Update Buttons
-    const buttons = document.querySelectorAll('.cc-tab-btn');
-    buttons.forEach(b => {
-        b.classList.remove('active');
-        if(b.innerText.toLowerCase().includes(tabName)) b.classList.add('active');
-    });
-
-    // B. Show View
-    document.querySelectorAll('.cc-view').forEach(v => v.classList.add('hidden'));
+function switchCcTab(tabName) {
+    // 1. Hide all views
+    document.querySelectorAll('.cc-view').forEach(el => el.classList.add('hidden'));
+    
+    // 2. Show selected view
     document.getElementById(`view-${tabName}`).classList.remove('hidden');
 
-    // C. Trigger Data Refresh if needed
-    if (tabName === 'squads') {
-        if(typeof renderSquadTabs === 'function') renderSquadTabs();
-        socket.emit("getSquads");
-    }
-    if (tabName === 'sets') {
-        if(typeof renderSetsPanel === 'function') renderSetsPanel();
-    }
-};
+    // 3. Update Tab Buttons Visuals
+    const tabs = ['sets', 'feed', 'squads'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tabName) {
+            // Apply Active Classes
+            btn.className = "cc-tab flex-1 py-2 text-[10px] font-bold rounded-lg transition-all tracking-widest border tab-active";
+        } else {
+            // Apply Inactive Classes
+            btn.className = "cc-tab flex-1 py-2 text-[10px] font-bold rounded-lg transition-all tracking-widest border tab-inactive";
+        }
+    });
+}
 
-// 2. Expand Toggle (Arrow)
-window.toggleCcExpand = function() {
-    const box = document.getElementById('commandCenter');
-    const btn = document.getElementById('ccExpandBtn');
-    
-    box.classList.toggle('expanded');
-    
-    if(box.classList.contains('expanded')) {
-        btn.innerText = "▲";
-    } else {
-        btn.innerText = "▼";
-    }
-};
+function toggleCcExpand() {
+    const cc = document.getElementById('commandCenter');
+    cc.classList.toggle('cc-minimized');
+}
 
 // 3. Initialize Feed as Active
 // (Optional: Call this on load if it doesn't default correctly)
@@ -1635,6 +1623,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
