@@ -2319,3 +2319,63 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     }
 }
 
+/* ========================================= */
+/* 🛠️ FIX: MOBILE SQUAD CARD (Square & 2x2) */
+/* ========================================= */
+
+/* 1. Remove the "Big Top Logo" (Clean Background) */
+.team-sheet-card::before {
+    display: none !important; /* Removes the duplicate background layer */
+}
+
+/* 2. Mobile Layout: Square Card + 2x2 Grid */
+@media (max-width: 600px) {
+    /* Force Exact Square Aspect Ratio & Trim Bottom */
+    .team-sheet-card.full-squad-mode {
+        width: 100% !important;
+        min-width: 0 !important; /* Override fixed width */
+        max-width: 400px !important;
+        aspect-ratio: 1 / 1 !important; /* EXACT SQUARE */
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: hidden !important; /* Trim extra content at bottom */
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Shrink Header to fit */
+    .full-squad-mode .sheet-header {
+        padding: 10px !important;
+    }
+    .full-squad-mode .sheet-title {
+        font-size: 1.5rem !important;
+    }
+    .full-squad-mode .sheet-subtitle {
+        font-size: 0.7rem !important;
+        margin-top: 2px !important;
+    }
+
+    /* 2x2 GRID LAYOUT (WK, BAT top / ALL, BOWL bottom) */
+    .full-squad-mode .pro-body {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important; /* 2 Columns */
+        gap: 8px !important;
+        padding: 10px !important;
+        flex: 1; /* Fill remaining space */
+        overflow: hidden; /* Prevent scrolling inside card */
+    }
+
+    /* Compact Rows for Mobile */
+    .pro-player-card {
+        padding: 4px 6px !important;
+        margin-bottom: 3px !important;
+    }
+    .pp-name { font-size: 0.7rem !important; }
+    .pp-price { font-size: 0.7rem !important; }
+    
+    /* Hide Footer on Mobile to save space for players */
+    .full-squad-mode .sheet-footer {
+        display: none !important; 
+    }
+}
+
