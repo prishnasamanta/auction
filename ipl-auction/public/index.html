@@ -290,66 +290,59 @@
             </div>
     </section>
 
-    <section id="playingXI" class="screen hidden">
-        <div style="max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh;">
-            
-            <div style="text-align:center; margin-bottom: 20px;">
-                <h2 style="margin:0; color:var(--gold);">🧢 SELECT PLAYING XI</h2>
-                <div style="display:flex; justify-content:center; gap:15px; font-size:0.8rem; color:#aaa; margin-top:5px;">
-                    <span>Max 4 Overseas</span> • <span>Min 3 Bat/Bowl</span> • <span>Min 1 WK/All</span>
-                </div>
+<section id="playingXI" class="screen hidden">
+    <div style="max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh;">
+        
+        <div style="text-align:center; margin-bottom: 15px;">
+            <h2 style="margin:0; color:var(--gold);">🧢 SELECT PLAYING XI</h2>
+            <div style="display:flex; justify-content:center; gap:15px; font-size:0.75rem; color:#aaa; margin-top:5px;">
+                <span>Max 4 Overseas</span> • <span>Min 3 Bat/Bowl</span> • <span>Min 1 WK/All</span>
             </div>
-
-            <div id="xiCardTarget" class="team-sheet-card hidden">
-                <div class="sheet-header">
-                    <h2 id="sheetTeamName" class="sheet-title">MY TEAM</h2>
-                    <div class="sheet-subtitle">PLAYING XI</div>
-                </div>
-                
-                <div id="sheetContent"></div>
-                
-                <div class="sheet-footer">
-                    <span>IPL AUCTION LIVE</span>
-                    <span id="sheetCount">0/11 Selected</span>
-                </div>
-            </div>
-
-            <div id="xiPlaceholder" class="xi-placeholder">
-                <div style="font-size:3rem; margin-bottom:10px;">🏏</div>
-                Select players below to build your Team Sheet
-            </div>
-            
-            <div id="xiStatsBar" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 15px;"></div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <button id="submitXIBtn" onclick="submitXI()" class="primary-btn" style="flex: 2;">
-                    Submit XI (0/11)
-                </button>
-                <button onclick="resetXISelection()" class="secondary-btn" style="width:50px; border-color:#ef4444; color:#ef4444;">
-                    ↻
-                </button>
-                <button id="saveXIBtn" onclick="downloadSheetPNG()" class="secondary-btn hidden" style="flex: 1; color:var(--gold); border-color:var(--gold);">
-                    📸 Save
-                </button>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button onclick="showScreen('leaderboard')" class="secondary-btn" style="flex: 1; border-color:#334155; background:rgba(255,255,255,0.05);">
-                    🏆 Leaderboard
-                </button>
-                
-                <button onclick="exitToHome()" class="secondary-btn" style="flex: 1; border-color:#334155; color:#94a3b8;">
-                    🏠 Home
-                </button>
-            </div>
-
-            <h3 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px;">👇 Tap to Select</h3>
-            
-            <div id="mySquadList"></div>
-
-            <div id="xiStatus" style="position:fixed; bottom:20px; right:20px; z-index:100;"></div>
         </div>
-    </section>
+
+        <div id="xiCardWrapper" class="hidden" style="margin-bottom: 20px;"></div>
+
+        <div id="xiPlaceholder" class="xi-placeholder">
+            <div style="font-size:3rem; margin-bottom:10px;">🏏</div>
+            Start selecting players below...
+        </div>
+        
+        <div id="xiStatsBar" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px;"></div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; position: sticky; top: 10px; z-index: 50;">
+            <button id="submitXIBtn" onclick="submitXI()" class="primary-btn" style="flex: 2; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                Submit XI (0/11)
+            </button>
+            
+            <button onclick="resetXISelection()" class="secondary-btn" style="width:50px; border-color:#ef4444; color:#ef4444; background: #1e293b;">
+                ↻
+            </button>
+            
+            <button id="saveXIBtn" onclick="downloadSheetPNG()" class="secondary-btn hidden" style="flex: 1; color:var(--gold); border-color:var(--gold); background: #1e293b;">
+                📸 Save
+            </button>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 25px;">
+            <button onclick="showScreen('leaderboard')" class="secondary-btn" style="flex: 1; border-color:#334155; background:rgba(255,255,255,0.05);">
+                🏆 Leaderboard
+            </button>
+            
+            <button onclick="exitToHome()" class="secondary-btn" style="flex: 1; border-color:#334155; color:#94a3b8;">
+                🏠 Home
+            </button>
+        </div>
+
+        <h3 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; color:#94a3b8; font-size:0.9rem; text-transform: uppercase;">
+            👇 Tap to Add to Squad
+        </h3>
+        
+        <div id="mySquadList"></div>
+
+        <div id="xiStatus"></div>
+    </div>
+</section>
+
 
     <section id="leaderboard" class="screen hidden">
         <header class="topbar glass">
@@ -508,6 +501,7 @@
 </body>
 
 </html>
+
 
 
 
