@@ -1097,3 +1097,109 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 
 
+/* --- PLAYER CARD OVERLAY (Professional) --- */
+.player-card-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 2000;
+    display: flex; justify-content: center; align-items: center;
+    backdrop-filter: blur(8px);
+}
+
+.pc-card {
+    width: 350px; height: 500px;
+    background: #1e293b; border-radius: 20px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex; flex-direction: column;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Dynamic Team Backgrounds */
+.pc-bg-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0.15; filter: grayscale(100%);
+    background-size: cover; background-position: center;
+    transition: all 0.5s;
+}
+/* Specific Team Gradients (Fallback if no logo image) */
+.pc-card[data-team="CSK"] .pc-bg-layer { background: linear-gradient(45deg, #facc15, #000); opacity: 0.3; }
+.pc-card[data-team="RCB"] .pc-bg-layer { background: linear-gradient(45deg, #dc2626, #000); opacity: 0.3; }
+.pc-card[data-team="MI"] .pc-bg-layer { background: linear-gradient(45deg, #0ea5e9, #000); opacity: 0.3; }
+.pc-card[data-team="KKR"] .pc-bg-layer { background: linear-gradient(45deg, #a855f7, #000); opacity: 0.3; }
+/* Add others... */
+
+.pc-content {
+    position: relative; z-index: 2; height: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px;
+}
+
+.pc-img-box {
+    width: 180px; height: 180px; border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    margin-top: 30px; border: 3px solid rgba(255,255,255,0.2);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.pc-img { width: 100%; height: 100%; object-fit: cover; }
+
+.pc-info { text-align: center; margin-top: 20px; }
+.pc-name { font-size: 1.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.pc-role { color: var(--gold); font-weight: bold; font-size: 1rem; margin-bottom: 15px; }
+
+.pc-stat-row {
+    display: flex; gap: 15px; margin-top: 10px;
+    background: rgba(0,0,0,0.4); padding: 10px 20px; border-radius: 12px;
+}
+.pc-stat { text-align: center; }
+.pc-stat-lbl { font-size: 0.7rem; color: #94a3b8; display: block; }
+.pc-stat-val { font-size: 1.2rem; font-weight: bold; color: #fff; }
+
+.pc-price-tag {
+    margin-top: auto; margin-bottom: 20px;
+    background: #fff; color: #000;
+    padding: 10px 30px; font-weight: 900; font-size: 1.5rem;
+    border-radius: 50px; transform: skewX(-10deg);
+    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+
+@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* --- SQUAD VIEW UPDATES --- */
+.foreign-icon { margin-right: 4px; font-size: 0.9em; }
+.sq-row { cursor: pointer; transition: background 0.2s; padding: 6px 8px; border-radius: 4px; }
+.sq-row:hover { background: rgba(255,255,255,0.05); }
+
+/* --- BENCH IN LEADERBOARD --- */
+.bench-section { margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 10px; }
+.bench-title { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; }
+.bench-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+.bench-pill { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: #ccc; }
+
+/* --- RESPONSIVE PLAYING XI CARD --- */
+.team-sheet-card {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    border: 2px solid var(--gold);
+    width: 100%; max-width: 600px; /* PC Size */
+    margin: 0 auto; padding: 20px;
+    aspect-ratio: 16/9; /* Standard layout */
+    display: flex; flex-direction: column;
+}
+@media (max-width: 768px) {
+    .team-sheet-card {
+        aspect-ratio: 9/16; /* Mobile Story Format */
+        max-width: 350px;
+    }
+}
+.sheet-role-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 12px; }
+.sheet-player-pill { 
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); 
+    padding: 5px 12px; border-radius: 20px; font-size: 0.9rem;
+    display: flex; align-items: center; gap: 5px;
+}
+.sheet-player-pill.foreign { border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+
+
+
+
