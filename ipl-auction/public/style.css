@@ -1267,6 +1267,68 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
+/* --- TEAM SPECIFIC BACKGROUNDS (ALL CAPS .PNG) --- */
+
+/* Chennai Super Kings */
+.pc-card[data-team="CSK"] .pc-bg-layer { 
+    background-image: url('/logos/CSK.PNG'); 
+    background-color: #facc15; 
+}
+
+/* Royal Challengers Bengaluru */
+.pc-card[data-team="RCB"] .pc-bg-layer { 
+    background-image: url('/logos/RCB.PNG'); 
+    background-color: #dc2626; 
+}
+
+/* Mumbai Indians */
+.pc-card[data-team="MI"] .pc-bg-layer { 
+    background-image: url('/logos/MI.PNG'); 
+    background-color: #0ea5e9; 
+}
+
+/* Kolkata Knight Riders */
+.pc-card[data-team="KKR"] .pc-bg-layer { 
+    background-image: url('/logos/KKR.PNG'); 
+    background-color: #a855f7; 
+}
+
+/* Rajasthan Royals */
+.pc-card[data-team="RR"] .pc-bg-layer { 
+    background-image: url('/logos/RR.PNG'); 
+    background-color: #fb7185; 
+}
+
+/* Sunrisers Hyderabad */
+.pc-card[data-team="SRH"] .pc-bg-layer { 
+    background-image: url('/logos/SRH.PNG'); 
+    background-color: #fb923c; 
+}
+
+/* Delhi Capitals */
+.pc-card[data-team="DC"] .pc-bg-layer { 
+    background-image: url('/logos/DC.PNG'); 
+    background-color: #60a5fa; 
+}
+
+/* Punjab Kings */
+.pc-card[data-team="PBKS"] .pc-bg-layer { 
+    background-image: url('/logos/PBKS.PNG'); 
+    background-color: #ef4444; 
+}
+
+/* Gujarat Titans */
+.pc-card[data-team="GT"] .pc-bg-layer { 
+    background-image: url('/logos/GT.PNG'); 
+    background-color: #0d9488; 
+}
+
+/* Lucknow Super Giants */
+.pc-card[data-team="LSG"] .pc-bg-layer { 
+    background-image: url('/logos/LSG.PNG'); 
+    background-color: #22c55e; 
+}
+
 
 
 
