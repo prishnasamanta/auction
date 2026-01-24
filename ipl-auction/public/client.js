@@ -1674,7 +1674,6 @@ function showScreen(id){
 
 // --- 1. SETUP & STATE ---
 // We use an object to track selection by role so we can sort the card (WK -> BAT -> ALL -> BOWL)
-let selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
 
 socket.on("auctionEnded", () => {
     showScreen("playingXI");
@@ -2169,6 +2168,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
