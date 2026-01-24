@@ -1924,57 +1924,178 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-top: 1px solid #222;
 }
 
+/* ================================================= */
+/* 💎 PRO PLAYING XI CARD (MATCHING YOUR IMAGE)      */
+/* ================================================= */
 
+/* 1. The Card Container */
+.team-sheet-card {
+    background-color: #0f172a; /* Dark Navy Background */
+    border: 2px solid #facc15; /* Gold Border */
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px; /* Wider to fit 4 cards */
+    margin: 0 auto;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+}
 
+/* Watermark Background */
+.team-sheet-card::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%; height: 80%;
+    background-image: var(--team-logo-url, none);
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.1; /* Subtle fade */
+    z-index: 0;
+    filter: grayscale(100%);
+}
 
-/* --- VERTICAL PLAYER CARD (Fix for "Cracked" Layout) --- */
+/* 2. Header Section */
+.sheet-header {
+    background: rgba(0,0,0,0.3);
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
 
-/* 1. The Container: Stacks items vertically */
+.sheet-title {
+    margin: 0;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 2.5rem; /* Big Team Name */
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #fff;
+    line-height: 1;
+}
+
+.sheet-subtitle {
+    font-size: 0.8rem;
+    color: #facc15; /* Gold Text */
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 5px;
+    font-weight: 600;
+}
+
+/* 3. Content Body */
 #sheetContent {
+    padding: 20px;
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
-    gap: 6px; /* Spacing between rows */
-    padding: 10px 0;
+    gap: 15px; /* Space between Role Sections */
 }
 
-/* 2. The Row Item: A single strip for each player */
-.sheet-player-row {
+/* 4. Role Section Headers */
+.xi-role-header {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
-    border-left: 4px solid var(--gold); /* Accent line on left */
-    padding: 8px 12px;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-/* 3. Row Content Styling */
-.sp-icon {
-    font-size: 1.2rem;
-    margin-right: 12px;
-    width: 24px;
-    text-align: center;
-}
-
-.sp-name {
-    flex: 1; /* Takes up all remaining space */
-    font-weight: 600;
-    color: #fff;
-    font-size: 0.95rem;
-    text-align: left;
-}
-
-.sp-rating {
+    gap: 10px;
+    margin-bottom: 8px;
+    color: #94a3b8;
     font-size: 0.8rem;
-    color: var(--gold);
-    font-weight: bold;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-/* 4. Foreign Player Styling */
-.sheet-player-row.foreign {
-    background: rgba(56, 189, 248, 0.1); /* Light Blue Tint */
-    border-left-color: #38bdf8; /* Blue Accent */
+/* The horizontal line after the header */
+.xi-role-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
 }
+
+.role-icon-badge {
+    background: #facc15; /* Gold Circle */
+    color: #000;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 0.9rem;
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+}
+
+/* 5. The Grid (Players Side-by-Side) */
+.xi-role-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 Columns Fixed */
+    gap: 8px;
+}
+
+/* Mobile: Switch to 2 columns if screen is small */
+@media (max-width: 500px) {
+    .xi-role-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* 6. The Player Card (Rectangular Pill) */
+.xi-player-card {
+    background: rgba(30, 41, 59, 0.6); /* Slate Blue */
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px 5px;
+    text-align: center;
+    position: relative;
+    transition: 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 55px;
+}
+
+/* Foreign Accent */
+.xi-player-card.foreign {
+    border-color: #38bdf8; /* Cyan Border */
+    background: rgba(56, 189, 248, 0.1);
+}
+
+/* Foreign Plane Icon (Top Right) */
+.xp-plane {
+    position: absolute;
+    top: 3px; right: 4px;
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.xp-name {
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.xp-rating {
+    font-size: 0.75rem;
+    color: #fbbf24; /* Gold Star */
+    font-weight: 600;
+}
+
+/* 7. Footer */
+.sheet-footer {
+    position: relative;
+    z-index: 2;
+    background: rgba(0,0,0,0.2);
+    padding: 10px 20px;
+    font-size: 0.75rem;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
 
 /* 5. Mobile Adjustments for card */
 @media (max-width: 600px) {
@@ -1988,6 +2109,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
         font-size: 0.9rem;
     }
 }
+
 
 
 
