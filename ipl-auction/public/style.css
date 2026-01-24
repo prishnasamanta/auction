@@ -1888,6 +1888,134 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     letter-spacing: 3px;
     border-top: 1px solid #222;
 }
+/* ================================================= */
+/* 🏟️ COMPACT FANTASY CARD (Fix for "Cracked" UI)    */
+/* ================================================= */
 
-/
+.fantasy-card {
+    background: #0f172a; /* Dark Navy */
+    border: 2px solid #facc15; /* Gold Border */
+    border-radius: 12px;
+    width: 100%;
+    max-width: 450px; /* Keep it narrow like a phone screen */
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    font-family: 'Exo 2', sans-serif;
+    /* Allow height to fit content */
+    height: auto; 
+    min-height: 300px;
+}
+
+/* Watermark */
+.fantasy-card::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px; height: 200px;
+    background-image: var(--team-logo, none);
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.1;
+    z-index: 0;
+    filter: grayscale(100%);
+    pointer-events: none;
+}
+
+/* Header */
+.fantasy-header {
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    position: relative; z-index: 2;
+}
+.fantasy-title {
+    margin: 0; font-size: 1.8rem; font-weight: 900; color: #fff; text-transform: uppercase;
+}
+.fantasy-subtitle {
+    font-size: 0.7rem; color: #facc15; letter-spacing: 3px; text-transform: uppercase; margin-top: 2px;
+}
+.fantasy-rating {
+    font-size: 0.9rem; color: #4ade80; font-weight: bold; margin-top: 2px;
+}
+
+/* Body */
+.fantasy-body {
+    padding: 15px;
+    position: relative; z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Rows (Role Sections) */
+.fantasy-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.fantasy-role-label {
+    font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    text-align: center;
+}
+
+/* Player Grid (Horizontal Flex) */
+.fantasy-player-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* Allows wrapping if too many players */
+    gap: 8px;
+}
+
+/* Player Pill (Tiny Chip) */
+.fantasy-player-pill {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; /* Fully rounded */
+    padding: 6px 12px;
+    min-width: 80px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+/* Foreign Accent */
+.fantasy-player-pill.foreign {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.fp-name {
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fp-sub {
+    font-size: 0.65rem;
+    color: #cbd5e1;
+    margin-top: 2px;
+}
+
+/* Footer */
+.fantasy-footer {
+    background: rgba(0,0,0,0.3);
+    padding: 8px 15px;
+    font-size: 0.7rem;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    position: relative; z-index: 2;
+}
 
