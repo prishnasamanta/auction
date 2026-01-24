@@ -1191,13 +1191,91 @@ window.downloadSquadImage = function() {
     });
 };
 
+// ==========================================
+//      UTILS: PLAYER CARDS & IMAGES
+// ==========================================
 
-/* =========================================
-   4. HELPER FUNCTION (Placeholder)
-   ========================================= */
-window.openPlayerProfile = function(player, team, price) {
-    alert(`Opening Profile:\nName: ${player.name}\nTeam: ${team}\nPrice: ₹${price} Cr`);
+function loadPlayerImage(imgEl, playerName) {
+    if(!playerName) return;
+    const raw = playerName.trim();
+    const noSpace = raw.replace(/\s+/g, '');
+    const withUnderscore = raw.replace(/\s+/g, '_');
+    const upperUnderscore = withUnderscore.toUpperCase();
+
+    const candidates = [
+        `/players/${upperUnderscore}.png`, // VIRAT_KOHLI.png 
+        `/players/${noSpace}.png`,         // ViratKohli.png
+        `/players/${raw}.png`,             // Virat Kohli.png
+        "https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png" // Fallback
+    ];
+
+    let attempt = 0;
+    function tryNext() {
+        if (attempt >= candidates.length) {
+            imgEl.src = candidates[candidates.length - 1]; 
+            return;
+        }
+        imgEl.src = candidates[attempt];
+        imgEl.onerror = function() {
+            attempt++;
+            tryNext();
+        };
+    }
+    tryNext();
+}
+
+window.openPlayerProfile = function(playerData, teamName, price) {
+    const existing = document.getElementById('playerCardOverlay');
+    if(existing) existing.remove();
+
+    const team = teamName || "Unsold";
+    const amount = price ? `₹${price.toFixed(2)} Cr` : "---";
+    const teamColor = TEAM_COLORS[team] || "#64748b";
+    
+    const html = `
+    <div id="playerCardOverlay" class="player-card-overlay" onclick="closePlayerCard(event)">
+        <div class="pc-card compact" data-team="${team}" onclick="event.stopPropagation()">
+            <div class="pc-bg-layer"></div>
+            <div class="pc-content">
+                <div style="width:100%; display:flex; justify-content:space-between; align-items:center; z-index:10;">
+                    <span style="font-weight:bold; color:rgba(255,255,255,0.5); font-size:0.9rem;">${team}</span>
+                    <button onclick="document.getElementById('playerCardOverlay').remove()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">✕</button>
+                </div>
+                
+                <div class="pc-img-box" style="border-color:${teamColor}">
+                    <img id="activeCardImg" class="pc-img" alt="${playerData.name}">
+                </div>
+
+                <div class="pc-info">
+                    <div class="pc-name">${playerData.name}</div>
+                    <div class="pc-role">${playerData.foreign ? '✈️' : ''} ${playerData.role}</div>
+                </div>
+
+                <div class="pc-stat-row">
+                    <div class="pc-stat">
+                        <span class="pc-stat-lbl">RATING</span>
+                        <span class="pc-stat-val">⭐${playerData.rating}</span>
+                    </div>
+                     <div class="pc-stat">
+                        <span class="pc-stat-lbl">STATUS</span>
+                        <span class="pc-stat-val" style="color:${price ? '#4ade80' : '#fff'}">${price ? 'SOLD' : 'UPCOMING'}</span>
+                    </div>
+                </div>
+
+                <div class="pc-price-tag" style="color:${teamColor}">${amount}</div>
+            </div>
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    const imgEl = document.getElementById('activeCardImg');
+    loadPlayerImage(imgEl, playerData.name);
 };
+
+window.closePlayerCard = function(e) {
+    if(e.target.id === 'playerCardOverlay') e.target.remove();
+}
+
 
 /* =========================================
    5. EXECUTE ON LOAD
@@ -1753,20 +1831,24 @@ window.downloadSheetPNG = function() {
         link.click();
     });
 };
+// ==========================================
+//      SUBMIT XI & LEADERBOARD LOGIC
+// ==========================================
+
 // Variable to store selected XI players
 let currentXI = []; 
 
 window.openSubmitXI = function() {
     // Hide other views, Show XI View
     document.querySelectorAll('.cc-view').forEach(v => v.classList.add('hidden'));
-    const view = document.getElementById('submit-xi-view'); // Ensure you have this ID in HTML
-    view.classList.remove('hidden');
-
+    const view = document.getElementById('submit-xi-view'); 
+    if(view) view.classList.remove('hidden');
     renderXIGrid();
 };
 
 window.renderXIGrid = function() {
     const container = document.getElementById('xi-grid-container');
+    if(!container) return;
     container.innerHTML = '';
 
     // If no players, show message
@@ -1782,7 +1864,7 @@ window.renderXIGrid = function() {
         
         // Icon based on role
         let icon = '🏏';
-        if(p.role === 'BOWL') icon = '⚾';
+        if(p.role === 'BOWL' || p.role === 'PACE' || p.role === 'SPIN') icon = '⚾';
         if(p.role === 'WK') icon = '🧤';
         if(p.role === 'ALL') icon = '⚔️';
 
@@ -1796,23 +1878,140 @@ window.renderXIGrid = function() {
     });
 };
 
-// --- BUTTON ACTIONS ---
-
 window.reselectXI = function() {
     if(confirm("Are you sure you want to clear your selection?")) {
         currentXI = []; // Clear array
         renderXIGrid(); // Re-render empty
-        // Optional: specific logic to go back to selection screen
         alert("Selection cleared. Please select players again.");
     }
 };
 
 window.goHome = function() {
-    // Hide XI view, show Home
     document.getElementById('submit-xi-view').classList.add('hidden');
-    document.getElementById('home-view').classList.remove('hidden'); // Change 'home-view' to your main ID
+    document.getElementById('auctionUI').classList.remove('hidden'); // Show main UI
+    // Reset tabs if needed
+    switchCcTab('feed');
 };
 
+socket.on("submitResult", (res) => {
+    const btn = document.getElementById("submitXIBtn");
+    if(btn) btn.classList.add("hidden");
+    
+    const status = document.getElementById("xiStatus");
+    if(status) {
+        status.innerHTML = `
+        <div style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? 'red' : 'green'}; background:rgba(0,0,0,0.8); border-radius:10px; margin-top:20px;">
+            <h2 style="color:${res.disqualified ? 'red' : 'green'}">${res.disqualified ? 'DISQUALIFIED' : 'QUALIFIED'}</h2>
+            <p>Rating: <b>${res.rating}</b></p>
+            <p>${res.disqualified ? res.reason : "Team Submitted Successfully"}</p>
+        </div>`;
+    }
+});
+
+socket.on("leaderboard", (board) => {
+    const tbody = document.getElementById("leaderboardBody");
+    if(tbody) {
+        tbody.innerHTML = "";
+        board.forEach((t, i) => {
+            const tr = document.createElement("tr");
+            tr.className = "clickable";
+            tr.innerHTML = `
+                <td>#${i+1}</td>
+                <td style="color:${TEAM_COLORS[t.team] || 'white'}; font-weight:bold;">${t.team}</td>
+                <td>${t.rating}</td>
+                <td>${t.disqualified ? '❌' : '✔️'}</td>
+                <td>₹${t.purse} Cr</td>
+                <td><button onclick='openSquadView(${JSON.stringify(t)})' class="secondary-btn" style="padding:2px 8px; font-size:0.7rem;">👁️</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+});
+
+function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
+    let benchHTML = '';
+    if (fullSquad && players) {
+        const xiNames = new Set(players.map(p => p.name));
+        const benchPlayers = fullSquad.filter(p => !xiNames.has(p.name));
+        
+        if (benchPlayers.length > 0) {
+            benchHTML = `
+            <div class="bench-section">
+                <div class="bench-title">BENCH (${benchPlayers.length})</div>
+                <div class="bench-grid">
+                    ${benchPlayers.map(p => `<span class="bench-pill">${p.role.substring(0,2)} ${p.name}</span>`).join('')}
+                </div>
+            </div>`;
+        }
+    }
+
+    if(!players || players.length === 0) return `<div class="sheet-empty">No Players</div>`;
+
+    const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
+    players.forEach(p => {
+        let r = p.role;
+        if(r === "PACE" || r === "SPIN") r = "BOWL";
+        if(roles[r]) roles[r].push(p);
+    });
+
+    let html = `
+    <div id="generatedCard" class="team-sheet-card">
+        <div class="sheet-header">
+            <h2 class="sheet-title">${teamName}</h2>
+            <div class="sheet-subtitle">OFFICIAL PLAYING XI</div>
+            <div style="margin-top:5px; color:#4ade80; font-weight:bold;">Rating: ${rating}</div>
+        </div>
+        <div id="sheetContent" style="flex:1;">`;
+
+    ['WK', 'BAT', 'ALL', 'BOWL'].forEach(role => {
+        if (roles[role].length > 0) {
+            html += `<div class="sheet-role-group">`;
+            roles[role].forEach(p => {
+                let icon = '';
+                if(role==='WK') icon = '🧤'; else if(role==='BAT') icon = '🏏';
+                else if(role==='ALL') icon = '⚡'; else icon = '🥎';
+
+                html += `
+                <div class="sheet-player-pill ${p.foreign ? 'foreign' : ''}">
+                    <span>${icon} ${p.name} ${p.foreign ? '✈️' : ''}</span> 
+                    <small>⭐${p.rating}</small>
+                </div>`;
+            });
+            html += `</div>`;
+        }
+    });
+
+    html += `</div>
+        ${benchHTML} <div class="sheet-footer">
+            <span>IPL AUCTION LIVE</span>
+            <span>${count}/11 Selected</span>
+        </div>
+    </div>`;
+
+    return html;
+}
+
+function openSquadView(data) {
+    const overlay = document.getElementById("squadViewOverlay");
+    const container = document.getElementById("squadCaptureArea");
+    const teamFullSquad = allSquads[data.team] || [];
+
+    container.innerHTML = generateCreativeCardHTML(
+        data.team, data.xi, data.rating, 
+        data.xi ? data.xi.length : 0, teamFullSquad
+    );
+    overlay.classList.remove("hidden");
+}
+
+window.downloadLeaderboardPNG = function() {
+    const el = document.getElementById('generatedCard');
+    html2canvas(el, { backgroundColor: null, scale: 3 }).then(canvas => {
+        const a = document.createElement('a');
+        a.download = `Squad_Card.png`;
+        a.href = canvas.toDataURL();
+        a.click();
+    });
+}
 
 socket.on("submitResult", (res) => {
     document.getElementById("submitXIBtn").classList.add("hidden");
@@ -2126,6 +2325,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
