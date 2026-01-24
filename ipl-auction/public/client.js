@@ -1929,6 +1929,46 @@ function loadPlayerImage(imgEl, playerName) {
 
     tryNext();
 }
+function downloadSquadImage() {
+    // 1. Get current visible data
+    const teamName = document.getElementById('view-team-name').innerText;
+    const manager = document.getElementById('view-manager-name').innerText;
+    const purse = document.getElementById('view-team-purse').innerText;
+    const stats = document.getElementById('view-player-stats').innerText;
+    
+    // Get the team logo URL (Assuming you have this stored in a variable or can grab it)
+    // Example: const logoUrl = currentTeamData.logo_url; 
+    // If not stored, we can try to find it in the DOM or use a placeholder
+    const logoUrl = "path/to/default_logo.png"; // REPLACE with actual logic to get team logo
+
+    // 2. Populate the Hidden Card
+    document.getElementById('card-team-name').innerText = teamName;
+    document.getElementById('card-manager').innerText = manager;
+    document.getElementById('card-stats').innerText = stats;
+    document.getElementById('card-purse').innerText = purse;
+    
+    // Set Background
+    document.getElementById('card-bg-img').style.backgroundImage = `url('${logoUrl}')`;
+
+    // Copy Player List
+    const sourceList = document.getElementById('view-squad-list');
+    const targetList = document.getElementById('card-player-list');
+    targetList.innerHTML = sourceList.innerHTML; // Clone the list items
+
+    // 3. Generate Canvas & Download
+    const captureElement = document.getElementById('squad-card-capture');
+    
+    html2canvas(captureElement, {
+        scale: 2, // High resolution
+        useCORS: true // Important for loading external images
+    }).then(canvas => {
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `${teamName.replace(/\s+/g, '_')}_Squad.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    });
+}
 
 // --- UPDATED: Open Player Card ---
 window.openPlayerProfile = function(playerData, teamName, price) {
@@ -2010,6 +2050,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
