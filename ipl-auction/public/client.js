@@ -891,31 +891,86 @@ function showResultStamp(title, detail, color, isUnsold) {
 /* ================================================= */
 /* =========== 5. LOGS, CHAT & COMMAND CENTER ====== */
 /* ================================================= */
+/* ================================================= */
+/* =========== 5. LOGS & CHAT (IMPROVED) =========== */
+/* ================================================= */
 
+// 1. CHAT UPDATE (Newest at Bottom)
 socket.on("chatUpdate", d => {
     const chat = document.getElementById("chat");
+    if(!chat) return;
+
+    const isMe = (d.user === username); // Check if I sent it
     const div = document.createElement("div");
-    div.innerHTML = `<b style="color:${TEAM_COLORS[d.team] || '#aaa'}">${d.team} (${d.user})</b>: ${d.msg}`;
+    
+    // Distinguish between MY messages and OTHERS
+    div.className = `chat-msg ${isMe ? 'mine' : 'others'}`;
+    
+    // Nice Formatting
+    div.innerHTML = `
+        <div class="chat-header" style="color:${TEAM_COLORS[d.team] || '#94a3b8'}">
+            ${isMe ? 'You' : d.team + ' (' + d.user + ')'}
+        </div>
+        <div class="chat-bubble">
+            ${d.msg}
+        </div>
+    `;
+
     chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-    if(chat.children.length > 20) chat.removeChild(chat.firstChild);
+
+    // AUTO SCROLL TO BOTTOM
+    // We use a slight timeout to ensure the DOM has rendered the new height
+    setTimeout(() => {
+        chat.scrollTop = chat.scrollHeight;
+    }, 50);
+
+    // Limit history to 50 messages to save memory
+    if(chat.children.length > 50) chat.removeChild(chat.firstChild);
 });
 
-window.sendChat = function() {
-    const msgInput = document.getElementById("msg");
-    if(!msgInput.value.trim()) return;
-    socket.emit("chat", { user: username, team: myTeam || "Viewer", msg: msgInput.value });
-    msgInput.value = "";
-};
-
+// 2. LOG UPDATE (Newest at TOP - Fixed)
 socket.on("logUpdate", msg => {
     const log = document.getElementById("log");
+    if(!log) return;
+
     const div = document.createElement("div");
     div.className = "log-item";
-    div.innerText = msg;
-    log.appendChild(div);
-    log.scrollTop = log.scrollHeight;
-    if (log.children.length > 20) log.removeChild(log.firstChild);
+    
+    // Add Timestamp
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `<span style="opacity:0.5; font-size:0.7em; margin-right:5px;">${time}</span> ${msg}`;
+    
+    // PREPEND instead of Append (Adds to TOP)
+    log.prepend(div);
+
+    // Limit logs to 30 items
+    if (log.children.length > 30) log.removeChild(log.lastChild);
+});
+
+// 3. SEND FUNCTION
+window.sendChat = function() {
+    const msgInput = document.getElementById("msg");
+    const text = msgInput.value.trim();
+    if(!text) return;
+    
+    socket.emit("chat", { user: username, team: myTeam || "Spectator", msg: text });
+    msgInput.value = "";
+    msgInput.focus(); // Keep keyboard open
+};
+
+// 4. ENTER KEY LISTENER
+// Run this once when the page loads
+document.addEventListener("DOMContentLoaded", () => {
+    const msgInput = document.getElementById("msg");
+    if(msgInput) {
+        msgInput.addEventListener("keypress", function(event) {
+            // If the user presses the "Enter" key on the keyboard
+            if (event.key === "Enter") {
+                event.preventDefault(); // Cancel the default action
+                sendChat(); // Trigger the button element with a click
+            }
+        });
+    }
 });
 
 // --- COMMAND CENTER LOGIC ---
@@ -1834,6 +1889,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
