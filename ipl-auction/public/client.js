@@ -321,22 +321,30 @@ socket.on("joinedRoom", (data) => {
     // --- 5. CHECK: HAS AUCTION ENDED? ---
    // Inside socket.on("joinedRoom", ...)
 if (data.auctionEnded) {
-    const savedRoom = sessionStorage.getItem('ipl_room');
-    
-    // Save data so we can render the summary
-    if(data.squads) allSquads = data.squads;
-    if(data.purses) teamPurse = data.purses;
-    if(data.teamOwners) teamOwners = data.teamOwners;
-    
-    // SHOW SUMMARY PAGE DIRECTLY
-    setupAuctionScreen(); // Hides landing/auth
-    renderPostAuctionSummary();
-    showScreen("postAuctionSummary");
-    
-    // If I have a team, show me the Leaderboard button in summary
-    // If I am a spectator, I stay here.
-    return; 
-}
+        const savedRoom = sessionStorage.getItem('ipl_room');
+        roomCode = data.roomCode; // Ensure room code is set
+        sessionStorage.setItem('ipl_room', roomCode);
+
+        // Save data so we can render the summary
+        if(data.squads) allSquads = data.squads;
+        if(data.rules) activeRules = data.rules;
+        
+        setupAuctionScreen(); 
+
+        // REDIRECTION LOGIC
+        if (myTeam) {
+            // Players go to Submit XI
+            showScreen("playingXI");
+            document.body.style.overflow = "auto";
+            socket.emit("getMySquad"); 
+            updateRulesUI();
+        } else {
+            // Spectators go DIRECTLY to Summary
+            renderPostAuctionSummary();
+            showScreen("postAuctionSummary");
+        }
+        return; 
+    }
 
     // --- 6. STANDARD SETUP ---
     roomCode = data.roomCode;
@@ -1705,11 +1713,26 @@ function showScreen(id){
 /* ================================================= */
 
 socket.on("auctionEnded", () => {
-    showScreen("playingXI");
+    // Enable scrolling
     document.body.style.overflow = "auto";
-    socket.emit("getAuctionState"); // Ensure rules loaded
-    socket.emit("getMySquad");
+    
+    // Ensure we have the latest data
+    socket.emit("getAuctionState"); 
+    socket.emit("getSquads"); 
+
+    if (myTeam) {
+        // I am a Player: Go to Submit XI
+        showScreen("playingXI");
+        socket.emit("getMySquad");
+    } else {
+        // I am a Spectator: Go to Summary
+        setTimeout(() => {
+            renderPostAuctionSummary();
+            showScreen("postAuctionSummary");
+        }, 500); // Small delay to ensure data arrives
+    }
 });
+
 
 // --- 2. RENDER SELECTION LIST (FIXED) ---
 socket.on("mySquad", ({ squad, rules }) => {
@@ -2007,15 +2030,20 @@ function renderPopupContent(mode) {
     const container = document.getElementById("squadCaptureArea");
     const d = currentPopupData;
     const fullSquad = allSquads[d.team] || [];
+    
+    // Ensure purse is a number for toFixed
+    const safePurse = Number(d.purse || teamPurse[d.team] || 0);
 
     if (mode === 'XI') {
-        // Use the Fantasy Card Generator (from previous code)
         container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
+        // ... (download handler)
     } else {
-        // Use the New 4-Column Generator
-        container.innerHTML = generateFullSquadHTML(d.team, fullSquad, d.purse, "Manager");
+        // Use New 4-Column Generator
+        container.innerHTML = generateFullSquadHTML(d.team, fullSquad, safePurse, "Manager");
+        // ... (download handler)
     }
 }
+
 
 // Download Handler for Popup
 window.downloadPopupCard = function() {
@@ -2045,19 +2073,29 @@ socket.on("leaderboard", (board) => {
         tbody.innerHTML = "";
         board.forEach((t, i) => {
             const tr = document.createElement("tr");
-            tr.className = "clickable";
+            
+            // Status Badge
+            const statusHtml = t.disqualified 
+                ? `<span class="lb-status-badge lb-status-disqualified">❌ DQ</span>`
+                : `<span class="lb-status-badge lb-status-qualified">✅ OK</span>`;
+
             tr.innerHTML = `
                 <td>#${i+1}</td>
-                <td style="color:${TEAM_COLORS[t.team] || 'white'}; font-weight:bold;">${t.team}</td>
-                <td>${t.rating}</td>
-                <td>${t.disqualified ? '❌' : '✔️'}</td>
-                <td>₹${t.purse} Cr</td>
-                <td><button onclick='openSquadView(${JSON.stringify(t)})' class="secondary-btn" style="padding:2px 8px; font-size:0.7rem;">👁️</button></td>
+                <td>
+                    <div class="lb-team-name" style="color:${TEAM_COLORS[t.team] || '#fff'}">${t.team}</div>
+                </td>
+                <td class="lb-rating">⭐ ${t.rating}</td>
+                <td style="font-family:monospace; color:#ccc;">₹${Number(t.purse).toFixed(2)}</td>
+                <td>${statusHtml}</td>
+                <td style="text-align:center;">
+                    <button onclick='openSquadView(${JSON.stringify(t)})' class="lb-view-btn" title="View Squad">👁️</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
     }
 });
+
 // --- SHARED HELPER: GENERATE 4-COLUMN SQUAD CARD HTML ---
 /* ================================================= */
 /* 🛠️ SQUAD CARD UTILITIES (VIEW & DOWNLOAD)         */
@@ -2528,6 +2566,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
