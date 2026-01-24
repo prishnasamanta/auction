@@ -2037,6 +2037,25 @@ window.openPlayerProfile = function(playerData, teamName, price) {
 window.closePlayerCard = function(e) {
     if(e.target.id === 'playerCardOverlay') e.target.remove();
 }
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Create the buttons
+    initSquadTabs();
+
+    // --- THE FIX ---
+    // Change "CSK" to your actual variable (e.g., userTeam, myTeamName, etc.)
+    const defaultTeam = "CSK"; 
+
+    // Check if the default team exists, otherwise just open the first one found
+    if (allSquads[defaultTeam]) {
+        viewEmbeddedSquad(defaultTeam);
+    } else {
+        // Fallback: Open the first team in the list automatically
+        const firstAvailableTeam = Object.keys(allSquads)[0];
+        if (firstAvailableTeam) {
+            viewEmbeddedSquad(firstAvailableTeam);
+        }
+    }
+});
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2057,6 +2076,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
