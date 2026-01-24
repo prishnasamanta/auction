@@ -1394,6 +1394,20 @@ window.toggleSetsView = function() {
         switchInfoTab('feed'); 
     }
 };
+// --- HELPER: Handle clicks from the Squad Sheet ---
+window.viewPlayerFromCard = function(name, role, rating, isForeign, price, teamName) {
+    // Reconstruct the player object expected by openPlayerProfile
+    const playerObj = {
+        name: name,
+        role: role,
+        rating: rating,
+        foreign: isForeign
+    };
+    
+    // Call the existing profile opener
+    openPlayerProfile(playerObj, teamName, price);
+};
+
 // --- HELPER: Click Handler for Set Players ---
 window.viewSetPlayer = function(name, role, rating, isForeign) {
     // Construct the player object needed by the profile card
@@ -2651,6 +2665,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
