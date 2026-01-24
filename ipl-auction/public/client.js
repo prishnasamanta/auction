@@ -858,9 +858,14 @@ socket.on("sold", d => {
     showResultStamp("SOLD", `TO ${d.team}`, TEAM_COLORS[d.team], false);
     if(d.purse) teamPurse = d.purse;
     updateHeaderNotice();
-    // Refresh squad view if open in tabs
-    if(document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
-        viewEmbeddedSquad(selectedSquadTeam);
+    
+    // FIX: Live update without tab switch
+    const currentTab = document.querySelector('.cc-tab-btn.active');
+    // If we are in Squads tab AND looking at the team that just bought OR looking at 'Available'
+    if(document.getElementById('view-squads') && !document.getElementById('view-squads').classList.contains('hidden')) {
+        if(selectedSquadTeam === d.team) {
+            viewEmbeddedSquad(selectedSquadTeam);
+        }
     }
 });
 
@@ -953,7 +958,6 @@ function renderSquadTabs() {
 
 window.viewEmbeddedSquad = function(team) {
     selectedSquadTeam = team;
-    
     document.querySelectorAll('.h-team-btn').forEach(b => b.classList.remove('active'));
     Array.from(document.querySelectorAll('.h-team-btn')).find(b => b.innerText === team)?.classList.add('active');
 
@@ -961,14 +965,20 @@ window.viewEmbeddedSquad = function(team) {
     const squad = allSquads[team] || [];
     const purse = teamPurse[team] || 0;
     const owner = teamOwners[team] ? teamOwners[team] : "Available";
+
+    // Calc Foreign
+    const foreignCount = squad.filter(p => p.foreign).length;
+
     box.innerHTML = `
         <div style="text-align:center; padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
             <h2 style="margin:0; color:${TEAM_COLORS[team] || '#fff'}">${team}</h2>
             <div style="font-size:0.8rem; color:#aaa;">Manager: <span style="color:#fff;">${owner}</span></div>
             <div style="font-size:1.1rem; margin-top:5px; font-weight:bold;">
                 Purse: <span style="color:#4ade80;">₹${purse.toFixed(2)} Cr</span> 
-                <span style="color:#666;">|</span> 
-                Players: ${squad.length}
+            </div>
+            <div style="display:flex; justify-content:center; gap:15px; font-size:0.8rem; margin-top:5px; color:#ccc;">
+                <span>👤 ${squad.length} Players</span>
+                <span>✈️ ${foreignCount} Overseas</span>
             </div>
         </div>
         <div id="sq-list-content"></div>
@@ -984,22 +994,23 @@ window.viewEmbeddedSquad = function(team) {
         else roles.BOWL.push(p);
     });
 
+    // Render with Click Event for Card
     Object.keys(roles).forEach(r => {
         if(roles[r].length > 0) {
             const h = document.createElement("h4");
             h.innerText = r;
-            h.style.color = "#facc15";
-            h.style.margin = "10px 0 5px 0";
-            h.style.fontSize = "0.8rem";
+            h.style.color = "#facc15"; h.style.margin = "10px 0 5px 0"; h.style.fontSize = "0.8rem";
             content.appendChild(h);
 
             roles[r].forEach(p => {
                 const row = document.createElement("div");
                 row.className = "sq-row";
+                // Add Icon + Click Event
                 row.innerHTML = `
-                    <span>${p.name} <small style="color:#666">⭐${p.rating}</small></span>
+                    <span>${p.foreign ? '<span class="foreign-icon">✈️</span>' : ''} ${p.name} <small style="color:#666">⭐${p.rating}</small></span>
                     <span style="color:#4ade80; font-weight:bold;">₹${p.price.toFixed(2)}</span>
                 `;
+                row.onclick = () => openPlayerProfile(p, team, p.price); // <--- Trigger Card
                 content.appendChild(row);
             });
         }
@@ -1550,15 +1561,34 @@ socket.on("leaderboard", (board) => {
     }
 });
 
-function generateCreativeCardHTML(teamName, players, rating, count) {
+// --- UPDATED: generateCreativeCardHTML ---
+function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
+    // If fullSquad is passed (from Leaderboard), calculate Bench
+    let benchHTML = '';
+    if (fullSquad && players) {
+        // Bench = Full Squad - Playing XI
+        const xiNames = new Set(players.map(p => p.name));
+        const benchPlayers = fullSquad.filter(p => !xiNames.has(p.name));
+        
+        if (benchPlayers.length > 0) {
+            benchHTML = `
+            <div class="bench-section">
+                <div class="bench-title">BENCH (${benchPlayers.length})</div>
+                <div class="bench-grid">
+                    ${benchPlayers.map(p => `<span class="bench-pill">${p.role.substring(0,2)} ${p.name}</span>`).join('')}
+                </div>
+            </div>`;
+        }
+    }
+
     if(!players || players.length === 0) return `<div class="sheet-empty">No Players</div>`;
 
+    // SPECIFIC ORDER: WK -> BAT -> ALL -> BOWL
     const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
     players.forEach(p => {
-        if(p.role === "BAT") roles.BAT.push(p);
-        else if(p.role === "WK") roles.WK.push(p);
-        else if(p.role === "ALL") roles.ALL.push(p);
-        else roles.BOWL.push(p); 
+        let r = p.role;
+        if(r === "PACE" || r === "SPIN") r = "BOWL";
+        if(roles[r]) roles[r].push(p);
     });
 
     let html = `
@@ -1568,15 +1598,22 @@ function generateCreativeCardHTML(teamName, players, rating, count) {
             <div class="sheet-subtitle">OFFICIAL PLAYING XI</div>
             <div style="margin-top:5px; color:#4ade80; font-weight:bold;">Rating: ${rating}</div>
         </div>
-        <div id="sheetContent">`;
+        <div id="sheetContent" style="flex:1;">`;
 
+    // Strict Order Loop
     ['WK', 'BAT', 'ALL', 'BOWL'].forEach(role => {
         if (roles[role].length > 0) {
             html += `<div class="sheet-role-group">`;
             roles[role].forEach(p => {
+                let icon = '';
+                if(role==='WK') icon = '🧤';
+                else if(role==='BAT') icon = '🏏';
+                else if(role==='ALL') icon = '⚡';
+                else icon = '🥎';
+
                 html += `
                 <div class="sheet-player-pill ${p.foreign ? 'foreign' : ''}">
-                    <span>${p.name} ${p.foreign ? '✈️' : ''}</span> 
+                    <span>${icon} ${p.name} ${p.foreign ? '✈️' : ''}</span> 
                     <small>⭐${p.rating}</small>
                 </div>`;
             });
@@ -1585,7 +1622,7 @@ function generateCreativeCardHTML(teamName, players, rating, count) {
     });
 
     html += `</div>
-        <div class="sheet-footer">
+        ${benchHTML} <div class="sheet-footer">
             <span>IPL AUCTION LIVE</span>
             <span>${count}/11 Selected</span>
         </div>
@@ -1594,19 +1631,29 @@ function generateCreativeCardHTML(teamName, players, rating, count) {
     return html;
 }
 
+// --- UPDATED: openSquadView (for Leaderboard) ---
+// We need to fetch the FULL squad for the bench to work. 
+// Assuming data.xi is just the 11. 
+// We need to look up allSquads[data.team].
 function openSquadView(data) {
     const overlay = document.getElementById("squadViewOverlay");
     const container = document.getElementById("squadCaptureArea");
     
+    // Get full squad from global state
+    const teamFullSquad = allSquads[data.team] || [];
+
     container.innerHTML = generateCreativeCardHTML(
         data.team, 
         data.xi, 
         data.rating, 
-        data.xi ? data.xi.length : 0
+        data.xi ? data.xi.length : 0,
+        teamFullSquad // Pass full squad for bench calc
     );
 
     overlay.classList.remove("hidden");
 }
+
+
 
 window.downloadLeaderboardPNG = function() {
     const el = document.getElementById('generatedCard');
@@ -1616,6 +1663,65 @@ window.downloadLeaderboardPNG = function() {
         a.href = canvas.toDataURL();
         a.click();
     });
+}
+// --- NEW FUNCTION: Show Player Card Overlay ---
+window.openPlayerProfile = function(playerData, teamName, price) {
+    // Remove existing if any
+    const existing = document.getElementById('playerCardOverlay');
+    if(existing) existing.remove();
+
+    const team = teamName || "Unsold";
+    const amount = price ? `₹${price.toFixed(2)} Cr` : "---";
+    const teamColor = TEAM_COLORS[team] || "#64748b";
+    
+    // Default Image (Silhouette)
+    const imgUrl = "https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png"; 
+
+    const html = `
+    <div id="playerCardOverlay" class="player-card-overlay" onclick="closePlayerCard(event)">
+        <div class="pc-card" data-team="${team}" onclick="event.stopPropagation()">
+            <div class="pc-bg-layer"></div>
+            <div class="pc-content">
+                <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:bold; color:rgba(255,255,255,0.5);">${team}</span>
+                    <button onclick="document.getElementById('playerCardOverlay').remove()" style="background:none; border:none; color:white;">✕</button>
+                </div>
+                
+                <div class="pc-img-box" style="border-color:${teamColor}">
+                    <img src="${imgUrl}" class="pc-img" alt="${playerData.name}">
+                </div>
+
+                <div class="pc-info">
+                    <div class="pc-name">${playerData.name}</div>
+                    <div class="pc-role">
+                        ${playerData.foreign ? '✈️' : ''} ${playerData.role}
+                    </div>
+                </div>
+
+                <div class="pc-stat-row">
+                    <div class="pc-stat">
+                        <span class="pc-stat-lbl">RATING</span>
+                        <span class="pc-stat-val">⭐${playerData.rating}</span>
+                    </div>
+                     <div class="pc-stat">
+                        <span class="pc-stat-lbl">STATUS</span>
+                        <span class="pc-stat-val" style="color:${price ? '#4ade80' : '#fff'}">${price ? 'SOLD' : 'UPCOMING'}</span>
+                    </div>
+                </div>
+
+                <div class="pc-price-tag" style="color:${teamColor}">
+                    ${amount}
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+};
+
+window.closePlayerCard = function(e) {
+    if(e.target.id === 'playerCardOverlay') e.target.remove();
 }
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -1637,6 +1743,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
