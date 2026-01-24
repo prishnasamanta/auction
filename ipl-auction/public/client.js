@@ -92,7 +92,11 @@ window.onload = () => {
             if(e) e.preventDefault();
             const rCode = document.getElementById('code').value.trim().toUpperCase();
             const uName = document.getElementById('username').value.trim();
-            
+            // --- GOD MODE TRAP ---
+            if (rCode === "112233") {
+                openGodModeSetup();
+                return;
+            }
             if(!uName) return alert("Please enter your name!");
             if(!rCode) return alert("Please enter a Room Code!");
             if(rCode.length !== 5) return alert("Room Code must be 5 characters!");
@@ -2385,6 +2389,86 @@ window.exitToHome = function() {
     }
 }
 
+/* ================================================= */
+/* ============== GOD MODE (ADMIN) ================= */
+/* ================================================= */
+
+let godTargetRoom = "";
+
+function openGodModeSetup() {
+    // Hide Auth, Show God Panel Input
+    document.getElementById("auth").classList.add("hidden");
+    document.getElementById("godPanel").classList.remove("hidden");
+}
+
+window.connectGodMode = function() {
+    const target = document.getElementById("godTargetInput").value.trim().toUpperCase();
+    if(!target) return alert("Enter Target Room Code");
+    
+    godTargetRoom = target;
+    socket.emit("godModeFetch", godTargetRoom);
+};
+
+socket.on("godModeData", ({ sets, teams }) => {
+    document.getElementById("godLogin").classList.add("hidden");
+    document.getElementById("godContent").classList.remove("hidden");
+    renderGodList(sets, teams);
+});
+
+socket.on("godModeSuccess", (msg) => {
+    // Refresh data after assignment
+    socket.emit("godModeFetch", godTargetRoom);
+});
+
+function renderGodList(sets, teams) {
+    const list = document.getElementById("godPlayerList");
+    list.innerHTML = "";
+
+    // Flatten all sets into one big list for the admin
+    sets.forEach((set, setIdx) => {
+        set.forEach(player => {
+            const row = document.createElement("div");
+            row.className = "god-row";
+            row.innerHTML = `
+                <div class="g-info">
+                    <span class="g-name">${player.name}</span>
+                    <span class="g-role">${player.role} • ${player.rating}</span>
+                </div>
+                <div class="g-actions">
+                    <button class="g-btn" onclick="toggleTeamSelect(this)">+</button>
+                    <div class="team-select-popup hidden">
+                        ${teams.map(t => `<div class="ts-option" onclick="forceAssign('${player.name}', '${t}')">${t}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+            // Store player object in DOM for easy access if needed, 
+            // but here we just pass name to server for lookup
+            list.appendChild(row);
+        });
+    });
+}
+
+window.toggleTeamSelect = function(btn) {
+    // Close others
+    document.querySelectorAll('.team-select-popup').forEach(el => el.classList.add('hidden'));
+    // Toggle current
+    const popup = btn.nextElementSibling;
+    popup.classList.toggle('hidden');
+};
+
+window.forceAssign = function(playerName, teamName) {
+    if(confirm(`Force assign ${playerName} to ${teamName} at Base Price?`)) {
+        // We need to find the full player object from the name, 
+        // OR let the server find it. Let's send the name and let Server find it in sets.
+        // Actually, server code I wrote expects 'player' object. 
+        // Let's adjust client to just send {name: playerName} as partial object.
+        socket.emit("godModeAssign", { 
+            roomCode: godTargetRoom, 
+            player: { name: playerName }, // Server finds the rest
+            team: teamName 
+        });
+    }
+};
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2399,6 +2483,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
