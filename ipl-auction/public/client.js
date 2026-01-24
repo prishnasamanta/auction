@@ -1048,11 +1048,11 @@ function initSquadTabs() {
 window.viewEmbeddedSquad = function(team) {
     selectedSquadTeam = team;
 
-    // 1. Toggle Button Active State
+    // 1. Tab Logic
     document.querySelectorAll('.h-team-btn').forEach(b => b.classList.remove('active'));
     Array.from(document.querySelectorAll('.h-team-btn')).find(b => b.innerText === team)?.classList.add('active');
 
-    // 2. Data Setup
+    // 2. Data
     const box = document.getElementById("embeddedSquadView");
     const squad = allSquads[team] || [];
     const purse = teamPurse[team] || 0;
@@ -1060,38 +1060,42 @@ window.viewEmbeddedSquad = function(team) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[team] || '#fff';
 
-    // 3. Categorize Players
+    // 3. Categorize
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
         if(cat[p.role]) cat[p.role].push(p);
         else cat.BOWL.push(p);
     });
 
-    // --- HELPER: Generate HTML for the 4-Column Card ---
-    const getCardHTML = (players) => {
+    // --- HELPER: Generate "Pro" Player Rows ---
+    const generateProCardHTML = (players) => {
         return players.map(p => `
-            <div class="card-p-item" style="border-left-color:${teamColor}">
-                <span class="card-p-name">${p.foreign ? '✈️ ' : ''}${p.name}</span>
-                <div class="card-p-meta">
-                    <span>⭐${p.rating}</span>
-                    <span style="color:#4ade80; font-weight:bold;">₹${p.price.toFixed(2)}</span>
+            <div class="pro-player-card" style="border-left-color:${teamColor}">
+                <div class="pp-left">
+                    <span class="pp-name">
+                        ${p.foreign ? '<span class="foreign-icon">✈️</span>' : ''} ${p.name}
+                    </span>
+                </div>
+                <div class="pp-right" style="text-align:right;">
+                    <span class="pp-price">₹${p.price.toFixed(2)}</span>
+                    <span class="pp-rating" style="color:#888; font-size:0.75rem;">⭐${p.rating}</span>
                 </div>
             </div>
         `).join('');
     };
 
-    // 4. INJECT HTML (Both View and Hidden Card)
+    // 4. INJECT HTML (Dashboard View + Hidden Professional Card)
     box.innerHTML = `
         <div id="squad-display-container">
             <div class="squad-header-compact">
-                <h2 style="margin:0; color:${teamColor}">${team}</h2>
+                <h2 style="color:${teamColor}; margin:0;">${team}</h2>
                 <div style="display:flex; justify-content:space-between; margin-top:5px; color:#aaa; font-size:0.9rem;">
                     <span>Mgr: <span style="color:#fff">${owner}</span></span>
-                    <span style="color:#4ade80; font-weight:bold; font-size:1.1rem;">₹${purse.toFixed(2)} Cr</span>
+                    <span style="color:#4ade80; font-weight:bold;">₹${purse.toFixed(2)} Cr</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-top:5px; color:#ccc; font-size:0.8rem;">
-                    <span>Total: ${squad.length} | OS: ${foreignCount}</span>
-                    <button onclick="downloadSquadImage()" style="background:none; border:none; color:#facc15; cursor:pointer; font-size:1rem;">
+                <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;">
+                    <span style="color:#ccc;">${squad.length} Players</span>
+                    <button onclick="downloadSquadImage()" style="cursor:pointer; background:#222; border:1px solid #444; color:#facc15; padding:4px 10px; border-radius:4px;">
                         <i class="fas fa-download"></i> Download Card
                     </button>
                 </div>
@@ -1100,61 +1104,62 @@ window.viewEmbeddedSquad = function(team) {
         </div>
 
         <div id="squad-card-capture">
-            <div class="capture-bg" style="background-image: url('/logos/${team}.png');"></div>
+            <div class="capture-bg-watermark" style="background-image: url('/logos/${team}.png');"></div>
             
-            <div class="capture-header">
-                <h1 style="color:${teamColor}; margin:0; font-size:3rem;">${team}</h1>
-                <h3 style="color:#ddd; margin:10px 0;">Manager: ${owner}</h3>
-                <div style="color:#facc15; font-weight:bold; font-size:1.4rem; margin-top:10px;">
-                    Purse: ₹${purse.toFixed(2)} Cr &nbsp;|&nbsp; Players: ${squad.length} &nbsp;|&nbsp; OS: ${foreignCount}
+            <div class="pro-header">
+                <div class="pro-team-info">
+                    <h1 style="background: linear-gradient(to bottom, #fff, ${teamColor}); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${team}</h1>
+                    <h3>${owner}</h3>
+                </div>
+                <div class="pro-header-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Purse Remaining</div>
+                        <div class="stat-val" style="color:#4ade80;">₹${purse.toFixed(2)} <small style="font-size:1rem;">Cr</small></div>
+                    </div>
+                    <div style="color:#aaa; font-size:0.9rem; letter-spacing:1px; margin-top:5px;">
+                        SQUAD SIZE: <strong style="color:#fff;">${squad.length}</strong> &nbsp;|&nbsp; OVERSEAS: <strong style="color:#fff;">${foreignCount}</strong>
+                    </div>
                 </div>
             </div>
 
-            <div class="capture-body">
-                <div class="sq-col">
-                    <div class="col-header">🖑 WK</div>
-                    <div class="col-list">${getCardHTML(cat.WK)}</div>
+            <div class="pro-body">
+                <div class="pro-col">
+                    <div class="pro-col-header" style="border-color:${teamColor}; color:${teamColor};">🖑 WICKET KEEPERS</div>
+                    ${generateProCardHTML(cat.WK)}
                 </div>
-                <div class="sq-col">
-                    <div class="col-header">➘ BAT</div>
-                    <div class="col-list">${getCardHTML(cat.BAT)}</div>
+                <div class="pro-col">
+                    <div class="pro-col-header" style="border-color:${teamColor}; color:${teamColor};">➘ BATTERS</div>
+                    ${generateProCardHTML(cat.BAT)}
                 </div>
-                <div class="sq-col">
-                    <div class="col-header">☄ ALL</div>
-                    <div class="col-list">${getCardHTML(cat.ALL)}</div>
+                <div class="pro-col">
+                    <div class="pro-col-header" style="border-color:${teamColor}; color:${teamColor};">☄ ALL ROUNDERS</div>
+                    ${generateProCardHTML(cat.ALL)}
                 </div>
-                <div class="sq-col">
-                    <div class="col-header">⚾︎ BOWL</div>
-                    <div class="col-list">${getCardHTML(cat.BOWL)}</div>
+                <div class="pro-col">
+                    <div class="pro-col-header" style="border-color:${teamColor}; color:${teamColor};">⚾︎ BOWLERS</div>
+                    ${generateProCardHTML(cat.BOWL)}
                 </div>
+            </div>
+
+            <div class="pro-footer">
+                Official Auction Summary • Generated by AuctionDashboard
             </div>
         </div>
     `;
 
-    // 5. Populate the VISIBLE List (Interactive)
+    // 5. Populate Visible List (Same as before)
     const viewList = document.getElementById("view-squad-list");
-    
-    // We iterate strictly: WK -> BAT -> ALL -> BOWL
     ['WK', 'BAT', 'ALL', 'BOWL'].forEach(r => {
         if(cat[r].length > 0) {
-            // Header
             const h = document.createElement("div");
             h.className = "role-header";
             h.innerText = r;
             viewList.appendChild(h);
-
-            // Rows
             cat[r].forEach(p => {
                 const row = document.createElement("div");
                 row.className = "sq-row";
-                row.innerHTML = `
-                    <span>${p.foreign ? '✈️ ' : ''} ${p.name} <small style="color:#666">(${p.rating})</small></span>
-                    <span style="color:#4ade80;">₹${p.price.toFixed(2)}</span>
-                `;
-                // Add click event for profile
-                row.onclick = () => { 
-                    if(window.openPlayerProfile) window.openPlayerProfile(p, team, p.price); 
-                };
+                row.innerHTML = `<span>${p.foreign ? '✈️' : ''} ${p.name}</span><span style="color:#4ade80;">₹${p.price.toFixed(2)}</span>`;
+                row.onclick = () => { if(window.openPlayerProfile) window.openPlayerProfile(p, team, p.price); };
                 viewList.appendChild(row);
             });
         }
@@ -1166,18 +1171,19 @@ window.downloadSquadImage = function() {
     const teamName = selectedSquadTeam || "Squad";
 
     html2canvas(element, {
-        width: 1200, // Forces square width
-        height: 1200, // Forces square height
-        windowWidth: 1200, // Simulate window size
+        width: 1200,
+        height: 1200,
+        windowWidth: 1200,
         windowHeight: 1200,
         scrollX: 0,
         scrollY: 0,
-        scale: 1, // 1:1 scale (since base is already 1200px)
-        useCORS: true, // Needed for images
-        backgroundColor: "#121212"
+        scale: 2, // High Quality Export
+        useCORS: true,
+        backgroundColor: "#111111", // Matches the dark theme base
+        letterRendering: 1
     }).then(canvas => {
         const link = document.createElement('a');
-        link.download = `${teamName}_Squad_Card.png`;
+        link.download = `${teamName}_Official_Card.png`;
         link.href = canvas.toDataURL("image/png");
         document.body.appendChild(link);
         link.click();
@@ -2067,5 +2073,6 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
