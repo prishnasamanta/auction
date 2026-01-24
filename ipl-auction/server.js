@@ -49,33 +49,72 @@ function startBid(rating) {
     return 0.3;
 }
 
+/* ... imports and setup ... */
+// Replace the existing createSets function with this:
+
 function createSets(allPlayers) {
+    // 1. Sort everyone by rating high to low
+    const sorted = [...allPlayers].sort((a, b) => b.rating - a.rating);
+
+    // 2. Extract MARQUEE Set (Top 10 highest rated players)
+    const marquee = sorted.slice(0, 10);
+    const remaining = sorted.slice(10);
+
+    // 3. Group remaining by Role
+    const bats = remaining.filter(p => p.role === "BAT");
+    const alls = remaining.filter(p => p.role === "ALL");
+    const wks = remaining.filter(p => p.role === "WK");
+    const pace = remaining.filter(p => p.role === "PACE");
+    const spin = remaining.filter(p => p.role === "SPIN");
+    const bowls = [...pace, ...spin]; // Combine for generic bowl sets if needed, or keep separate
+
     const sets = [];
-    let currentSet = [];
-    
-    if (!allPlayers || allPlayers.length === 0) return [];
+    sets.push({ name: "M1: Marquee Players", players: marquee });
 
-    let lastP = allPlayers[0];
-    currentSet.push(lastP);
+    // Helper to chunk arrays
+    const chunk = (arr, size) => {
+        const res = [];
+        for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
+        return res;
+    };
 
-    for (let i = 1; i < allPlayers.length; i++) {
-        const p = allPlayers[i];
-        if (p.role !== lastP.role || p.foreign !== lastP.foreign) {
-            sets.push(currentSet); 
-            currentSet = [];       
-        }
-        currentSet.push(p);
-        lastP = p;
+    const batSets = chunk(bats, 8);
+    const allSets = chunk(alls, 8);
+    const wkSets = chunk(wks, 7);
+    const paceSets = chunk(pace, 7);
+    const spinSets = chunk(spin, 7);
+
+    // 4. Interleave Sets (BA1, AL1, WK1, FA1, SP1, BA2...)
+    const maxLen = Math.max(batSets.length, allSets.length, wkSets.length, paceSets.length, spinSets.length);
+
+    for(let i=0; i<maxLen; i++) {
+        if(batSets[i]) sets.push({ name: `BA${i+1}: Batters`, players: batSets[i] });
+        if(allSets[i]) sets.push({ name: `AL${i+1}: All-Rounders`, players: allSets[i] });
+        if(wkSets[i]) sets.push({ name: `WK${i+1}: Wicket Keepers`, players: wkSets[i] });
+        if(paceSets[i]) sets.push({ name: `FA${i+1}: Fast Bowlers`, players: paceSets[i] });
+        if(spinSets[i]) sets.push({ name: `SP${i+1}: Spinners`, players: spinSets[i] });
     }
-    sets.push(currentSet); 
-    return sets;
+
+    // Flatten logic for the existing architecture (Array of Arrays)
+    return sets.map(s => s.players);
 }
 
+// Update getSetName to handle the new logic slightly better
 function getSetName(set) {
     if (!set || set.length === 0) return "Empty Set";
-    const p = set[0];
-    return `${p.foreign ? "Overseas" : "Indian"} ${p.role}s`;
+    // Check role of first player to guess set name
+    const r = set[0].role;
+    if(set.some(p => p.rating >= 9.4)) return "Marquee Set"; // Simple heuristic
+    if(r === "BAT") return "Batters Set";
+    if(r === "ALL") return "All-Rounders Set";
+    if(r === "WK") return "Wicket Keepers Set";
+    if(r === "PACE") return "Fast Bowlers Set";
+    if(r === "SPIN") return "Spinners Set";
+    return "Mixed Set";
 }
+
+/* ... rest of server.js remains same ... */
+
 
 function broadcastSets(r, roomCode) {
     const payload = [];
@@ -807,5 +846,6 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
