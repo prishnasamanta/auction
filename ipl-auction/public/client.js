@@ -2009,7 +2009,7 @@ function renderPopupContent(mode) {
         container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
     } else {
         // Use the New 4-Column Generator
-        container.innerHTML = generateFullSquadHTML(d.team, fullSquad, d.purse, "Manager");
+        container.innerHTML = downloadSquadImage(d.team, fullSquad, d.purse, "Manager");
     }
 }
 
@@ -2352,7 +2352,7 @@ function renderPostAuctionSummary() {
         // Content (Hidden by default)
         const content = document.createElement("div");
         content.className = "summary-content hidden";
-        content.innerHTML = generateFullSquadHTML(team, squad, purse, owner);
+        content.innerHTML = downloadSquadImage(team, squad, purse, owner);
 
         // Toggle Logic
         header.onclick = () => {
@@ -2399,6 +2399,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
