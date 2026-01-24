@@ -2396,7 +2396,7 @@ window.exitToHome = function() {
 let godTargetRoom = "";
 
 function openGodModeSetup() {
-    // Hide Auth, Show God Panel Input
+    document.getElementById("landing").classList.add("hidden");
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("godPanel").classList.remove("hidden");
 }
@@ -2416,7 +2416,12 @@ socket.on("godModeData", ({ sets, teams }) => {
 });
 
 socket.on("godModeSuccess", (msg) => {
-    // Refresh data after assignment
+    // Flash success and refresh data
+    const list = document.getElementById("godPlayerList");
+    // Simple visual feedback
+    list.style.opacity = "0.5";
+    setTimeout(() => list.style.opacity = "1", 200);
+    
     socket.emit("godModeFetch", godTargetRoom);
 });
 
@@ -2424,47 +2429,50 @@ function renderGodList(sets, teams) {
     const list = document.getElementById("godPlayerList");
     list.innerHTML = "";
 
-    // Flatten all sets into one big list for the admin
-    sets.forEach((set, setIdx) => {
+    // Sort team list for dropdown
+    const teamOptions = teams.sort();
+
+    sets.forEach(set => {
         set.forEach(player => {
             const row = document.createElement("div");
             row.className = "god-row";
             row.innerHTML = `
                 <div class="g-info">
-                    <span class="g-name">${player.name}</span>
-                    <span class="g-role">${player.role} • ${player.rating}</span>
+                    <div class="g-name" style="font-weight:bold; color:#fff;">${player.name}</div>
+                    <div class="g-role" style="font-size:0.75rem; color:#888;">${player.role} • ⭐${player.rating}</div>
                 </div>
-                <div class="g-actions">
-                    <button class="g-btn" onclick="toggleTeamSelect(this)">+</button>
-                    <div class="team-select-popup hidden">
-                        ${teams.map(t => `<div class="ts-option" onclick="forceAssign('${player.name}', '${t}')">${t}</div>`).join('')}
+                <div class="g-actions" style="position:relative;">
+                    <button class="g-btn" onclick="toggleTeamSelect(this)" style="background:#ef4444; color:#fff; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer;">+</button>
+                    
+                    <div class="team-select-popup hidden" style="position:absolute; right:35px; top:-10px; background:#1e1e1e; border:1px solid #ef4444; border-radius:6px; width:100px; max-height:200px; overflow-y:auto; z-index:100; box-shadow:0 5px 15px rgba(0,0,0,0.5);">
+                        ${teamOptions.map(t => `
+                            <div class="ts-option" 
+                                 onclick="forceAssign('${player.name.replace(/'/g, "\\'")}', '${t}')"
+                                 style="padding:8px; border-bottom:1px solid #333; color:#ccc; cursor:pointer; font-size:0.8rem; text-align:center;">
+                                 ${t}
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
-            // Store player object in DOM for easy access if needed, 
-            // but here we just pass name to server for lookup
             list.appendChild(row);
         });
     });
 }
 
 window.toggleTeamSelect = function(btn) {
-    // Close others
+    // Close any other open popups first
     document.querySelectorAll('.team-select-popup').forEach(el => el.classList.add('hidden'));
-    // Toggle current
+    
     const popup = btn.nextElementSibling;
     popup.classList.toggle('hidden');
 };
 
 window.forceAssign = function(playerName, teamName) {
-    if(confirm(`Force assign ${playerName} to ${teamName} at Base Price?`)) {
-        // We need to find the full player object from the name, 
-        // OR let the server find it. Let's send the name and let Server find it in sets.
-        // Actually, server code I wrote expects 'player' object. 
-        // Let's adjust client to just send {name: playerName} as partial object.
+    if(confirm(`Force assign ${playerName} to ${teamName}?`)) {
         socket.emit("godModeAssign", { 
             roomCode: godTargetRoom, 
-            player: { name: playerName }, // Server finds the rest
+            player: { name: playerName }, 
             team: teamName 
         });
     }
@@ -2483,6 +2491,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
