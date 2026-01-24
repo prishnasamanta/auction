@@ -818,20 +818,6 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .log-item { margin-bottom: 3px; border-left: 2px solid transparent; padding-left: 5px; }
 .log-item:last-child { border-left-color: #22c55e; color: #cbd5e1; } 
 
-#feedChat {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-#chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    font-size: 0.9rem;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-}
-.chat-box { display: flex; gap: 5px; margin-top: 10px; }
 
 /* Input Area */
 .feed-input-wrapper {
@@ -1096,73 +1082,206 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 
+/* ================================================= */
+/* 💎 PREMIUM PLAYER CARD (MODERN GLASS STYLE)       */
+/* ================================================= */
 
-/* --- PLAYER CARD OVERLAY (Professional) --- */
 .player-card-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); z-index: 2000;
-    display: flex; justify-content: center; align-items: center;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(12px); /* Stronger blur for focus */
+    background: rgba(0, 0, 0, 0.75);
 }
 
 .pc-card {
-    width: 350px; height: 500px;
-    background: #1e293b; border-radius: 20px;
-    position: relative; overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.1);
-    display: flex; flex-direction: column;
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* Dynamic Team Backgrounds */
-.pc-bg-layer {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    opacity: 0.15; filter: grayscale(100%);
-    background-size: cover; background-position: center;
-    transition: all 0.5s;
-}
-/* Specific Team Gradients (Fallback if no logo image) */
-.pc-card[data-team="CSK"] .pc-bg-layer { background: linear-gradient(45deg, #facc15, #000); opacity: 0.3; }
-.pc-card[data-team="RCB"] .pc-bg-layer { background: linear-gradient(45deg, #dc2626, #000); opacity: 0.3; }
-.pc-card[data-team="MI"] .pc-bg-layer { background: linear-gradient(45deg, #0ea5e9, #000); opacity: 0.3; }
-.pc-card[data-team="KKR"] .pc-bg-layer { background: linear-gradient(45deg, #a855f7, #000); opacity: 0.3; }
-/* Add others... */
-
-.pc-content {
-    position: relative; z-index: 2; height: 100%;
-    display: flex; flex-direction: column; align-items: center;
-    padding: 20px;
-}
-
-.pc-img-box {
-    width: 180px; height: 180px; border-radius: 50%;
-    background: rgba(255,255,255,0.05);
-    margin-top: 30px; border: 3px solid rgba(255,255,255,0.2);
+    position: relative;
+    width: 320px;
+    height: 480px;
+    border-radius: 24px;
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    box-shadow: 
+        0 20px 40px rgba(0,0,0,0.6), 
+        inset 0 1px 1px rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.08);
     overflow: hidden;
+    display: flex; 
+    flex-direction: column;
+    animation: cardFloat 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* 1. BACKGROUND LOGO LAYER (Watermark) */
+.pc-bg-layer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;  /* Make it larger than card */
+    height: 120%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.12; /* Subtle watermark effect */
+    filter: grayscale(100%); /* Elegant B&W look */
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* 2. GLOWING ACCENT BORDER (Top Gradient) */
+.pc-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+    background: linear-gradient(90deg, transparent, var(--team-color, #fff), transparent);
+    z-index: 2;
+    opacity: 0.8;
+}
+
+/* 3. CONTENT CONTAINER */
+.pc-content {
+    position: relative;
+    z-index: 5;
+    height: 100%;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    padding: 25px 20px;
+}
+
+/* 4. PLAYER IMAGE (Circle with Glow) */
+.pc-img-box {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border: 3px solid rgba(255,255,255,0.15);
+    padding: 4px; /* Gap between border and image */
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    margin-top: 20px;
 }
-.pc-img { width: 100%; height: 100%; object-fit: cover; }
 
-.pc-info { text-align: center; margin-top: 20px; }
-.pc-name { font-size: 1.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-.pc-role { color: var(--gold); font-weight: bold; font-size: 1rem; margin-bottom: 15px; }
+.pc-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    background: #0f172a; /* Fallback bg */
+}
 
+/* 5. TEXT TYPOGRAPHY */
+.pc-info { text-align: center; margin-top: 15px; }
+
+.pc-name {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: linear-gradient(180deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.pc-role {
+    font-family: 'Inter', sans-serif;
+    color: var(--gold);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: rgba(255, 215, 0, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* 6. STATS ROW */
 .pc-stat-row {
-    display: flex; gap: 15px; margin-top: 10px;
-    background: rgba(0,0,0,0.4); padding: 10px 20px; border-radius: 12px;
+    display: flex; 
+    justify-content: center; 
+    gap: 20px;
+    width: 100%;
+    margin-top: auto; /* Pushes to bottom */
+    margin-bottom: 20px;
+    padding: 15px 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.pc-stat { text-align: center; }
-.pc-stat-lbl { font-size: 0.7rem; color: #94a3b8; display: block; }
-.pc-stat-val { font-size: 1.2rem; font-weight: bold; color: #fff; }
 
-.pc-price-tag {
-    margin-top: auto; margin-bottom: 20px;
-    background: #fff; color: #000;
-    padding: 10px 30px; font-weight: 900; font-size: 1.5rem;
-    border-radius: 50px; transform: skewX(-10deg);
-    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+.pc-stat { 
+    display: flex; flex-direction: column; align-items: center; 
+    min-width: 80px;
 }
+.pc-stat-lbl { font-size: 0.7rem; color: #64748b; font-weight: 700; letter-spacing: 1px; }
+.pc-stat-val { font-size: 1.2rem; font-weight: 700; color: #fff; margin-top: 2px; }
+
+/* 7. PRICE TAG (Floating Badge) */
+.pc-price-tag {
+    position: absolute;
+    bottom: 25px;
+    background: #fff;
+    color: #000;
+    padding: 8px 24px;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 900;
+    font-size: 1.4rem;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    transform: translateY(50%);
+    opacity: 0;
+    animation: slideUpTag 0.4s 0.2s forwards ease-out;
+}
+
+/* ANIMATIONS */
+@keyframes cardFloat { from { transform: translateY(50px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+@keyframes slideUpTag { to { transform: translateY(0); opacity: 1; } }
+
+/* ================================================= */
+/* 🎨 TEAM SPECIFIC LOGOS & COLORS                   */
+/* ================================================= */
+
+/* We use a CSS Variable --team-color for dynamic glows */
+
+/* CSK */
+.pc-card[data-team="CSK"] { --team-color: #facc15; }
+.pc-card[data-team="CSK"] .pc-bg-layer { background-image: url('/logos/CSK.png'); }
+
+/* RCB */
+.pc-card[data-team="RCB"] { --team-color: #dc2626; }
+.pc-card[data-team="RCB"] .pc-bg-layer { background-image: url('/logos/RCB.png'); }
+
+/* MI */
+.pc-card[data-team="MI"] { --team-color: #0ea5e9; }
+.pc-card[data-team="MI"] .pc-bg-layer { background-image: url('/logos/MI.png'); }
+
+/* KKR */
+.pc-card[data-team="KKR"] { --team-color: #a855f7; }
+.pc-card[data-team="KKR"] .pc-bg-layer { background-image: url('/logos/KKR.png'); }
+
+/* RR */
+.pc-card[data-team="RR"] { --team-color: #fb7185; }
+.pc-card[data-team="RR"] .pc-bg-layer { background-image: url('/logos/RR.png'); }
+
+/* SRH */
+.pc-card[data-team="SRH"] { --team-color: #fb923c; }
+.pc-card[data-team="SRH"] .pc-bg-layer { background-image: url('/logos/SRH.png'); }
+
+/* DC */
+.pc-card[data-team="DC"] { --team-color: #60a5fa; }
+.pc-card[data-team="DC"] .pc-bg-layer { background-image: url('/logos/DC.png'); }
+
+/* PBKS */
+.pc-card[data-team="PBKS"] { --team-color: #ef4444; }
+.pc-card[data-team="PBKS"] .pc-bg-layer { background-image: url('/logos/PBKS.png'); }
+
+/* GT */
+.pc-card[data-team="GT"] { --team-color: #0d9488; }
+.pc-card[data-team="GT"] .pc-bg-layer { background-image: url('/logos/GT.png'); }
+
+/* LSG */
+.pc-card[data-team="LSG"] { --team-color: #22c55e; }
+.pc-card[data-team="LSG"] .pc-bg-layer { background-image: url('/logos/LSG.png'); }
+
+/* UNSOLD */
+.pc-card[data-team="Unsold"] { --team-color: #64748b; }
+.pc-card[data-team="Unsold"] .pc-bg-layer { background-image: none; opacity: 0; }
+.pc-card[data-team="Unsold"] .pc-price-tag { display: none; }
 
 @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
@@ -1328,6 +1447,105 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     background-image: url('/logos/LSG.PNG'); 
     background-color: #22c55e; 
 }
+
+/* --- MODERN CHAT & LOGS --- */
+#view-feed {
+    display: flex; flex-direction: column; height: 100%;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px; overflow: hidden;
+}
+
+/* 1. ACTIVITY LOG (Ticker Style) */
+#miniLog {
+    height: 120px; /* Fixed height for logs */
+    overflow-y: auto;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 10px;
+    font-size: 0.85rem;
+    display: flex; 
+    flex-direction: column; /* Normal order, we will PREPEND in JS */
+}
+
+.log-item {
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    border-left: 2px solid var(--gold);
+    background: rgba(255, 215, 0, 0.05);
+    color: #cbd5e1;
+    animation: slideDown 0.3s ease-out;
+}
+
+/* 2. CHAT AREA */
+#feedChat {
+    flex: 1; /* Takes remaining space */
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+#chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex; flex-direction: column; gap: 8px;
+    scroll-behavior: smooth;
+}
+
+/* Chat Bubbles */
+.chat-msg {
+    display: flex; flex-direction: column;
+    max-width: 85%;
+    animation: popIn 0.2s ease-out;
+}
+
+.chat-msg.mine { align-self: flex-end; align-items: flex-end; }
+.chat-msg.others { align-self: flex-start; align-items: flex-start; }
+
+.chat-header { font-size: 0.7rem; color: #94a3b8; margin-bottom: 2px; }
+.chat-bubble {
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.chat-msg.mine .chat-bubble {
+    background: var(--primary); 
+    color: #000;
+    border-top-right-radius: 2px;
+}
+
+.chat-msg.others .chat-bubble {
+    background: #334155;
+    color: #fff;
+    border-top-left-radius: 2px;
+}
+
+/* 3. INPUT AREA */
+.feed-input-wrapper {
+    padding: 10px;
+    background: rgba(0,0,0,0.4);
+    display: flex; gap: 8px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+#msg {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 20px;
+    outline: none;
+    transition: all 0.2s;
+}
+#msg:focus { border-color: var(--primary); background: rgba(0,0,0,0.3); }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
 
 
