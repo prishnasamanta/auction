@@ -2018,4 +2018,20 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-top: 1px solid rgba(255,255,255,0.05);
     position: relative; z-index: 2;
 }
+/* Fix for Status Overlay hiding behind Footer */
+#xiStatus {
+    position: fixed;
+    bottom: 90px !important; /* Move up above the footer area */
+    right: 20px;
+    z-index: 2100 !important; /* Higher than Footer (2000) */
+    width: 90%;
+    max-width: 400px;
+    pointer-events: none; /* Let clicks pass through if transparent */
+}
+
+/* Ensure the content inside is clickable */
+#xiStatus > div {
+    pointer-events: auto;
+}
+
 
