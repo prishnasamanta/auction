@@ -1018,41 +1018,6 @@ function renderSquadTabs() {
     if(selectedSquadTeam) viewEmbeddedSquad(selectedSquadTeam);
 }
 /* =========================================
-   1. MOCK DATA 
-   (Replace this with your real database later)
-   ========================================= */
-
-const allSquads = {
-    "CSK": [
-        { name: "MS Dhoni", role: "WK", price: 12.0, rating: 9.5, foreign: false },
-        { name: "R. Jadeja", role: "ALL", price: 16.0, rating: 9.8, foreign: false },
-        { name: "D. Conway", role: "BAT", price: 8.5, rating: 9.0, foreign: true },
-        { name: "M. Pathirana", role: "BOWL", price: 6.0, rating: 8.8, foreign: true }
-    ],
-    "MI": [
-        { name: "Rohit Sharma", role: "BAT", price: 16.0, rating: 9.5, foreign: false },
-        { name: "J. Bumrah", role: "BOWL", price: 12.0, rating: 9.9, foreign: false },
-        { name: "T. David", role: "BAT", price: 8.25, rating: 8.5, foreign: true }
-    ],
-    "RCB": [
-        { name: "Virat Kohli", role: "BAT", price: 15.0, rating: 9.7, foreign: false },
-        { name: "G. Maxwell", role: "ALL", price: 11.0, rating: 9.0, foreign: true }
-    ],
-    "KKR": [
-        { name: "S. Iyer", role: "BAT", price: 12.25, rating: 8.9, foreign: false },
-        { name: "A. Russell", role: "ALL", price: 14.0, rating: 9.2, foreign: true }
-    ],
-    "GT": [
-        { name: "S. Gill", role: "BAT", price: 8.0, rating: 9.4, foreign: false },
-        { name: "Rashid Khan", role: "BOWL", price: 15.0, rating: 9.8, foreign: true }
-    ]
-};
-
-const teamPurse = { "CSK": 12.5, "MI": 4.0, "RCB": 15.0, "KKR": 8.5, "GT": 20.0 };
-const teamOwners = { "CSK": "N. Srinivasan", "MI": "N. Ambani", "RCB": "United Spirits", "KKR": "Shah Rukh Khan", "GT": "CVC Capital" };
-
-
-/* =========================================
    2. INITIALIZATION LOGIC
    (Creates the buttons inside your empty HTML div)
    ========================================= */
@@ -2043,6 +2008,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
