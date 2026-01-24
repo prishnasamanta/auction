@@ -1,7 +1,11 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const path = require('path'); // Add this if missing
 
+// --- ADD THIS LINE TO FIX 404 ERRORS ---
+// This tells the server: "If anyone asks for a file, look in the 'public' folder"
+app.use(express.static(path.join(__dirname, 'public')));
 const PLAYERS = require("./players"); 
 const disconnectTimers = {};
 const app = express();
@@ -846,6 +850,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
