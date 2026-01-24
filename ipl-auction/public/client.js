@@ -929,6 +929,7 @@ socket.on("chatUpdate", d => {
 });
 
 // 2. LOG UPDATE (Newest at TOP - Fixed)
+// --- UPDATED LOGIC: Latest at Bottom, Max 3 Items ---
 socket.on("logUpdate", msg => {
     const log = document.getElementById("log");
     if(!log) return;
@@ -936,16 +937,22 @@ socket.on("logUpdate", msg => {
     const div = document.createElement("div");
     div.className = "log-item";
     
-    // Add Timestamp
+    // Simple Timestamp + Message
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    div.innerHTML = `<span style="opacity:0.5; font-size:0.7em; margin-right:5px;">${time}</span> ${msg}`;
+    div.innerHTML = `<span style="color:var(--gold); margin-right:5px;">${time}</span> ${msg}`;
     
-    // PREPEND instead of Append (Adds to TOP)
-    log.prepend(div);
+    // 1. APPEND (Add to bottom)
+    log.appendChild(div);
 
-    // Limit logs to 30 items
-    if (log.children.length > 30) log.removeChild(log.lastChild);
+    // 2. SCROLL TO BOTTOM (Show latest)
+    log.scrollTop = log.scrollHeight;
+
+    // 3. LIMIT TO 3 ITEMS
+    while (log.children.length > 3) {
+        log.removeChild(log.firstChild); // Remove oldest from top
+    }
 });
+
 
 // 3. SEND FUNCTION
 window.sendChat = function() {
@@ -1889,6 +1896,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
