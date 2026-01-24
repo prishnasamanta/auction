@@ -2270,3 +2270,52 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
         min-width: 100%; /* Allow squeezing if possible, or scroll */
     }
 }
+/* --- SCALING FOR VIEWING LARGE CARDS (FIXED) --- */
+
+/* 1. The Container for the Card */
+#squadCaptureArea, .summary-content {
+    background: #0f172a;
+    display: flex;
+    justify-content: center;
+    overflow: hidden; /* Hide scrollbars */
+    padding: 10px;
+}
+
+/* 2. The Card Itself when Inside the Viewer */
+#squadCaptureArea .team-sheet-card, 
+.summary-content .team-sheet-card {
+    /* Use ZOOM instead of Transform. 
+       Zoom physically shrinks the element layout, preventing whitespace issues.
+    */
+    zoom: 0.45; /* Default Desktop Zoom */
+    
+    /* Remove margins that were hacking the transform layout */
+    margin: 0;
+    transform: none; 
+}
+
+/* Mobile Adjustments */
+@media (max-width: 800px) {
+    #squadCaptureArea .team-sheet-card, 
+    .summary-content .team-sheet-card {
+        zoom: 0.35; /* Tablet */
+    }
+}
+
+@media (max-width: 500px) {
+    #squadCaptureArea .team-sheet-card, 
+    .summary-content .team-sheet-card {
+        zoom: 0.28; /* Mobile - fits 1000px card into ~300px width */
+    }
+}
+
+/* Firefox doesn't support zoom, use Transform fallback */
+@supports not (zoom: 1) {
+    #squadCaptureArea .team-sheet-card, 
+    .summary-content .team-sheet-card {
+        transform: scale(0.3);
+        transform-origin: top center;
+        margin-bottom: -200%; /* Negative margin is necessary only for transform */
+    }
+}
+
