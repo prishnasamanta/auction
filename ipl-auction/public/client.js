@@ -41,7 +41,20 @@ const soundTick = new Audio("/sounds/beep.mp3");
 /* ================================================= */
 /* ========= 1. INITIALIZATION & NAVIGATION ======== */
 /* ================================================= */
-
+// ✅ FIX: Safe Play Function to prevent crashes
+function safePlay(audioObj) {
+    if (!audioObj) return;
+    // Reset time to start (allows rapid re-play)
+    audioObj.currentTime = 0;
+    
+    // Attempt to play, catch errors silently if user hasn't interacted yet
+    const playPromise = audioObj.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            console.warn("Audio blocked (User interaction needed):", error);
+        });
+    }
+}
 window.onload = () => {
     // --- 1. SETUP EVENT LISTENERS ---
     const enterBtn = document.getElementById("enterBtn");
@@ -761,10 +774,10 @@ function updatePlayerCard(player, bid) {
 
 
 socket.on("timer", t => {
-    document.getElementById("timer").innerText = "⏱" + t;
+    document.getElementById("timer").innerText = "" + t;
     if(auctionLive && !auctionPaused && t <= 3 && t > 0 && t !== lastTickSecond) {
         lastTickSecond = t;
-        soundTick.play().catch(()=>{});
+        safePlay(soundTick);    
     }
 });
 
@@ -778,10 +791,8 @@ if(bidBtn) {
 }
 
 socket.on("bidUpdate", data => {
-    if (typeof soundBid !== 'undefined') {
-        soundBid.currentTime = 0; 
-        soundBid.play().catch(()=>{});
-    }
+    safePlay(soundBid);
+    
     document.getElementById("bid").innerText = `₹${data.bid.toFixed(2)} Cr`;
     lastBidTeam = data.team;
     
@@ -854,7 +865,7 @@ function updateBidButton(state) {
 
 
 socket.on("sold", d => {
-    soundHammer.play();
+    safePlay(soundHammer);
     showResultStamp("SOLD", `TO ${d.team}`, TEAM_COLORS[d.team], false);
     if(d.purse) teamPurse = d.purse;
     updateHeaderNotice();
@@ -870,7 +881,7 @@ socket.on("sold", d => {
 });
 
 socket.on("unsold", () => {
-    soundUnsold.play();
+safePlay(soundUnsold);
     showResultStamp("UNSOLD", "PASSED IN", "#f43f5e", true);
 });
 
@@ -1750,32 +1761,53 @@ socket.on("mySquad", ({ squad, rules }) => {
 
 // --- 3. TOGGLE PLAYERS ---
 // --- 3. TOGGLE PLAYERS (FIXED BUTTON LOGIC) ---
+// --- 3. TOGGLE PLAYERS (FIXED BUTTON RESET) ---
 function togglePlayerXI(p, btnElement, roleKey) {
     const list = selectedXI[roleKey];
     const index = list.findIndex(x => x.name === p.name);
 
-    // 1. Update State
     if(index > -1) {
-        list.splice(index, 1); // Remove
+        list.splice(index, 1);
         btnElement.classList.remove("picked");
     } else {
         if(countTotalXI() >= 11) return alert("Playing XI is Full (11/11).");
-        list.push(p); // Add
+        list.push(p);
         btnElement.classList.add("picked");
     }
 
-    // 2. RESET UI STATE (Fix for "Submit Button Not Appearing")
-    // If user modifies the team, bring back Submit button, hide Save button
-    document.getElementById('submitXIBtn').classList.remove('hidden');
-    document.getElementById('saveXIBtn').classList.add('hidden');
+    // RESET BUTTON STATE: If user changes anything, allow them to submit again
+    const submitBtn = document.getElementById('submitXIBtn');
+    const saveBtn = document.getElementById('saveXIBtn');
     
-    // Clear any previous "Qualified/Disqualified" messages
-    const statusBox = document.getElementById("xiStatus");
-    if(statusBox) statusBox.innerHTML = "";
+    if(submitBtn) {
+        submitBtn.disabled = false; 
+        submitBtn.innerText = `Submit XI (${countTotalXI()}/11)`; 
+        submitBtn.classList.remove('hidden'); // Show button
+        submitBtn.style.background = ""; // Reset color
+    }
+    if(saveBtn) saveBtn.classList.add('hidden'); // Hide save until submitted
 
-    // 3. Update Visuals
+    // Hide previous status message
+    const statusDiv = document.getElementById("xiStatus");
+    if(statusDiv) statusDiv.innerHTML = "";
+
     updateXIPreview();
 }
+
+// --- 5. SUBMIT LOGIC (FIXED) ---
+window.submitXI = function() {
+    if(countTotalXI() !== 11) return alert("Please select exactly 11 players.");
+    
+    // Send the Object structure: { WK: [...], BAT: [...] }
+    const payload = selectedXI; 
+
+    const btn = document.getElementById("submitXIBtn");
+    if(btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
+
+    // Send 'team' explicitly to prevent server silent fail
+    socket.emit("submitXI", { team: myTeam, xi: payload });
+};
+
 
 
 function countTotalXI() {
@@ -1898,17 +1930,6 @@ function updateStatsBar() {
 }
 
 // --- 5. SUBMIT ---
-window.submitXI = function() {
-    if(countTotalXI() !== 11) return alert("Please select exactly 11 players.");
-    
-    // SERVER EXPECTS OBJECT with full players (based on your previous logs)
-    const payload = selectedXI; 
-
-    const btn = document.getElementById("submitXIBtn");
-    if(btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
-
-    socket.emit("submitXI", { team: myTeam, xi: payload });
-};
 
 window.resetXISelection = function() {
     if(confirm("Reset Selection?")) {
@@ -2211,6 +2232,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
