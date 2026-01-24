@@ -1048,11 +1048,11 @@ function initSquadTabs() {
 window.viewEmbeddedSquad = function(team) {
     selectedSquadTeam = team;
 
-    // 1. Highlight the Tab Button
+    // 1. UI Tab Toggling
     document.querySelectorAll('.h-team-btn').forEach(b => b.classList.remove('active'));
     Array.from(document.querySelectorAll('.h-team-btn')).find(b => b.innerText === team)?.classList.add('active');
 
-    // 2. Get Data
+    // 2. Data Retrieval
     const box = document.getElementById("embeddedSquadView");
     const squad = allSquads[team] || [];
     const purse = teamPurse[team] || 0;
@@ -1060,128 +1060,125 @@ window.viewEmbeddedSquad = function(team) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[team] || '#fff';
 
-    // 3. Inject Structure (Your new HTML)
+    // 3. Filter Players into Categories
+    const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
+    squad.forEach(p => {
+        if(cat[p.role]) cat[p.role].push(p);
+        else cat.BOWL.push(p); // Default to Bowl if unknown
+    });
+
+    // 4. Generate HTML for the 4 Columns (Helper Function)
+    const generateColumnHTML = (players) => {
+        return players.map(p => `
+            <div class="col-item" style="border-left-color:${teamColor}">
+                <span class="player-name">
+                    ${p.foreign ? '✈️ ' : ''}${p.name}
+                </span>
+                <div class="player-meta">
+                    <span>⭐${p.rating}</span>
+                    <span class="p-price">₹${p.price.toFixed(2)}</span>
+                </div>
+            </div>
+        `).join('');
+    };
+
+    // 5. Inject HTML (Both Visible View AND Hidden Square Card)
     box.innerHTML = `
         <div id="squad-display-container">
-            <div class="squad-header-compact" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
-                <div class="sq-row-1">
-                    <h2 id="view-team-name" style="margin:0; color:${teamColor}">${team}</h2>
+            <div class="squad-header-compact" style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px;">
+                <h2 style="margin:0; color:${teamColor}">${team}</h2>
+                <div style="display:flex; justify-content:space-between; color:#aaa; font-size:0.9rem; margin-top:5px;">
+                    <span>Mgr: ${owner}</span>
+                    <span style="color:#4ade80; font-weight:bold;">₹${purse.toFixed(2)} Cr</span>
                 </div>
-                <div class="sq-row-2" style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                    <span class="sq-label" id="view-manager-name" style="color:#aaa; font-size:0.9rem;">Mgr: <span style="color:#fff">${owner}</span></span>
-                    <span class="sq-value highlight-purse" id="view-team-purse" style="color:#4ade80; font-weight:bold; font-size:1.1rem;">₹ ${purse.toFixed(2)} Cr</span>
-                </div>
-                <div class="sq-row-3" style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; font-size:0.8rem; color:#ccc;">
-                    <span class="sq-stats" id="view-player-stats">Total: ${squad.length} | OS: ${foreignCount}</span>
-                    <button class="sq-download-btn" onclick="downloadSquadImage()" style="background:none; border:none; color:#facc15; cursor:pointer;">
-                        <i class="fas fa-download"></i>[⤓]
+                <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                    <span style="font-size:0.8rem; color:#888;">${squad.length} Players | ${foreignCount} Overseas</span>
+                    <button onclick="downloadSquadImage()" style="background:none; border:none; color:#facc15; cursor:pointer; font-size:1.1rem;">
+                        <i class="fas fa-download"></i> ⬇
                     </button>
                 </div>
             </div>
-
-            <div class="squad-list-container">
-                <ul id="view-squad-list" class="compact-list" style="list-style:none; padding:0; margin:0;"></ul>
-            </div>
+            <div id="view-squad-list"></div> 
         </div>
 
-        <div id="squad-card-capture" class="hidden-capture-card" style="position:fixed; left:-9999px; width: 400px; background:#1e1e1e; padding:20px; color:#fff;">
+        <div id="squad-card-capture">
+            <div class="capture-bg" style="background-image: url('${team}.png');"></div>
             
-            <div class="card-bg-layer" id="card-bg-img" 
-                style="background-image: url('/logos/${team}.png');"
+            <div class="capture-header">
+                <h1 style="color:${teamColor}">${team}</h1>
+                <h3>Manager: ${owner}</h3>
+                <div class="capture-stats">
+                    💰 Purse: ₹${purse.toFixed(2)} Cr &nbsp;|&nbsp; 👥 ${squad.length} Players &nbsp;|&nbsp; ✈️ ${foreignCount} OS
                 </div>
-            <div class="card-overlay">
-                <div class="card-header" style="text-align:center; margin-bottom:15px; border-bottom:2px solid ${teamColor};">
-                    <h1 id="card-team-name" style="margin:0; color:${teamColor}; text-transform:uppercase;">${team}</h1>
-                    <h3 id="card-manager" style="margin:5px 0; font-size:1rem; color:#ccc;">Mgr: ${owner}</h3>
+            </div>
+
+            <div class="capture-body">
+                
+                <div class="sq-col">
+                    <div class="col-header">🖑 WK</div>
+                    <div class="col-list">${generateColumnHTML(cat.WK)}</div>
                 </div>
-                <div class="card-body">
-                    <ul id="card-player-list" style="list-style:none; padding:0;"></ul>
+
+                <div class="sq-col">
+                    <div class="col-header">➘ BAT</div>
+                    <div class="col-list">${generateColumnHTML(cat.BAT)}</div>
                 </div>
-                <div class="card-footer" style="display:flex; justify-content:space-between; margin-top:15px; padding-top:10px; border-top:1px solid #333; font-weight:bold;">
-                    <span id="card-stats">Total: ${squad.length} | OS: ${foreignCount}</span>
-                    <span id="card-purse" style="color:#4ade80;">Purse: ₹${purse.toFixed(2)} Cr</span>
+
+                <div class="sq-col">
+                    <div class="col-header">☄ ALL</div>
+                    <div class="col-list">${generateColumnHTML(cat.ALL)}</div>
                 </div>
+
+                <div class="sq-col">
+                    <div class="col-header">⚾︎ BOWL</div>
+                    <div class="col-list">${generateColumnHTML(cat.BOWL)}</div>
+                </div>
+
             </div>
         </div>
     `;
 
-    // 4. Populate Lists (View List AND Card List)
+    // 6. Populate the visible list (Simple list logic from before)
     const viewList = document.getElementById("view-squad-list");
-    const cardList = document.getElementById("card-player-list");
-    
-    // Helper to categorize roles
-    const roles = { BAT: [], WK: [], ALL: [], BOWL: [] };
-    squad.forEach(p => { 
-        if(roles[p.role]) roles[p.role].push(p);
-        else roles.BOWL.push(p);
-    });
-
-    // Render Logic
-    Object.keys(roles).forEach(r => {
-        if(roles[r].length > 0) {
-            // Create Header for View
-            const h = document.createElement("li");
+    Object.keys(cat).forEach(r => {
+        if(cat[r].length > 0) {
+            const h = document.createElement("div");
             h.innerText = r;
-            h.style.cssText = "color:#facc15; margin:10px 0 5px 0; font-size:0.8rem; font-weight:bold; border-left:3px solid #facc15; padding-left:8px;";
+            h.style.cssText = "color:#facc15; font-weight:bold; margin:10px 0 5px 0; font-size:0.85rem;";
             viewList.appendChild(h);
-
-            // Create Header for Card (Clone logic)
-            const hCard = h.cloneNode(true);
-            cardList.appendChild(hCard);
-
-            roles[r].forEach(p => {
-                // --- A. Render Visible List Item ---
-                const li = document.createElement("li");
-                li.className = "sq-row";
-                li.style.cssText = "display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;";
-                li.innerHTML = `
-                    <span>${p.foreign ? '✈️' : ''} ${p.name} <small style="color:#666">(${p.rating})</small></span>
-                    <span style="color:#4ade80;">₹${p.price.toFixed(2)}</span>
-                `;
-                li.onclick = () => { if(window.openPlayerProfile) window.openPlayerProfile(p, team, p.price); };
-                viewList.appendChild(li);
-
-                // --- B. Render Hidden Card Item (No click events needed) ---
-                const liCard = document.createElement("li");
-                liCard.style.cssText = "display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #333; font-size:0.9rem;";
-                liCard.innerHTML = `
-                    <span>${p.foreign ? '✈️' : ''} ${p.name}</span>
-                    <span style="color:#fff;">₹${p.price.toFixed(2)}</span>
-                `;
-                cardList.appendChild(liCard);
+            cat[r].forEach(p => {
+                const row = document.createElement("div");
+                row.style.cssText = "display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #333; font-size:0.9rem; cursor:pointer";
+                row.innerHTML = `<span>${p.name}</span><span style="color:#4ade80">₹${p.price}</span>`;
+                row.onclick = () => { if(window.openPlayerProfile) window.openPlayerProfile(p, team, p.price); };
+                viewList.appendChild(row);
             });
         }
     });
 };
-window.downloadSquadImage = function() {
-    // 1. Select the hidden card element
-    const captureElement = document.getElementById("squad-card-capture");
-    
-    // Get the current team name for the filename
-    const teamName = selectedSquadTeam || "Squad"; 
 
-    // 2. Use html2canvas to create the image
-    // We set scrollX/Y to 0 to prevent issues if the user has scrolled down
-    // We set useCORS to true in case you have external images (flags/logos)
-    html2canvas(captureElement, {
+window.downloadSquadImage = function() {
+    const element = document.getElementById("squad-card-capture");
+    const teamName = selectedSquadTeam || "Squad";
+
+    html2canvas(element, {
+        width: 1200, // Force width
+        height: 1200, // Force height
         scrollX: 0,
-        scrollY: -window.scrollY, 
-        useCORS: true,
-        backgroundColor: "#1e1e1e", // Force background color so it's not transparent
-        scale: 2 // High resolution (2x)
+        scrollY: 0,
+        useCORS: true, // Important for images
+        scale: 1, // 1 is fine since base size is already 1200px
+        backgroundColor: "#111111"
     }).then(canvas => {
-        
-        // 3. Create a fake link to trigger download
         const link = document.createElement('a');
         link.download = `${teamName}_Squad_Card.png`;
         link.href = canvas.toDataURL("image/png");
-        
-        // 4. Click the link programmatically
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     });
 };
+
 
 
 /* =========================================
@@ -1195,9 +1192,22 @@ window.openPlayerProfile = function(player, team, price) {
    5. EXECUTE ON LOAD
    ========================================= */
 document.addEventListener("DOMContentLoaded", () => {
+    // 1. Initialize the buttons
     initSquadTabs();
-    // Optional: Open the first team by default
-    viewEmbeddedSquad("CSK"); 
+    let startTeam = "CSK"; 
+    if (typeof myTeam !== 'undefined' && myTeam) {
+        startTeam = myTeam;
+    } else if (typeof userTeam !== 'undefined' && userTeam) {
+        startTeam = userTeam;
+    }
+    // 3. Open that team's view
+    if (allSquads[startTeam] || teamPurse[startTeam]) {
+        viewEmbeddedSquad(startTeam);
+    } else {
+        // Safety fallback: just open the first team in the list
+        const firstTeam = Object.keys(TEAM_COLORS)[0];
+        viewEmbeddedSquad(firstTeam);
+    }
 });
 
 /* ================================================= */
@@ -2037,24 +2047,7 @@ window.openPlayerProfile = function(playerData, teamName, price) {
 window.closePlayerCard = function(e) {
     if(e.target.id === 'playerCardOverlay') e.target.remove();
 }
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Initialize the buttons
-    initSquadTabs();
-    let startTeam = "CSK"; 
-    if (typeof myTeam !== 'undefined' && myTeam) {
-        startTeam = myTeam;
-    } else if (typeof userTeam !== 'undefined' && userTeam) {
-        startTeam = userTeam;
-    }
-    // 3. Open that team's view
-    if (allSquads[startTeam] || teamPurse[startTeam]) {
-        viewEmbeddedSquad(startTeam);
-    } else {
-        // Safety fallback: just open the first team in the list
-        const firstTeam = Object.keys(TEAM_COLORS)[0];
-        viewEmbeddedSquad(firstTeam);
-    }
-});
+
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2069,3 +2062,4 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
