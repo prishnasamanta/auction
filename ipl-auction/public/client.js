@@ -1048,11 +1048,11 @@ function initSquadTabs() {
 window.viewEmbeddedSquad = function(team) {
     selectedSquadTeam = team;
 
-    // 1. UI Tab Toggling
+    // 1. Toggle Button Active State
     document.querySelectorAll('.h-team-btn').forEach(b => b.classList.remove('active'));
     Array.from(document.querySelectorAll('.h-team-btn')).find(b => b.innerText === team)?.classList.add('active');
 
-    // 2. Data Retrieval
+    // 2. Data Setup
     const box = document.getElementById("embeddedSquadView");
     const squad = allSquads[team] || [];
     const purse = teamPurse[team] || 0;
@@ -1060,97 +1060,101 @@ window.viewEmbeddedSquad = function(team) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[team] || '#fff';
 
-    // 3. Filter Players into Categories
+    // 3. Categorize Players
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
         if(cat[p.role]) cat[p.role].push(p);
-        else cat.BOWL.push(p); // Default to Bowl if unknown
+        else cat.BOWL.push(p);
     });
 
-    // 4. Generate HTML for the 4 Columns (Helper Function)
-    const generateColumnHTML = (players) => {
+    // --- HELPER: Generate HTML for the 4-Column Card ---
+    const getCardHTML = (players) => {
         return players.map(p => `
-            <div class="col-item" style="border-left-color:${teamColor}">
-                <span class="player-name">
-                    ${p.foreign ? '✈️ ' : ''}${p.name}
-                </span>
-                <div class="player-meta">
+            <div class="card-p-item" style="border-left-color:${teamColor}">
+                <span class="card-p-name">${p.foreign ? '✈️ ' : ''}${p.name}</span>
+                <div class="card-p-meta">
                     <span>⭐${p.rating}</span>
-                    <span class="p-price">₹${p.price.toFixed(2)}</span>
+                    <span style="color:#4ade80; font-weight:bold;">₹${p.price.toFixed(2)}</span>
                 </div>
             </div>
         `).join('');
     };
 
-    // 5. Inject HTML (Both Visible View AND Hidden Square Card)
+    // 4. INJECT HTML (Both View and Hidden Card)
     box.innerHTML = `
         <div id="squad-display-container">
-            <div class="squad-header-compact" style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px;">
+            <div class="squad-header-compact">
                 <h2 style="margin:0; color:${teamColor}">${team}</h2>
-                <div style="display:flex; justify-content:space-between; color:#aaa; font-size:0.9rem; margin-top:5px;">
-                    <span>Mgr: ${owner}</span>
-                    <span style="color:#4ade80; font-weight:bold;">₹${purse.toFixed(2)} Cr</span>
+                <div style="display:flex; justify-content:space-between; margin-top:5px; color:#aaa; font-size:0.9rem;">
+                    <span>Mgr: <span style="color:#fff">${owner}</span></span>
+                    <span style="color:#4ade80; font-weight:bold; font-size:1.1rem;">₹${purse.toFixed(2)} Cr</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-top:5px;">
-                    <span style="font-size:0.8rem; color:#888;">${squad.length} Players | ${foreignCount} Overseas</span>
-                    <button onclick="downloadSquadImage()" style="background:none; border:none; color:#facc15; cursor:pointer; font-size:1.1rem;">
-                        <i class="fas fa-download"></i> ⬇
+                <div style="display:flex; justify-content:space-between; margin-top:5px; color:#ccc; font-size:0.8rem;">
+                    <span>Total: ${squad.length} | OS: ${foreignCount}</span>
+                    <button onclick="downloadSquadImage()" style="background:none; border:none; color:#facc15; cursor:pointer; font-size:1rem;">
+                        <i class="fas fa-download"></i> Download Card
                     </button>
                 </div>
             </div>
-            <div id="view-squad-list"></div> 
+            <div id="view-squad-list" class="compact-list"></div>
         </div>
 
         <div id="squad-card-capture">
-            <div class="capture-bg" style="background-image: url('${team}.png');"></div>
+            <div class="capture-bg" style="background-image: url('/logos/${team}.png');"></div>
             
             <div class="capture-header">
-                <h1 style="color:${teamColor}">${team}</h1>
-                <h3>Manager: ${owner}</h3>
-                <div class="capture-stats">
-                    💰 Purse: ₹${purse.toFixed(2)} Cr &nbsp;|&nbsp; 👥 ${squad.length} Players &nbsp;|&nbsp; ✈️ ${foreignCount} OS
+                <h1 style="color:${teamColor}; margin:0; font-size:3rem;">${team}</h1>
+                <h3 style="color:#ddd; margin:10px 0;">Manager: ${owner}</h3>
+                <div style="color:#facc15; font-weight:bold; font-size:1.4rem; margin-top:10px;">
+                    Purse: ₹${purse.toFixed(2)} Cr &nbsp;|&nbsp; Players: ${squad.length} &nbsp;|&nbsp; OS: ${foreignCount}
                 </div>
             </div>
 
             <div class="capture-body">
-                
                 <div class="sq-col">
                     <div class="col-header">🖑 WK</div>
-                    <div class="col-list">${generateColumnHTML(cat.WK)}</div>
+                    <div class="col-list">${getCardHTML(cat.WK)}</div>
                 </div>
-
                 <div class="sq-col">
                     <div class="col-header">➘ BAT</div>
-                    <div class="col-list">${generateColumnHTML(cat.BAT)}</div>
+                    <div class="col-list">${getCardHTML(cat.BAT)}</div>
                 </div>
-
                 <div class="sq-col">
                     <div class="col-header">☄ ALL</div>
-                    <div class="col-list">${generateColumnHTML(cat.ALL)}</div>
+                    <div class="col-list">${getCardHTML(cat.ALL)}</div>
                 </div>
-
                 <div class="sq-col">
                     <div class="col-header">⚾︎ BOWL</div>
-                    <div class="col-list">${generateColumnHTML(cat.BOWL)}</div>
+                    <div class="col-list">${getCardHTML(cat.BOWL)}</div>
                 </div>
-
             </div>
         </div>
     `;
 
-    // 6. Populate the visible list (Simple list logic from before)
+    // 5. Populate the VISIBLE List (Interactive)
     const viewList = document.getElementById("view-squad-list");
-    Object.keys(cat).forEach(r => {
+    
+    // We iterate strictly: WK -> BAT -> ALL -> BOWL
+    ['WK', 'BAT', 'ALL', 'BOWL'].forEach(r => {
         if(cat[r].length > 0) {
+            // Header
             const h = document.createElement("div");
+            h.className = "role-header";
             h.innerText = r;
-            h.style.cssText = "color:#facc15; font-weight:bold; margin:10px 0 5px 0; font-size:0.85rem;";
             viewList.appendChild(h);
+
+            // Rows
             cat[r].forEach(p => {
                 const row = document.createElement("div");
-                row.style.cssText = "display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #333; font-size:0.9rem; cursor:pointer";
-                row.innerHTML = `<span>${p.name}</span><span style="color:#4ade80">₹${p.price}</span>`;
-                row.onclick = () => { if(window.openPlayerProfile) window.openPlayerProfile(p, team, p.price); };
+                row.className = "sq-row";
+                row.innerHTML = `
+                    <span>${p.foreign ? '✈️ ' : ''} ${p.name} <small style="color:#666">(${p.rating})</small></span>
+                    <span style="color:#4ade80;">₹${p.price.toFixed(2)}</span>
+                `;
+                // Add click event for profile
+                row.onclick = () => { 
+                    if(window.openPlayerProfile) window.openPlayerProfile(p, team, p.price); 
+                };
                 viewList.appendChild(row);
             });
         }
@@ -1162,13 +1166,15 @@ window.downloadSquadImage = function() {
     const teamName = selectedSquadTeam || "Squad";
 
     html2canvas(element, {
-        width: 1200, // Force width
-        height: 1200, // Force height
+        width: 1200, // Forces square width
+        height: 1200, // Forces square height
+        windowWidth: 1200, // Simulate window size
+        windowHeight: 1200,
         scrollX: 0,
         scrollY: 0,
-        useCORS: true, // Important for images
-        scale: 1, // 1 is fine since base size is already 1200px
-        backgroundColor: "#111111"
+        scale: 1, // 1:1 scale (since base is already 1200px)
+        useCORS: true, // Needed for images
+        backgroundColor: "#121212"
     }).then(canvas => {
         const link = document.createElement('a');
         link.download = `${teamName}_Squad_Card.png`;
@@ -1178,7 +1184,6 @@ window.downloadSquadImage = function() {
         document.body.removeChild(link);
     });
 };
-
 
 
 /* =========================================
@@ -2062,4 +2067,5 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
