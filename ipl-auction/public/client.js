@@ -1678,23 +1678,28 @@ function showScreen(id){
 /* ========= 8. PLAYING XI & LEADERBOARD =========== */
 /* ================================================= */
 
+/* ================================================= */
+/* ========= 8. PLAYING XI & LEADERBOARD =========== */
+/* ================================================= */
+
+// --- 1. STATE ---
+let selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
 
 socket.on("auctionEnded", () => {
     showScreen("playingXI");
-    document.body.style.overflow = "auto"; // Re-enable scrolling
-    socket.emit("getMySquad"); // Fetch data
+    document.body.style.overflow = "auto";
+    socket.emit("getAuctionState"); // Ensure rules loaded
+    socket.emit("getMySquad");
 });
 
-// --- 2. RECEIVE SQUAD & INIT UI ---
+// --- 2. RENDER SELECTION LIST ---
 socket.on("mySquad", ({ squad, rules }) => {
-    // 1. Sync Rules
-    if(rules) activeRules = rules;
+    if(rules) activeRules = rules; 
     updateRulesUI();
 
-    // 2. Reset Selection
+    // Reset Selection
     selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
     
-    // 3. Render the "Tap to Select" List
     const container = document.getElementById("mySquadList");
     if(!container || !squad) return;
     container.innerHTML = "";
@@ -1702,28 +1707,25 @@ socket.on("mySquad", ({ squad, rules }) => {
     const grid = document.createElement("div");
     grid.className = "xi-select-container";
 
-    // Grouping for selection list
     const roleGroups = { WK: "Wicket Keepers", BAT: "Batsmen", ALL: "All Rounders", BOWL: "Bowlers" };
 
     Object.keys(roleGroups).forEach(key => {
-        // Filter players for this role
+        // Filter players (Combine Pace/Spin into Bowl)
         const players = squad.filter(p => {
             if(key === "BOWL") return ["PACE", "SPIN", "BOWL"].includes(p.role);
             return p.role === key;
         });
 
         if(players.length > 0) {
-            // Header
             const title = document.createElement("div");
             title.className = "role-group-title";
             title.innerText = roleGroups[key];
             grid.appendChild(title);
 
-            // Buttons
             players.forEach(p => {
                 const btn = document.createElement("div");
                 btn.className = "xi-player-btn";
-                // ID for toggling styles
+                // Unique ID to toggle visuals
                 btn.id = `sel-btn-${p.name.replace(/[^a-zA-Z0-9]/g, '')}`; 
 
                 btn.innerHTML = `
@@ -1736,12 +1738,13 @@ socket.on("mySquad", ({ squad, rules }) => {
         }
     });
     container.appendChild(grid);
-    updateXIPreview(); // Draw empty card
+    updateXIPreview();
 });
 
-// --- 3. TOGGLE LOGIC ---
+// --- 3. TOGGLE PLAYERS ---
 function togglePlayerXI(p, btnElement, roleKey) {
     const list = selectedXI[roleKey];
+    // Check by name to avoid object reference issues
     const index = list.findIndex(x => x.name === p.name);
 
     if(index > -1) {
@@ -1750,7 +1753,7 @@ function togglePlayerXI(p, btnElement, roleKey) {
         btnElement.classList.remove("picked");
     } else {
         // Add
-        if(countTotalXI() >= 11) return alert("Playing XI Full (11/11). Remove someone first.");
+        if(countTotalXI() >= 11) return alert("Playing XI is Full (11/11).");
         list.push(p);
         btnElement.classList.add("picked");
     }
@@ -1761,11 +1764,11 @@ function countTotalXI() {
     return selectedXI.WK.length + selectedXI.BAT.length + selectedXI.ALL.length + selectedXI.BOWL.length;
 }
 
-// --- 4. RENDER PREVIEW CARD (THE REDESIGN) ---
+// --- 4. RENDER PREVIEW CARD (MATCHES IMAGE LAYOUT) ---
 function updateXIPreview() {
     const count = countTotalXI();
     
-    // Elements
+    // UI Elements
     const cardTarget = document.getElementById('xiCardTarget');
     const placeholder = document.getElementById('xiPlaceholder');
     const content = document.getElementById('sheetContent');
@@ -1774,24 +1777,16 @@ function updateXIPreview() {
     const countLabel = document.getElementById('sheetCount');
     const teamTitle = document.getElementById('sheetTeamName');
 
-    // Update Text
+    // Update Header Info
     if(teamTitle) teamTitle.innerText = myTeam || "MY TEAM";
     if(countLabel) countLabel.innerText = `${count}/11 Selected`;
     
-    // Set Logo Background Variable
+    // Set Logo Background
     if(cardTarget && myTeam) {
         cardTarget.style.setProperty('--team-logo-url', `url('/logos/${myTeam}.png')`);
     }
 
-    // Update Submit Button
-    if(btn) {
-        btn.innerText = `Submit XI (${count}/11)`;
-        btn.disabled = count !== 11;
-        btn.style.background = count === 11 ? "var(--success)" : "";
-        btn.style.color = count === 11 ? "#000" : "#fff";
-    }
-
-    // Toggle Placeholder
+    // Toggle Placeholder vs Card
     if (count === 0) {
         cardTarget.classList.add('hidden');
         placeholder.classList.remove('hidden');
@@ -1799,30 +1794,38 @@ function updateXIPreview() {
     } else {
         cardTarget.classList.remove('hidden');
         placeholder.classList.add('hidden');
+        // Show save button only when full
         if(saveBtn) count === 11 ? saveBtn.classList.remove('hidden') : saveBtn.classList.add('hidden');
     }
 
-    // --- GENERATE HTML GRID (Vertical Role Groups) ---
+    if(btn) {
+        btn.innerText = count === 11 ? "Submit XI" : `Select (${count}/11)`;
+        btn.disabled = count !== 11;
+        btn.style.background = count === 11 ? "var(--success)" : "";
+        btn.style.color = count === 11 ? "#000" : "#fff";
+    }
+
+    // --- GENERATE HTML (The Grid Layout) ---
     if(content) {
         content.innerHTML = "";
         
-        // Define the display order and icons
+        // Define Roles & Icons
         const config = [
-            { key: 'WK', label: 'Wicket Keepers', icon: '🧤' },
-            { key: 'BAT', label: 'Batters', icon: '🏏' },
-            { key: 'ALL', label: 'All Rounders', icon: '⚡' },
-            { key: 'BOWL', label: 'Bowlers', icon: '🥎' }
+            { key: 'WK', label: 'WICKET KEEPERS', icon: '🧤' },
+            { key: 'BAT', label: 'BATTERS', icon: '🏏' },
+            { key: 'ALL', label: 'ALL ROUNDERS', icon: '⚡' },
+            { key: 'BOWL', label: 'BOWLERS', icon: '🥎' }
         ];
 
         config.forEach(group => {
             const players = selectedXI[group.key];
             
             if(players.length > 0) {
-                // 1. Create Section Wrapper
+                // 1. Role Wrapper
                 const section = document.createElement("div");
                 section.className = "xi-role-section";
 
-                // 2. Create Header
+                // 2. Role Header (Icon + Name + Line)
                 section.innerHTML = `
                     <div class="xi-role-header">
                         <span class="role-icon-badge">${group.icon}</span>
@@ -1830,21 +1833,23 @@ function updateXIPreview() {
                     </div>
                 `;
 
-                // 3. Create Grid
+                // 3. Player Grid (4 Columns)
                 const grid = document.createElement("div");
                 grid.className = "xi-role-grid";
 
                 players.forEach(p => {
-                    const pill = document.createElement("div");
-                    pill.className = `xi-player-pill ${p.foreign ? 'foreign' : ''}`;
-                    // Truncate name for fit
-                    const shortName = p.name.split(' ').slice(-1)[0]; // Last name usually fits best
+                    const card = document.createElement("div");
+                    card.className = `xi-player-card ${p.foreign ? 'foreign' : ''}`;
                     
-                    pill.innerHTML = `
+                    // Shorten name if too long (First Initial + Last Name)
+                    // e.g. "Virat Kohli" -> "Virat Kohli", "Mahendra Singh Dhoni" -> "MS Dhoni" logic handled by CSS text-overflow mainly
+                    
+                    card.innerHTML = `
                         <div class="xp-name" title="${p.name}">${p.name}</div>
-                        <div class="xp-rating">⭐${p.rating}</div>
+                        <div class="xp-rating">⭐ ${p.rating}</div>
+                        ${p.foreign ? '<span class="xp-plane">✈️</span>' : ''}
                     `;
-                    grid.appendChild(pill);
+                    grid.appendChild(card);
                 });
 
                 section.appendChild(grid);
@@ -1858,9 +1863,7 @@ function updateXIPreview() {
 
 function updateStatsBar() {
     const bar = document.getElementById("xiStatsBar");
-    // Fallback defaults if activeRules is missing (prevents crash)
-    const rules = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3 }; 
-    
+    const r = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3 }; 
     if(!bar) return;
 
     const all = [...selectedXI.WK, ...selectedXI.BAT, ...selectedXI.ALL, ...selectedXI.BOWL];
@@ -1869,42 +1872,46 @@ function updateStatsBar() {
     const badge = (label, curr, req, isMax) => {
         const valid = isMax ? curr <= req : curr >= req;
         const color = valid ? '#4ade80' : '#f87171';
-        return `<span style="border:1px solid ${color}; color:${color}; padding:4px 8px; border-radius:4px; font-size:0.75rem; background:rgba(0,0,0,0.3);">${label}: ${curr}/${req}</span>`;
+        return `<span style="border:1px solid ${color}; color:${color}; padding:3px 6px; border-radius:4px; font-size:0.7rem; background:rgba(0,0,0,0.4);">${label}: ${curr}/${req}</span>`;
     };
 
     bar.innerHTML = `
-        ${badge("✈️ OS", foreign, rules.maxForeignXI || 4, true)}
-        ${badge("🧤 WK", selectedXI.WK.length, rules.minWK || 1)}
-        ${badge("🏏 BAT", selectedXI.BAT.length, rules.minBat || 3)}
-        ${badge("🥎 BOWL", selectedXI.BOWL.length, rules.minBowl || 3)}
+        ${badge("✈️ OS", foreign, r.maxForeignXI, true)}
+        ${badge("🧤 WK", selectedXI.WK.length, r.minWK)}
+        ${badge("🏏 BAT", selectedXI.BAT.length, r.minBat)}
+        ${badge("🥎 BOWL", selectedXI.BOWL.length, r.minBowl)}
     `;
 }
 
-// --- 5. SUBMIT LOGIC (FIXED) ---
+// --- 5. SUBMIT LOGIC (FIX FOR DISQUALIFIED ERROR) ---
 window.submitXI = function() {
     if(countTotalXI() !== 11) return alert("Please select exactly 11 players.");
     
-    // FLATTEN THE LIST (Crucial Step)
+    // 1. Flatten the object into a single array
     const flatList = [
         ...selectedXI.WK,
         ...selectedXI.BAT,
         ...selectedXI.ALL,
         ...selectedXI.BOWL
     ];
-
-    console.log("Submitting Payload:", flatList); // Debug
     
-    // Disable button to prevent double click
-    const btn = document.getElementById("submitXIBtn");
-    if(btn) { btn.disabled = true; btn.innerText = "Checking..."; }
+    // 2. EXTRACT NAMES ONLY (Fixes the 0/11 error)
+    // The server expects ["Virat Kohli", "Rohit Sharma"], not [{name: "Virat", ...}, ...]
+    const payload = flatList.map(p => p.name); 
 
-    socket.emit("submitXI", { team: myTeam, xi: flatList });
+    console.log("Submitting Payload:", payload); // Debugging
+
+    // 3. UI Feedback
+    const btn = document.getElementById("submitXIBtn");
+    if(btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
+
+    // 4. Send
+    socket.emit("submitXI", { team: myTeam, xi: payload });
 };
 
 window.resetXISelection = function() {
-    if(confirm("Clear Selection?")) {
+    if(confirm("Reset Selection?")) {
         selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
-        // Remove 'picked' class from all buttons
         document.querySelectorAll('.xi-player-btn').forEach(b => b.classList.remove('picked'));
         updateXIPreview();
     }
@@ -1912,41 +1919,36 @@ window.resetXISelection = function() {
 
 window.downloadSheetPNG = function() {
     const el = document.getElementById('xiCardTarget');
-    // Ensure high quality capture
     html2canvas(el, { backgroundColor: null, scale: 3, useCORS: true }).then(canvas => {
         const link = document.createElement('a');
-        link.download = `${myTeam}_Playing_XI.png`;
+        link.download = `Playing_XI.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
     });
 };
 
-// --- 6. SERVER RESPONSES ---
-
+// --- 6. RESULT HANDLING ---
 socket.on("submitResult", (res) => {
-    // Hide submit button if successful
     const btn = document.getElementById("submitXIBtn");
-    
     const status = document.getElementById("xiStatus");
+    
     if(status) {
         status.innerHTML = `
-        <div style="padding:15px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="padding:15px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
             <h2 style="margin:0 0 5px 0; color:${res.disqualified ? '#ef4444' : '#22c55e'}">${res.disqualified ? '❌ DISQUALIFIED' : '✅ APPROVED'}</h2>
             <div style="font-size:0.9rem; color:#ccc;">RATING: <b style="color:#fff; font-size:1.1rem;">${res.rating}</b></div>
             ${res.disqualified ? `<div style="margin-top:5px; color:#fca5a5; font-size:0.85rem;">Reason: ${res.reason}</div>` : ''}
             
-            ${res.disqualified ? `<button onclick="document.getElementById('submitXIBtn').disabled=false; document.getElementById('submitXIBtn').innerText='Resubmit'; this.parentElement.remove();" style="margin-top:10px; background:#334155; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Fix Team</button>` : ''}
+            ${res.disqualified ? `<button onclick="document.getElementById('submitXIBtn').disabled=false; document.getElementById('submitXIBtn').innerText='Fix Team'; this.parentElement.remove();" style="margin-top:10px; background:#334155; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Edit</button>` : ''}
         </div>`;
     }
     
-    // Re-enable button if disqualified so they can try again
-    if(res.disqualified && btn) {
-        // Button handled inside the HTML above
-    } else if (btn) {
-        btn.classList.add("hidden"); // Hide if successful
+    if (btn && !res.disqualified) {
+        btn.classList.add("hidden"); 
         document.getElementById("saveXIBtn").classList.remove("hidden");
     }
 });
+
 
 socket.on("leaderboard", (board) => {
     const tbody = document.getElementById("leaderboardBody");
@@ -2214,6 +2216,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
