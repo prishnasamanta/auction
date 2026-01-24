@@ -1682,7 +1682,6 @@ function showScreen(id){
 /* ========= 8. PLAYING XI & LEADERBOARD =========== */
 /* ================================================= */
 
-// --- 1. STATE ---
 
 socket.on("auctionEnded", () => {
     showScreen("playingXI");
@@ -1709,18 +1708,20 @@ socket.on("mySquad", ({ squad, rules }) => {
     const roleGroups = { WK: "Wicket Keepers", BAT: "Batsmen", ALL: "All Rounders", BOWL: "Bowlers" };
 
     Object.keys(roleGroups).forEach(key => {
-        // Filter players (Combine Pace/Spin into Bowl)
+        // Filter players: "PACE" and "SPIN" count as "BOWL"
         const players = squad.filter(p => {
             if(key === "BOWL") return ["PACE", "SPIN", "BOWL"].includes(p.role);
             return p.role === key;
         });
 
         if(players.length > 0) {
+            // Header
             const title = document.createElement("div");
             title.className = "role-group-title";
             title.innerText = roleGroups[key];
             grid.appendChild(title);
 
+            // Buttons
             players.forEach(p => {
                 const btn = document.createElement("div");
                 btn.className = "xi-player-btn";
@@ -1763,7 +1764,7 @@ function countTotalXI() {
     return selectedXI.WK.length + selectedXI.BAT.length + selectedXI.ALL.length + selectedXI.BOWL.length;
 }
 
-// --- 4. RENDER PREVIEW CARD (MATCHES IMAGE LAYOUT) ---
+// --- 4. RENDER PREVIEW CARD (THE PROFESSIONAL LAYOUT) ---
 function updateXIPreview() {
     const count = countTotalXI();
     
@@ -1776,11 +1777,11 @@ function updateXIPreview() {
     const countLabel = document.getElementById('sheetCount');
     const teamTitle = document.getElementById('sheetTeamName');
 
-    // Update Header Info
+    // Update Header
     if(teamTitle) teamTitle.innerText = myTeam || "MY TEAM";
     if(countLabel) countLabel.innerText = `${count}/11 Selected`;
     
-    // Set Logo Background
+    // Set Logo
     if(cardTarget && myTeam) {
         cardTarget.style.setProperty('--team-logo-url', `url('/logos/${myTeam}.png')`);
     }
@@ -1804,7 +1805,7 @@ function updateXIPreview() {
         btn.style.color = count === 11 ? "#000" : "#fff";
     }
 
-    // --- GENERATE HTML (The Grid Layout) ---
+    // --- GENERATE HTML GRID ---
     if(content) {
         content.innerHTML = "";
         
@@ -1820,11 +1821,11 @@ function updateXIPreview() {
             const players = selectedXI[group.key];
             
             if(players.length > 0) {
-                // 1. Role Wrapper
+                // Section
                 const section = document.createElement("div");
-                section.className = "xi-role-section";
+                section.className = "xi-pro-section";
 
-                // 2. Role Header (Icon + Name + Line)
+                // Header
                 section.innerHTML = `
                     <div class="xi-role-header">
                         <span class="role-icon-badge">${group.icon}</span>
@@ -1832,16 +1833,13 @@ function updateXIPreview() {
                     </div>
                 `;
 
-                // 3. Player Grid (4 Columns)
+                // Grid (This ensures no cracking)
                 const grid = document.createElement("div");
                 grid.className = "xi-role-grid";
 
                 players.forEach(p => {
                     const card = document.createElement("div");
                     card.className = `xi-player-card ${p.foreign ? 'foreign' : ''}`;
-                    
-                    // Shorten name if too long (First Initial + Last Name)
-                    // e.g. "Virat Kohli" -> "Virat Kohli", "Mahendra Singh Dhoni" -> "MS Dhoni" logic handled by CSS text-overflow mainly
                     
                     card.innerHTML = `
                         <div class="xp-name" title="${p.name}">${p.name}</div>
@@ -1856,7 +1854,6 @@ function updateXIPreview() {
             }
         });
     }
-    
     updateStatsBar();
 }
 
@@ -1882,29 +1879,19 @@ function updateStatsBar() {
     `;
 }
 
-// --- 5. SUBMIT LOGIC (FIX FOR DISQUALIFIED ERROR) ---
+// --- 5. SUBMIT (LOGIC FIXED FOR SERVER) ---
 window.submitXI = function() {
     if(countTotalXI() !== 11) return alert("Please select exactly 11 players.");
     
-    // 1. Flatten the object into a single array
-    const flatList = [
-        ...selectedXI.WK,
-        ...selectedXI.BAT,
-        ...selectedXI.ALL,
-        ...selectedXI.BOWL
-    ];
-    
-    // 2. EXTRACT NAMES ONLY (Fixes the 0/11 error)
-    // The server expects ["Virat Kohli", "Rohit Sharma"], not [{name: "Virat", ...}, ...]
-    const payload = flatList.map(p => p.name); 
+    // SERVER FIX: Send the Object { WK: [], BAT: [] }
+    // Do NOT flatten it. The server expects the keys BAT, WK, etc. to exist.
+    const payload = selectedXI; 
 
-    console.log("Submitting Payload:", payload); // Debugging
+    console.log("Submitting Payload:", payload); // Debug to console
 
-    // 3. UI Feedback
     const btn = document.getElementById("submitXIBtn");
     if(btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
 
-    // 4. Send
     socket.emit("submitXI", { team: myTeam, xi: payload });
 };
 
@@ -2215,6 +2202,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
