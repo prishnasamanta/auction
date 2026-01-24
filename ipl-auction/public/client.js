@@ -1087,8 +1087,8 @@ window.viewEmbeddedSquad = function(team) {
         <div id="squad-card-capture" class="hidden-capture-card" style="position:fixed; left:-9999px; width: 400px; background:#1e1e1e; padding:20px; color:#fff;">
             
             <div class="card-bg-layer" id="card-bg-img" 
-                 style="background-image: url('${team}.png');">
-            </div>
+                style="background-image: url('/logos/${team}.png');"
+                </div>
             <div class="card-overlay">
                 <div class="card-header" style="text-align:center; margin-bottom:15px; border-bottom:2px solid ${teamColor};">
                     <h1 id="card-team-name" style="margin:0; color:${teamColor}; text-transform:uppercase;">${team}</h1>
@@ -2038,22 +2038,21 @@ window.closePlayerCard = function(e) {
     if(e.target.id === 'playerCardOverlay') e.target.remove();
 }
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Create the buttons
+    // 1. Initialize the buttons
     initSquadTabs();
-
-    // --- THE FIX ---
-    // Change "CSK" to your actual variable (e.g., userTeam, myTeamName, etc.)
-    const defaultTeam = "CSK"; 
-
-    // Check if the default team exists, otherwise just open the first one found
-    if (allSquads[defaultTeam]) {
-        viewEmbeddedSquad(defaultTeam);
+    let startTeam = "CSK"; 
+    if (typeof myTeam !== 'undefined' && myTeam) {
+        startTeam = myTeam;
+    } else if (typeof userTeam !== 'undefined' && userTeam) {
+        startTeam = userTeam;
+    }
+    // 3. Open that team's view
+    if (allSquads[startTeam] || teamPurse[startTeam]) {
+        viewEmbeddedSquad(startTeam);
     } else {
-        // Fallback: Open the first team in the list automatically
-        const firstAvailableTeam = Object.keys(allSquads)[0];
-        if (firstAvailableTeam) {
-            viewEmbeddedSquad(firstAvailableTeam);
-        }
+        // Safety fallback: just open the first team in the list
+        const firstTeam = Object.keys(TEAM_COLORS)[0];
+        viewEmbeddedSquad(firstTeam);
     }
 });
 
@@ -2067,37 +2066,6 @@ function refreshGlobalUI() {
     if(currentTab && currentTab.id === 'tab-squads' && selectedSquadTeam) {
         viewEmbeddedSquad(selectedSquadTeam);
     }
-
-    // 2. Update Header (Spectator vs Team View)
     updateHeaderNotice();
-
-    // 3. Force Admin Button Update
-    // This ensures the "Leave" button appears immediately after picking a team
-    // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
