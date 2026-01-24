@@ -1693,40 +1693,64 @@ window.downloadLeaderboardPNG = function() {
 }
 // --- NEW FUNCTION: Show Player Card Overlay ---
 // --- HELPER: Smart Image Loader ---
+// --- UPDATED: Smart Image Loader (Robust Version) ---
 function loadPlayerImage(imgEl, playerName) {
-    // 1. Clean the name for variations
-    const raw = playerName.trim();
-    const noSpace = raw.replace(/\s+/g, ''); // "ViratKohli"
-    const withUnderscore = raw.replace(/\s+/g, '_'); // "Virat_Kohli"
-    const lower = noSpace.toLowerCase(); // "viratkohli"
+    if(!playerName) return;
+    
+    // 1. Prepare Name Variations
+    const raw = playerName.trim();                       // "Virat Kohli"
+    const upperRaw = raw.toUpperCase();                  // "VIRAT KOHLI"
+    
+    const noSpace = raw.replace(/\s+/g, '');             // "ViratKohli"
+    const upperNoSpace = noSpace.toUpperCase();          // "VIRATKOHLI"
+    
+    const withUnderscore = raw.replace(/\s+/g, '_');     // "Virat_Kohli"
+    const upperUnderscore = withUnderscore.toUpperCase();// "VIRAT_KOHLI" <--- Matches your specific file
+    
+    const lower = noSpace.toLowerCase();                 // "viratkohli"
 
-    // 2. Define the priority list of filenames to try
+    // 2. Define the Candidate List (Priority Order)
     const candidates = [
-        `/players/${noSpace}.png`,       // ViratKohli.png
-        `/players/${raw}.png`,           // Virat Kohli.png
-        `/players/${withUnderscore}.png`, // Virat_Kohli.png
-        `/players/${lower}.png`          // viratkohli.png
+        // A. YOUR SPECIFIC FORMAT (All Caps Name + Underscore + .png)
+        `/players/${upperUnderscore}.png`, // VIRAT_KOHLI.png 
+        `/players/${upperUnderscore}.PNG`, // VIRAT_KOHLI.PNG
+
+        // B. Standard Formats
+        `/players/${noSpace}.png`,         // ViratKohli.png
+        `/players/${withUnderscore}.png`,  // Virat_Kohli.png
+        `/players/${raw}.png`,             // Virat Kohli.png
+        `/players/${lower}.png`,           // viratkohli.png
+
+        // C. All Caps Extensions
+        `/players/${noSpace}.PNG`,         // ViratKohli.PNG
+        `/players/${withUnderscore}.PNG`,  // Virat_Kohli.PNG
+        
+        // D. JPG/JPEG Fallbacks
+        `/players/${upperUnderscore}.jpg`,
+        `/players/${noSpace}.jpg`
     ];
 
     const defaultImg = "https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png"; 
 
-    // 3. Recursive function to try next image if current fails
+    // 3. Recursive Loader
     let attempt = 0;
     
     function tryNext() {
         if (attempt >= candidates.length) {
-            imgEl.src = defaultImg; // All failed, show default
+            // console.warn(`[ImgFail] Could not find image for: ${playerName}`);
+            imgEl.src = defaultImg; 
             return;
         }
         
-        imgEl.src = candidates[attempt];
+        const currentSrc = candidates[attempt];
+        imgEl.src = currentSrc;
+        
         imgEl.onerror = function() {
             attempt++;
-            tryNext(); // Try the next format
+            tryNext();
         };
     }
 
-    // Start trying
     tryNext();
 }
 
@@ -1810,6 +1834,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
