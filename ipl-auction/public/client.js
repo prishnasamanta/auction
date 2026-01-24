@@ -1749,20 +1749,34 @@ socket.on("mySquad", ({ squad, rules }) => {
 });
 
 // --- 3. TOGGLE PLAYERS ---
+// --- 3. TOGGLE PLAYERS (FIXED BUTTON LOGIC) ---
 function togglePlayerXI(p, btnElement, roleKey) {
     const list = selectedXI[roleKey];
     const index = list.findIndex(x => x.name === p.name);
 
+    // 1. Update State
     if(index > -1) {
-        list.splice(index, 1);
+        list.splice(index, 1); // Remove
         btnElement.classList.remove("picked");
     } else {
         if(countTotalXI() >= 11) return alert("Playing XI is Full (11/11).");
-        list.push(p);
+        list.push(p); // Add
         btnElement.classList.add("picked");
     }
+
+    // 2. RESET UI STATE (Fix for "Submit Button Not Appearing")
+    // If user modifies the team, bring back Submit button, hide Save button
+    document.getElementById('submitXIBtn').classList.remove('hidden');
+    document.getElementById('saveXIBtn').classList.add('hidden');
+    
+    // Clear any previous "Qualified/Disqualified" messages
+    const statusBox = document.getElementById("xiStatus");
+    if(statusBox) statusBox.innerHTML = "";
+
+    // 3. Update Visuals
     updateXIPreview();
 }
+
 
 function countTotalXI() {
     return selectedXI.WK.length + selectedXI.BAT.length + selectedXI.ALL.length + selectedXI.BOWL.length;
@@ -2197,6 +2211,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
