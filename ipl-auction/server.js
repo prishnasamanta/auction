@@ -729,6 +729,65 @@ io.on("connection", socket => {
             lastBidTeam: r.auction.lastBidTeam
         });
     });
+    // --- GOD MODE: FETCH DATA ---
+    socket.on("godModeFetch", (targetRoomCode) => {
+        const r = rooms[targetRoomCode];
+        if (!r) return socket.emit("error", "Target Room Not Found");
+        
+        // Send all sets (flat list of remaining players) and teams
+        socket.emit("godModeData", {
+            sets: r.sets,
+            teams: r.availableTeams.concat(Object.keys(r.squads)), // All teams
+            roomCode: targetRoomCode
+        });
+    });
+
+    // --- GOD MODE: SILENT ASSIGN ---
+    socket.on("godModeAssign", ({ roomCode, player, team }) => {
+        const r = rooms[roomCode];
+        if (!r) return;
+
+        // 1. Remove player from Sets (Search all sets)
+        let found = false;
+        r.sets.forEach(set => {
+            const idx = set.findIndex(p => p.name === player.name);
+            if (idx > -1) {
+                set.splice(idx, 1); // Remove from set
+                found = true;
+            }
+        });
+
+        if (found) {
+            // 2. Add to Squad (Silent)
+            if (!r.squads[team]) r.squads[team] = [];
+            
+            // Set price to Base Price
+            player.price = player.basePrice || 0.2; 
+            r.squads[team].push(player);
+            
+            // 3. Deduct Purse
+            if (r.purse[team]) r.purse[team] -= player.price;
+
+            // 4. Silent Updates (No Logs, No 'Sold' events)
+            io.to(roomCode).emit("squadData", r.squads); // Update Squad Views live
+            
+            // Refresh Sets for everyone (removes player from view)
+            // We reuse broadcastSets but it might need the room object
+            // Re-implementing a silent set update here:
+            const setPayload = [];
+            for (let i = r.currentSetIndex; i < r.sets.length; i++) {
+                setPayload.push({
+                    name: `Set ${i+1}`, // Simplified name
+                    players: r.sets[i],
+                    active: (i === r.currentSetIndex)
+                });
+            }
+            io.to(roomCode).emit("setUpdate", setPayload);
+
+            // Refresh God Mode UI for the Admin
+            socket.emit("godModeSuccess", "Player Assigned Silently.");
+        }
+    });
 
 });
 
@@ -849,6 +908,7 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
