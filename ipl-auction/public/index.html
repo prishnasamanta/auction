@@ -61,11 +61,41 @@
                         <span class="label-text">Public Room (Visible to everyone)</span>
                     </label>
                     
-                    <div style="margin-top: 15px;">
-                        <label style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px; display: block;">Select Player Set:</label>
-                        <div id="dataset-mini-row" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;"></div>
-                        <input type="hidden" id="selectedSetId" value="ipl2025">
-                    </div>
+    <div style="margin-top: 15px;">
+        <label style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 8px; display: block; font-weight:600;">
+            SELECT PLAYER SET:
+        </label>
+        
+        <div class="dataset-list custom-scroll">
+            
+            <div class="dataset-option active" onclick="selectDataset('ipl2026', this)">
+                <div class="ds-info">
+                    <span class="ds-name">🏆 IPL 2026</span>
+                    <span class="ds-meta">Updated Squads & Purse</span>
+                </div>
+                <div class="ds-check">●</div>
+            </div>
+
+            <div class="dataset-option" onclick="selectDataset('legends', this)">
+                <div class="ds-info">
+                    <span class="ds-name">🔥 Legends Cricket</span>
+                    <span class="ds-meta">All-Time Greats</span>
+                </div>
+                <div class="ds-check">○</div>
+            </div>
+
+            <div class="dataset-option" onclick="selectDataset('custom', this)">
+                <div class="ds-info">
+                    <span class="ds-name">🛠️ Custom Set</span>
+                    <span class="ds-meta">Create your own</span>
+                </div>
+                <div class="ds-check">○</div>
+            </div>
+
+        </div>
+        
+        <input type="hidden" id="selectedSetId" value="ipl2026">
+    </div>
 
                     <button id="createBtn" class="primary-btn" style="width:100%; margin-top:15px;">Create Room</button>
                 </div>
@@ -345,50 +375,54 @@
 
 
     <section id="leaderboard" class="screen hidden">
-        <header class="topbar glass">
-            <div style="display:flex; align-items:center;">
-                <button onclick="showScreen('playingXI')" class="secondary-btn" style="margin-right:15px; border:none; font-size:1.2rem;">
-                    ←
-                </button>
-                <span class="brand">🏆 Tournament Leaderboard</span>
-            </div>
-        </header>
+    <header class="topbar glass" style="justify-content: center; position: relative;">
+        <button onclick="showScreen('playingXI')" class="secondary-btn" style="position: absolute; left: 15px; border:none; font-size:1.2rem;">
+            ← Back
+        </button>
+        <span class="brand" style="font-size: 1.2rem;">🏆 TOURNAMENT STANDINGS</span>
+    </header>
 
-        <div class="container" style="padding-top:80px; padding:20px;">
-            <div class="glass" style="padding: 10px; overflow-x: auto;">
-                <table class="leaderboard-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;">#</th>
-                            <th>Team</th>
-                            <th>Rating</th>
-                            <th>Status</th>
-                            <th>Purse Left</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboardBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <div id="squadViewOverlay" class="rules-overlay hidden">
-        <div class="glass rules-card" style="max-width:500px; width:95%; background: #0f172a;">
-            <div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid #333;">
-                <h3 id="svTeamName" style="margin:0; color:var(--primary);">SQUAD PREVIEW</h3>
-                <button onclick="document.getElementById('squadViewOverlay').classList.add('hidden')" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
-            </div>
-            
-            <div id="squadCaptureArea" style="padding:20px; overflow-y:auto; max-height:60vh;"></div>
-
-            <div style="padding:15px; border-top:1px solid #333; display:flex; gap:10px;">
-                <button onclick="downloadLeaderboardPNG()" class="primary-btn" style="width:100%;">
-                    📸 Download Card
-                </button>
-            </div>
+    <div class="lb-container">
+        <div class="lb-scroll-wrapper custom-scroll">
+            <table class="lb-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Rank</th>
+                        <th style="text-align: left;">Team</th>
+                        <th>Rating</th>
+                        <th>Purse</th>
+                        <th>Status</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                    </tbody>
+            </table>
         </div>
     </div>
+</section>
+
+  <div id="squadViewOverlay" class="rules-overlay hidden">
+    <div class="glass rules-card" style="max-width:650px; width:95%; background: #0f172a; max-height:90vh; display:flex; flex-direction:column;">
+        
+        <div style="padding:15px; border-bottom:1px solid #333; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+            <div style="display:flex; gap:5px;">
+                <button id="btnShowXI" onclick="switchPopupView('XI')" class="tab-btn active" style="font-size:0.8rem; padding:5px 10px;">Playing XI</button>
+                <button id="btnShowFull" onclick="switchPopupView('FULL')" class="tab-btn" style="font-size:0.8rem; padding:5px 10px;">Full Squad</button>
+            </div>
+            <button onclick="document.getElementById('squadViewOverlay').classList.add('hidden')" style="background:none; border:none; color:#fff; font-size:1.5rem;">&times;</button>
+        </div>
+        
+        <div id="squadCaptureArea" style="padding:20px; overflow-y:auto; flex:1; display:flex; justify-content:center;"></div>
+
+        <div style="padding:15px; border-top:1px solid #333; flex-shrink:0;">
+            <button onclick="downloadPopupCard()" class="primary-btn" style="width:100%;">
+                📸 Download Card
+            </button>
+        </div>
+    </div>
+</div>
+
 
     <div id="rulesScreen" class="rules-overlay hidden">
       <div class="overlay-card">
@@ -489,6 +523,28 @@
         </div>
 
     </footer>
+<section id="postAuctionSummary" class="screen hidden">
+    <header class="topbar glass">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+            <span class="brand">🏁 AUCTION SUMMARY</span>
+            <div style="display:flex; gap:10px;">
+                <button onclick="showScreen('leaderboard')" class="secondary-btn" style="font-size:0.8rem;">
+                    🏆 Leaderboard
+                </button>
+                <button onclick="window.location.href='/'" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">
+                    🏠 Home
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div style="max-width: 900px; margin: 0 auto; padding: 20px; padding-top: 80px;">
+        <div style="text-align:center; margin-bottom:20px; color:#aaa; font-size:0.9rem;">
+            The auction has ended. Tap a team to view their full squad.
+        </div>
+        <div id="summaryList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+</section>
 
 
 
@@ -501,6 +557,7 @@
 </body>
 
 </html>
+
 
 
 
