@@ -1647,6 +1647,155 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .rating-tag { color: #888; font-size: 0.75rem; margin-left: 5px; }
 .price-tag { color: #4ade80; font-weight: bold; font-size: 0.9rem; }
 
+/* --- PROFESSIONAL CAPTURE CARD (1200x1200px) --- */
+#squad-card-capture {
+    position: fixed;
+    left: -9999px; /* Hide from view */
+    top: 0;
+    
+    width: 1200px;
+    height: 1200px;
+    
+    /* Deep Rich Background */
+    background: radial-gradient(circle at top right, #2a2a2a, #0d0d0d 80%);
+    color: #fff;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 1. Giant Faded Background Logo */
+.capture-bg-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    height: 800px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.07; /* Very subtle watermark */
+    z-index: 0;
+    filter: grayscale(100%);
+}
+
+/* 2. Top Header Bar */
+.pro-header {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px 60px;
+    background: rgba(0,0,0,0.6);
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px); /* Glass effect */
+}
+
+.pro-team-info h1 {
+    font-size: 5rem;
+    margin: 0;
+    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1;
+    /* Gradient Text Effect */
+    background: linear-gradient(to bottom, #fff, #bbb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.pro-team-info h3 {
+    margin: 5px 0 0 5px;
+    font-size: 1.8rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.pro-header-stats {
+    text-align: right;
+}
+
+.stat-box {
+    background: rgba(255,255,255,0.1);
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.stat-label { font-size: 0.9rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+.stat-val { font-size: 2rem; font-weight: bold; color: #fff; }
+
+/* 3. The Grid Layout (Body) */
+.pro-body {
+    position: relative;
+    z-index: 2;
+    flex-grow: 1;
+    padding: 40px 50px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr; /* 4 Columns */
+    gap: 25px;
+}
+
+/* Column Styling */
+.pro-col {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.pro-col-header {
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid; /* Color injected via JS */
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+/* Player Cards inside Columns */
+.pro-player-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+    margin-bottom: 10px;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border-left: 4px solid #444; /* Default accent */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.pp-name { font-size: 1.1rem; font-weight: 600; color: #eee; }
+.pp-meta { text-align: right; }
+.pp-price { display: block; font-size: 1rem; color: #4ade80; font-weight: bold; }
+.pp-rating { font-size: 0.8rem; color: #777; }
+.foreign-badge { margin-right: 5px; filter: grayscale(0.2); }
+
+/* 4. Footer */
+.pro-footer {
+    position: relative;
+    z-index: 2;
+    padding: 20px;
+    text-align: center;
+    background: #000;
+    color: #444;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-top: 1px solid #222;
+}
+
 
 
 
