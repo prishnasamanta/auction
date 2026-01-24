@@ -479,268 +479,135 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 .team-btn:hover { background: var(--team-color); color: #000; }
 /* ================================================= */
-/* 💎 FINAL PRO PLAYING XI CARD (FIXED LAYOUT)       */
+/* 💎 FINAL FIXED PRO CARD (CSK STYLE)               */
 /* ================================================= */
 
-/* 1. Card Container (Fixed Size & Theme) */
+/* 1. Card Container - AUTO HEIGHT (Fixes Cracked Layout) */
 .team-sheet-card {
-    background-color: #020617; /* Very Dark Navy */
-    border: 2px solid #facc15; /* Gold Border */
-    border-radius: 16px;
+    background-color: #020617; /* Dark Navy */
+    border: 2px solid #facc15; /* Gold */
+    border-radius: 12px;
     width: 100%;
-    max-width: 650px; /* Wide enough for 4 columns */
+    max-width: 500px; /* Optimal reading width */
     margin: 0 auto;
     padding: 0;
     position: relative;
     overflow: hidden;
+    /* IMPORTANT: Allow height to grow based on content */
+    height: auto; 
+    min-height: 400px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.8);
     font-family: 'Exo 2', sans-serif;
 }
 
-/* Watermark Background */
+/* Watermark */
 .team-sheet-card::before {
     content: '';
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 400px; height: 400px;
+    width: 80%; height: 80%;
     background-image: var(--team-logo-url, none);
     background-size: contain;
     background-repeat: no-repeat;
-    opacity: 0.15; /* Visible but subtle */
+    opacity: 0.1;
     z-index: 0;
     filter: grayscale(100%);
+    pointer-events: none;
 }
 
 /* 2. Header */
 .sheet-header {
-    padding: 20px 0;
+    background: rgba(0,0,0,0.3);
+    padding: 20px;
     text-align: center;
-    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
     border-bottom: 1px solid rgba(255,255,255,0.1);
     position: relative; z-index: 2;
 }
-
 .sheet-title {
-    margin: 0;
-    font-size: 3rem;
-    font-weight: 900;
-    color: #fff;
-    text-transform: uppercase;
-    line-height: 1;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    margin: 0; font-size: 2.2rem; font-weight: 900; color: #fff; line-height: 1; text-transform: uppercase;
 }
-
 .sheet-subtitle {
-    font-size: 0.9rem;
-    color: #facc15; /* Gold */
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    font-weight: 700;
-    margin-top: 5px;
+    font-size: 0.8rem; color: #facc15; letter-spacing: 4px; text-transform: uppercase; margin-top: 5px; font-weight: 700;
 }
 
-/* 3. Content Body (Vertical Stack) */
+/* 3. Content Body */
 #sheetContent {
-    padding: 25px;
+    padding: 20px;
     position: relative; z-index: 2;
     display: flex;
-    flex-direction: column; /* THIS FIXES THE CRACKING */
+    flex-direction: column;
     gap: 15px;
 }
 
-/* 4. Role Headers (The Icon + Line) */
+/* 4. Role Header */
 .xi-role-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    color: #94a3b8; /* Slate Grey */
-    font-size: 0.75rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    color: #94a3b8; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
 }
-
-.role-icon-badge {
-    width: 24px; height: 24px;
-    background: #facc15; /* Gold */
-    color: #000;
-    border-radius: 50%;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 0.9rem;
-    box-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
-}
-
-.role-icon-badge::after {
-    content: ''; /* Pseudo element to ensure centering */
-}
-
-/* Horizontal Line */
 .xi-role-header::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: rgba(255,255,255,0.1);
+    content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1);
+}
+.role-icon-badge {
+    width: 22px; height: 22px; background: #facc15; color: #000; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center; font-size: 0.85rem;
 }
 
-/* 5. The Grid (4 Players Per Row) */
+/* 5. The Grid (4 Columns, Responsive) */
 .xi-role-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Strict 4 Columns */
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr); /* 4 Cards per row */
+    gap: 8px;
 }
 
-/* 6. Player Card (Small Pill) */
+/* 6. Player Card (Small Rect) */
 .xi-player-card {
-    background: rgba(30, 41, 59, 0.6); /* Glassy Blue */
+    background: rgba(30, 41, 59, 0.6);
     border: 1px solid #334155;
-    border-radius: 8px;
+    border-radius: 6px;
     padding: 8px 4px;
     text-align: center;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: flex; flex-direction: column; justify-content: center;
     min-height: 50px;
-    transition: 0.2s;
 }
-
-/* Foreign Accent */
 .xi-player-card.foreign {
-    border-color: #38bdf8;
-    background: rgba(56, 189, 248, 0.1);
+    border-color: #38bdf8; background: rgba(56, 189, 248, 0.1);
+}
+.xp-name {
+    color: #fff; font-size: 0.75rem; font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.xp-rating {
+    font-size: 0.7rem; color: #fbbf24; margin-top: 2px;
 }
 .xp-plane {
-    position: absolute; top: 4px; right: 4px; font-size: 0.6rem;
-}
-
-.xp-name {
-    color: #fff;
-    font-size: 0.8rem; /* Small enough to fit */
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 2px;
-}
-
-.xp-rating {
-    font-size: 0.7rem;
-    color: #facc15;
-    font-weight: 600;
+    position: absolute; top: 2px; right: 2px; font-size: 0.6rem;
 }
 
 /* 7. Footer */
 .sheet-footer {
-    position: relative; z-index: 2;
-    padding: 12px 25px;
-    background: rgba(0,0,0,0.3);
-    border-top: 1px solid rgba(255,255,255,0.1);
+    position: relative; z-index: 2; padding: 10px 20px;
+    background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05);
     display: flex; justify-content: space-between;
-    color: #64748b; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+    color: #64748b; font-size: 0.75rem;
 }
 
-/* Mobile: Drop to 2 columns if screen is very narrow */
+/* --- MODAL FIXES (Fixes Leaderboard View) --- */
+/* Ensure the modal is large enough to show the full card without internal scroll issues */
+.rules-card {
+    max-height: 90vh !important; /* Allow it to be tall */
+    overflow-y: auto; /* Scroll the modal, not the card container */
+    display: flex; flex-direction: column;
+}
+#squadCaptureArea {
+    padding: 20px;
+    overflow: visible; /* Let the card expand naturally */
+}
+
+/* Mobile Tweak */
 @media (max-width: 500px) {
     .xi-role-grid { grid-template-columns: repeat(2, 1fr); }
-    .sheet-title { font-size: 2rem; }
-}
-
-/* 4. Role Section */
-.xi-role-section {
-    width: 100%;
-}
-
-/* Premium Role Header (Symbol + Line) */
-.xi-role-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    color: #94a3b8;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.xi-role-header::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: rgba(255,255,255,0.1);
-}
-.role-icon-badge {
-    background: var(--gold);
-    color: #000;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 0.8rem;
-}
-
-/* 5. The Grid (Max 4 per row, tiny names) */
-.xi-role-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* FORCE 4 COLUMNS */
-    gap: 6px;
-}
-
-/* The Player Pill (Small Scale) */
-.xi-player-pill {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 6px;
-    padding: 6px 4px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 45px;
-    position: relative;
-    transition: 0.2s;
-}
-
-/* Foreign Player Accent */
-.xi-player-pill.foreign {
-    border-color: rgba(56, 189, 248, 0.3);
-    background: rgba(56, 189, 248, 0.05);
-}
-.xi-player-pill.foreign::after {
-    content: '✈️';
-    position: absolute;
-    top: 2px; right: 2px;
-    font-size: 0.5rem;
-}
-
-.xp-name {
-    color: #fff;
-    font-size: 0.75rem; /* Small font to fit */
-    font-weight: 600;
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-}
-.xp-rating {
-    font-size: 0.65rem;
-    color: #64748b;
-    margin-top: 2px;
-}
-
-/* Footer */
-.sheet-footer {
-    position: relative;
-    z-index: 2;
-    background: rgba(0,0,0,0.3);
-    padding: 10px 15px;
-    font-size: 0.75rem;
-    color: #64748b;
-    display: flex;
-    justify-content: space-between;
-    border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 /* 3. SELECTION LIST (COMPACT) */
@@ -2023,3 +1890,4 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 /
+
