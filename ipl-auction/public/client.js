@@ -1678,98 +1678,82 @@ function showScreen(id){
 /* ========= 8. PLAYING XI & LEADERBOARD =========== */
 /* ================================================= */
 
-// --- 1. SETUP & STATE ---
-// We use an object to track selection by role so we can sort the card (WK -> BAT -> ALL -> BOWL)
 
 socket.on("auctionEnded", () => {
     showScreen("playingXI");
-    document.body.style.overflow = "auto";
-    // Ensure we have rules before starting
-    socket.emit("getAuctionState"); 
-    socket.emit("getMySquad");
+    document.body.style.overflow = "auto"; // Re-enable scrolling
+    socket.emit("getMySquad"); // Fetch data
 });
 
-// --- 2. RECEIVE SQUAD & RENDER SELECTION LIST ---
+// --- 2. RECEIVE SQUAD & INIT UI ---
 socket.on("mySquad", ({ squad, rules }) => {
-    // CRITICAL FIX: Ensure rules are updated
-    if(rules) {
-        activeRules = rules;
-        updateRulesUI();
-    } else if (!activeRules || Object.keys(activeRules).length === 0) {
-        // Fallback: request rules again if missing
-        socket.emit("getAuctionState");
-    }
+    // 1. Sync Rules
+    if(rules) activeRules = rules;
+    updateRulesUI();
 
-    // Reset State
+    // 2. Reset Selection
     selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
+    
+    // 3. Render the "Tap to Select" List
     const container = document.getElementById("mySquadList");
     if(!container || !squad) return;
-
     container.innerHTML = "";
 
-    // Render Selection Grid (Bottom List)
     const grid = document.createElement("div");
     grid.className = "xi-select-container";
 
-    // Define Groups for the "Tap to Select" list
+    // Grouping for selection list
     const roleGroups = { WK: "Wicket Keepers", BAT: "Batsmen", ALL: "All Rounders", BOWL: "Bowlers" };
 
     Object.keys(roleGroups).forEach(key => {
-        // Filter squad players for this group
+        // Filter players for this role
         const players = squad.filter(p => {
             if(key === "BOWL") return ["PACE", "SPIN", "BOWL"].includes(p.role);
             return p.role === key;
         });
 
         if(players.length > 0) {
-            // Role Header
+            // Header
             const title = document.createElement("div");
             title.className = "role-group-title";
             title.innerText = roleGroups[key];
             grid.appendChild(title);
 
-            // Player Buttons
+            // Buttons
             players.forEach(p => {
                 const btn = document.createElement("div");
                 btn.className = "xi-player-btn";
-                // Unique ID to toggle styling later
-                btn.id = `sel-btn-${p.name.replace(/\s/g, '')}`;
+                // ID for toggling styles
+                btn.id = `sel-btn-${p.name.replace(/[^a-zA-Z0-9]/g, '')}`; 
 
                 btn.innerHTML = `
                     <span>${p.name} ${p.foreign ? '✈️' : ''}</span>
                     <small>⭐${p.rating}</small>
                 `;
-
-                // CLICK EVENT -> Toggle Player
                 btn.onclick = () => togglePlayerXI(p, btn, key);
                 grid.appendChild(btn);
             });
         }
     });
     container.appendChild(grid);
-    updateXIPreview(); // Reset preview to empty state
+    updateXIPreview(); // Draw empty card
 });
 
 // --- 3. TOGGLE LOGIC ---
 function togglePlayerXI(p, btnElement, roleKey) {
     const list = selectedXI[roleKey];
-    // Check if player is already in the list
-    const existingIndex = list.findIndex(x => x.name === p.name);
+    const index = list.findIndex(x => x.name === p.name);
 
-    if(existingIndex > -1) {
-        // REMOVE: Deselect
-        list.splice(existingIndex, 1);
+    if(index > -1) {
+        // Remove
+        list.splice(index, 1);
         btnElement.classList.remove("picked");
     } else {
-        // ADD: Select
-        const total = countTotalXI();
-        if(total >= 11) return alert("Playing XI is full (11/11). Remove a player first.");
-
+        // Add
+        if(countTotalXI() >= 11) return alert("Playing XI Full (11/11). Remove someone first.");
         list.push(p);
         btnElement.classList.add("picked");
     }
-
-    // UPDATE THE CARD IMMEDIATELY
     updateXIPreview();
 }
 
@@ -1777,23 +1761,29 @@ function countTotalXI() {
     return selectedXI.WK.length + selectedXI.BAT.length + selectedXI.ALL.length + selectedXI.BOWL.length;
 }
 
-// --- 4. RENDER THE PREVIEW CARD (Vertical Layout Fix) ---
+// --- 4. RENDER PREVIEW CARD (THE REDESIGN) ---
 function updateXIPreview() {
     const count = countTotalXI();
     
     // Elements
     const cardTarget = document.getElementById('xiCardTarget');
     const placeholder = document.getElementById('xiPlaceholder');
-    const sheetContent = document.getElementById('sheetContent');
+    const content = document.getElementById('sheetContent');
     const btn = document.getElementById('submitXIBtn');
     const saveBtn = document.getElementById('saveXIBtn');
     const countLabel = document.getElementById('sheetCount');
     const teamTitle = document.getElementById('sheetTeamName');
 
-    // A. Update Text
-    if(teamTitle) teamTitle.innerText = myTeam ? myTeam : "MY TEAM";
+    // Update Text
+    if(teamTitle) teamTitle.innerText = myTeam || "MY TEAM";
     if(countLabel) countLabel.innerText = `${count}/11 Selected`;
+    
+    // Set Logo Background Variable
+    if(cardTarget && myTeam) {
+        cardTarget.style.setProperty('--team-logo-url', `url('/logos/${myTeam}.png')`);
+    }
 
+    // Update Submit Button
     if(btn) {
         btn.innerText = `Submit XI (${count}/11)`;
         btn.disabled = count !== 11;
@@ -1801,93 +1791,120 @@ function updateXIPreview() {
         btn.style.color = count === 11 ? "#000" : "#fff";
     }
 
-    // B. Toggle Visibility (Placeholder vs Card)
+    // Toggle Placeholder
     if (count === 0) {
-        if(cardTarget) cardTarget.classList.add('hidden');
-        if(placeholder) placeholder.classList.remove('hidden');
+        cardTarget.classList.add('hidden');
+        placeholder.classList.remove('hidden');
         if(saveBtn) saveBtn.classList.add('hidden');
     } else {
-        if(cardTarget) cardTarget.classList.remove('hidden');
-        if(placeholder) placeholder.classList.add('hidden');
-        // Show save button only when full
+        cardTarget.classList.remove('hidden');
+        placeholder.classList.add('hidden');
         if(saveBtn) count === 11 ? saveBtn.classList.remove('hidden') : saveBtn.classList.add('hidden');
     }
 
-    // C. GENERATE HTML ROWS (Vertical Layout)
-    if(sheetContent) {
-        sheetContent.innerHTML = ""; // Clear current
+    // --- GENERATE HTML GRID (Vertical Role Groups) ---
+    if(content) {
+        content.innerHTML = "";
+        
+        // Define the display order and icons
+        const config = [
+            { key: 'WK', label: 'Wicket Keepers', icon: '🧤' },
+            { key: 'BAT', label: 'Batters', icon: '🏏' },
+            { key: 'ALL', label: 'All Rounders', icon: '⚡' },
+            { key: 'BOWL', label: 'Bowlers', icon: '🥎' }
+        ];
 
-        // Render in Cricket Order: WK -> BAT -> ALL -> BOWL
-        const displayOrder = ['WK', 'BAT', 'ALL', 'BOWL'];
+        config.forEach(group => {
+            const players = selectedXI[group.key];
+            
+            if(players.length > 0) {
+                // 1. Create Section Wrapper
+                const section = document.createElement("div");
+                section.className = "xi-role-section";
 
-        displayOrder.forEach(role => {
-            const players = selectedXI[role];
-            if(players && players.length > 0) {
-                // We no longer use role headers inside the card to keep it clean like the image
+                // 2. Create Header
+                section.innerHTML = `
+                    <div class="xi-role-header">
+                        <span class="role-icon-badge">${group.icon}</span>
+                        <span>${group.label}</span>
+                    </div>
+                `;
+
+                // 3. Create Grid
+                const grid = document.createElement("div");
+                grid.className = "xi-role-grid";
+
                 players.forEach(p => {
-                    let icon = '🏏';
-                    if(role === 'WK') icon = '🧤';
-                    if(role === 'BOWL') icon = '🥎';
-                    if(role === 'ALL') icon = '⚡';
-
-                    // Create Vertical Row Item (.sheet-player-row)
-                    const row = document.createElement("div");
-                    row.className = `sheet-player-row ${p.foreign ? 'foreign' : ''}`;
-                    row.innerHTML = `
-                        <div class="sp-icon">${icon}</div>
-                        <div class="sp-name">${p.name} ${p.foreign ? '✈️' : ''}</div>
-                        <div class="sp-rating">⭐${p.rating}</div>
+                    const pill = document.createElement("div");
+                    pill.className = `xi-player-pill ${p.foreign ? 'foreign' : ''}`;
+                    // Truncate name for fit
+                    const shortName = p.name.split(' ').slice(-1)[0]; // Last name usually fits best
+                    
+                    pill.innerHTML = `
+                        <div class="xp-name" title="${p.name}">${p.name}</div>
+                        <div class="xp-rating">⭐${p.rating}</div>
                     `;
-                    sheetContent.appendChild(row);
+                    grid.appendChild(pill);
                 });
+
+                section.appendChild(grid);
+                content.appendChild(section);
             }
         });
     }
     
-    // D. Update Stats Bar (Foreign Count, etc.)
     updateStatsBar();
 }
 
 function updateStatsBar() {
     const bar = document.getElementById("xiStatsBar");
-    // Safety check: if activeRules is missing, use defaults
+    // Fallback defaults if activeRules is missing (prevents crash)
     const rules = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3 }; 
     
     if(!bar) return;
 
-    // Flatten lists to count specifics
     const all = [...selectedXI.WK, ...selectedXI.BAT, ...selectedXI.ALL, ...selectedXI.BOWL];
     const foreign = all.filter(p => p.foreign).length;
     
-    // Create badges
     const badge = (label, curr, req, isMax) => {
         const valid = isMax ? curr <= req : curr >= req;
-        const color = valid ? '#4ade80' : '#f87171'; // Green or Red
-        return `<span style="background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; border:1px solid ${color}; font-size:0.75rem;">${label}: ${curr}/${req}</span>`;
+        const color = valid ? '#4ade80' : '#f87171';
+        return `<span style="border:1px solid ${color}; color:${color}; padding:4px 8px; border-radius:4px; font-size:0.75rem; background:rgba(0,0,0,0.3);">${label}: ${curr}/${req}</span>`;
     };
 
     bar.innerHTML = `
-        ${badge("✈️ Foreign", foreign, rules.maxForeignXI || 4, true)}
+        ${badge("✈️ OS", foreign, rules.maxForeignXI || 4, true)}
         ${badge("🧤 WK", selectedXI.WK.length, rules.minWK || 1)}
         ${badge("🏏 BAT", selectedXI.BAT.length, rules.minBat || 3)}
         ${badge("🥎 BOWL", selectedXI.BOWL.length, rules.minBowl || 3)}
     `;
 }
 
-// --- 5. ACTIONS ---
-
+// --- 5. SUBMIT LOGIC (FIXED) ---
 window.submitXI = function() {
     if(countTotalXI() !== 11) return alert("Please select exactly 11 players.");
-    const flatList = [...selectedXI.WK, ...selectedXI.BAT, ...selectedXI.ALL, ...selectedXI.BOWL];
     
-    console.log("Submitting XI:", flatList); // Debug Log
+    // FLATTEN THE LIST (Crucial Step)
+    const flatList = [
+        ...selectedXI.WK,
+        ...selectedXI.BAT,
+        ...selectedXI.ALL,
+        ...selectedXI.BOWL
+    ];
+
+    console.log("Submitting Payload:", flatList); // Debug
     
+    // Disable button to prevent double click
+    const btn = document.getElementById("submitXIBtn");
+    if(btn) { btn.disabled = true; btn.innerText = "Checking..."; }
+
     socket.emit("submitXI", { team: myTeam, xi: flatList });
 };
 
 window.resetXISelection = function() {
     if(confirm("Clear Selection?")) {
         selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
+        // Remove 'picked' class from all buttons
         document.querySelectorAll('.xi-player-btn').forEach(b => b.classList.remove('picked'));
         updateXIPreview();
     }
@@ -1895,34 +1912,41 @@ window.resetXISelection = function() {
 
 window.downloadSheetPNG = function() {
     const el = document.getElementById('xiCardTarget');
+    // Ensure high quality capture
     html2canvas(el, { backgroundColor: null, scale: 3, useCORS: true }).then(canvas => {
         const link = document.createElement('a');
-        link.download = `My_Playing_XI.png`;
+        link.download = `${myTeam}_Playing_XI.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
     });
 };
 
-// --- 6. LEADERBOARD & PREVIEW ---
+// --- 6. SERVER RESPONSES ---
 
 socket.on("submitResult", (res) => {
-    // Hide submit button to prevent double submission
+    // Hide submit button if successful
     const btn = document.getElementById("submitXIBtn");
-    if(btn) btn.classList.add("hidden");
     
     const status = document.getElementById("xiStatus");
     if(status) {
         status.innerHTML = `
-        <div style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? 'red' : 'green'}; background:rgba(0,0,0,0.9); border-radius:10px; margin-top:20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-            <h2 style="margin:0; color:${res.disqualified ? '#ef4444' : '#22c55e'}">${res.disqualified ? 'DISQUALIFIED ❌' : 'QUALIFIED ✅'}</h2>
-            <p style="color:#ccc; margin:10px 0;">Rating: <b style="color:white; font-size:1.2rem;">${res.rating}</b></p>
-            ${res.disqualified ? `<p style="color:#fca5a5; font-size:0.9rem;">Reason: ${res.reason}</p>` : ''}
+        <div style="padding:15px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <h2 style="margin:0 0 5px 0; color:${res.disqualified ? '#ef4444' : '#22c55e'}">${res.disqualified ? '❌ DISQUALIFIED' : '✅ APPROVED'}</h2>
+            <div style="font-size:0.9rem; color:#ccc;">RATING: <b style="color:#fff; font-size:1.1rem;">${res.rating}</b></div>
+            ${res.disqualified ? `<div style="margin-top:5px; color:#fca5a5; font-size:0.85rem;">Reason: ${res.reason}</div>` : ''}
             
-            ${res.disqualified ? `<button onclick="document.getElementById('submitXIBtn').classList.remove('hidden'); this.parentElement.remove();" style="margin-top:10px; background:#334155; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer;">Try Again</button>` : ''}
+            ${res.disqualified ? `<button onclick="document.getElementById('submitXIBtn').disabled=false; document.getElementById('submitXIBtn').innerText='Resubmit'; this.parentElement.remove();" style="margin-top:10px; background:#334155; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Fix Team</button>` : ''}
         </div>`;
     }
+    
+    // Re-enable button if disqualified so they can try again
+    if(res.disqualified && btn) {
+        // Button handled inside the HTML above
+    } else if (btn) {
+        btn.classList.add("hidden"); // Hide if successful
+        document.getElementById("saveXIBtn").classList.remove("hidden");
+    }
 });
-
 
 socket.on("leaderboard", (board) => {
     const tbody = document.getElementById("leaderboardBody");
@@ -2190,6 +2214,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
