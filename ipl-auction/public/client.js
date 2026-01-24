@@ -315,25 +315,24 @@ socket.on("joinedRoom", (data) => {
     if (data.purses) teamPurse = data.purses;
     
     // --- 5. CHECK: HAS AUCTION ENDED? ---
-    if (data.auctionEnded) {
-        const savedRoom = sessionStorage.getItem('ipl_room');
-        if (savedRoom === data.roomCode) {
-            roomCode = data.roomCode;
-            if(data.squads) allSquads = data.squads;
-            if(data.rules) activeRules = data.rules;
-            
-            setupAuctionScreen();
-            showScreen("playingXI");
-            document.body.style.overflow = "auto";
-            socket.emit("getMySquad"); 
-            updateRulesUI();
-        } else {
-            alert("⚠️ The Auction has ended. Returning to Main Screen.");
-            sessionStorage.clear();
-            window.location.href = "/";
-        }
-        return; 
-    }
+   // Inside socket.on("joinedRoom", ...)
+if (data.auctionEnded) {
+    const savedRoom = sessionStorage.getItem('ipl_room');
+    
+    // Save data so we can render the summary
+    if(data.squads) allSquads = data.squads;
+    if(data.purses) teamPurse = data.purses;
+    if(data.teamOwners) teamOwners = data.teamOwners;
+    
+    // SHOW SUMMARY PAGE DIRECTLY
+    setupAuctionScreen(); // Hides landing/auth
+    renderPostAuctionSummary();
+    showScreen("postAuctionSummary");
+    
+    // If I have a team, show me the Leaderboard button in summary
+    // If I am a spectator, I stay here.
+    return; 
+}
 
     // --- 6. STANDARD SETUP ---
     roomCode = data.roomCode;
@@ -679,7 +678,7 @@ socket.on("teamPicked", ({ team, user, remaining }) => {
 socket.on("adminPromoted", () => {
     isHost = true;
     updateAdminButtons(gameStarted);
-    alert("👑 You are now the Host!");
+    alert("🜲 You are now the Host!");
 });
 
 // Save Rules
@@ -1909,7 +1908,7 @@ function updateXIPreview() {
 
 function updateStatsBar() {
     const bar = document.getElementById("xiStatsBar");
-    const r = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3 }; 
+    const r = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3,minAll: 1, minSpin: 0 }; 
     if(!bar) return;
 
     const all = [...selectedXI.WK, ...selectedXI.BAT, ...selectedXI.ALL, ...selectedXI.BOWL];
@@ -1922,10 +1921,12 @@ function updateStatsBar() {
     };
 
     bar.innerHTML = `
-        ${badge("✈️", foreign, r.maxForeignXI, true)}
-        ${badge("🧤", selectedXI.WK.length, r.minWK)}
+        ${badge("✈", foreign, r.maxForeignXI, true)}
+        ${badge("🖑", selectedXI.WK.length, r.minWK)}
         ${badge("🏏", selectedXI.BAT.length, r.minBat)}
+        ${badge("☄", selectedXI.ALL.length, r.minAll)}
         ${badge("🥎", selectedXI.BOWL.length, r.minBowl)}
+        ${badge("🥎", selectedXI.SPIN.length, r.minSpin)}
     `;
 }
 
@@ -1969,23 +1970,60 @@ socket.on("submitResult", (res) => {
         document.getElementById("saveXIBtn").classList.remove("hidden");
     }
 });
+// --- LEADERBOARD POPUP LOGIC ---
+let currentPopupData = null; // Store data to switch views
 
-// LEADERBOARD POPUP
 function openSquadView(data) {
+    currentPopupData = data;
     const overlay = document.getElementById("squadViewOverlay");
-    const container = document.getElementById("squadCaptureArea");
     
-    // Reuse the same generator
-    container.innerHTML = generateFantasyCardHTML(
-        data.team, 
-        data.xi, 
-        data.rating, 
-        11, 
-        false
-    );
+    // Default to Playing XI view
+    renderPopupContent('XI');
     
     overlay.classList.remove("hidden");
 }
+
+window.switchPopupView = function(mode) {
+    // Toggle Button Styles
+    const btnXI = document.getElementById('btnShowXI');
+    const btnFull = document.getElementById('btnShowFull');
+    
+    if(mode === 'XI') {
+        btnXI.classList.add('active');
+        btnFull.classList.remove('active');
+    } else {
+        btnFull.classList.add('active');
+        btnXI.classList.remove('active');
+    }
+    
+    renderPopupContent(mode);
+}
+
+function renderPopupContent(mode) {
+    const container = document.getElementById("squadCaptureArea");
+    const d = currentPopupData;
+    const fullSquad = allSquads[d.team] || [];
+
+    if (mode === 'XI') {
+        // Use the Fantasy Card Generator (from previous code)
+        container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
+    } else {
+        // Use the New 4-Column Generator
+        container.innerHTML = generateFullSquadHTML(d.team, fullSquad, d.purse, "Manager");
+    }
+}
+
+// Download Handler for Popup
+window.downloadPopupCard = function() {
+    const el = document.getElementById('squadCaptureArea').firstElementChild;
+    html2canvas(el, { backgroundColor: "#020617", scale: 2, useCORS:true }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `${currentPopupData.team}_Card.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+}
+
 
 window.downloadLeaderboardPNG = function() {
     const el = document.getElementById('generatedCard');
@@ -2016,6 +2054,69 @@ socket.on("leaderboard", (board) => {
         });
     }
 });
+// --- SHARED HELPER: GENERATE 4-COLUMN SQUAD CARD HTML ---
+function generateFullSquadHTML(teamName, squad, purse, owner) {
+    const foreignCount = squad.filter(p => p.foreign).length;
+    const teamColor = TEAM_COLORS[teamName] || '#fff';
+    const logoUrl = `/logos/${teamName}.png`;
+
+    // Categorize
+    const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
+    squad.forEach(p => {
+        let r = p.role;
+        if (['PACE', 'SPIN'].includes(r)) r = 'BOWL';
+        if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
+    });
+
+    // Helper to render rows
+    const renderRows = (list) => list.map(p => `
+        <div class="pro-player-card" style="border-left-color:${teamColor}">
+            <div class="pp-left">
+                <span class="pp-name">${p.foreign ? '✈️ ' : ''}${p.name}</span>
+            </div>
+            <div class="pp-right">
+                <span class="pp-price">₹${p.price.toFixed(2)}</span>
+            </div>
+        </div>
+    `).join('');
+
+    return `
+    <div class="team-sheet-card full-squad-mode" style="--team-logo-url: url('${logoUrl}'); max-width: 800px;">
+        <div class="sheet-header">
+            <h2 class="sheet-title">${teamName}</h2>
+            <div class="sheet-subtitle">FULL SQUAD • ${owner || 'Manager'}</div>
+            <div style="margin-top:10px; display:flex; justify-content:center; gap:15px; font-size:0.85rem; color:#ccc;">
+                <span>💰 ₹${purse.toFixed(2)} Cr Left</span>
+                <span>👥 ${squad.length} Players</span>
+                <span>✈️ ${foreignCount} OS</span>
+            </div>
+        </div>
+
+        <div class="pro-body" style="padding:15px; gap:15px;">
+            <div class="pro-col">
+                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">🧤 WICKET KEEPERS</div>
+                ${renderRows(cat.WK)}
+            </div>
+            <div class="pro-col">
+                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">🏏 BATTERS</div>
+                ${renderRows(cat.BAT)}
+            </div>
+            <div class="pro-col">
+                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">⚡ ALL ROUNDERS</div>
+                ${renderRows(cat.ALL)}
+            </div>
+            <div class="pro-col">
+                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">🥎 BOWLERS</div>
+                ${renderRows(cat.BOWL)}
+            </div>
+        </div>
+        
+        <div class="sheet-footer">
+            <span>OFFICIAL SQUAD LIST</span>
+            <span>Generated by AuctionDashboard</span>
+        </div>
+    </div>`;
+}
 
 // Helper for Leaderboard Card (Not for selection)
 function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
@@ -2217,6 +2318,72 @@ window.openPlayerProfile = function(playerData, teamName, price) {
 window.closePlayerCard = function(e) {
     if(e.target.id === 'playerCardOverlay') e.target.remove();
 }
+// --- POST AUCTION SUMMARY PAGE LOGIC ---
+
+function renderPostAuctionSummary() {
+    const list = document.getElementById("summaryList");
+    if(!list) return;
+    list.innerHTML = "";
+
+    const teams = Object.keys(allSquads).sort();
+
+    teams.forEach(team => {
+        const squad = allSquads[team];
+        const purse = teamPurse[team];
+        const owner = teamOwners[team] || "Manager";
+        const teamColor = TEAM_COLORS[team] || "#fff";
+
+        // Create Item Wrapper
+        const item = document.createElement("div");
+        item.className = "summary-item";
+
+        // Header (Always Visible)
+        const header = document.createElement("div");
+        header.className = "summary-header";
+        header.style.borderLeftColor = teamColor;
+        header.innerHTML = `
+            <div class="sum-info">
+                <span class="sum-team" style="color:${teamColor}">${team}</span>
+                <span class="sum-meta">${owner} • 💰 ₹${purse.toFixed(2)} Cr • 👥 ${squad.length}</span>
+            </div>
+            <button class="sum-expand-btn">▼</button>
+        `;
+
+        // Content (Hidden by default)
+        const content = document.createElement("div");
+        content.className = "summary-content hidden";
+        content.innerHTML = generateFullSquadHTML(team, squad, purse, owner);
+
+        // Toggle Logic
+        header.onclick = () => {
+            const isHidden = content.classList.contains("hidden");
+            // Close all others (Accordion style - optional)
+            document.querySelectorAll('.summary-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.sum-expand-btn').forEach(b => b.innerText = "▼");
+            
+            if(isHidden) {
+                content.classList.remove("hidden");
+                header.querySelector('.sum-expand-btn').innerText = "▲";
+            }
+        };
+
+        item.appendChild(header);
+        item.appendChild(content);
+        list.appendChild(item);
+    });
+}
+
+// Override Exit Home to go to Summary if auction ended
+window.exitToHome = function() {
+    if (activeRules && document.getElementById("postAuctionSummary")) {
+        // If coming from Playing XI screen
+        showScreen("postAuctionSummary");
+        renderPostAuctionSummary();
+    } else if(confirm("Are you sure you want to exit?")) {
+        sessionStorage.clear();
+        window.location.href = "/"; 
+    }
+}
 
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2232,6 +2399,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
