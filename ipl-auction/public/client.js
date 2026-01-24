@@ -1027,13 +1027,18 @@ window.viewEmbeddedSquad = function(team) {
 // --- A. UPCOMING SETS LOGIC ---
 let isSetsViewOpen = false;
 
+// --- UPDATED: Set Update Listener (Fixes Live Refresh) ---
 socket.on("setUpdate", data => {
     remainingSets = data; 
-    // If the view is currently open, refresh it live to show changes immediately
-    if(isSetsViewOpen){
+    
+    // Check if the panel is visible, if so, re-render immediately
+    const setsPanel = document.getElementById("panel-sets");
+    // We check if the panel exists and does NOT have the 'hidden' class
+    if(setsPanel && !document.getElementById("view-sets").classList.contains('hidden')){
         renderSetsPanel(); 
     }
 });
+
 
 // Toggle between Normal View and Sets View
 window.toggleSetsView = function() {
@@ -1805,6 +1810,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
