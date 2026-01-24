@@ -1087,12 +1087,23 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ================================================= */
 
 .player-card-overlay {
-    backdrop-filter: blur(12px); /* Stronger blur for focus */
-    background: rgba(0, 0, 0, 0.75);
+    position: fixed;       /* Fixes to screen, ignores footer/scroll */
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh;
+    z-index: 10000;        /* Highest layer */
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;         /* Center the card */
+    justify-content: center; 
+    align-items: center;
+    overflow: hidden;      /* Prevent background scrolling */
 }
 
 .pc-card {
     position: relative;
+  max-height: 90vh;      /* Fit within screen height */
     width: 320px;
     height: 480px;
     border-radius: 24px;
@@ -1386,99 +1397,46 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-/* --- TEAM SPECIFIC BACKGROUNDS (ALL CAPS .PNG) --- */
-
-/* Chennai Super Kings */
-.pc-card[data-team="CSK"] .pc-bg-layer { 
-    background-image: url('/logos/CSK.PNG'); 
-    background-color: #facc15; 
-}
-
-/* Royal Challengers Bengaluru */
-.pc-card[data-team="RCB"] .pc-bg-layer { 
-    background-image: url('/logos/RCB.PNG'); 
-    background-color: #dc2626; 
-}
-
-/* Mumbai Indians */
-.pc-card[data-team="MI"] .pc-bg-layer { 
-    background-image: url('/logos/MI.PNG'); 
-    background-color: #0ea5e9; 
-}
-
-/* Kolkata Knight Riders */
-.pc-card[data-team="KKR"] .pc-bg-layer { 
-    background-image: url('/logos/KKR.PNG'); 
-    background-color: #a855f7; 
-}
-
-/* Rajasthan Royals */
-.pc-card[data-team="RR"] .pc-bg-layer { 
-    background-image: url('/logos/RR.PNG'); 
-    background-color: #fb7185; 
-}
-
-/* Sunrisers Hyderabad */
-.pc-card[data-team="SRH"] .pc-bg-layer { 
-    background-image: url('/logos/SRH.PNG'); 
-    background-color: #fb923c; 
-}
-
-/* Delhi Capitals */
-.pc-card[data-team="DC"] .pc-bg-layer { 
-    background-image: url('/logos/DC.PNG'); 
-    background-color: #60a5fa; 
-}
-
-/* Punjab Kings */
-.pc-card[data-team="PBKS"] .pc-bg-layer { 
-    background-image: url('/logos/PBKS.PNG'); 
-    background-color: #ef4444; 
-}
-
-/* Gujarat Titans */
-.pc-card[data-team="GT"] .pc-bg-layer { 
-    background-image: url('/logos/GT.PNG'); 
-    background-color: #0d9488; 
-}
-
-/* Lucknow Super Giants */
-.pc-card[data-team="LSG"] .pc-bg-layer { 
-    background-image: url('/logos/LSG.PNG'); 
-    background-color: #22c55e; 
-}
 
 /* --- MODERN CHAT & LOGS --- */
+/* --- UPDATED CHAT & LOG LAYOUT --- */
+
+/* 1. LAYOUT CONTAINER */
 #view-feed {
     display: flex; flex-direction: column; height: 100%;
     background: rgba(0,0,0,0.2);
     border-radius: 12px; overflow: hidden;
 }
 
-/* 1. ACTIVITY LOG (Ticker Style) */
+/* 2. MINIMAL LOGS (Top Section) */
 #miniLog {
-    height: 120px; /* Fixed height for logs */
-    overflow-y: auto;
-    background: rgba(0,0,0,0.3);
+    height: auto;           /* Let content dictate height */
+    max-height: 80px;       /* Limit max height */
+    min-height: 40px;
+    overflow-y: hidden;     /* Hide scrollbar for cleaner look */
+    background: rgba(0,0,0,0.4);
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: 10px;
-    font-size: 0.85rem;
+    padding: 8px;
+    font-size: 0.8rem;
     display: flex; 
-    flex-direction: column; /* Normal order, we will PREPEND in JS */
+    flex-direction: column;
+    justify-content: flex-end; /* Keep items at bottom */
 }
 
 .log-item {
-    padding: 4px 8px;
-    margin-bottom: 4px;
-    border-left: 2px solid var(--gold);
-    background: rgba(255, 215, 0, 0.05);
-    color: #cbd5e1;
-    animation: slideDown 0.3s ease-out;
+    padding: 2px 0;
+    color: #94a3b8;         /* Muted text */
+    white-space: nowrap;    /* Single line */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-left: none;      /* Remove border */
+    background: none;       /* Remove bg */
+    margin: 0;
 }
 
-/* 2. CHAT AREA */
+/* 3. EXPANDED CHAT AREA */
 #feedChat {
-    flex: 1; /* Takes remaining space */
+    flex: 1;                /* Takes ALL remaining space */
     display: flex; flex-direction: column;
     overflow: hidden;
     position: relative;
@@ -1488,40 +1446,51 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     flex: 1;
     overflow-y: auto;
     padding: 15px;
-    display: flex; flex-direction: column; gap: 8px;
-    scroll-behavior: smooth;
+    display: flex; flex-direction: column; gap: 10px;
 }
 
-/* Chat Bubbles */
+/* 4. CHAT BUBBLES (My vs Others) */
 .chat-msg {
     display: flex; flex-direction: column;
-    max-width: 85%;
+    max-width: 80%;
     animation: popIn 0.2s ease-out;
 }
 
+/* Position */
 .chat-msg.mine { align-self: flex-end; align-items: flex-end; }
 .chat-msg.others { align-self: flex-start; align-items: flex-start; }
 
-.chat-header { font-size: 0.7rem; color: #94a3b8; margin-bottom: 2px; }
+/* Header (Name) */
+.chat-header { 
+    font-size: 0.65rem; 
+    margin-bottom: 3px; 
+    padding: 0 4px;
+    opacity: 0.8;
+}
+
+/* Bubbles */
 .chat-bubble {
-    padding: 8px 12px;
-    border-radius: 12px;
+    padding: 8px 14px;
+    border-radius: 16px;
     font-size: 0.95rem;
     line-height: 1.4;
     position: relative;
-    word-wrap: break-word;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
+/* MY BUBBLE STYLE */
 .chat-msg.mine .chat-bubble {
-    background: var(--primary); 
+    background: var(--primary); /* Gold/Yellow */
     color: #000;
-    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px; /* Distinct shape */
 }
 
+/* OTHERS BUBBLE STYLE (Improved) */
 .chat-msg.others .chat-bubble {
-    background: #334155;
+    background: #334155;        /* Slate Gray */
     color: #fff;
-    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px; /* Distinct shape */
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 /* 3. INPUT AREA */
@@ -1546,6 +1515,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
 
 
 
