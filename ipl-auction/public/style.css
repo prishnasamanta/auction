@@ -1799,5 +1799,67 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 
 
+/* --- VERTICAL PLAYER CARD (Fix for "Cracked" Layout) --- */
+
+/* 1. The Container: Stacks items vertically */
+#sheetContent {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Spacing between rows */
+    padding: 10px 0;
+}
+
+/* 2. The Row Item: A single strip for each player */
+.sheet-player-row {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 4px solid var(--gold); /* Accent line on left */
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+/* 3. Row Content Styling */
+.sp-icon {
+    font-size: 1.2rem;
+    margin-right: 12px;
+    width: 24px;
+    text-align: center;
+}
+
+.sp-name {
+    flex: 1; /* Takes up all remaining space */
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.sp-rating {
+    font-size: 0.8rem;
+    color: var(--gold);
+    font-weight: bold;
+}
+
+/* 4. Foreign Player Styling */
+.sheet-player-row.foreign {
+    background: rgba(56, 189, 248, 0.1); /* Light Blue Tint */
+    border-left-color: #38bdf8; /* Blue Accent */
+}
+
+/* 5. Mobile Adjustments for card */
+@media (max-width: 600px) {
+    .team-sheet-card {
+        padding: 15px;
+    }
+    .sheet-player-row {
+        padding: 6px 10px;
+    }
+    .sp-name {
+        font-size: 0.9rem;
+    }
+}
+
 
 
