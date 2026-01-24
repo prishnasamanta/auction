@@ -1683,7 +1683,6 @@ function showScreen(id){
 /* ================================================= */
 
 // --- 1. STATE ---
-let selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
 
 socket.on("auctionEnded", () => {
     showScreen("playingXI");
@@ -2216,6 +2215,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
