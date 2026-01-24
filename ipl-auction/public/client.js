@@ -1682,17 +1682,23 @@ function showScreen(id){
 /* ========= 8. PLAYING XI & LEADERBOARD =========== */
 /* ================================================= */
 
+/* ================================================= */
+/* ========= 8. PLAYING XI & LEADERBOARD =========== */
+/* ================================================= */
+
+// --- 1. STATE ---
+let selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
 
 socket.on("auctionEnded", () => {
     showScreen("playingXI");
     document.body.style.overflow = "auto";
-    socket.emit("getAuctionState"); // Ensure rules loaded
+    socket.emit("getAuctionState"); 
     socket.emit("getMySquad");
 });
 
 // --- 2. RENDER SELECTION LIST ---
 socket.on("mySquad", ({ squad, rules }) => {
-    if(rules) activeRules = rules; 
+    if(rules) activeRules = rules;
     updateRulesUI();
 
     // Reset Selection
@@ -1715,17 +1721,14 @@ socket.on("mySquad", ({ squad, rules }) => {
         });
 
         if(players.length > 0) {
-            // Header
             const title = document.createElement("div");
             title.className = "role-group-title";
             title.innerText = roleGroups[key];
             grid.appendChild(title);
 
-            // Buttons
             players.forEach(p => {
                 const btn = document.createElement("div");
                 btn.className = "xi-player-btn";
-                // Unique ID to toggle visuals
                 btn.id = `sel-btn-${p.name.replace(/[^a-zA-Z0-9]/g, '')}`; 
 
                 btn.innerHTML = `
@@ -1744,17 +1747,14 @@ socket.on("mySquad", ({ squad, rules }) => {
 // --- 3. TOGGLE PLAYERS ---
 function togglePlayerXI(p, btnElement, roleKey) {
     const list = selectedXI[roleKey];
-    // Check by name to avoid object reference issues
     const index = list.findIndex(x => x.name === p.name);
 
     if(index > -1) {
-        // Remove
-        list.splice(index, 1);
+        list.splice(index, 1); // Remove
         btnElement.classList.remove("picked");
     } else {
-        // Add
         if(countTotalXI() >= 11) return alert("Playing XI is Full (11/11).");
-        list.push(p);
+        list.push(p); // Add
         btnElement.classList.add("picked");
     }
     updateXIPreview();
@@ -1764,37 +1764,94 @@ function countTotalXI() {
     return selectedXI.WK.length + selectedXI.BAT.length + selectedXI.ALL.length + selectedXI.BOWL.length;
 }
 
-// --- 4. RENDER PREVIEW CARD (THE PROFESSIONAL LAYOUT) ---
+// --- 4. RENDER PREVIEW CARD (SHARED FUNCTION) ---
+// This function generates the HTML string for the card. 
+// We reuse it for both the "Preview" and the "Leaderboard Popup" to ensure they look identical.
+function generateProfessionalCardHTML(teamName, xiData, rating, count, isPreview = false) {
+    const logoUrl = `/logos/${teamName}.png`;
+    
+    // Config for Role Sections
+    const config = [
+        { key: 'WK', label: 'WICKET KEEPERS', icon: '🧤' },
+        { key: 'BAT', label: 'BATTERS', icon: '🏏' },
+        { key: 'ALL', label: 'ALL ROUNDERS', icon: '⚡' },
+        { key: 'BOWL', label: 'BOWLERS', icon: '🥎' }
+    ];
+
+    let contentHTML = '';
+
+    config.forEach(group => {
+        // Handle both Array (Leaderboard) and Object (Local State) structures
+        let players = [];
+        if (Array.isArray(xiData)) {
+            // If flat array (from server leaderboard), filter it
+            players = xiData.filter(p => {
+                if(group.key === 'BOWL') return ['PACE', 'SPIN', 'BOWL'].includes(p.role);
+                return p.role === group.key;
+            });
+        } else {
+            // If object (local state), access directly
+            players = xiData[group.key] || [];
+        }
+
+        if (players.length > 0) {
+            contentHTML += `
+            <div class="xi-role-section">
+                <div class="xi-role-header">
+                    <span class="role-icon-badge">${group.icon}</span>
+                    <span>${group.label}</span>
+                </div>
+                <div class="xi-role-grid">
+                    ${players.map(p => `
+                        <div class="xi-player-card ${p.foreign ? 'foreign' : ''}">
+                            <div class="xp-name" title="${p.name}">${p.name}</div>
+                            <div class="xp-rating">⭐ ${p.rating}</div>
+                            ${p.foreign ? '<span class="xp-plane">✈️</span>' : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        }
+    });
+
+    return `
+    <div id="${isPreview ? 'xiCardTarget' : 'generatedCard'}" class="team-sheet-card" style="--team-logo-url: url('${logoUrl}');">
+        <div class="sheet-header">
+            <h2 class="sheet-title">${teamName}</h2>
+            <div class="sheet-subtitle">PLAYING XI</div>
+            ${rating ? `<div style="margin-top:5px; color:#4ade80; font-weight:bold; font-size:0.9rem;">RATING: ${rating}</div>` : ''}
+        </div>
+        <div id="sheetContent">${contentHTML}</div>
+        <div class="sheet-footer">
+            <span>IPL AUCTION LIVE</span>
+            <span>${count}/11 SELECTED</span>
+        </div>
+    </div>`;
+}
+
+// --- 5. UPDATE PREVIEW (CALLS GENERATOR) ---
 function updateXIPreview() {
     const count = countTotalXI();
+    const container = document.getElementById('xiCardWrapper'); // Make sure this ID exists in HTML
     
-    // UI Elements
-    const cardTarget = document.getElementById('xiCardTarget');
-    const placeholder = document.getElementById('xiPlaceholder');
-    const content = document.getElementById('sheetContent');
-    const btn = document.getElementById('submitXIBtn');
-    const saveBtn = document.getElementById('saveXIBtn');
-    const countLabel = document.getElementById('sheetCount');
-    const teamTitle = document.getElementById('sheetTeamName');
-
-    // Update Header
-    if(teamTitle) teamTitle.innerText = myTeam || "MY TEAM";
-    if(countLabel) countLabel.innerText = `${count}/11 Selected`;
-    
-    // Set Logo
-    if(cardTarget && myTeam) {
-        cardTarget.style.setProperty('--team-logo-url', `url('/logos/${myTeam}.png')`);
+    // If wrapper exists, inject the card HTML
+    if(container) {
+        container.innerHTML = generateProfessionalCardHTML(myTeam || "MY TEAM", selectedXI, null, count, true);
     }
 
-    // Toggle Placeholder vs Card
+    // UI State Management (Buttons, Placeholders)
+    const placeholder = document.getElementById('xiPlaceholder');
+    const btn = document.getElementById('submitXIBtn');
+    const saveBtn = document.getElementById('saveXIBtn');
+    const countLabel = document.getElementById('sheetCount'); // May be inside generated HTML now
+
     if (count === 0) {
-        cardTarget.classList.add('hidden');
-        placeholder.classList.remove('hidden');
+        if(container) container.classList.add('hidden');
+        if(placeholder) placeholder.classList.remove('hidden');
         if(saveBtn) saveBtn.classList.add('hidden');
     } else {
-        cardTarget.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-        // Show save button only when full
+        if(container) container.classList.remove('hidden');
+        if(placeholder) placeholder.classList.add('hidden');
         if(saveBtn) count === 11 ? saveBtn.classList.remove('hidden') : saveBtn.classList.add('hidden');
     }
 
@@ -1804,56 +1861,7 @@ function updateXIPreview() {
         btn.style.background = count === 11 ? "var(--success)" : "";
         btn.style.color = count === 11 ? "#000" : "#fff";
     }
-
-    // --- GENERATE HTML GRID ---
-    if(content) {
-        content.innerHTML = "";
-        
-        // Define Roles & Icons
-        const config = [
-            { key: 'WK', label: 'WICKET KEEPERS', icon: '🧤' },
-            { key: 'BAT', label: 'BATTERS', icon: '🏏' },
-            { key: 'ALL', label: 'ALL ROUNDERS', icon: '⚡' },
-            { key: 'BOWL', label: 'BOWLERS', icon: '🥎' }
-        ];
-
-        config.forEach(group => {
-            const players = selectedXI[group.key];
-            
-            if(players.length > 0) {
-                // Section
-                const section = document.createElement("div");
-                section.className = "xi-pro-section";
-
-                // Header
-                section.innerHTML = `
-                    <div class="xi-role-header">
-                        <span class="role-icon-badge">${group.icon}</span>
-                        <span>${group.label}</span>
-                    </div>
-                `;
-
-                // Grid (This ensures no cracking)
-                const grid = document.createElement("div");
-                grid.className = "xi-role-grid";
-
-                players.forEach(p => {
-                    const card = document.createElement("div");
-                    card.className = `xi-player-card ${p.foreign ? 'foreign' : ''}`;
-                    
-                    card.innerHTML = `
-                        <div class="xp-name" title="${p.name}">${p.name}</div>
-                        <div class="xp-rating">⭐ ${p.rating}</div>
-                        ${p.foreign ? '<span class="xp-plane">✈️</span>' : ''}
-                    `;
-                    grid.appendChild(card);
-                });
-
-                section.appendChild(grid);
-                content.appendChild(section);
-            }
-        });
-    }
+    
     updateStatsBar();
 }
 
@@ -1879,15 +1887,17 @@ function updateStatsBar() {
     `;
 }
 
-// --- 5. SUBMIT (LOGIC FIXED FOR SERVER) ---
+// --- 6. SUBMIT LOGIC (FIXED FOR SERVER) ---
 window.submitXI = function() {
     if(countTotalXI() !== 11) return alert("Please select exactly 11 players.");
     
-    // SERVER FIX: Send the Object { WK: [], BAT: [] }
-    // Do NOT flatten it. The server expects the keys BAT, WK, etc. to exist.
+    // SERVER FIX: Send the Structured Object, NOT a flat array.
+    // Your server code: `const allPlayers = [ ...(xi.BAT || []), ... ]` 
+    // This expects `xi` to be { BAT: [], WK: [] ... }
+    
     const payload = selectedXI; 
 
-    console.log("Submitting Payload:", payload); // Debug to console
+    console.log("Submitting Payload:", payload); // Debug
 
     const btn = document.getElementById("submitXIBtn");
     if(btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
@@ -1904,7 +1914,8 @@ window.resetXISelection = function() {
 };
 
 window.downloadSheetPNG = function() {
-    const el = document.getElementById('xiCardTarget');
+    // Note: ID changed to match generator
+    const el = document.getElementById('xiCardTarget'); 
     html2canvas(el, { backgroundColor: null, scale: 3, useCORS: true }).then(canvas => {
         const link = document.createElement('a');
         link.download = `Playing_XI.png`;
@@ -1913,27 +1924,54 @@ window.downloadSheetPNG = function() {
     });
 };
 
-// --- 6. RESULT HANDLING ---
+// --- 7. RESULT HANDLING & LEADERBOARD ---
 socket.on("submitResult", (res) => {
     const btn = document.getElementById("submitXIBtn");
     const status = document.getElementById("xiStatus");
     
     if(status) {
         status.innerHTML = `
-        <div style="padding:15px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+        <div style="padding:15px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             <h2 style="margin:0 0 5px 0; color:${res.disqualified ? '#ef4444' : '#22c55e'}">${res.disqualified ? '❌ DISQUALIFIED' : '✅ APPROVED'}</h2>
-            <div style="font-size:0.9rem; color:#ccc;">RATING: <b style="color:#fff; font-size:1.1rem;">${res.rating}</b></div>
+            <div style="font-size:0.9rem; color:#ccc;">RATING: <b style="color:#fff; font-size:1.4rem;">${res.rating}</b></div>
             ${res.disqualified ? `<div style="margin-top:5px; color:#fca5a5; font-size:0.85rem;">Reason: ${res.reason}</div>` : ''}
             
             ${res.disqualified ? `<button onclick="document.getElementById('submitXIBtn').disabled=false; document.getElementById('submitXIBtn').innerText='Fix Team'; this.parentElement.remove();" style="margin-top:10px; background:#334155; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Edit</button>` : ''}
         </div>`;
     }
-    
     if (btn && !res.disqualified) {
         btn.classList.add("hidden"); 
         document.getElementById("saveXIBtn").classList.remove("hidden");
     }
 });
+
+// --- 8. OPEN SQUAD VIEW (LEADERBOARD FIX) ---
+// This was causing the "Cracked" look. We now reuse the generator.
+function openSquadView(data) {
+    const overlay = document.getElementById("squadViewOverlay");
+    const container = document.getElementById("squadCaptureArea");
+    
+    // Generate the FULL card using the same shared function
+    container.innerHTML = generateProfessionalCardHTML(
+        data.team, 
+        data.xi, // Server sends flat array in leaderboard usually, generator handles it
+        data.rating, 
+        11, 
+        false
+    );
+    
+    overlay.classList.remove("hidden");
+}
+
+window.downloadLeaderboardPNG = function() {
+    const el = document.getElementById('generatedCard');
+    html2canvas(el, { backgroundColor: null, scale: 3 }).then(canvas => {
+        const a = document.createElement('a');
+        a.download = `Squad_Card.png`;
+        a.href = canvas.toDataURL();
+        a.click();
+    });
+}
 
 
 socket.on("leaderboard", (board) => {
@@ -1958,12 +1996,6 @@ socket.on("leaderboard", (board) => {
 
 // Helper for Leaderboard Card (Not for selection)
 function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
-    // Reuse specific logic for popup view if needed, 
-    // or just duplicate logic from updateXIPreview but returning HTML string.
-    // ... (Code omitted for brevity, use previous version if needed) ...
-    // For now, let's keep the user-provided logic for this specific function or previous working version.
-    
-    // Simplified version for Leaderboard Popup:
     const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
     if(players) players.forEach(p => {
         let r = p.role;
@@ -1998,31 +2030,6 @@ function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
     html += `</div><div class="sheet-footer"><span>IPL AUCTION LIVE</span><span>${count}/11 Selected</span></div></div>`;
     return html;
 }
-
-
-window.downloadLeaderboardPNG = function() {
-    const el = document.getElementById('generatedCard');
-    html2canvas(el, { backgroundColor: null, scale: 3 }).then(canvas => {
-        const a = document.createElement('a');
-        a.download = `Squad_Card.png`;
-        a.href = canvas.toDataURL();
-        a.click();
-    });
-};
-
-
-function openSquadView(data) {
-    const overlay = document.getElementById("squadViewOverlay");
-    const container = document.getElementById("squadCaptureArea");
-    const teamFullSquad = allSquads[data.team] || [];
-
-    container.innerHTML = generateCreativeCardHTML(
-        data.team, data.xi, data.rating, 
-        data.xi ? data.xi.length : 0, teamFullSquad
-    );
-    overlay.classList.remove("hidden");
-}
-
 
 // --- NEW FUNCTION: Show Player Card Overlay ---
 // --- HELPER: Smart Image Loader ---
@@ -2202,6 +2209,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
