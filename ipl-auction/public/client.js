@@ -1085,6 +1085,18 @@ window.toggleSetsView = function() {
         switchInfoTab('feed'); 
     }
 };
+// --- HELPER: Click Handler for Set Players ---
+window.viewSetPlayer = function(name, role, rating, isForeign) {
+    // Construct the player object needed by the profile card
+    const playerData = { 
+        name: name, 
+        role: role, 
+        rating: rating, 
+        foreign: isForeign 
+    };
+    // Open profile with no team (null) and no price (null) -> "Normal Background"
+    openPlayerProfile(playerData, null, null);
+};
 
 function renderSetsPanel() {
     const container = document.getElementById("panel-sets");
@@ -1092,13 +1104,15 @@ function renderSetsPanel() {
 
     const activeSet = remainingSets[0];
 
-    // Build the HTML for Active Set + Upcoming Sets
+    // Updated HTML: Added onclick and cursor:pointer
     let html = `
         <div style="padding:10px;">
             <h2 class="set-title active">🔥 ${activeSet.name} (${activeSet.players.length})</h2>
             <div>
                 ${activeSet.players.map(p => `
-                    <div class="set-player-row active-p">
+                    <div class="set-player-row active-p" 
+                         style="cursor: pointer;" 
+                         onclick="viewSetPlayer('${p.name}', '${p.role}', ${p.rating}, ${p.foreign})">
                         <span>${p.name}</span>
                         <div>
                             <span class="sp-role">${p.role}</span>
@@ -1110,14 +1124,16 @@ function renderSetsPanel() {
             </div>
     `;
 
-    // Append Upcoming Sets
+    // Upcoming Sets
     if(remainingSets.length > 1) {
         remainingSets.slice(1).forEach(set => {
             html += `
                 <h2 class="set-title">📦 ${set.name} (${set.players.length})</h2>
                 <div style="opacity: 0.6;">
                     ${set.players.map(p => `
-                        <div class="set-player-row">
+                        <div class="set-player-row" 
+                             style="cursor: pointer;"
+                             onclick="viewSetPlayer('${p.name}', '${p.role}', ${p.rating}, ${p.foreign})">
                             <span>${p.name}</span>
                             <div><span class="sp-role">${p.role}</span></div>
                         </div>
@@ -1131,15 +1147,21 @@ function renderSetsPanel() {
     container.innerHTML = html;
 }
 
-
 // --- SQUADS DATA ---
+// --- UPDATED: Socket Listener for Squad Data ---
 socket.on("squadData", squads => {
-    allSquads = squads;
-    // Refresh embedded view if active
-    if(document.getElementById('tab-squads').classList.contains('active')) {
-        viewEmbeddedSquad(selectedSquadTeam);
+    allSquads = squads; // Update global variable
+    
+    // LIVE REFRESH: If the "Squads" tab is currently open, refresh it immediately.
+    const squadView = document.getElementById('view-squads');
+    if (squadView && !squadView.classList.contains('hidden')) {
+        // Only refresh if we have a selected team
+        if(selectedSquadTeam) {
+            viewEmbeddedSquad(selectedSquadTeam);
+        }
     }
 });
+
 
 // --- ADMIN ---
 /* ================= UPDATED ADMIN & LEAVE LOGIC ================= */
@@ -1665,8 +1687,47 @@ window.downloadLeaderboardPNG = function() {
     });
 }
 // --- NEW FUNCTION: Show Player Card Overlay ---
+// --- HELPER: Smart Image Loader ---
+function loadPlayerImage(imgEl, playerName) {
+    // 1. Clean the name for variations
+    const raw = playerName.trim();
+    const noSpace = raw.replace(/\s+/g, ''); // "ViratKohli"
+    const withUnderscore = raw.replace(/\s+/g, '_'); // "Virat_Kohli"
+    const lower = noSpace.toLowerCase(); // "viratkohli"
+
+    // 2. Define the priority list of filenames to try
+    const candidates = [
+        `/players/${noSpace}.png`,       // ViratKohli.png
+        `/players/${raw}.png`,           // Virat Kohli.png
+        `/players/${withUnderscore}.png`, // Virat_Kohli.png
+        `/players/${lower}.png`          // viratkohli.png
+    ];
+
+    const defaultImg = "https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png"; 
+
+    // 3. Recursive function to try next image if current fails
+    let attempt = 0;
+    
+    function tryNext() {
+        if (attempt >= candidates.length) {
+            imgEl.src = defaultImg; // All failed, show default
+            return;
+        }
+        
+        imgEl.src = candidates[attempt];
+        imgEl.onerror = function() {
+            attempt++;
+            tryNext(); // Try the next format
+        };
+    }
+
+    // Start trying
+    tryNext();
+}
+
+// --- UPDATED: Open Player Card ---
 window.openPlayerProfile = function(playerData, teamName, price) {
-    // Remove existing if any
+    // Remove existing
     const existing = document.getElementById('playerCardOverlay');
     if(existing) existing.remove();
 
@@ -1674,21 +1735,18 @@ window.openPlayerProfile = function(playerData, teamName, price) {
     const amount = price ? `₹${price.toFixed(2)} Cr` : "---";
     const teamColor = TEAM_COLORS[team] || "#64748b";
     
-    // Default Image (Silhouette)
-    const imgUrl = "https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png"; 
-
     const html = `
     <div id="playerCardOverlay" class="player-card-overlay" onclick="closePlayerCard(event)">
-        <div class="pc-card" data-team="${team}" onclick="event.stopPropagation()">
+        <div class="pc-card compact" data-team="${team}" onclick="event.stopPropagation()">
             <div class="pc-bg-layer"></div>
             <div class="pc-content">
-                <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-weight:bold; color:rgba(255,255,255,0.5);">${team}</span>
-                    <button onclick="document.getElementById('playerCardOverlay').remove()" style="background:none; border:none; color:white;">✕</button>
+                <div style="width:100%; display:flex; justify-content:space-between; align-items:center; z-index:10;">
+                    <span style="font-weight:bold; color:rgba(255,255,255,0.5); font-size:0.9rem;">${team}</span>
+                    <button onclick="document.getElementById('playerCardOverlay').remove()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">✕</button>
                 </div>
                 
                 <div class="pc-img-box" style="border-color:${teamColor}">
-                    <img src="${imgUrl}" class="pc-img" alt="${playerData.name}">
+                    <img id="activeCardImg" class="pc-img" alt="${playerData.name}">
                 </div>
 
                 <div class="pc-info">
@@ -1718,6 +1776,10 @@ window.openPlayerProfile = function(playerData, teamName, price) {
     `;
 
     document.body.insertAdjacentHTML('beforeend', html);
+    
+    // Trigger the smart loader
+    const imgEl = document.getElementById('activeCardImg');
+    loadPlayerImage(imgEl, playerData.name);
 };
 
 window.closePlayerCard = function(e) {
@@ -1743,6 +1805,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
