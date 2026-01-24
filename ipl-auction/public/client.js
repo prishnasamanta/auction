@@ -1048,18 +1048,11 @@ function initSquadTabs() {
 window.viewEmbeddedSquad = function(team) {
     selectedSquadTeam = team;
 
-    // --- A. Handle Button Active State ---
+    // 1. Highlight the Tab Button
     document.querySelectorAll('.h-team-btn').forEach(b => b.classList.remove('active'));
-    // Find the button with this team name and make it active
-    const buttons = document.querySelectorAll('.h-team-btn');
-    for (const btn of buttons) {
-        if (btn.innerText === team) {
-            btn.classList.add('active');
-            break;
-        }
-    }
+    Array.from(document.querySelectorAll('.h-team-btn')).find(b => b.innerText === team)?.classList.add('active');
 
-    // --- B. Get Data ---
+    // 2. Get Data
     const box = document.getElementById("embeddedSquadView");
     const squad = allSquads[team] || [];
     const purse = teamPurse[team] || 0;
@@ -1067,73 +1060,126 @@ window.viewEmbeddedSquad = function(team) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[team] || '#fff';
 
-    // --- C. Render Header ---
+    // 3. Inject Structure (Your new HTML)
     box.innerHTML = `
-        <div class="squad-header">
-            <h2 style="color:${teamColor}; margin:0;">${team}</h2>
-            <div class="manager-text" style="color:#aaa; font-size:0.8rem;">Manager: <span style="color:#fff;">${owner}</span></div>
-            <div class="purse-box" style="margin-top:5px; font-weight:bold; font-size:1.1rem;">
-                Purse: <span style="color:#4ade80;">₹${purse.toFixed(2)} Cr</span> 
+        <div id="squad-display-container">
+            <div class="squad-header-compact" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
+                <div class="sq-row-1">
+                    <h2 id="view-team-name" style="margin:0; color:${teamColor}">${team}</h2>
+                </div>
+                <div class="sq-row-2" style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                    <span class="sq-label" id="view-manager-name" style="color:#aaa; font-size:0.9rem;">Mgr: <span style="color:#fff">${owner}</span></span>
+                    <span class="sq-value highlight-purse" id="view-team-purse" style="color:#4ade80; font-weight:bold; font-size:1.1rem;">₹ ${purse.toFixed(2)} Cr</span>
+                </div>
+                <div class="sq-row-3" style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; font-size:0.8rem; color:#ccc;">
+                    <span class="sq-stats" id="view-player-stats">Total: ${squad.length} | OS: ${foreignCount}</span>
+                    <button class="sq-download-btn" onclick="downloadSquadImage()" style="background:none; border:none; color:#facc15; cursor:pointer;">
+                        <i class="fas fa-download"></i> ⬇
+                    </button>
+                </div>
             </div>
-            <div class="stats-row" style="display:flex; justify-content:center; gap:15px; font-size:0.8rem; margin-top:5px; color:#ccc;">
-                <span>👤 ${squad.length} Players</span>
-                <span>✈️ ${foreignCount} Overseas</span>
+
+            <div class="squad-list-container">
+                <ul id="view-squad-list" class="compact-list" style="list-style:none; padding:0; margin:0;"></ul>
             </div>
         </div>
-        <div id="sq-list-content" style="margin-top:10px;"></div>
+
+        <div id="squad-card-capture" class="hidden-capture-card" style="position:fixed; left:-9999px; width: 400px; background:#1e1e1e; padding:20px; color:#fff;">
+            <div class="card-bg-layer" id="card-bg-img"></div>
+            <div class="card-overlay">
+                <div class="card-header" style="text-align:center; margin-bottom:15px; border-bottom:2px solid ${teamColor};">
+                    <h1 id="card-team-name" style="margin:0; color:${teamColor}; text-transform:uppercase;">${team}</h1>
+                    <h3 id="card-manager" style="margin:5px 0; font-size:1rem; color:#ccc;">Mgr: ${owner}</h3>
+                </div>
+                <div class="card-body">
+                    <ul id="card-player-list" style="list-style:none; padding:0;"></ul>
+                </div>
+                <div class="card-footer" style="display:flex; justify-content:space-between; margin-top:15px; padding-top:10px; border-top:1px solid #333; font-weight:bold;">
+                    <span id="card-stats">Total: ${squad.length} | OS: ${foreignCount}</span>
+                    <span id="card-purse" style="color:#4ade80;">Purse: ₹${purse.toFixed(2)} Cr</span>
+                </div>
+            </div>
+        </div>
     `;
 
-    // --- D. Sort Players by Role ---
-    const content = document.getElementById("sq-list-content");
-    const roles = { BAT: [], WK: [], ALL: [], BOWL: [] };
+    // 4. Populate Lists (View List AND Card List)
+    const viewList = document.getElementById("view-squad-list");
+    const cardList = document.getElementById("card-player-list");
     
+    // Helper to categorize roles
+    const roles = { BAT: [], WK: [], ALL: [], BOWL: [] };
     squad.forEach(p => { 
-        if (roles[p.role]) roles[p.role].push(p);
-        else roles.BOWL.push(p); // Fallback to BOWL if role is undefined
+        if(roles[p.role]) roles[p.role].push(p);
+        else roles.BOWL.push(p);
     });
 
-    // --- E. Render Player Lists ---
+    // Render Logic
     Object.keys(roles).forEach(r => {
-        if (roles[r].length > 0) {
-            // Role Header
-            const h = document.createElement("div");
-            h.className = "role-header";
+        if(roles[r].length > 0) {
+            // Create Header for View
+            const h = document.createElement("li");
             h.innerText = r;
-            // Basic styles incase CSS is missing
-            h.style.cssText = "color:#facc15; margin:15px 0 5px 0; font-size:0.85rem; border-left:3px solid #facc15; padding-left:8px;";
-            content.appendChild(h);
+            h.style.cssText = "color:#facc15; margin:10px 0 5px 0; font-size:0.8rem; font-weight:bold; border-left:3px solid #facc15; padding-left:8px;";
+            viewList.appendChild(h);
 
-            // Player Rows
+            // Create Header for Card (Clone logic)
+            const hCard = h.cloneNode(true);
+            cardList.appendChild(hCard);
+
             roles[r].forEach(p => {
-                const row = document.createElement("div");
-                row.className = "sq-row";
-                
-                // Row HTML
-                row.innerHTML = `
-                    <span class="player-info">
-                        ${p.foreign ? '<span class="foreign-icon">✈️</span>' : ''} 
-                        ${p.name} 
-                        <small style="color:#888; margin-left:5px;">⭐${p.rating}</small>
-                    </span>
-                    <span style="color:#4ade80; font-weight:bold;">₹${p.price.toFixed(2)}</span>
+                // --- A. Render Visible List Item ---
+                const li = document.createElement("li");
+                li.className = "sq-row";
+                li.style.cssText = "display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;";
+                li.innerHTML = `
+                    <span>${p.foreign ? '✈️' : ''} ${p.name} <small style="color:#666">(${p.rating})</small></span>
+                    <span style="color:#4ade80;">₹${p.price.toFixed(2)}</span>
                 `;
-                
-                // Add basic row styles dynamically to ensure visibility
-                row.style.cssText = "display:flex; justify-content:space-between; padding:8px 10px; background:rgba(255,255,255,0.05); margin-bottom:4px; border-radius:4px; cursor:pointer;";
+                li.onclick = () => { if(window.openPlayerProfile) window.openPlayerProfile(p, team, p.price); };
+                viewList.appendChild(li);
 
-                // Click Event
-                row.onclick = () => {
-                    if (typeof openPlayerProfile === "function") {
-                        openPlayerProfile(p, team, p.price);
-                    } else {
-                        console.log("Clicked:", p.name);
-                    }
-                };
-                content.appendChild(row);
+                // --- B. Render Hidden Card Item (No click events needed) ---
+                const liCard = document.createElement("li");
+                liCard.style.cssText = "display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #333; font-size:0.9rem;";
+                liCard.innerHTML = `
+                    <span>${p.foreign ? '✈️' : ''} ${p.name}</span>
+                    <span style="color:#fff;">₹${p.price.toFixed(2)}</span>
+                `;
+                cardList.appendChild(liCard);
             });
         }
     });
 };
+window.downloadSquadImage = function() {
+    // 1. Select the hidden card element
+    const captureElement = document.getElementById("squad-card-capture");
+    
+    // Get the current team name for the filename
+    const teamName = selectedSquadTeam || "Squad"; 
+
+    // 2. Use html2canvas to create the image
+    // We set scrollX/Y to 0 to prevent issues if the user has scrolled down
+    // We set useCORS to true in case you have external images (flags/logos)
+    html2canvas(captureElement, {
+        scrollX: 0,
+        scrollY: -window.scrollY, 
+        useCORS: true,
+        backgroundColor: "#1e1e1e", // Force background color so it's not transparent
+        scale: 2 // High resolution (2x)
+    }).then(canvas => {
+        
+        // 3. Create a fake link to trigger download
+        const link = document.createElement('a');
+        link.download = `${teamName}_Squad_Card.png`;
+        link.href = canvas.toDataURL("image/png");
+        
+        // 4. Click the link programmatically
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+};
+
 
 /* =========================================
    4. HELPER FUNCTION (Placeholder)
@@ -2008,6 +2054,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
