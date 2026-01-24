@@ -1021,13 +1021,6 @@ function renderSquadTabs() {
    1. MOCK DATA 
    (Replace this with your real database later)
    ========================================= */
-const TEAM_COLORS = { 
-    "CSK": "#F9CD05", 
-    "MI": "#004BA0", 
-    "RCB": "#EC1C24", 
-    "KKR": "#3A225D",
-    "GT": "#1B2133"
-};
 
 const allSquads = {
     "CSK": [
@@ -2050,6 +2043,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
