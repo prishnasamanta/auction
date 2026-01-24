@@ -1094,9 +1094,9 @@ window.viewEmbeddedSquad = function(team) {
                     <span style="color:#4ade80; font-weight:bold;">₹${purse.toFixed(2)} Cr</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;">
-                    <span style="color:#ccc;">${squad.length} Players</span>
+                    <span style="color:#ccc;">𐀪 : ${squad.length} | <strong>OS: ${foreignCount}</strong></span>
                     <button onclick="downloadSquadImage()" style="cursor:pointer; background:#222; border:1px solid #444; color:#facc15; padding:4px 10px; border-radius:4px;">
-                        <i class="fas fa-download"></i> Download Card
+                        <i class="fas fa-download"></i> [⇩]
                     </button>
                 </div>
             </div>
@@ -1753,13 +1753,66 @@ window.downloadSheetPNG = function() {
         link.click();
     });
 };
+// Variable to store selected XI players
+let currentXI = []; 
 
-window.submitXI = function() {
-    if(countTotalXI() !== 11) return;
-    if(confirm("Submit Playing XI? This is final.")) {
-        socket.emit("submitXI", { xi: selectedXI });
+window.openSubmitXI = function() {
+    // Hide other views, Show XI View
+    document.querySelectorAll('.cc-view').forEach(v => v.classList.add('hidden'));
+    const view = document.getElementById('submit-xi-view'); // Ensure you have this ID in HTML
+    view.classList.remove('hidden');
+
+    renderXIGrid();
+};
+
+window.renderXIGrid = function() {
+    const container = document.getElementById('xi-grid-container');
+    container.innerHTML = '';
+
+    // If no players, show message
+    if (currentXI.length === 0) {
+        container.innerHTML = '<div style="width:100%; color:#777; padding:40px;">No players selected yet.</div>';
+        return;
+    }
+
+    // Render Clean Cards
+    currentXI.forEach((p, index) => {
+        const card = document.createElement('div');
+        card.className = 'xi-card';
+        
+        // Icon based on role
+        let icon = '🏏';
+        if(p.role === 'BOWL') icon = '⚾';
+        if(p.role === 'WK') icon = '🧤';
+        if(p.role === 'ALL') icon = '⚔️';
+
+        card.innerHTML = `
+            <span class="xi-role-icon">${icon}</span>
+            <span class="xi-name">${p.name}</span>
+            <span class="xi-price">₹${p.price.toFixed(2)}</span>
+            ${p.foreign ? '<span style="position:absolute; top:5px; right:5px; font-size:0.7rem;">✈️</span>' : ''}
+        `;
+        container.appendChild(card);
+    });
+};
+
+// --- BUTTON ACTIONS ---
+
+window.reselectXI = function() {
+    if(confirm("Are you sure you want to clear your selection?")) {
+        currentXI = []; // Clear array
+        renderXIGrid(); // Re-render empty
+        // Optional: specific logic to go back to selection screen
+        alert("Selection cleared. Please select players again.");
     }
 };
+
+window.goHome = function() {
+    // Hide XI view, show Home
+    document.getElementById('submit-xi-view').classList.add('hidden');
+    document.getElementById('home-view').classList.remove('hidden'); // Change 'home-view' to your main ID
+};
+
 
 socket.on("submitResult", (res) => {
     document.getElementById("submitXIBtn").classList.add("hidden");
@@ -2073,6 +2126,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
