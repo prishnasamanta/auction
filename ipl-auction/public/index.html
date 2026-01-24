@@ -573,7 +573,7 @@
 
     <section id="leaderboard" class="screen hidden">
         <header class="topbar glass" style="justify-content: center; position: relative;">
-            <button onclick="showScreen('playingXI')" class="secondary-btn" style="position: absolute; left: 15px; border:none; font-size:1rem;">
+            <button onclick="goBackFromLeaderboard()" class="secondary-btn" style="position: absolute; left: 15px; border:none; font-size:1rem;">
                 ← Back
             </button>
             <span class="brand" style="font-size: 1.2rem;">🏆 TOURNAMENT STANDINGS</span>
@@ -604,7 +604,7 @@
                 <span class="brand">🏁 AUCTION SUMMARY</span>
                 <div style="display:flex; gap:10px;">
                     <button onclick="showScreen('leaderboard')" class="secondary-btn" style="font-size:0.8rem;">🏆 Leaderboard</button>
-                    <button onclick="window.location.href='/'" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">🏠 Home</button>
+                    <button onclick="exitToHome()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">🏠 Home</button>
                 </div>
             </div>
         </header>
@@ -802,4 +802,5 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
