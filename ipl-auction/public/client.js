@@ -1745,82 +1745,97 @@ function countTotalXI() {
     return Object.values(selectedXI).reduce((acc, arr) => acc + arr.length, 0);
 }
 
-function updateXIPreview() {
-    const count = countTotalXI();
-    const btn = document.getElementById("submitXIBtn");
-    const saveBtn = document.getElementById("saveXIBtn");
-    const placeholder = document.getElementById("xiPlaceholder");
-    const card = document.getElementById("xiCardTarget");
-    const content = document.getElementById("sheetContent");
-    const countLabel = document.getElementById("sheetCount");
-    const teamTitle = document.getElementById("sheetTeamName");
+window.updateXICard = function() {
+    const cardTarget = document.getElementById('xiCardTarget');
+    const placeholder = document.getElementById('xiPlaceholder');
+    const content = document.getElementById('sheetContent');
+    const btn = document.getElementById('submitXIBtn');
+    const saveBtn = document.getElementById('saveXIBtn');
+    const countLabel = document.getElementById('sheetCount');
+    const teamNameTitle = document.getElementById('sheetTeamName');
+    
+    // Update Counts & Labels
+    const fCount = getForeignCount();
+    const count = currentXI.length;
+    
+    if(btn) btn.innerText = `Submit XI (${count}/${MAX_XI})`;
+    if(countLabel) countLabel.innerText = `${count}/${MAX_XI} Selected (OS: ${fCount})`;
 
-    // --- LIVE STATS BAR ---
-    const statsBar = document.getElementById("xiStatsBar");
-    if(statsBar) {
-        const foreign = Object.values(selectedXI).flat().filter(p => p.foreign).length;
-        const wk = selectedXI.WK.length;
-        const bat = selectedXI.BAT.length;
-        const bowl = selectedXI.BOWL.length;
-        const all = selectedXI.ALL.length;
-
-        const createBadge = (label, current, limit, isMax = false) => {
-            const isValid = isMax ? current <= limit : current >= limit;
-            const statusClass = isValid ? 'valid' : '';
-            const errorClass = (isMax && !isValid) ? 'invalid' : '';
-            return `<div class="xi-rule-badge ${statusClass} ${errorClass}">${label} <b>${current}/${limit}</b></div>`;
-        };
-
-        statsBar.innerHTML = `
-            ${createBadge("✈️ Foreign", foreign, activeRules.minForeignXI || 4, true)}
-            ${createBadge("🧤 WK", wk, activeRules.minWK || 1)}
-            ${createBadge("🏏 BAT", bat, activeRules.minBat || 3)}
-            ${createBadge("👟 ALL", all, activeRules.minAll || 1)}
-            ${createBadge("🥎 BOWL", bowl, activeRules.minBowl || 3)}
-        `;
-    }
-
-    if(btn) {
-        btn.innerText = `Submit XI (${count}/11)`;
-        btn.disabled = count !== 11;
-        btn.style.background = count === 11 ? "var(--success)" : "";
-        btn.style.color = count === 11 ? "#000" : "#fff";
-    }
-
+    // Update Team Name
+    const myTeamName = typeof myTeam !== 'undefined' ? myTeam : "MY TEAM";
+    if(teamNameTitle) teamNameTitle.innerText = myTeamName;
+    
+    // Toggle Placeholder vs Card
     if (count === 0) {
-        placeholder.classList.remove("hidden");
-        card.classList.add("hidden");
-        if(saveBtn) saveBtn.classList.add("hidden");
+        cardTarget.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        if(saveBtn) saveBtn.classList.add('hidden');
         return; 
     } else {
-        placeholder.classList.add("hidden");
-        card.classList.remove("hidden");
-        if(saveBtn) saveBtn.classList.remove("hidden");
+        cardTarget.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        if(saveBtn) saveBtn.classList.remove('hidden');
     }
 
-    if(teamTitle) teamTitle.innerText = myTeam ? `${myTeam} XI` : "MY TEAM";
-    if(countLabel) countLabel.innerText = `${count}/11 Players`;
+    // --- NEW RENDERING LOGIC (MATCHES YOUR CSS PILLS) ---
+    content.innerHTML = '';
     
-    content.innerHTML = "";
-    const renderOrder = ['WK', 'BAT', 'ALL', 'BOWL'];
+    // 1. Group Players by Role
+    const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
     
-    renderOrder.forEach(roleKey => {
-        const players = selectedXI[roleKey];
-        if(players && players.length > 0) {
-            const row = document.createElement("div");
-            row.className = "sheet-role-group";
-            
-            players.forEach(p => {
-                const pill = document.createElement("div");
-                pill.className = `sheet-player-pill ${p.foreign ? 'foreign' : ''}`;
-                const icon = p.foreign ? "✈️" : "";
-                pill.innerHTML = `<span>${p.name} ${icon}</span> <small>⭐${p.rating}</small>`;
-                row.appendChild(pill);
-            });
-            content.appendChild(row);
+    currentXI.forEach(p => {
+        let r = p.role;
+        // Normalize role names
+        if(r === 'PACE' || r === 'SPIN') r = 'BOWL';
+        
+        if(roles[r]) {
+            roles[r].push(p);
+        } else {
+            // Fallback for unknown roles
+            roles['BOWL'].push(p);
         }
     });
-}
+
+    // 2. Render Groups (WK -> BAT -> ALL -> BOWL)
+    const renderOrder = ['WK', 'BAT', 'ALL', 'BOWL'];
+
+    renderOrder.forEach(roleKey => {
+        const players = roles[roleKey];
+        
+        if (players.length > 0) {
+            // Create the Row Container (.sheet-role-group)
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'sheet-role-group';
+
+            players.forEach(p => {
+                // Icons
+                let icon = '🏏';
+                if(roleKey === 'WK') icon = '🧤';
+                else if(roleKey === 'ALL') icon = '⚡';
+                else if(roleKey === 'BOWL') icon = '🥎';
+
+                // Create the Pill (.sheet-player-pill)
+                const pill = document.createElement('div');
+                pill.className = `sheet-player-pill ${p.foreign ? 'foreign' : ''}`;
+                
+                pill.innerHTML = `
+                    <span>${icon} ${p.name} ${p.foreign ? '✈️' : ''}</span>
+                    <small>⭐${p.rating}</small>
+                `;
+                
+                groupDiv.appendChild(pill);
+            });
+
+            content.appendChild(groupDiv);
+        }
+    });
+
+    // Toggle Save Button Visibility
+    if(saveBtn) {
+        if (count === 11) saveBtn.classList.remove('hidden');
+        else saveBtn.classList.add('hidden');
+    }
+};
 
 window.downloadSheetPNG = function() {
     const el = document.getElementById('xiCardTarget');
@@ -2325,6 +2340,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
