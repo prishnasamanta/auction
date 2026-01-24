@@ -1199,6 +1199,75 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     display: flex; align-items: center; gap: 5px;
 }
 .sheet-player-pill.foreign { border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+/* --- UNSOLD / NORMAL CARD STATE --- */
+/* When a card has data-team="Unsold" (which happens when you click from Sets) */
+.pc-card[data-team="Unsold"] .pc-bg-layer {
+    background-color: #334155; /* Neutral Slate Gray */
+    background-image: none;    /* No Logo */
+    opacity: 0.5;
+}
+
+.pc-card[data-team="Unsold"] .pc-price-tag {
+    background: #475569;       /* Darker tag */
+    color: #94a3b8;            /* Muted text */
+    box-shadow: none;
+}
+
+.pc-card[data-team="Unsold"] .pc-img-box {
+    border-color: #475569;     /* Neutral border */
+}
+/* --- COMPACT PLAYER CARD (Smaller Size) --- */
+.pc-card.compact {
+    width: 300px; /* Reduced from 350px */
+    height: 420px; /* Reduced from 500px */
+    border-radius: 16px;
+}
+
+/* Adjust internal elements for the compact size */
+.pc-card.compact .pc-img-box {
+    width: 140px; /* Smaller image */
+    height: 140px;
+    margin-top: 15px;
+    border-width: 3px;
+}
+
+.pc-card.compact .pc-name {
+    font-size: 1.4rem; /* Smaller text */
+    margin-bottom: 2px;
+}
+
+.pc-card.compact .pc-role {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.pc-card.compact .pc-stat-row {
+    padding: 8px 15px;
+    margin-top: 5px;
+}
+
+.pc-card.compact .pc-stat-val {
+    font-size: 1rem;
+}
+
+.pc-card.compact .pc-price-tag {
+    font-size: 1.2rem;
+    padding: 6px 20px;
+    margin-bottom: 15px;
+}
+
+/* --- Fix for Live Squad Scrolling --- */
+#sq-list-content {
+    padding-bottom: 20px;
+}
+.sq-row {
+    display: flex; 
+    justify-content: space-between; 
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+
 
 
 
