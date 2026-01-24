@@ -1017,67 +1017,181 @@ function renderSquadTabs() {
 
     if(selectedSquadTeam) viewEmbeddedSquad(selectedSquadTeam);
 }
+/* =========================================
+   1. MOCK DATA 
+   (Replace this with your real database later)
+   ========================================= */
+const TEAM_COLORS = { 
+    "CSK": "#F9CD05", 
+    "MI": "#004BA0", 
+    "RCB": "#EC1C24", 
+    "KKR": "#3A225D",
+    "GT": "#1B2133"
+};
 
+const allSquads = {
+    "CSK": [
+        { name: "MS Dhoni", role: "WK", price: 12.0, rating: 9.5, foreign: false },
+        { name: "R. Jadeja", role: "ALL", price: 16.0, rating: 9.8, foreign: false },
+        { name: "D. Conway", role: "BAT", price: 8.5, rating: 9.0, foreign: true },
+        { name: "M. Pathirana", role: "BOWL", price: 6.0, rating: 8.8, foreign: true }
+    ],
+    "MI": [
+        { name: "Rohit Sharma", role: "BAT", price: 16.0, rating: 9.5, foreign: false },
+        { name: "J. Bumrah", role: "BOWL", price: 12.0, rating: 9.9, foreign: false },
+        { name: "T. David", role: "BAT", price: 8.25, rating: 8.5, foreign: true }
+    ],
+    "RCB": [
+        { name: "Virat Kohli", role: "BAT", price: 15.0, rating: 9.7, foreign: false },
+        { name: "G. Maxwell", role: "ALL", price: 11.0, rating: 9.0, foreign: true }
+    ],
+    "KKR": [
+        { name: "S. Iyer", role: "BAT", price: 12.25, rating: 8.9, foreign: false },
+        { name: "A. Russell", role: "ALL", price: 14.0, rating: 9.2, foreign: true }
+    ],
+    "GT": [
+        { name: "S. Gill", role: "BAT", price: 8.0, rating: 9.4, foreign: false },
+        { name: "Rashid Khan", role: "BOWL", price: 15.0, rating: 9.8, foreign: true }
+    ]
+};
+
+const teamPurse = { "CSK": 12.5, "MI": 4.0, "RCB": 15.0, "KKR": 8.5, "GT": 20.0 };
+const teamOwners = { "CSK": "N. Srinivasan", "MI": "N. Ambani", "RCB": "United Spirits", "KKR": "Shah Rukh Khan", "GT": "CVC Capital" };
+
+
+/* =========================================
+   2. INITIALIZATION LOGIC
+   (Creates the buttons inside your empty HTML div)
+   ========================================= */
+function initSquadTabs() {
+    const tabContainer = document.getElementById('squadTabList');
+    if (!tabContainer) return; // Safety check
+
+    tabContainer.innerHTML = ''; // Clear any existing buttons
+
+    // Create a button for each team in TEAM_COLORS
+    Object.keys(TEAM_COLORS).forEach(team => {
+        const btn = document.createElement('button');
+        btn.innerText = team;
+        btn.className = 'h-team-btn'; // Class for styling
+        
+        // When clicked, run the view function
+        btn.onclick = () => viewEmbeddedSquad(team);
+        
+        tabContainer.appendChild(btn);
+    });
+}
+
+
+/* =========================================
+   3. MAIN VIEW LOGIC
+   (Renders the selected team's details)
+   ========================================= */
 window.viewEmbeddedSquad = function(team) {
     selectedSquadTeam = team;
-    document.querySelectorAll('.h-team-btn').forEach(b => b.classList.remove('active'));
-    Array.from(document.querySelectorAll('.h-team-btn')).find(b => b.innerText === team)?.classList.add('active');
 
+    // --- A. Handle Button Active State ---
+    document.querySelectorAll('.h-team-btn').forEach(b => b.classList.remove('active'));
+    // Find the button with this team name and make it active
+    const buttons = document.querySelectorAll('.h-team-btn');
+    for (const btn of buttons) {
+        if (btn.innerText === team) {
+            btn.classList.add('active');
+            break;
+        }
+    }
+
+    // --- B. Get Data ---
     const box = document.getElementById("embeddedSquadView");
     const squad = allSquads[team] || [];
     const purse = teamPurse[team] || 0;
-    const owner = teamOwners[team] ? teamOwners[team] : "Available";
-
-    // Calc Foreign
+    const owner = teamOwners[team] || "Available";
     const foreignCount = squad.filter(p => p.foreign).length;
+    const teamColor = TEAM_COLORS[team] || '#fff';
 
+    // --- C. Render Header ---
     box.innerHTML = `
-        <div style="text-align:center; padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
-            <h2 style="margin:0; color:${TEAM_COLORS[team] || '#fff'}">${team}</h2>
-            <div style="font-size:0.8rem; color:#aaa;">Manager: <span style="color:#fff;">${owner}</span></div>
-            <div style="font-size:1.1rem; margin-top:5px; font-weight:bold;">
+        <div class="squad-header">
+            <h2 style="color:${teamColor}; margin:0;">${team}</h2>
+            <div class="manager-text" style="color:#aaa; font-size:0.8rem;">Manager: <span style="color:#fff;">${owner}</span></div>
+            <div class="purse-box" style="margin-top:5px; font-weight:bold; font-size:1.1rem;">
                 Purse: <span style="color:#4ade80;">₹${purse.toFixed(2)} Cr</span> 
             </div>
-            <div style="display:flex; justify-content:center; gap:15px; font-size:0.8rem; margin-top:5px; color:#ccc;">
+            <div class="stats-row" style="display:flex; justify-content:center; gap:15px; font-size:0.8rem; margin-top:5px; color:#ccc;">
                 <span>👤 ${squad.length} Players</span>
                 <span>✈️ ${foreignCount} Overseas</span>
             </div>
         </div>
-        <div id="sq-list-content"></div>
+        <div id="sq-list-content" style="margin-top:10px;"></div>
     `;
 
+    // --- D. Sort Players by Role ---
     const content = document.getElementById("sq-list-content");
     const roles = { BAT: [], WK: [], ALL: [], BOWL: [] };
     
     squad.forEach(p => { 
-        if(p.role === "BAT") roles.BAT.push(p);
-        else if(p.role === "WK") roles.WK.push(p);
-        else if(p.role === "ALL") roles.ALL.push(p);
-        else roles.BOWL.push(p);
+        if (roles[p.role]) roles[p.role].push(p);
+        else roles.BOWL.push(p); // Fallback to BOWL if role is undefined
     });
 
-    // Render with Click Event for Card
+    // --- E. Render Player Lists ---
     Object.keys(roles).forEach(r => {
-        if(roles[r].length > 0) {
-            const h = document.createElement("h4");
+        if (roles[r].length > 0) {
+            // Role Header
+            const h = document.createElement("div");
+            h.className = "role-header";
             h.innerText = r;
-            h.style.color = "#facc15"; h.style.margin = "10px 0 5px 0"; h.style.fontSize = "0.8rem";
+            // Basic styles incase CSS is missing
+            h.style.cssText = "color:#facc15; margin:15px 0 5px 0; font-size:0.85rem; border-left:3px solid #facc15; padding-left:8px;";
             content.appendChild(h);
 
+            // Player Rows
             roles[r].forEach(p => {
                 const row = document.createElement("div");
                 row.className = "sq-row";
-                // Add Icon + Click Event
+                
+                // Row HTML
                 row.innerHTML = `
-                    <span>${p.foreign ? '<span class="foreign-icon">✈️</span>' : ''} ${p.name} <small style="color:#666">⭐${p.rating}</small></span>
+                    <span class="player-info">
+                        ${p.foreign ? '<span class="foreign-icon">✈️</span>' : ''} 
+                        ${p.name} 
+                        <small style="color:#888; margin-left:5px;">⭐${p.rating}</small>
+                    </span>
                     <span style="color:#4ade80; font-weight:bold;">₹${p.price.toFixed(2)}</span>
                 `;
-                row.onclick = () => openPlayerProfile(p, team, p.price); // <--- Trigger Card
+                
+                // Add basic row styles dynamically to ensure visibility
+                row.style.cssText = "display:flex; justify-content:space-between; padding:8px 10px; background:rgba(255,255,255,0.05); margin-bottom:4px; border-radius:4px; cursor:pointer;";
+
+                // Click Event
+                row.onclick = () => {
+                    if (typeof openPlayerProfile === "function") {
+                        openPlayerProfile(p, team, p.price);
+                    } else {
+                        console.log("Clicked:", p.name);
+                    }
+                };
                 content.appendChild(row);
             });
         }
     });
 };
+
+/* =========================================
+   4. HELPER FUNCTION (Placeholder)
+   ========================================= */
+window.openPlayerProfile = function(player, team, price) {
+    alert(`Opening Profile:\nName: ${player.name}\nTeam: ${team}\nPrice: ₹${price} Cr`);
+};
+
+/* =========================================
+   5. EXECUTE ON LOAD
+   ========================================= */
+document.addEventListener("DOMContentLoaded", () => {
+    initSquadTabs();
+    // Optional: Open the first team by default
+    viewEmbeddedSquad("CSK"); 
+});
 
 /* ================================================= */
 /* =========== 6. POPUPS (SETS, RULES, ADMIN) ====== */
@@ -1896,6 +2010,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
