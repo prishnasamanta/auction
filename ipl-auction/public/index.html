@@ -325,13 +325,16 @@
                 <button id="submitXIBtn" onclick="submitXI()" class="primary-btn" style="flex: 2;">
                     Submit XI (0/11)
                 </button>
+                <button onclick="resetXISelection()" class="secondary-btn" style="width:50px; border-color:#ef4444; color:#ef4444;">
+                    ↻
+                </button>
                 <button id="saveXIBtn" onclick="downloadSheetPNG()" class="secondary-btn hidden" style="flex: 1; color:var(--gold); border-color:var(--gold);">
                     📸 Save
                 </button>
             </div>
-            
+
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button onclick="showScreen('leaderboard')" class="secondary-btn" style="flex: 1; background:rgba(255,255,255,0.05);">
+                <button onclick="showScreen('leaderboard')" class="secondary-btn" style="flex: 1; border-color:#334155; background:rgba(255,255,255,0.05);">
                     🏆 Leaderboard
                 </button>
                 
@@ -505,6 +508,7 @@
 </body>
 
 </html>
+
 
 
 
