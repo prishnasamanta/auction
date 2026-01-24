@@ -2013,7 +2013,7 @@ function renderPopupContent(mode) {
         container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
     } else {
         // Use the New 4-Column Generator
-        container.innerHTML = downloadSquadImage(d.team, fullSquad, d.purse, "Manager");
+        container.innerHTML = generateFullSquadHTML(d.team, fullSquad, d.purse, "Manager");
     }
 }
 
@@ -2059,6 +2059,11 @@ socket.on("leaderboard", (board) => {
     }
 });
 // --- SHARED HELPER: GENERATE 4-COLUMN SQUAD CARD HTML ---
+/* ================================================= */
+/* 🛠️ SQUAD CARD UTILITIES (VIEW & DOWNLOAD)         */
+/* ================================================= */
+
+// 1. SHARED HTML GENERATOR (Returns High-Res HTML String)
 function generateFullSquadHTML(teamName, squad, purse, owner) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[teamName] || '#fff';
@@ -2072,55 +2077,87 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
 
-    // Helper to render rows
+    // Helper to render rows (Exact Pro Player Card Style)
     const renderRows = (list) => list.map(p => `
-        <div class="pro-player-card" style="border-left-color:${teamColor}">
+        <div class="pro-player-card" style="
+            background: rgba(255,255,255,0.05); 
+            padding: 8px; 
+            margin-bottom: 5px; 
+            border-radius: 4px; 
+            border-left: 3px solid ${teamColor}; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;">
             <div class="pp-left">
-                <span class="pp-name">${p.foreign ? '✈️ ' : ''}${p.name}</span>
+                <span class="pp-name" style="font-weight: bold; color: #fff; font-size: 0.85rem;">
+                    ${p.foreign ? '✈️ ' : ''}${p.name}
+                </span>
             </div>
             <div class="pp-right">
-                <span class="pp-price">₹${p.price.toFixed(2)}</span>
+                <span class="pp-price" style="color: #4ade80; font-size: 0.85rem;">₹${p.price.toFixed(2)}</span>
             </div>
         </div>
     `).join('');
 
+    // RETURN THE EXACT HTML STRUCTURE FROM YOUR DOWNLOAD FUNCTION
     return `
-    <div class="team-sheet-card full-squad-mode" style="--team-logo-url: url('${logoUrl}'); max-width: 800px;">
-        <div class="sheet-header">
-            <h2 class="sheet-title">${teamName}</h2>
-            <div class="sheet-subtitle">FULL SQUAD • ${owner || 'Manager'}</div>
-            <div style="margin-top:10px; display:flex; justify-content:center; gap:15px; font-size:0.85rem; color:#ccc;">
-                <span>💰 ₹${purse.toFixed(2)} Cr Left</span>
-                <span>👥 ${squad.length} Players</span>
-                <span>✈️ ${foreignCount} OS</span>
+    <div class="team-sheet-card full-squad-mode" style="
+        --team-logo-url: url('${logoUrl}'); 
+        width: 1000px; 
+        min-width: 1000px; /* Force Width */
+        background-color: #020617; 
+        border: 2px solid #facc15; 
+        border-radius: 16px; 
+        position: relative; 
+        overflow: hidden; 
+        font-family: 'Exo 2', sans-serif; 
+        box-shadow: 0 0 50px rgba(0,0,0,0.5);">
+        
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background-image: url('${logoUrl}'); background-size: contain; background-repeat: no-repeat; opacity: 0.1; filter: grayscale(100%); pointer-events: none;"></div>
+
+        <div class="sheet-header" style="background: rgba(0,0,0,0.3); padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2;">
+            <h2 class="sheet-title" style="margin: 0; font-size: 3.5rem; font-weight: 900; color: #fff; text-transform: uppercase; line-height: 1;">${teamName}</h2>
+            <div class="sheet-subtitle" style="font-size: 1.1rem; color: #facc15; letter-spacing: 4px; text-transform: uppercase; margin-top: 5px; font-weight: 700;">FULL SQUAD • ${owner || 'Manager'}</div>
+            
+            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 40px; font-size: 1.3rem; color: #ccc; font-weight: bold;">
+                <span style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
+                    💰 ₹${purse.toFixed(2)} Cr
+                </span>
+                <span style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
+                    👥 ${squad.length} Players
+                </span>
+                <span style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
+                    ✈️ ${foreignCount} OS
+                </span>
             </div>
         </div>
 
-        <div class="pro-body" style="padding:15px; gap:15px;">
+        <div class="pro-body" style="padding: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; position: relative; z-index: 2;">
             <div class="pro-col">
-                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">🧤 WICKET KEEPERS</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; margin-bottom: 15px; font-weight: 800; font-size: 1.1rem; padding-bottom: 5px; text-transform: uppercase;">🧤 WICKET KEEPERS</div>
                 ${renderRows(cat.WK)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">🏏 BATTERS</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; margin-bottom: 15px; font-weight: 800; font-size: 1.1rem; padding-bottom: 5px; text-transform: uppercase;">🏏 BATTERS</div>
                 ${renderRows(cat.BAT)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">⚡ ALL ROUNDERS</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; margin-bottom: 15px; font-weight: 800; font-size: 1.1rem; padding-bottom: 5px; text-transform: uppercase;">⚡ ALL ROUNDERS</div>
                 ${renderRows(cat.ALL)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">🥎 BOWLERS</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; margin-bottom: 15px; font-weight: 800; font-size: 1.1rem; padding-bottom: 5px; text-transform: uppercase;">🥎 BOWLERS</div>
                 ${renderRows(cat.BOWL)}
             </div>
         </div>
         
-        <div class="sheet-footer">
+        <div class="sheet-footer" style="background: rgba(0,0,0,0.3); padding: 20px 40px; display: flex; justify-content: space-between; color: #64748b; font-size: 1rem; border-top: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; text-transform: uppercase; font-weight: 600;">
             <span>OFFICIAL SQUAD LIST</span>
             <span>Generated by AuctionDashboard</span>
         </div>
     </div>`;
 }
+
 
 // Helper for Leaderboard Card (Not for selection)
 function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
@@ -2356,7 +2393,7 @@ function renderPostAuctionSummary() {
         // Content (Hidden by default)
         const content = document.createElement("div");
         content.className = "summary-content hidden";
-        content.innerHTML = downloadSquadImage(team, squad, purse, owner);
+        content.innerHTML = generateFullSquadHTML(team, squad, purse, owner);
 
         // Toggle Logic
         header.onclick = () => {
@@ -2491,6 +2528,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
