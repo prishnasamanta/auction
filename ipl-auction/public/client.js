@@ -1074,7 +1074,7 @@ window.viewEmbeddedSquad = function(team) {
                 <div class="sq-row-3" style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; font-size:0.8rem; color:#ccc;">
                     <span class="sq-stats" id="view-player-stats">Total: ${squad.length} | OS: ${foreignCount}</span>
                     <button class="sq-download-btn" onclick="downloadSquadImage()" style="background:none; border:none; color:#facc15; cursor:pointer;">
-                        <i class="fas fa-download"></i> ⬇
+                        <i class="fas fa-download"></i>[⤓]
                     </button>
                 </div>
             </div>
@@ -1085,7 +1085,10 @@ window.viewEmbeddedSquad = function(team) {
         </div>
 
         <div id="squad-card-capture" class="hidden-capture-card" style="position:fixed; left:-9999px; width: 400px; background:#1e1e1e; padding:20px; color:#fff;">
-            <div class="card-bg-layer" id="card-bg-img"></div>
+            
+            <div class="card-bg-layer" id="card-bg-img" 
+                 style="background-image: url('${team}.png');">
+            </div>
             <div class="card-overlay">
                 <div class="card-header" style="text-align:center; margin-bottom:15px; border-bottom:2px solid ${teamColor};">
                     <h1 id="card-team-name" style="margin:0; color:${teamColor}; text-transform:uppercase;">${team}</h1>
@@ -2054,6 +2057,7 @@ function refreshGlobalUI() {
     // or disappears if you become a spectator.
     updateAdminButtons(gameStarted);
 }
+
 
 
 
