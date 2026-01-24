@@ -117,147 +117,411 @@
         </div>
     </section>
 
+
     <section id="auctionUI" class="screen hidden">
+
+
+
+   <header class="topbar">
+
+    <div class="top-left" style="display:flex; align-items:center; gap: 8px;">
+
+        <span class="brand">⚡LIVE AUCTION⚡</span>
+
         
-        <header class="topbar">
-            <div class="top-left" style="display:flex; align-items:center; gap: 8px;">
-                <span class="brand">⚡LIVE AUCTION⚡</span>
-                <div id="roomCodeBar" class="hidden" style="font-family:monospace; font-size: 0.75rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">
-                    <span id="roomCodeText" style="color:var(--primary); font-weight:bold;"></span>
-                </div>
-                <button id="shareBtn" onclick="shareRoomLink()" class="secondary-btn hidden" style="padding:4px; border:none;">
-                    <img width="20" height="20" src="https://img.icons8.com/material-outlined/24/share.png" alt="share" style="filter: invert(1); display:block;"/>
-                </button>
-                <div style="position: relative; display: inline-block;">
-                    <button onclick="toggleUserList()" class="count-pill-btn">
-                        <span class="pulse-dot"></span>
-                        <span id="liveUserCount">1</span>
-                    </button>
-                    <div id="userListDropdown" class="user-list-dropdown hidden glass">
-                        <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">Active Players</h4>
-                        <div id="userListContent"></div>
-                    </div>
-                </div>
+
+        <div id="roomCodeBar" class="hidden" style="font-family:monospace; font-size: 0.75rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">
+
+            <span id="roomCodeText" style="color:var(--primary); font-weight:bold;"></span>
+
+        </div>
+
+
+
+        <button id="shareBtn" onclick="shareRoomLink()" class="secondary-btn hidden" style="padding:4px; border:none; display:flex; align-items:center; justify-content:center;">
+
+            <img width="20" height="20" src="https://img.icons8.com/material-outlined/24/share.png" alt="share" style="filter: invert(1); display:block;"/>
+
+        </button>
+
+
+
+        <div style="position: relative; display: inline-block;">
+
+            <button onclick="toggleUserList()" class="count-pill-btn">
+
+                <span class="pulse-dot"></span>
+
+                <span id="liveUserCount">1</span>
+
+            </button>
+
+            <div id="userListDropdown" class="user-list-dropdown hidden glass">
+
+                <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">Active Players</h4>
+
+                <div id="userListContent"></div>
+
             </div>
 
-            <div class="top-right" style="display:flex; align-items:center; gap: 8px;">
-                <button id="lateJoinBtn" onclick="toggleLateJoin()" class="secondary-btn hidden" style="color:var(--gold); border-color:var(--gold); padding:6px 12px; font-size:0.8rem;">+ Join Team</button>
-                <button onclick="showRules()" class="secondary-btn" style="padding:6px 12px; font-size:0.8rem;">📜 Rules</button>
-                
-                <span id="adminControls" class="admin-mini hidden" style="display:flex; align-items:center; gap: 5px;">
-                    <span style="border-left:1px solid var(--border); height:20px; display:inline-block; margin: 0 5px;"></span>
-                    <button id="startBtn" class="primary-btn" style="padding:6px 12px; font-size:0.8rem;">START</button>
-                    <button id="togglePauseBtn" class="secondary-btn" style="padding:6px;">Pause</button>
-                    <button id="skipBtn" class="secondary-btn" style="padding:6px;">⏭</button>
-                    <button id="skipSetBtn" class="secondary-btn" style="color: #fca5a5; padding:6px;">Set</button>
-                    <button onclick="admin('end')" class="secondary-btn" style="color:var(--accent); padding:6px;">End</button>
-                    <button id="leaveBtn" class="hidden leave-btn">🏃 Leave Room</button>
-                </span>
-            </div>
-        </header>
+        </div>
+
+    </div>
+
+
+
+    <div class="top-right" style="display:flex; align-items:center; gap: 8px;">
+
+        
+
+        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="secondary-btn hidden"style="color:var(--gold); border-color:var(--gold); padding:6px 12px; font-size:0.8rem;">
+
+            + Join Team
+
+        </button>
+
+
+
+
+
+     <button onclick="showRules()" class="secondary-btn" style="padding:6px 12px; font-size:0.8rem;">
+
+            📜 Rules
+
+        </button>
+
+        
+
+        <span id="adminControls" class="admin-mini hidden" style="display:flex; align-items:center; gap: 5px;">
+
+            <span style="border-left:1px solid var(--border); height:20px; display:inline-block; margin: 0 5px;"></span>
+
+
+
+            <button id="startBtn" class="primary-btn" style="padding:6px 12px; font-size:0.8rem;">START</button>
+
+            <button id="togglePauseBtn" class="secondary-btn" style="padding:6px;">Pause</button>
+
+            <button id="skipBtn" class="secondary-btn" style="padding:6px;">⏭</button>
+
+            <button id="skipSetBtn" class="secondary-btn" style="color: #fca5a5; padding:6px;">Set</button>
+
+            <button onclick="admin('end')" class="secondary-btn" style="color:var(--accent); padding:6px;">End</button>
+
+            <button id="leaveBtn" class="hidden leave-btn">
+
+                🏃 Leave Room 
+
+            </button>
+
+        </span>
+
+
+
+    </div>
+
+</header>
+
+
+
+
 
         <div class="auction-wrapper">
-            <div class="auction-center">
-                
-                <div id="teamSelectionMain" class="glass" style="width: 100%; max-width: 500px;">
-                    <h2 style="color:var(--primary); margin-top:0;">CHOOSE YOUR TEAM</h2>
-                    <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Select a team to participate.</p>
-                    <div id="embeddedTeamList" class="team-list"></div>
-                    <div id="waitingForHostMsg" class="hidden" style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                        <h3 style="margin:0 0 5px 0; color:#22c55e;">✅ Team Selected</h3>
-                        <p style="color:#aaa; font-size:0.9rem; margin:0;">Waiting for Host to start...</p>
-                    </div>
-                </div>
 
-                <div class="auction glass hidden" id="auctionCard">
-                    <div class="auction-header-row">
-                        <div id="noticeTeam" class="meta-item left">SPECTATOR</div>
-                        <div id="playerMeta" class="meta-item center">WAITING...</div>
-                        <div id="noticePurse" class="meta-item right"></div>
-                    </div>
-                    <div class="auction-body">
-                        <div id="playerInfoBox" class="compact-name" style="position: relative;">
-                            <div id="resultOverlay" class="result-overlay hidden">
-                                <div class="stamp-container">
-                                    <div id="stampTitle" class="stamp-title">SOLD</div>
-                                    <div id="stampDetail" class="stamp-detail">TO CSK</div>
-                                </div>
-                            </div>
-                            <div id="playerName">---</div>
-                        </div>
-                        <div class="price-container">
-                            <div class="bid-box">
-                                <div style="font-size:0.7rem; color:var(--text-muted); font-weight:bold;">CURRENT BID</div>
-                                <div id="bid" style="font-weight:bold;">₹0.00 Cr</div>
-                            </div>
-                            <div id="currentBidder" class="bidder-badge hidden">
-                                <span class="dot"></span> <span id="bidderName">CSK</span>
-                            </div>
-                            <div style="text-align:right;">
-                                <div id="timer">10</div>
-                            </div>
-                        </div>
-                        <div class="card-padding-area">
-                            <button id="bidBtn">PLACE BID</button>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="command-center glass" id="commandCenter">
-                    <div class="dashboard-header">
-                        <div class="brand-indicator">
-                            <div class="live-dot"></div>
-                            <span>Command Center</span>
-                        </div>
-                        <div class="nav-pills">
-                            <button class="nav-btn active" onclick="switchCcTab('feed')" data-tab="feed">Feed</button>
-                            <button class="nav-btn" onclick="switchCcTab('squads')" data-tab="squads">Squads</button>
-                            <button class="nav-btn" onclick="switchCcTab('sets')" data-tab="sets">Sets</button>
-                        </div>
-                        <div class="window-controls">
-                            <button class="ctrl-btn" onclick="toggleMaximize()" title="Maximize">⛶</button>
-                            <button class="ctrl-btn" onclick="toggleCcExpand()" id="expandBtn" title="Expand">−</button>
-                        </div>
-                    </div>
 
-                    <div class="dashboard-content">
-                        <div id="view-feed" class="view-panel active">
-                            <div class="feed-sub-header">
-                                <button class="sub-tab active" onclick="switchFeedMode('chat')" id="btn-chat">💬 Chat</button>
-                                <button class="sub-tab" onclick="switchFeedMode('logs')" id="btn-logs">📜 Logs</button>
-                            </div>
-                            <div id="mode-chat" class="feed-mode-container active">
-                                <div class="scroll-area chat-view">
-                                    <div id="feedChat" class="chat-stream">
-                                        <div id="chat"></div>
-                                    </div>
-                                </div>
-                                <div class="chat-input-bar">
-                                    <input type="text" id="msg" placeholder="Type a message..." autocomplete="off">
-                                    <button onclick="sendChat()" class="send-btn">➤</button>
-                                </div>
-                            </div>
-                            <div id="mode-logs" class="feed-mode-container">
-                                <div id="miniLog" class="scroll-area terminal-font">
-                                    <div id="log"></div>
-                                </div>
-                            </div>
-                        </div>
+<div class="auction-center">
 
-                        <div id="view-squads" class="view-panel">
-                            <div class="squad-layout">
-                                <div id="squadTabList" class="team-selector"></div>
-                                <div id="embeddedSquadView" class="scroll-area roster-list"></div>
-                            </div>
-                        </div>
+      
 
-                        <div id="view-sets" class="view-panel">
-                            <div id="panel-sets" class="scroll-area sets-list"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div id="teamSelectionMain" class="glass" style="width: 100%; max-width: 500px;">
+
+          <h2 style="color:var(--primary); margin-top:0;">CHOOSE YOUR TEAM</h2>
+
+          <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">
+
+              Select a team to participate.
+
+          </p>
+
+          
+
+          <div id="embeddedTeamList" class="team-list"></div>
+
+
+
+          <div id="waitingForHostMsg" class="hidden" style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px;">
+
+              <h3 style="margin:0 0 5px 0; color:#22c55e;">✅ Team Selected</h3>
+
+              <p style="color:#aaa; font-size:0.9rem; margin:0;">Waiting for Host to start...</p>
+
+          </div>
+
+      </div>
+
+
+
+      <div class="auction glass hidden" id="auctionCard">
+
+        
+
+        <div class="auction-header-row">
+
+            <div id="noticeTeam" class="meta-item left">SPECTATOR</div>
+
+            <div id="playerMeta" class="meta-item center">WAITING...</div>
+
+            <div id="noticePurse" class="meta-item right"></div>
+
         </div>
+
+
+
+        <div class="auction-body">
+
+          <div id="playerInfoBox" class="compact-name" style="position: relative;"> 
+
+              <div id="resultOverlay" class="result-overlay hidden">
+
+                  <div class="stamp-container">
+
+                      <div id="stampTitle" class="stamp-title">SOLD</div>
+
+                      <div id="stampDetail" class="stamp-detail">TO CSK</div>
+
+                  </div>
+
+              </div>
+
+              <div id="playerName">---</div>
+
+              </div>
+
+
+
+          <div class="price-container">
+
+              <div class="bid-box">
+
+                  <div style="font-size:0.7rem; color:var(--text-muted); font-weight:bold;">CURRENT BID</div>
+
+                  <div id="bid" style="font-weight:bold;">₹0.00 Cr</div>
+
+              </div>
+
+              
+
+              <div id="currentBidder" class="bidder-badge hidden">
+
+                  <span class="dot"></span> <span id="bidderName">CSK</span>
+
+              </div>
+
+
+
+              <div style="text-align:right;">
+
+                  <div id="timer">10</div>
+
+              </div>
+
+          </div>
+
+
+
+          <div class="card-padding-area">
+
+              <button id="bidBtn">PLACE BID</button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+<div id="commandCenter" class="glass">
+
+
+
+    
+
+
+
+    <div class="cc-tabs">
+
+
+
+        <button class="cc-tab-btn" onclick="switchCcTab('sets')">📦 Sets</button>
+
+
+
+        <button class="cc-tab-btn active" onclick="switchCcTab('feed')">💬 Feed</button>
+
+
+
+        <button class="cc-tab-btn" onclick="switchCcTab('squads')">👥 Squads</button>
+
+
+
+    </div>
+
+
+
+
+
+
+
+    <div id="ccContent" class="cc-content">
+
+
+
+        
+
+
+
+        <div id="view-sets" class="cc-view hidden">
+
+
+
+            <div id="panel-sets" class="scroll-view">
+
+
+
+                <div style="padding:10px; color:#aaa; text-align:center;">Loading Sets...</div>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+
+
+
+
+        <div id="view-feed" class="cc-view">
+
+
+
+            <div id="miniLog">
+
+
+
+                <div id="log">
+
+
+
+                    <div class="log-item">Waiting for auction...</div>
+
+
+
+                </div>
+
+
+
+            </div>
+
+
+
+            <div id="feedChat">
+
+
+
+                <div id="chat"></div>
+
+
+
+                <div class="feed-input-wrapper">
+
+
+
+                    <input type="text" id="msg" placeholder="Chat..." autocomplete="off">
+
+
+
+                    <button class="primary-btn" onclick="sendChat()">➤</button>
+
+
+
+                </div>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+
+
+
+
+        <div id="view-squads" class="cc-view hidden">
+
+
+
+            <div id="squadTabList" class="horizontal-tabs"></div>
+
+
+
+            <div id="embeddedSquadView" class="scroll-view">
+
+
+
+                <div style="padding:10px; color:#aaa; text-align:center;">Select a team</div>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+
+
+
+
+    </div>
+
+
+
+
+
+
+
+    <button id="ccExpandBtn" onclick="toggleCcExpand()">▼</button>
+
+
+
+</div>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+             
+
+            </div>
+
     </section>
 
     <section id="playingXI" class="screen hidden">
@@ -538,3 +802,4 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
