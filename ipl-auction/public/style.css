@@ -2117,3 +2117,156 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .ts-option:hover { background: #ef4444; color: white; }
 
 
+
+/* ================================================= */
+/* 🏆 PROFESSIONAL LEADERBOARD STYLING               */
+/* ================================================= */
+
+/* 1. Container & Scroll Area */
+.lb-container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 15px;
+    height: calc(100vh - 100px); /* Fill remaining screen */
+    display: flex;
+    flex-direction: column;
+}
+
+.lb-scroll-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    border-radius: 12px;
+    background: rgba(30, 41, 59, 0.4); /* Glassy Background */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+/* 2. The Table */
+.lb-table {
+    width: 100%;
+    border-collapse: separate; /* Allows border-radius on rows */
+    border-spacing: 0;
+    min-width: 600px; /* Force horizontal scroll on very small screens */
+}
+
+/* 3. Sticky Header */
+.lb-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #0f172a; /* Solid dark background for header */
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 15px;
+    border-bottom: 2px solid #334155;
+    text-align: left;
+}
+
+.lb-table tbody td {
+    padding: 15px;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    vertical-align: middle;
+    transition: background 0.2s;
+}
+
+/* 4. Row Hover Effect */
+.lb-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.lb-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+/* 5. Rank Column Styling */
+.lb-table td:first-child {
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 800;
+    color: #64748b;
+    text-align: center;
+}
+
+/* Top 3 Ranks Highlights */
+.lb-table tbody tr:nth-child(1) td { background: rgba(250, 204, 21, 0.05); border-bottom-color: rgba(250, 204, 21, 0.2); }
+.lb-table tbody tr:nth-child(1) td:first-child { color: #facc15; font-size: 1.2rem; text-shadow: 0 0 10px rgba(250, 204, 21, 0.5); } /* 🥇 Gold */
+
+.lb-table tbody tr:nth-child(2) td:first-child { color: #e2e8f0; font-size: 1.1rem; text-shadow: 0 0 10px rgba(226, 232, 240, 0.5); } /* 🥈 Silver */
+
+.lb-table tbody tr:nth-child(3) td:first-child { color: #b45309; font-size: 1.1rem; text-shadow: 0 0 10px rgba(180, 83, 9, 0.5); } /* 🥉 Bronze */
+
+/* 6. Team Name Column */
+.lb-team-name {
+    font-weight: 700;
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+/* 7. Rating Column */
+.lb-rating {
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+/* 8. Status Badges (Qualified/Disqualified) */
+.lb-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.lb-status-qualified {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.lb-status-disqualified {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* 9. Action Button (Eye Icon) */
+.lb-view-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.lb-view-btn:hover {
+    background: var(--primary);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+    .lb-table th, .lb-table td {
+        padding: 10px 8px; /* Tighter padding */
+        font-size: 0.8rem;
+    }
+    .lb-table {
+        min-width: 100%; /* Allow squeezing if possible, or scroll */
+    }
+}
