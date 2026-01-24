@@ -515,6 +515,28 @@
         <div id="summaryList" style="display:flex; flex-direction:column; gap:10px;"></div>
     </div>
 </section>
+    <section id="godPanel" class="screen hidden" style="background:#000;">
+        <div class="glass" style="max-width:600px; margin:20px auto; padding:20px; height:90vh; display:flex; flex-direction:column;">
+            
+            <div style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px; display:flex; justify-content:space-between;">
+                <h2 style="margin:0; color:#ef4444;">👹 GOD MODE</h2>
+                <button onclick="window.location.reload()" class="secondary-btn" style="padding:5px 10px;">Exit</button>
+            </div>
+
+            <div id="godLogin">
+                <p style="color:#aaa;">Enter the Room Code you want to manipulate:</p>
+                <div style="display:flex; gap:10px;">
+                    <input id="godTargetInput" placeholder="Room Code (e.g. ABCDE)">
+                    <button onclick="connectGodMode()" class="primary-btn" style="background:#ef4444;">ACCESS</button>
+                </div>
+            </div>
+
+            <div id="godContent" class="hidden" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+                <div id="godPlayerList" style="flex:1; overflow-y:auto; padding-right:5px;"></div>
+            </div>
+
+        </div>
+    </section>
 
 
 
@@ -527,6 +549,7 @@
 </body>
 
 </html>
+
 
 
 
