@@ -1674,18 +1674,31 @@ function showScreen(id){
 
 // --- 1. SETUP & STATE ---
 // We use an object to track selection by role so we can sort the card (WK -> BAT -> ALL -> BOWL)
+/* ================================================= */
+/* ========= 8. PLAYING XI & LEADERBOARD =========== */
+/* ================================================= */
+
+// --- 1. SETUP & STATE ---
+// We use an object to track selection by role so we can sort the card (WK -> BAT -> ALL -> BOWL)
+let selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
 
 socket.on("auctionEnded", () => {
     showScreen("playingXI");
     document.body.style.overflow = "auto";
+    // Ensure we have rules before starting
+    socket.emit("getAuctionState"); 
     socket.emit("getMySquad");
 });
 
 // --- 2. RECEIVE SQUAD & RENDER SELECTION LIST ---
 socket.on("mySquad", ({ squad, rules }) => {
+    // CRITICAL FIX: Ensure rules are updated
     if(rules) {
         activeRules = rules;
         updateRulesUI();
+    } else if (!activeRules || Object.keys(activeRules).length === 0) {
+        // Fallback: request rules again if missing
+        socket.emit("getAuctionState");
     }
 
     // Reset State
@@ -1695,7 +1708,7 @@ socket.on("mySquad", ({ squad, rules }) => {
 
     container.innerHTML = "";
 
-    // Render Selection Grid
+    // Render Selection Grid (Bottom List)
     const grid = document.createElement("div");
     grid.className = "xi-select-container";
 
@@ -1765,7 +1778,7 @@ function countTotalXI() {
     return selectedXI.WK.length + selectedXI.BAT.length + selectedXI.ALL.length + selectedXI.BOWL.length;
 }
 
-// --- 4. RENDER THE PREVIEW CARD ---
+// --- 4. RENDER THE PREVIEW CARD (Vertical Layout Fix) ---
 function updateXIPreview() {
     const count = countTotalXI();
     
@@ -1801,7 +1814,7 @@ function updateXIPreview() {
         if(saveBtn) count === 11 ? saveBtn.classList.remove('hidden') : saveBtn.classList.add('hidden');
     }
 
-    // C. GENERATE HTML PILLS (The Visual Card)
+    // C. GENERATE HTML ROWS (Vertical Layout)
     if(sheetContent) {
         sheetContent.innerHTML = ""; // Clear current
 
@@ -1811,27 +1824,23 @@ function updateXIPreview() {
         displayOrder.forEach(role => {
             const players = selectedXI[role];
             if(players && players.length > 0) {
-                // Create Row Container (Flexbox from CSS)
-                const rowDiv = document.createElement("div");
-                rowDiv.className = "sheet-role-group"; 
-
+                // We no longer use role headers inside the card to keep it clean like the image
                 players.forEach(p => {
                     let icon = '🏏';
                     if(role === 'WK') icon = '🧤';
                     if(role === 'BOWL') icon = '🥎';
                     if(role === 'ALL') icon = '⚡';
 
-                    // Create Pill (Matches your CSS .sheet-player-pill)
-                    const pill = document.createElement("div");
-                    pill.className = `sheet-player-pill ${p.foreign ? 'foreign' : ''}`;
-                    pill.innerHTML = `
-                        <span>${icon} ${p.name} ${p.foreign ? '✈️' : ''}</span>
-                        <small>⭐${p.rating}</small>
+                    // Create Vertical Row Item (.sheet-player-row)
+                    const row = document.createElement("div");
+                    row.className = `sheet-player-row ${p.foreign ? 'foreign' : ''}`;
+                    row.innerHTML = `
+                        <div class="sp-icon">${icon}</div>
+                        <div class="sp-name">${p.name} ${p.foreign ? '✈️' : ''}</div>
+                        <div class="sp-rating">⭐${p.rating}</div>
                     `;
-                    rowDiv.appendChild(pill);
+                    sheetContent.appendChild(row);
                 });
-
-                sheetContent.appendChild(rowDiv);
             }
         });
     }
@@ -1842,7 +1851,10 @@ function updateXIPreview() {
 
 function updateStatsBar() {
     const bar = document.getElementById("xiStatsBar");
-    if(!bar || !activeRules) return;
+    // Safety check: if activeRules is missing, use defaults
+    const rules = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3 }; 
+    
+    if(!bar) return;
 
     // Flatten lists to count specifics
     const all = [...selectedXI.WK, ...selectedXI.BAT, ...selectedXI.ALL, ...selectedXI.BOWL];
@@ -1856,10 +1868,10 @@ function updateStatsBar() {
     };
 
     bar.innerHTML = `
-        ${badge("✈️ Foreign", foreign, activeRules.maxForeignXI || 4, true)}
-        ${badge("🧤 WK", selectedXI.WK.length, activeRules.minWK || 1)}
-        ${badge("🏏 BAT", selectedXI.BAT.length, activeRules.minBat || 3)}
-        ${badge("🥎 BOWL", selectedXI.BOWL.length, activeRules.minBowl || 3)}
+        ${badge("✈️ Foreign", foreign, rules.maxForeignXI || 4, true)}
+        ${badge("🧤 WK", selectedXI.WK.length, rules.minWK || 1)}
+        ${badge("🏏 BAT", selectedXI.BAT.length, rules.minBat || 3)}
+        ${badge("🥎 BOWL", selectedXI.BOWL.length, rules.minBowl || 3)}
     `;
 }
 
@@ -1868,6 +1880,9 @@ function updateStatsBar() {
 window.submitXI = function() {
     if(countTotalXI() !== 11) return alert("Please select exactly 11 players.");
     const flatList = [...selectedXI.WK, ...selectedXI.BAT, ...selectedXI.ALL, ...selectedXI.BOWL];
+    
+    console.log("Submitting XI:", flatList); // Debug Log
+    
     socket.emit("submitXI", { team: myTeam, xi: flatList });
 };
 
@@ -1892,15 +1907,23 @@ window.downloadSheetPNG = function() {
 // --- 6. LEADERBOARD & PREVIEW ---
 
 socket.on("submitResult", (res) => {
-    document.getElementById("submitXIBtn").classList.add("hidden");
+    // Hide submit button to prevent double submission
+    const btn = document.getElementById("submitXIBtn");
+    if(btn) btn.classList.add("hidden");
+    
     const status = document.getElementById("xiStatus");
-    status.innerHTML = `
-        <div style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? 'red' : 'green'}; background:rgba(0,0,0,0.8); border-radius:10px; margin-top:20px;">
-            <h2 style="color:${res.disqualified ? 'red' : 'green'}">${res.disqualified ? 'DISQUALIFIED' : 'QUALIFIED'}</h2>
-            <p>Rating: <b>${res.rating}</b></p>
-            <p>${res.disqualified ? res.reason : "Team Submitted Successfully"}</p>
+    if(status) {
+        status.innerHTML = `
+        <div style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? 'red' : 'green'}; background:rgba(0,0,0,0.9); border-radius:10px; margin-top:20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <h2 style="margin:0; color:${res.disqualified ? '#ef4444' : '#22c55e'}">${res.disqualified ? 'DISQUALIFIED ❌' : 'QUALIFIED ✅'}</h2>
+            <p style="color:#ccc; margin:10px 0;">Rating: <b style="color:white; font-size:1.2rem;">${res.rating}</b></p>
+            ${res.disqualified ? `<p style="color:#fca5a5; font-size:0.9rem;">Reason: ${res.reason}</p>` : ''}
+            
+            ${res.disqualified ? `<button onclick="document.getElementById('submitXIBtn').classList.remove('hidden'); this.parentElement.remove();" style="margin-top:10px; background:#334155; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer;">Try Again</button>` : ''}
         </div>`;
+    }
 });
+
 
 socket.on("leaderboard", (board) => {
     const tbody = document.getElementById("leaderboardBody");
@@ -2168,6 +2191,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
