@@ -3196,6 +3196,150 @@ body {
         border-radius: 12px 12px 0 0 !important; /* Clean bottom look */
     }
 }
+/* ================================================= */
+/* ⚡ ULTIMATE APP LAYOUT (Mobile & PC Fixed)        */
+/* ================================================= */
+
+/* 1. LOCK SCREEN (Prevent Browser Scroll) */
+body {
+    position: fixed;
+    width: 100%; 
+    height: 100dvh; /* Dynamic Height for Mobile Browsers */
+    overflow: hidden;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 2. MAIN CONTAINER (Stacks Header, Body, Footer) */
+#auctionUI {
+    display: flex;
+    flex-direction: column;
+    height: 100%; 
+    width: 100%;
+}
+
+/* 3. HEADER (Fixed Top) */
+.topbar {
+    flex-shrink: 0; /* Never shrink */
+    height: 50px;
+    z-index: 20;
+    background: #0f172a;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* 4. MIDDLE WRAPPER (Fills Space) */
+/* This holds the Auction Card & Command Center */
+.auction-wrapper {
+    flex: 1; /* Grows to fill space between Header & Footer */
+    display: flex;
+    flex-direction: column; /* Stack Vertically */
+    align-items: center;    /* Center Horizontally */
+    width: 100%;
+    max-width: 550px;       /* Fixed Width for PC (App Look) */
+    margin: 0 auto;         /* Center on PC Screen */
+    padding: 10px;
+    gap: 10px;
+    overflow: hidden;       /* No Scroll on Wrapper */
+    position: relative;
+}
+
+/* 5. AUCTION CARD (Top Item - Fixed Size) */
+.auction-center {
+    width: 100%;
+    flex-shrink: 0;
+}
+
+#auctionCard {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    display: flex; flex-direction: column;
+}
+
+/* 6. COMMAND CENTER (Bottom Item - Fills Remaining Space) */
+#commandCenter {
+    flex: 1; /* 🟢 THE MAGIC: Stretches to touch Footer */
+    width: 100%;
+    display: flex; 
+    flex-direction: column;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    /* Remove bottom radius to merge with footer */
+    border-bottom-left-radius: 0; 
+    border-bottom-right-radius: 0;
+    border-bottom: none; 
+    min-height: 0; /* Critical for flex scrolling */
+    margin-bottom: 0;
+}
+
+/* Internal Scrolling for CC */
+.cc-content { flex: 1; overflow: hidden; position: relative; }
+.cc-view { height: 100%; display: flex; flex-direction: column; }
+.scroll-view, #feedChat { 
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 10px;
+    -webkit-overflow-scrolling: touch; 
+}
+#ccExpandBtn { display: none !important; }
+
+/* 7. UNIVERSAL FOOTER (Fixed Bottom) */
+.app-footer {
+    flex-shrink: 0; /* Never shrink */
+    background: #020617;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 0;
+    z-index: 50;
+    width: 100%;
+    /* Safe Area for iPhones */
+    padding-bottom: env(safe-area-inset-bottom, 10px); 
+}
+
+.footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-family: 'Inter', sans-serif;
+}
+
+.footer-link {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.footer-link:hover { text-decoration: underline; color: #fff; }
+
+.separator { color: #475569; }
+
+.social-links {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.social-links a {
+    display: flex;
+    align-items: center;
+    opacity: 0.7;
+    transition: 0.2s;
+}
+.social-links a:hover { opacity: 1; transform: scale(1.1); }
+
+/* PC Specific Override (Optional) */
+/* If you want side-by-side on very large screens */
+@media (min-width: 1200px) {
+    /* Keep centering for consistency as requested */
+    .auction-wrapper { max-width: 600px; }
+}
+
 
 
 
