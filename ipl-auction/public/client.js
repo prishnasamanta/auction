@@ -1967,18 +1967,17 @@ function renderPopupContent(mode) {
     const container = document.getElementById("squadCaptureArea");
     const d = currentPopupData;
     const fullSquad = allSquads[d.team] || [];
-  
-    // Ensure purse is a number for toFixed
     const safePurse = Number(d.purse || teamPurse[d.team] || 0);
+
     if (mode === 'XI') {
         container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
-        // ... (download handler)
     } else {
-        // Use New 4-Column Generator
-        container.innerHTML = generateFullSquadHTML(d.team, fullSquad, safePurse, "Manager");
-        // ... (download handler)
+        // PASS TRUE AS THE LAST ARGUMENT FOR POPUP MODE
+        // This triggers the 2-column layout
+        container.innerHTML = generateFullSquadHTML(d.team, fullSquad, safePurse, "Manager", true);
     }
 }
+
 // --- FIX: LEADERBOARD DOWNLOAD BUTTON ---
 window.downloadPopupCard = function() {
     if (!currentPopupData || !currentPopupData.team) return;
@@ -2033,14 +2032,11 @@ socket.on("leaderboard", (board) => {
         });
     }
 });
-// 1. SHARED HTML GENERATOR (Compact & Viewable)
-/* ================================================= */
-/* 💎 PREMIUM SQUAD GENERATOR (JS Logic)             */
-/* ================================================= */
-function generateFullSquadHTML(teamName, squad, purse, owner) {
+// Updated Generator Function
+function generateFullSquadHTML(teamName, squad, purse, owner, isPopup = false) {
     // 1. Setup Data
     const foreignCount = squad.filter(p => p.foreign).length;
-    const teamColor = TEAM_COLORS[teamName] || '#facc15'; // Default Gold
+    const teamColor = TEAM_COLORS[teamName] || '#facc15'; 
     const logoUrl = `/logos/${teamName}.png`;
 
     // 2. Categorize Players
@@ -2053,14 +2049,21 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
 
     // 3. Helper: Render Player List
     const renderRows = (list) => {
-        if (!list || list.length === 0) return '<div class="empty-slot">-</div>';
+        if (!list || list.length === 0) return '<div class="empty-slot">Empty</div>';
         return list.map(p => {
             const safeName = p.name.replace(/'/g, "\\'");
+            // Shorter name logic for popup view to prevent overflow
+            let dispName = p.name;
+            if(isPopup && dispName.length > 15) {
+                const parts = dispName.split(' ');
+                if(parts.length > 1) dispName = parts[0].charAt(0) + '. ' + parts.slice(1).join(' ');
+            }
+
             return `
             <div class="p-row" onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')">
                 <div class="p-info">
                     <span class="p-dot" style="background:${teamColor}"></span>
-                    <span class="p-name">${p.foreign ? '✈️ ' : ''}${p.name}</span>
+                    <span class="p-name" title="${p.name}">${p.foreign ? '✈️' : ''} ${dispName}</span>
                 </div>
                 <div class="p-cost">₹${p.price.toFixed(2)}</div>
             </div>`;
@@ -2068,9 +2071,9 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
     };
 
     // 4. Return HTML
-    // We inject the dynamic color and logo as CSS Variables here
+    // Note: Changed ID to CLASS, and added logic for 'narrow-view'
     return `
-    <div id="premium-squad-card" style="--team-color: ${teamColor}; --watermark-url: url('${logoUrl}');">
+    <div class="premium-squad-card ${isPopup ? 'narrow-view' : ''}" style="--team-color: ${teamColor}; --watermark-url: url('${logoUrl}');">
         <div class="prem-watermark"></div>
         
         <div class="prem-header">
@@ -2110,6 +2113,7 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
         </div>
     </div>`;
 }
+
 // Helper for Leaderboard Card (Not for selection)
 function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
     const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
@@ -2281,10 +2285,10 @@ function renderPostAuctionSummary() {
             </div>
         `;
         // 3. Create Content (The Full Squad Card)
-        const content = document.createElement("div");
-        content.className = "summary-content hidden";
-        content.innerHTML = generateFullSquadHTML(team, squad, purse, owner);
-        // 4. Toggle Logic (Accordion Style)
+       const content = document.createElement("div");
+content.className = "summary-content hidden";
+// Pass true here as well to ensure it fits in the accordion dropdown
+content.innerHTML = generateFullSquadHTML(team, squad, purse, owner, true);
         header.onclick = () => {
             const isHidden = content.classList.contains("hidden");
            
@@ -2476,6 +2480,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
