@@ -913,8 +913,7 @@ function endAuction(r, room) {
 const mongoose = require('mongoose');
 
 // 1. Connect to MongoDB (Replace with your Atlas URI)
-const MONGO_URI = "mongodb+srv://YOUR_USER:YOUR_PASS@cluster0.mongodb.net/ipl_auction?retryWrites=true&w=majority"; 
-// OR local: "mongodb://localhost:27017/ipl_auction"
+const MONGO_URI = "mongodb+srv://admin:pass123@cluster0.cbap2x5.mongodb.net/?appName=Cluster";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ MongoDB Connected'))
@@ -1015,7 +1014,6 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
-
 
 
 
