@@ -2029,47 +2029,6 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     pointer-events: none; /* Let clicks pass through if transparent */
 }
 
-/* Ensure the content inside is clickable */
-#xiStatus > div {
-    pointer-events: auto;
-}
-/* --- SUMMARY PAGE STYLES --- */
-.summary-item {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    overflow: hidden;
-    transition: 0.2s;
-}
-
-.summary-header {
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    background: rgba(255,255,255,0.02);
-    border-left: 4px solid transparent; /* Colored via JS */
-}
-.summary-header:hover { background: rgba(255,255,255,0.05); }
-
-.sum-info { display: flex; flex-direction: column; gap: 4px; }
-.sum-team { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; }
-.sum-meta { font-size: 0.85rem; color: #94a3b8; }
-
-.sum-expand-btn {
-    background: none; border: none; color: #fff; font-size: 1rem;
-    width: 30px; height: 30px; border-radius: 50%;
-    background: rgba(255,255,255,0.1);
-    cursor: pointer;
-}
-
-.summary-content {
-    padding: 20px;
-    background: #020617;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    animation: slideDown 0.3s ease-out;
-}
 
 /* --- POPUP TOGGLE BUTTONS --- */
 .tab-btn {
@@ -2330,99 +2289,170 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 /* 4. ENSURE POPUPS ARE SCROLLABLE */
-#squadCaptureArea, .summary-content {
-    overflow-y: auto !important; /* Enable Vertical Scroll */
-    display: block !important; /* Allow normal flow */
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 40px !important;
+/* --- PREMIUM SUMMARY PAGE --- */
+#postAuctionSummary {
+    background: radial-gradient(circle at top, #1e293b, #0f172a);
 }
 
-/* Fix Scale/Zoom conflict causing cut-off */
-#squadCaptureArea .team-sheet-card, 
-.summary-content .team-sheet-card {
-    margin: 0 auto;
-    /* On mobile, we rely on natural width, not zoom */
-}
-@media (max-width: 600px) {
-    #squadCaptureArea .team-sheet-card, 
-    .summary-content .team-sheet-card {
-        zoom: 1 !important; /* Reset zoom so CSS Grid works */
-        transform: none !important;
-    }
-}
-/* --- SUMMARY PAGE STYLES --- */
-
-/* Item Container */
 .summary-item {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    margin-bottom: 12px;
     overflow: hidden;
-    transition: all 0.2s ease;
-    margin-bottom: 8px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
 }
 
-/* Header Strip */
+.summary-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
 .summary-header {
-    padding: 15px;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    background: rgba(255,255,255,0.02);
-    border-left: 4px solid transparent; /* Color injected via JS */
-}
-.summary-header:hover {
-    background: rgba(255,255,255,0.05);
+    background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+    border-left: 4px solid transparent; /* Color via JS */
 }
 
-/* Text Info */
-.sum-info { display: flex; flex-direction: column; gap: 4px; }
-.sum-team { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-.sum-meta { font-size: 0.85rem; color: #94a3b8; }
+.sum-team { 
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1.4rem; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    letter-spacing: 1px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
 
-/* Expand Button */
+.sum-meta { 
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem; 
+    color: #94a3b8; 
+    margin-top: 4px;
+    display: flex;
+    gap: 10px;
+}
+
 .sum-expand-btn {
-    background: rgba(255,255,255,0.1);
-    border: none;
-    color: #fff;
-    font-size: 0.8rem;
-    width: 28px; height: 28px;
+    width: 32px; height: 32px;
     border-radius: 50%;
-    cursor: pointer;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: none;
+    font-size: 0.8rem;
+    transition: 0.2s;
     display: flex; align-items: center; justify-content: center;
 }
 
-/* Content Area (Contains the Generated Card) */
 .summary-content {
     background: #020617;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding: 20px;
     animation: slideDown 0.3s ease-out;
-    padding: 10px;
-    
-    /* Center the card inside */
-    display: flex; 
+    display: flex;
     justify-content: center;
-    overflow-x: hidden; 
+}
+/* --- UNIVERSAL SQUAD CARD STYLING --- */
+.team-sheet-card.full-squad-mode {
+    background-color: #020617;
+    border: 2px solid #facc15;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Exo 2', sans-serif;
+    /* Desktop Default: Fixed Width for High Res Download */
+    width: 1000px;
+    min-width: 1000px;
 }
 
-/* Ensure the card scales down to fit inside the summary accordion */
-.summary-content .team-sheet-card {
-    zoom: 0.45; /* Desktop Zoom */
-    margin: 0;
+/* Header & Stats */
+.full-squad-mode .sheet-header {
+    background: rgba(0,0,0,0.5);
+    padding: 30px;
+    text-align: center;
+}
+.full-squad-mode .sheet-title { margin: 0; font-size: 3.5rem; font-weight: 900; text-transform: uppercase; }
+.full-squad-mode .sheet-stats {
+    margin-top: 20px; display: flex; justify-content: center; gap: 40px; 
+    font-size: 1.3rem; color: #ccc; font-weight: bold;
 }
 
-/* Mobile Zoom Adjustments */
-@media (max-width: 600px) {
+/* Desktop Grid: 4 Columns */
+.full-squad-mode .pro-body {
+    padding: 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+/* Player Card Row */
+.pro-player-card {
+    background: rgba(255,255,255,0.05);
+    padding: 8px; margin-bottom: 6px;
+    border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; transition: 0.2s;
+}
+.pro-player-card:hover { background: rgba(255,255,255,0.15); transform: translateX(2px); }
+
+.pp-left { display: flex; align-items: center; gap: 6px; }
+.pp-name { font-weight: bold; color: #fff; font-size: 0.9rem; }
+.pp-rating { font-size: 0.75rem; color: #fbbf24; }
+.pp-price { color: #4ade80; font-size: 0.9rem; font-weight: bold; }
+
+.pro-col-header {
+    border-bottom: 2px solid; font-weight: 800; margin-bottom: 15px; 
+    padding-bottom: 5px; text-align: center; font-size: 1.1rem;
+}
+
+/* Footer */
+.full-squad-mode .sheet-footer {
+    padding: 20px; text-align: center; color: #64748b; 
+    font-size: 0.9rem; background: rgba(0,0,0,0.5);
+}
+
+/* ========================================= */
+/* 📱 MOBILE RESPONSIVE OVERRIDES            */
+/* ========================================= */
+
+@media (max-width: 800px) {
+    /* 1. Reset Width constraint for Mobile View */
+    #squadCaptureArea .team-sheet-card, 
     .summary-content .team-sheet-card {
-        zoom: 1; /* Reset zoom for mobile responsive CSS to take over */
-        width: 100%;
+        width: 100% !important;
+        min-width: 0 !important;
+        zoom: 1 !important; /* Disable zoom, let flexbox work */
     }
-}
 
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    /* 2. Adjust Header Text */
+    .full-squad-mode .sheet-title { font-size: 2rem !important; }
+    .full-squad-mode .sheet-stats { gap: 15px !important; font-size: 0.9rem !important; }
+
+    /* 3. Switch to 2x2 Grid Layout */
+    .full-squad-mode .pro-body {
+        grid-template-columns: 1fr 1fr !important; /* 2 Columns */
+        gap: 10px !important;
+        padding: 15px !important;
+    }
+
+    /* 4. Compact Rows */
+    .pro-player-card { padding: 6px !important; }
+    .pp-name { font-size: 0.8rem !important; }
+
+    /* 5. Hide Footer to save space */
+    .full-squad-mode .sheet-footer { display: none !important; }
+
+    /* 6. Enable Scrolling in Container */
+    #squadCaptureArea, .summary-content {
+        overflow-x: hidden;
+        overflow-y: auto;
+        display: block;
+    }
 }
 
 
