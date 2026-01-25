@@ -2986,7 +2986,7 @@ body {
 /* Right Status Box (Timer & Team - SAME WIDTH) */
 .ac-status-box {
     flex-shrink: 0;
-    width: 50px; /* Fixed Width for Alignment */
+    width: 50px !important; /* Fixed Width for Alignment */
     display: flex; flex-direction: column; 
     gap: 6px;
 }
@@ -3024,7 +3024,7 @@ body {
 
 /* Price Box */
 .ac-price-box {
-    width: 30%; /* Fixed width */
+    width: 35% !important; /* Fixed width */
     display: flex; flex-direction: column; justify-content: center;
     padding-left: 5px;
 }
@@ -3036,7 +3036,7 @@ body {
 
 /* The Button (Extended Left) */
 .ac-main-bid-btn {
-    width: 70%; /* Takes 65% of the row */
+    width: 65% !important; /* Takes 65% of the row */
     height: 100%;
     background: var(--success);
     border: none; border-radius: 8px;
@@ -3458,3 +3458,4 @@ body::after {
         padding: 0 10px;
     }
 }
+
