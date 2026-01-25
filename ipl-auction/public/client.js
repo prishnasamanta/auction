@@ -207,7 +207,7 @@ window.onload = async () => {
             socket.emit("joinRoom", { roomCode, user: username });
         };
     }
-const path = window.location.pathname;
+
     const parts = path.split('/');
     // Format: /room/CODE/SUBPAGE
     const urlCode = (parts[1] === 'room' && parts[2]) ? parts[2].toUpperCase() : null;
@@ -2498,6 +2498,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
