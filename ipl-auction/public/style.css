@@ -2524,156 +2524,188 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     .nav-links { display: none; } /* Simple hide for now */
 }
 /* ================================================= */
-/* ⚡ PERFORMANCE & LAYOUT FIX (Mobile Stable)       */
+/* ⚡ LAYOUT & SCROLLING FIXES                       */
 /* ================================================= */
 
-/* 1. LOCK SCREEN (Prevent full page scroll) */
+/* 1. Page Layout (Fixed Height, No Body Scroll) */
 body {
     position: fixed;
     width: 100%; height: 100%;
-    overflow: hidden; /* Crucial for mobile feel */
+    overflow: hidden;
 }
 
-/* 2. WRAPPER (Flex Column to fill space) */
 .auction-wrapper {
-    height: calc(100vh - 50px); /* Subtract header height */
+    height: calc(100vh - 55px); /* Full height minus header */
     display: flex;
     flex-direction: column;
-    padding: 10px;
-    gap: 10px;
-    overflow: hidden; /* Stop internal scroll */
+    padding: 10px 15px; /* Side padding */
+    gap: 15px; /* Space between Card and Command Center */
+    overflow: hidden;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-/* 3. AUCTION CARD (Fixed Height & Grid) */
+/* 2. AUCTION CARD (Compact & Adjusted) */
 #auctionCard {
     width: 100%;
-    max-width: 500px;
-    margin: 0 auto; /* Center it */
     background: #0f172a;
     border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 12px;
-    flex-shrink: 0; /* Don't shrink this */
+    border-radius: 16px;
+    flex-shrink: 0; /* Don't shrink */
     display: flex; flex-direction: column;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: all 0.2s;
 }
 
-/* Top Row: Name (Left) | Status (Right) */
+/* Top Row: Name vs Timer */
 .ac-top-row {
-    display: grid;
-    grid-template-columns: 1fr 80px; /* Name gets space | Timer fixed */
-    padding: 15px; /* Uniform padding */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px; /* Reduced Uniform Padding */
     background: radial-gradient(circle at center, #1e293b, #0f172a);
     border-bottom: 1px solid rgba(255,255,255,0.05);
-    height: 90px;
-    align-items: center;
+    height: 85px;
     position: relative;
 }
 
 .ac-info-box {
+    flex: 1; /* Takes all available space up to timer */
     display: flex; flex-direction: column; justify-content: center;
-    overflow: hidden; /* Clip if absolutely necessary */
-    padding-right: 10px;
+    overflow: hidden; 
+    padding-right: 10px; /* The "Invisible Line" gap */
 }
-/* Font size is controlled by JS now */
+
+/* Name Text (Font size handled by JS) */
 .ac-name-text {
     font-family: 'Exo 2', sans-serif;
     font-weight: 800; color: #fff;
-    line-height: 1.1; text-transform: uppercase;
+    line-height: 1; text-transform: uppercase;
     white-space: nowrap; 
 }
 .ac-role-text {
     font-family: 'Inter', sans-serif;
     color: var(--gold); font-size: 0.8rem; font-weight: 600;
-    margin-top: 4px;
+    margin-top: 4px; letter-spacing: 1px;
 }
 
-/* Timer Box */
-.ac-status-box { display: flex; flex-direction: column; align-items: flex-end; }
+/* Timer Box (Right Aligned) */
+.ac-status-box {
+    flex-shrink: 0; /* Prevents shrinking */
+    display: flex; flex-direction: column; align-items: flex-end; 
+    width: 70px; 
+}
 .ac-timer-box {
     font-family: monospace; font-size: 1.4rem; font-weight: 700;
     color: #f43f5e; background: rgba(0,0,0,0.3);
     padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);
+    text-align: center; width: 100%;
 }
 
-/* BOTTOM ROW: Price (40%) | Button (60%) */
+/* Bottom Row: Price vs Button */
 .ac-bot-row {
-    display: flex; /* Flex is safer here */
+    display: flex; 
     align-items: center;
-    height: 80px;
+    height: 75px;
     background: rgba(30, 41, 59, 0.4);
-    padding: 10px; /* Outer padding */
+    padding: 8px 12px; /* Tighter outer padding */
 }
 
 .ac-price-box {
-    width: 40%; /* Strict Width */
     display: flex; flex-direction: column; justify-content: center;
-    padding-left: 10px;
+    padding-left: 5px; /* Minimal padding */
+    margin-right: 10px;
 }
-.ac-price-box .lbl { font-size: 0.65rem; color: #64748b; font-weight: 700; }
+.ac-price-box .lbl { font-size: 0.6rem; color: #64748b; font-weight: 700; letter-spacing: 0.5px; }
 .ac-price-box .val { 
-    font-family: 'Exo 2', sans-serif; font-size: 1.5rem; font-weight: 800; color: #fff;
+    font-family: 'Exo 2', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff;
     white-space: nowrap; 
 }
 
-/* The Button */
+/* The Button (Fills remaining space) */
 .ac-main-bid-btn {
-    width: 60%; /* Strict Width */
+    flex: 1; /* Grows to fill right side */
     height: 100%;
     background: var(--success);
     border: none; border-radius: 8px;
     color: #022c22; cursor: pointer;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     box-shadow: 0 4px 0 #15803d;
-    margin-left: 10px; /* Small gap from price */
+    transition: transform 0.1s;
 }
 .ac-main-bid-btn:active { transform: translateY(2px); box-shadow: none; }
-.ac-main-bid-btn:disabled { background: #334155; color: #64748b; box-shadow: none; }
+.ac-main-bid-btn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; }
 
-/* 4. COMMAND CENTER FIX (Fill remaining space) */
+/* 3. GREEN BORDER ANIMATION (Only on My Bid) */
+#auctionCard.pulse-green {
+    animation: flashGreen 0.5s ease-out;
+}
+@keyframes flashGreen {
+    0% { border-color: #4ade80; box-shadow: 0 0 30px rgba(74, 222, 128, 0.5) inset; }
+    100% { border-color: rgba(255,255,255,0.15); box-shadow: none; }
+}
+
+/* 4. PREMIUM SOLD ANIMATION (Stamp Overlay) */
+.ac-result-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85); /* Slightly transparent dark */
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex; justify-content: center; align-items: center;
+    border-radius: 16px;
+    opacity: 0; pointer-events: none; /* Hidden state */
+    transition: opacity 0.2s;
+}
+.ac-result-overlay.active { opacity: 1; pointer-events: all; }
+
+.premium-stamp {
+    border: 5px solid #fff;
+    padding: 10px 30px;
+    text-transform: uppercase;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 900;
+    font-size: 3rem;
+    transform: rotate(-15deg) scale(3); /* Start Big */
+    opacity: 0;
+    animation: stampCrash 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    text-align: center;
+}
+.premium-stamp div { font-size: 1rem; font-weight: 700; letter-spacing: 2px; margin-top: 5px; color: #fff; text-shadow:none; }
+
+@keyframes stampCrash {
+    to { transform: rotate(-15deg) scale(1); opacity: 1; }
+}
+
+/* 5. COMMAND CENTER & FOOTER FIX */
 #commandCenter {
-    flex: 1; /* Fill the rest of the screen */
-    width: 100%; max-width: 500px;
-    margin: 0 auto;
+    flex: 1; /* Fills remaining height */
+    width: 100%; 
     display: flex; flex-direction: column;
-    min-height: 0; /* Crucial for flex scrolling */
+    min-height: 0; /* Crucial for internal scroll */
+    margin-bottom: 0; /* Touch bottom */
+    border-bottom-left-radius: 0; border-bottom-right-radius: 0;
 }
-.cc-content { flex: 1; overflow: hidden; position: relative; }
-.cc-view { height: 100%; display: flex; flex-direction: column; }
-#embeddedSquadView { flex: 1; overflow-y: auto; } /* Scroll INSIDE */
 
-/* 5. CHAT ALIGNMENT FIX */
-#chat { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
-.chat-msg {
-    width: 100%;
-    display: flex; align-items: baseline; gap: 8px;
-    background: rgba(255,255,255,0.03);
-    padding: 6px 10px; border-radius: 4px;
-    border-left: 3px solid #64748b;
-    text-align: left; /* Force Left Alignment for everyone */
+/* Ensure Internal Scroll Works */
+.scroll-view {
+    flex: 1;
+    overflow-y: auto; /* ENABLE SCROLL */
+    padding: 10px;
+    -webkit-overflow-scrolling: touch;
 }
-/* My message gets a slight tint, but stays layout-identical */
-.chat-msg.mine { background: rgba(99, 102, 241, 0.1); border-left-color: var(--primary); }
 
-/* Hide dropdown arrow since we auto-expanded */
+/* Hide the arrow button */
 #ccExpandBtn { display: none !important; }
 
-.chat-msg.others { justify-content: flex-start; text-align: left; } /* Force left */
-.chat-msg.mine { background: rgba(99, 102, 241, 0.1); border-left-color: var(--primary); }
-
-.chat-meta { font-size: 0.7rem; color: #aaa; font-weight: 700; white-space: nowrap; }
-.chat-text { font-size: 0.85rem; color: #fff; word-wrap: break-word; }
-
-/* Animated Pause Icon */
-.pause-icon {
-    display: flex; gap: 3px; align-items: center; justify-content: center;
-    height: 14px;
+/* 6. HEADER TWEAKS */
+.header-badge {
+    padding: 4px 10px; /* More padding */
+    border: 1px solid rgba(255,255,255,0.2); /* Visible border */
 }
-.pause-bar {
-    width: 3px; height: 100%; background: #fff;
-    animation: pauseBounce 1s infinite alternate;
-}
-.pause-bar:nth-child(2) { animation-delay: 0.2s; }
-@keyframes pauseBounce { from { height: 60%; opacity: 0.5; } to { height: 100%; opacity: 1; } }
-
 
 
 
