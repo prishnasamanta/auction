@@ -94,13 +94,20 @@ function setupEventListeners() {
     const usernameInput = document.getElementById("username");
 
     // 1. Enter Arena Button
-    if (enterBtn) {
-        enterBtn.onclick = () => {
-            document.getElementById("landing").classList.add("hidden");
-            document.getElementById("auth").classList.remove("hidden");
-            switchAuthTab('join');
-        };
-    }
+ if (enterBtn) {
+    enterBtn.onclick = () => {
+        // Hide Landing
+        document.getElementById("landing").classList.add("hidden");
+        // Show Auth
+        document.getElementById("auth").classList.remove("hidden");
+        
+        // 🔴 IMPORTANT: Lock body scrolling again for the app view
+        document.body.style.overflow = "hidden"; 
+        
+        switchAuthTab('join');
+    };
+}
+
 
     // 2. Create Room Button
     if (createBtn) {
@@ -399,37 +406,46 @@ socket.on("roomCreated", code => {
     updateBrowserURL(code);
 });
 /* ================= ROOM STATE LOGIC ================= */
+/* ================= ROOM STATE LOGIC (FIXED) ================= */
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
+
     // --- 1. SILENT AUTO-REFRESH (Update Data Only) ---
     if (data.updateOnly) {
-        // Update Owners
         if(data.teamOwners) teamOwners = data.teamOwners;
-      
-        // KICK DETECTION: If my team is suddenly in the "Available" list, I timed out.
+        
+        // KICK DETECTION
         if (myTeam && data.availableTeams && data.availableTeams.includes(myTeam)) {
              alert("⚠️ You were disconnected for too long. You are now a Spectator.");
              sessionStorage.removeItem('ipl_team');
              myTeam = null;
              updateHeaderNotice();
-             // Switch view based on game state
-             if(gameStarted) setGamePhase("AUCTION");
-             else setGamePhase("TEAM_SELECT");
+             setGamePhase("TEAM_SELECT"); 
         }
-        // Update Team Buttons (for everyone)
+        
         if(data.availableTeams) renderEmbeddedTeams(data.availableTeams);
-        // Refresh Squad View if currently open in the tab
+        
         if(document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
             viewEmbeddedSquad(selectedSquadTeam);
         }
-        return; // Stop here, do not re-render whole page
+        return; 
     }
-    // --- 2. SYNC TEAM WITH SERVER (On Connect/Reconnect) ---
-    // If server says my team is different from what I thought (e.g. I timed out while away), update it.
+
+    // --- 2. SETUP SESSION ---
+    roomCode = data.roomCode;
+    sessionStorage.setItem('ipl_room', roomCode);
+    if(data.rules) activeRules = data.rules;
+    if(data.squads) allSquads = data.squads;
+    if(data.teamOwners) teamOwners = data.teamOwners;
+    if(data.purses) teamPurse = data.purses;
+    
+    isHost = data.isHost;
+    gameStarted = data.auctionStarted;
+
+    // --- 3. TEAM SYNC CHECK ---
     if (data.yourTeam !== undefined) {
         if (data.yourTeam === null && myTeam !== null) {
-            // I was downgraded to spectator
-            alert("⚠️ You were disconnected for too long. You are now a Spectator.");
+            alert("⚠️ You are now a Spectator.");
             sessionStorage.removeItem('ipl_team');
             myTeam = null;
         } else {
@@ -437,107 +453,37 @@ socket.on("joinedRoom", (data) => {
             if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
         }
     }
-    // --- 3. LOAD HISTORY (Chat/Logs) ---
-    if (data.history) {
-        const chatBox = document.getElementById("chat");
-        const logBox = document.getElementById("log");
-        if(chatBox) chatBox.innerHTML = "";
-        if(logBox) logBox.innerHTML = "";
-      
-        if(chatBox && data.history.chat) {
-            data.history.chat.forEach(m => {
-                const div = document.createElement("div");
-                div.innerHTML = `<b style="color:${TEAM_COLORS[m.team] || '#aaa'}">${m.team} (${m.user})</b>: ${m.msg}`;
-                chatBox.appendChild(div);
-            });
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-      
-        if(logBox && data.history.logs) {
-            data.history.logs.forEach(m => {
-                const div = document.createElement("div");
-                div.className = "log-item";
-                div.innerText = m;
-                logBox.appendChild(div);
-            });
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    }
-    // --- 4. SAVE METADATA ---
-    if (data.teamOwners) teamOwners = data.teamOwners;
-    if (data.purses) teamPurse = data.purses;
-  
-    // --- 5. CHECK: HAS AUCTION ENDED? ---
-   // Inside socket.on("joinedRoom", ...)
-if (data.auctionEnded) {
-        setupAuctionScreen(); // Prepare UI
-      
-        // Check for specific deep link target
-        const target = sessionStorage.getItem('redirect_target');
-      
-        if (target === 'summary') {
-            renderPostAuctionSummary();
-            showScreen("postAuctionSummary");
-        }
-        else if (target === 'leaderboard') {
-            showScreen("leaderboard");
-        }
-        else {
-            // Default Logic
-            if (myTeam) {
-                showScreen("playingXI");
-                socket.emit("getMySquad");
-            } else {
-                renderPostAuctionSummary();
-                showScreen("postAuctionSummary");
-            }
-        }
-      
-        // Clear redirection so it doesn't persist forever
-        sessionStorage.removeItem('redirect_target');
-        return;
-    }
-    // --- 6. STANDARD SETUP ---
-    roomCode = data.roomCode;
-    sessionStorage.setItem('ipl_room', roomCode);
-  
-    if(data.rules) activeRules = data.rules;
-    if(data.squads) allSquads = data.squads;
-    isHost = data.isHost;
-    gameStarted = data.auctionStarted;
-  
-    setupAuctionScreen();
-    // Render Teams
-    if (data.availableTeams) {
-        renderEmbeddedTeams(data.availableTeams);
-    }
-    // Determine Screen Phase
-    if (data.auctionStarted) {
-        if (!myTeam && data.availableTeams && data.availableTeams.length > 0) {
-            setGamePhase("TEAM_SELECT");
-        } else {
-            setGamePhase("AUCTION");
-            updateHeaderNotice();
+
+    // --- 4. RENDER TEAMS (THIS WAS MISSING) ---
+    // 🔴 THIS LINE IS CRITICAL: It draws the buttons when you first join
+    renderEmbeddedTeams(data.availableTeams || []);
+
+    // --- 5. DETERMINE SCREEN PHASE ---
+    if (myTeam) {
+        // I already have a team
+        setGamePhase("AUCTION");
+        updateHeaderNotice();
+        
+        // If pre-game, show "Waiting for Host"
+        if(!gameStarted) {
+            document.getElementById("embeddedTeamList").classList.add("hidden");
+            document.getElementById("waitingForHostMsg").classList.remove("hidden");
+            setGamePhase("TEAM_SELECT"); 
         }
     } else {
+        // I don't have a team -> Show selection screen
         setGamePhase("TEAM_SELECT");
-        if (myTeam) {
-             document.getElementById("embeddedTeamList").classList.add("hidden");
-             document.getElementById("waitingForHostMsg").classList.remove("hidden");
-             updateHeaderNotice();
-        }
     }
-  
+
+    // --- 6. SETUP UI ---
+    setupAuctionScreen();
     updateAdminButtons(data.auctionStarted);
-  
-    // Auto-Refresh Squad Window if open
-    if(squadWindow && !squadWindow.closed) {
-        socket.emit("getSquads");
-    }
+
     if (data.auctionStarted) {
         socket.emit("getAuctionState");
     }
 });
+
 /* ================= USER LIST LOGIC (UPDATED PILL) ================= */
 let userListInterval = null; // Global interval for the timer
 socket.on("roomUsersUpdate", (data) => {
@@ -720,31 +666,44 @@ socket.on("forceHome", (msg) => {
 function renderEmbeddedTeams(teams) {
     const box = document.getElementById("embeddedTeamList");
     if(!box) return;
+    
     box.innerHTML = "";
-  
-    if(teams.length === 0) {
-        box.innerHTML = "<p style='color:#ccc; padding:20px;'>All teams taken! You are a spectator.</p>";
-        if(gameStarted) {
-            const btn = document.createElement("button");
-            btn.className = "primary-btn";
-            btn.innerText = "Watch Auction";
-            btn.style.width = "100%";
-            btn.onclick = () => setGamePhase("AUCTION");
-            box.appendChild(btn);
-        }
+    
+    // 🔴 FIX: Unhide the box immediately so messages are visible
+    box.classList.remove("hidden");
+
+    // Case 1: No teams available
+    if(!teams || teams.length === 0) {
+        box.innerHTML = `
+            <div style="text-align:center; padding:20px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                <div style="color:#cbd5e1; font-size:0.9rem; margin-bottom:10px;">All teams are taken!</div>
+                <button class="primary-btn" style="width:100%; font-size:0.9rem;" onclick="setGamePhase('AUCTION')">
+                    👀 Watch as Spectator
+                </button>
+            </div>
+        `;
         return;
     }
+
+    // Case 2: Render Buttons
+    const grid = document.createElement("div");
+    grid.className = "team-list"; 
+    
     teams.sort().forEach(team => {
         const btn = document.createElement("button");
         btn.innerText = team;
         btn.className = "team-btn";
         btn.style.setProperty("--team-color", TEAM_COLORS[team] || "#94a3b8");
-      
+        
         btn.onclick = () => {
+            // Optimistic UI Update
             myTeam = team;
             sessionStorage.setItem('ipl_team', team);
+            
+            // Send to Server
             socket.emit("selectTeam", { team, user: username });
-          
+            
+            // Update UI immediately
             if(gameStarted) {
                 setGamePhase("AUCTION");
                 updateHeaderNotice();
@@ -753,25 +712,29 @@ function renderEmbeddedTeams(teams) {
                 document.getElementById("waitingForHostMsg").classList.remove("hidden");
                 updateHeaderNotice();
             }
-          
+            
+            // Hide header join button if it exists
             const lateBtn = document.getElementById("lateJoinBtn");
-            if(lateBtn) lateBtn.classList.add("hidden");
+            if(lateJoinBtn) lateBtn.classList.add("hidden");
         };
-        box.appendChild(btn);
+        grid.appendChild(btn);
     });
-  
+
+    box.appendChild(grid);
+
+    // Case 3: Add Spectator Option at bottom (Only if game started)
     if(gameStarted) {
-        const specBtn = document.createElement("button");
-        specBtn.innerText = "👀 Watch as Spectator";
-        specBtn.className = "secondary-btn";
-        specBtn.style.width = "100%";
-        specBtn.style.marginTop = "8px";
-        specBtn.onclick = () => setGamePhase("AUCTION");
-        box.appendChild(specBtn);
+        const specDiv = document.createElement("div");
+        specDiv.style.marginTop = "15px";
+        specDiv.innerHTML = `
+            <button class="secondary-btn" style="width:100%; font-size:0.8rem; border-style:dashed;" onclick="setGamePhase('AUCTION')">
+                Skip & Watch as Spectator
+            </button>
+        `;
+        box.appendChild(specDiv);
     }
-  
-    box.classList.remove("hidden");
 }
+
 socket.on("teamPicked", ({ team, user, remaining }) => {
     // 1. UPDATE OWNERS LIST IMMEDIATELY
     if (team && user) {
@@ -1586,17 +1549,21 @@ function setGamePhase(phase) {
     const teamCard = document.getElementById("teamSelectionMain");
     const auctionCard = document.getElementById("auctionCard");
     const lateJoinBtn = document.getElementById("lateJoinBtn");
+
     if (phase === "TEAM_SELECT") {
         if(teamCard) teamCard.classList.remove("hidden");
         if(auctionCard) auctionCard.classList.add("hidden");
+        // Hide "Join" button in header because we are ON the join screen
         if(lateJoinBtn) lateJoinBtn.classList.add("hidden");
-    }
+    } 
     else if (phase === "AUCTION") {
         if(teamCard) teamCard.classList.add("hidden");
         if(auctionCard) auctionCard.classList.remove("hidden");
+        // Show "Join" button in header if I am a spectator
         if(lateJoinBtn && !myTeam) lateJoinBtn.classList.remove("hidden");
     }
 }
+
 window.toggleLateJoin = function() {
     const teamCard = document.getElementById("teamSelectionMain");
     const auctionCard = document.getElementById("auctionCard");
@@ -2470,7 +2437,38 @@ window.copyRoomCode = function() {
         }, 1500);
     });
 };
+// ==========================================
+// LANDING PAGE ANIMATIONS
+// ==========================================
 
+function initLandingAnimations() {
+    const reveals = document.querySelectorAll('.reveal');
+
+    const revealOnScroll = () => {
+        const windowHeight = window.innerHeight;
+        const elementVisible = 100; // Trigger distance
+
+        reveals.forEach((reveal) => {
+            const elementTop = reveal.getBoundingClientRect().top;
+            if (elementTop < windowHeight - elementVisible) {
+                reveal.classList.add('active');
+            }
+        });
+    };
+
+    // Attach listener to the specific scrolling container
+    const landingSection = document.getElementById('landing');
+    if (landingSection) {
+        landingSection.addEventListener('scroll', revealOnScroll);
+        // Trigger once on load
+        revealOnScroll();
+    }
+}
+
+// Call this when the page loads
+document.addEventListener("DOMContentLoaded", () => {
+    initLandingAnimations();
+});
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2484,6 +2482,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
