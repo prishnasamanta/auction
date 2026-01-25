@@ -2707,92 +2707,205 @@ body {
     border: 1px solid rgba(255,255,255,0.2); /* Visible border */
 }
 /* ================================================= */
-/* ⚡ FIXED APP LAYOUT (Header + Body + Footer)      */
+/* ⚡ FINAL LAYOUT FIX (Mobile + PC + Logic)         */
 /* ================================================= */
 
-/* 1. LOCK THE SCREEN */
+/* 1. LOCK SCREEN (Prevent full page scroll) */
 body {
-    overflow: hidden; /* No scroll on body */
     position: fixed;
-    width: 100%;
-    height: 100%;
-    background: #0f172a;
+    width: 100%; height: 100%;
+    overflow: hidden;
 }
 
-/* 2. AUCTION SCREEN CONTAINER (Flex Column) */
-
-/* 3. HEADER (Fixed Height) */
-.topbar {
-    flex-shrink: 0; /* Never shrink */
-    height: 50px;
-    z-index: 10;
-    /* ... existing styles ... */
-}
-
-/* 4. MAIN WRAPPER (Fills Middle Space) */
+/* 2. WRAPPER (Flex Column to fill space) */
 .auction-wrapper {
-    flex: 1; /* Grows to fill all available space */
+    height: calc(100vh - 50px); /* Fill remaining height (Header is ~50px) */
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevent wrapper scroll */
     padding: 10px;
     gap: 10px;
-    max-width: 600px;
-    margin: 0 auto;
+    overflow: hidden; /* Stop wrapper scroll */
+    max-width: 600px; /* Constrain width for better PC view */
+    margin: 0 auto; /* Center horizontally on PC */
     width: 100%;
 }
 
+/* 3. AUCTION CENTER (The Card Container) */
 .auction-center {
-    flex-shrink: 0; /* Auction Card size is fixed based on content */
-}
-
-/* 5. COMMAND CENTER (Expands to Touch Footer) */
-#commandCenter {
-    flex: 1; /* 🟢 THIS MAKES IT STRETCH DOWN */
+    flex-shrink: 0; /* Never shrink this, it has fixed content */
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    background: rgba(15, 23, 42, 0.85); /* Slightly transparent */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    /* Remove bottom rounded corners to "touch" footer cleanly */
-    border-bottom-left-radius: 0; 
-    border-bottom-right-radius: 0;
-    border-bottom: none; /* Seamless merge */
-    margin-bottom: 0;
-    overflow: hidden;
 }
 
-.cc-content {
-    flex: 1; /* Internal content fills height */
+/* 4. AUCTION CARD (The Tile) */
+#auctionCard {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
     overflow: hidden;
     position: relative;
-    display: flex;
-    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column;
 }
 
-/* Enable Scroll for Panels inside Command Center */
-.scroll-view, #feedChat, #embeddedSquadView, #panel-sets {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* Smooth iOS scroll */
-    padding-bottom: 10px;
+/* --- Top Row: Name vs Timer --- */
+.ac-top-row {
+    display: flex; /* Flex is better for "pushing" content */
+    justify-content: space-between; /* Space out items */
+    align-items: center;
+    padding: 15px;
+    background: radial-gradient(circle at center, #1e293b, #0f172a);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    height: 90px;
+    position: relative;
 }
+
+.ac-info-box {
+    flex: 1; /* Takes all available space */
+    min-width: 0; /* Crucial for text-overflow to work in Flex */
+    display: flex; flex-direction: column; justify-content: center;
+    padding-right: 15px; /* The "gap" before the timer */
+}
+
+.ac-name-text {
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 800; color: #fff;
+    line-height: 1.1; text-transform: uppercase;
+    white-space: nowrap; 
+    /* Font size is set dynamically by JS */
+}
+
+.ac-role-text {
+    font-family: 'Inter', sans-serif;
+    color: var(--gold); font-size: 0.8rem; font-weight: 600;
+    margin-top: 4px; letter-spacing: 1px;
+}
+
+.ac-status-box {
+    flex-shrink: 0; /* Timer never shrinks */
+    display: flex; flex-direction: column; align-items: flex-end; 
+    width: 75px; 
+}
+.ac-timer-box {
+    font-family: monospace; font-size: 1.4rem; font-weight: 700;
+    color: #f43f5e; background: rgba(0,0,0,0.3);
+    padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);
+    text-align: center; width: 100%;
+}
+
+/* --- Bottom Row: Price vs Button --- */
+.ac-bot-row {
+    display: flex; 
+    align-items: stretch; /* Button stretches to fill height */
+    height: 80px;
+    background: rgba(30, 41, 59, 0.4);
+    padding: 10px;
+}
+
+.ac-price-box {
+    /* "Leftmost current bid" */
+    display: flex; flex-direction: column; justify-content: center;
+    padding-right: 15px; /* Space before button */
+    min-width: 110px; /* Ensure price doesn't jump */
+}
+.ac-price-box .lbl { font-size: 0.65rem; color: #64748b; font-weight: 700; letter-spacing: 0.5px; }
+.ac-price-box .val { 
+    font-family: 'Exo 2', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff;
+    white-space: nowrap; 
+}
+
+/* The Button (Extended to left) */
+.ac-main-bid-btn {
+    flex: 1; /* Fills ALL remaining space to the right */
+    background: var(--success);
+    border: none; border-radius: 8px;
+    color: #022c22; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 #15803d;
+    transition: transform 0.1s;
+}
+.ac-main-bid-btn:active { transform: translateY(2px); box-shadow: none; }
+.ac-main-bid-btn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; }
+
+/* 5. COMMAND CENTER (Fills the bottom) */
+#commandCenter {
+    flex: 1; /* Grows to fill space */
+    width: 100%;
+    display: flex; flex-direction: column;
+    min-height: 0; /* Allows internal scrolling */
+    margin-bottom: 0;
+    border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+}
+/* Ensure internal content scrolls properly */
+.cc-content { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.cc-view { height: 100%; display: flex; flex-direction: column; }
+.scroll-view { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; }
+
+/* PC Override: If screen is wide, use grid */
+@media (min-width: 1100px) {
+    .auction-wrapper {
+        display: grid;
+        grid-template-columns: 350px 1fr 350px; /* Sidebar | Main | Sidebar */
+        max-width: 1400px;
+        align-items: start;
+        height: auto; /* Let content dictate height on PC */
+        overflow: visible; 
+    }
+    /* On PC, Command Center has fixed height */
+    #commandCenter { height: 600px; flex: none; }
+    /* Hide footer on PC grid layout or place it differently */
+    .app-footer-fixed { position: static; } 
+}
+
+/* 🟢 GREEN FLASH ANIMATION */
+#auctionCard.pulse-green {
+    animation: flashGreen 0.5s ease-out;
+}
+@keyframes flashGreen {
+    0% { border-color: #4ade80; box-shadow: 0 0 30px rgba(74, 222, 128, 0.5) inset; }
+    100% { border-color: rgba(255,255,255,0.15); box-shadow: none; }
+}
+
+/* 🔴 NEW PREMIUM SOLD STAMP */
+.ac-result-overlay {
+    position: absolute; inset: 0; 
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex; justify-content: center; align-items: center;
+    border-radius: 16px 16px 0 0; /* Match top row */
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.2s;
+}
+.ac-result-overlay.active { opacity: 1; pointer-events: auto; }
+
+.premium-stamp {
+    border: 4px solid currentColor;
+    padding: 8px 20px;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 900; font-size: 2.5rem;
+    text-transform: uppercase;
+    transform: rotate(-12deg) scale(2);
+    animation: stampSlam 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    background: rgba(0,0,0,0.3);
+    box-shadow: 0 0 15px currentColor;
+    text-align: center;
+}
+@keyframes stampSlam { to { transform: rotate(-12deg) scale(1); } }
 
 /* 6. FIXED FOOTER */
 .app-footer-fixed {
     flex-shrink: 0; /* Never shrink */
     background: #020617;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 8px 0; /* Compact padding */
     text-align: center;
     font-size: 0.65rem;
     color: #475569;
     letter-spacing: 1px;
     z-index: 20;
     /* Safe Area for iPhones without home button */
-    padding-bottom: env(safe-area-inset-bottom, 8px); 
 }
+
 
 
 
