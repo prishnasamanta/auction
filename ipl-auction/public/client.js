@@ -2077,88 +2077,232 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[teamName] || '#fff';
     const logoUrl = `/logos/${teamName}.png`;
-    // Categorize
+
+    // 1. Categorize Players
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
         let r = p.role;
         if (['PACE', 'SPIN'].includes(r)) r = 'BOWL';
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
-    // Helper: Compact Rows
+
+    // 2. Helper: Render Rows (Premium Styling)
     const renderRows = (list) => list.map(p => {
         const safeName = p.name.replace(/'/g, "\\'");
         return `
         <div class="pro-player-card" 
-             onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')"
-             style="
-                background: rgba(255,255,255,0.05);
-                padding: 4px 8px; /* Tighter Padding */
-                margin-bottom: 2px; /* Tighter Margin */
-                border-radius: 4px;
-                border-left: 3px solid ${teamColor};
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                cursor: pointer;
-                min-height: 28px;">
-           
-            <div class="pp-left" style="display:flex; align-items:center; gap:5px;">
-                <span class="pp-name" style="font-weight: bold; color: #fff; font-size: 0.75rem;">
-                    ${p.foreign ? '✈️ ' : ''}${p.name}
+             onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')">
+            
+            <div class="pp-left">
+                <span class="pp-role-dot" style="background:${teamColor}"></span>
+                <span class="pp-name">
+                    ${p.foreign ? '<span class="plane-icon">✈️</span>' : ''}${p.name}
                 </span>
-                <span style="font-size:0.65rem; color:#fbbf24;">⭐${p.rating}</span>
             </div>
-           
+            
             <div class="pp-right">
-                <span class="pp-price" style="color: #4ade80; font-size: 0.75rem;">₹${p.price.toFixed(2)}</span>
+                <span class="pp-rating">⭐${p.rating}</span>
+                <span class="pp-price">₹${p.price.toFixed(2)}</span>
             </div>
         </div>
     `}).join('');
+
+    // 3. Return HTML with Embedded CSS
     return `
-    <div class="team-sheet-card full-squad-mode" style="
-        --team-logo-url: url('${logoUrl}');
-        width: 800px; /* Reduced Width for better fit */
-        background-color: #020617;
-        border: 2px solid #facc15;
-        border-radius: 12px;
-        position: relative;
-        overflow: hidden;
-        font-family: 'Exo 2', sans-serif;">
-       
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50%; height: 50%; background-image: url('${logoUrl}'); background-size: contain; background-repeat: no-repeat; opacity: 0.1; filter: grayscale(100%); pointer-events: none;"></div>
-        <div class="sheet-header" style="background: rgba(0,0,0,0.5); padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2;">
-            <h2 class="sheet-title" style="margin: 0; font-size: 2.2rem; color: #fff; text-transform: uppercase;">${teamName}</h2>
-            <div class="sheet-subtitle" style="color: #facc15; font-size: 0.9rem; letter-spacing: 2px;">FULL SQUAD • ${owner || 'Manager'}</div>
-            <div style="margin-top: 8px; display: flex; justify-content: center; gap: 20px; color: #ccc; font-weight: bold; font-size: 1rem;">
-                <span>💰 ₹${purse.toFixed(2)} Cr</span>
-                <span>👥 ${squad.length}</span>
-                <span>✈️ ${foreignCount} OS</span>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&display=swap');
+
+        .squad-view-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            overflow: hidden; /* Hide overflow from scaling */
+            padding: 10px;
+        }
+
+        .team-sheet-card {
+            width: 900px; /* Fixed "Premium" Width */
+            min-width: 900px;
+            background: linear-gradient(145deg, #0f172a 0%, #020617 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid ${teamColor};
+            border-radius: 16px;
+            position: relative;
+            font-family: 'Exo 2', sans-serif;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            transform-origin: top center;
+            transition: transform 0.3s ease;
+        }
+
+        /* WATERMARK */
+        .card-watermark {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%; height: 60%;
+            background-image: url('${logoUrl}');
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.05;
+            filter: grayscale(100%);
+            pointer-events: none;
+        }
+
+        /* HEADER */
+        .sheet-header {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(0,0,0,0.2));
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            z-index: 2;
+        }
+        .sheet-title {
+            margin: 0;
+            font-size: 2.8rem;
+            color: #fff;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .sheet-subtitle {
+            color: #fbbf24;
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+        .sheet-stats {
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+        }
+        .stat-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #e2e8f0;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* BODY GRID */
+        .pro-body {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            position: relative;
+            z-index: 2;
+        }
+        .pro-col-header {
+            color: ${teamColor};
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: 800;
+            font-size: 1rem;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* PLAYER CARDS */
+        .pro-player-card {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            border-left: 2px solid ${teamColor};
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .pro-player-card:hover {
+            background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            transform: translateX(2px);
+        }
+        .pp-left { display: flex; align-items: center; gap: 8px; }
+        .pp-name { font-weight: 700; color: #f1f5f9; font-size: 0.85rem; }
+        .plane-icon { margin-right: 4px; font-size: 0.8rem; }
+        .pp-right { display: flex; flex-direction: column; align-items: flex-end; line-height: 1; }
+        .pp-rating { font-size: 0.65rem; color: #94a3b8; margin-bottom: 2px; }
+        .pp-price { color: #4ade80; font-size: 0.8rem; font-weight: 700; font-family: monospace; }
+        
+        .sheet-footer {
+            padding: 12px;
+            text-align: center;
+            color: #475569;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* 📱 MOBILE RESPONSIVENESS: MAGIC SCALING */
+        /* On screens smaller than the card width (900px), scale it down */
+        @media (max-width: 920px) {
+            .team-sheet-card {
+                /* Calculate scale: Screen Width / Card Width */
+                /* We leave a little margin (95vw) */
+                transform: scale(calc(96vw / 900));
+                margin-left: calc((96vw - 900px) / 2); /* Center it after scaling */
+                margin-bottom: -40%; /* Remove huge gap caused by scaling */
+                margin-top: -20px;
+            }
+        }
+    </style>
+
+    <div class="squad-view-wrapper">
+        <div class="team-sheet-card full-squad-mode" id="squad-card-capture">
+            
+            <div class="card-watermark"></div>
+
+            <div class="sheet-header">
+                <h2 class="sheet-title">${teamName}</h2>
+                <div class="sheet-subtitle">OFFICIAL SQUAD • ${owner || 'Manager'}</div>
+                <div class="sheet-stats">
+                    <div class="stat-badge">💰 ₹${purse.toFixed(2)} Cr</div>
+                    <div class="stat-badge">👥 ${squad.length} / 25</div>
+                    <div class="stat-badge">✈️ ${foreignCount} Overseas</div>
+                </div>
             </div>
-        </div>
-        <div class="pro-body" style="padding: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; position: relative; z-index: 2;">
-            <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">WK</div>
-                ${renderRows(cat.WK)}
+
+            <div class="pro-body">
+                <div class="pro-col">
+                    <div class="pro-col-header">Wicket Keepers</div>
+                    ${renderRows(cat.WK)}
+                </div>
+                <div class="pro-col">
+                    <div class="pro-col-header">Batters</div>
+                    ${renderRows(cat.BAT)}
+                </div>
+                <div class="pro-col">
+                    <div class="pro-col-header">All Rounders</div>
+                    ${renderRows(cat.ALL)}
+                </div>
+                <div class="pro-col">
+                    <div class="pro-col-header">Bowlers</div>
+                    ${renderRows(cat.BOWL)}
+                </div>
             </div>
-            <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">BAT</div>
-                ${renderRows(cat.BAT)}
+            
+            <div class="sheet-footer">
+                IPL AUCTION 2025 • GENERATED BY AUCTION DASHBOARD
             </div>
-            <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">ALL</div>
-                ${renderRows(cat.ALL)}
-            </div>
-            <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">BOWL</div>
-                ${renderRows(cat.BOWL)}
-            </div>
-        </div>
-       
-        <div class="sheet-footer" style="padding: 10px; text-align: center; color: #64748b; font-size: 0.7rem; background: rgba(0,0,0,0.5);">
-            OFFICIAL SQUAD • GENERATED BY AUCTION DASHBOARD
         </div>
     </div>`;
 }
+
 // Helper for Leaderboard Card (Not for selection)
 function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
     const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
@@ -2525,6 +2669,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
