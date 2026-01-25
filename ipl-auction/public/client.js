@@ -821,18 +821,18 @@ function updatePauseIcon(isPaused) {
     const btn = document.getElementById("togglePauseBtn");
     if(!btn) return;
     
+    // Simple Text Swap: Less CPU usage
     if(isPaused) {
-        // Show Play Icon (to resume)
-        btn.innerHTML = '▶'; 
-        btn.style.borderColor = "#4ade80";
+        btn.innerText = "▶"; // Play
         btn.style.color = "#4ade80";
+        btn.style.borderColor = "#4ade80";
     } else {
-        // Show Animated Pause Icon
-        btn.innerHTML = '<div class="pause-icon"><div class="pause-bar"></div><div class="pause-bar"></div></div>';
-        btn.style.borderColor = "";
+        btn.innerText = "⏸"; // Pause (Vertical bars)
         btn.style.color = "";
+        btn.style.borderColor = "";
     }
 }
+
 socket.on("auctionStarted", () => {
     auctionLive = true;
     auctionPaused = false;
@@ -868,10 +868,25 @@ socket.on("newPlayer", d => {
 });
 function updatePlayerCard(player, bid) {
     // 1. Update Name (Big Text)
-    const nameEl = document.getElementById("playerName");
-    if(nameEl) nameEl.innerText = player.name;
-    // 2. Update Meta (Center Item: Role & Rating)
+   const nameEl = document.getElementById("playerName");
     const metaEl = document.getElementById("playerMeta");
+    const bidEl = document.getElementById("bid");
+
+    if (nameEl) {
+        nameEl.innerText = player.name;
+        
+        // Font Sizing Logic
+        // Reset
+        nameEl.style.fontSize = "1.8rem"; 
+        
+        // Check Length
+        if (player.name.length > 20) {
+            nameEl.style.fontSize = "1.1rem"; // Very small for huge names
+        } else if (player.name.length > 15) {
+            nameEl.style.fontSize = "1.4rem"; // Medium small
+        }
+    }
+    // 2. Update Meta (Center Item: Role & Rating)
     if(metaEl) {
         // Format: "BAT • ⭐85"
         metaEl.innerText = `${player.role} • ⭐${player.rating}`;
@@ -884,7 +899,6 @@ function updatePlayerCard(player, bid) {
         else metaEl.style.color = "#cbd5e1"; // Default
     }
     // 3. Update Bid Amount
-    const bidEl = document.getElementById("bid");
     if(bidEl) bidEl.innerText = `₹${bid.toFixed(2)} Cr`;
 }
 socket.on("timer", t => {
@@ -997,44 +1011,31 @@ socket.on("chatUpdate", d => {
     const chat = document.getElementById("chat");
     if(!chat) return;
 
+    // Strict Check
     const isMe = (d.user === username); 
+    
     const div = document.createElement("div");
+    // Both use the same base class structure now
+    div.className = `chat-msg ${isMe ? 'mine' : 'others'}`;
     
-    // Get Team Color or Default Grey
-    const teamColor = TEAM_COLORS[d.team] || '#94a3b8';
-    
-    // Generate simple time (e.g., 10:42)
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    // Helper for time
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12:false });
+    const color = TEAM_COLORS[d.team] || '#aaa';
 
-    // Apply classes and CSS variable for color
-    div.className = `chat-msg ${isMe ? 'mine' : ''}`;
-    div.style.setProperty('--msg-color', teamColor);
-
-    // PREMIUM COMPACT HTML STRUCTURE
     div.innerHTML = `
-        <div class="chat-meta">
-            <span class="chat-time">${time}</span>
-            <span>${isMe ? 'YOU' : d.team}</span>
-        </div>
-        <div class="chat-text">
-            ${d.msg}
-        </div>
+        <div class="chat-meta" style="color:${color}">${d.team} <span style="opacity:0.5; font-weight:400; font-size:0.65rem;">${time}</span></div>
+        <div class="chat-text" style="color:#eee;">${d.msg}</div>
     `;
+    
+    // Apply Border Color dynamically
+    div.style.borderLeftColor = color;
 
     chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
 
-    // Auto-scroll logic
-    // We add a tiny buffer (50px) so if user is scrolling up to read history, we don't yank them down
-    const isScrolledToBottom = chat.scrollHeight - chat.clientHeight <= chat.scrollTop + 100;
-    
-    if(isScrolledToBottom || isMe) { 
-        setTimeout(() => {
-            chat.scrollTop = chat.scrollHeight;
-        }, 50);
-    }
 
     // Limit history to 60 messages (slightly more since they are compact)
-    if(chat.children.length > 60) chat.removeChild(chat.firstChild);
+    if(chat.children.length > 20) chat.removeChild(chat.firstChild);
 });
 
 // 2. LOG UPDATE (Newest at TOP - Fixed)
@@ -2540,5 +2541,6 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
