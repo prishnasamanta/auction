@@ -1999,16 +1999,7 @@ socket.on("submitResult", (res) => {
 // --- LEADERBOARD POPUP LOGIC ---
 let currentPopupData = null;
 
-function openSquadView(data) {
-    currentPopupData = data;
-    const overlay = document.getElementById("squadViewOverlay");
-    
-    // Default to 'XI' view if they have submitted one, otherwise Full Squad
-    const initialMode = (data.xi && (data.xi.BAT || data.xi.WK)) ? 'XI' : 'FULL';
-    switchPopupView(initialMode); 
-    
-    overlay.classList.remove("hidden");
-}
+
 window.switchPopupView = function(mode) {
     const btnXI = document.getElementById('btnShowXI');
     const btnFull = document.getElementById('btnShowFull');
@@ -2038,20 +2029,22 @@ function renderPopupContent(mode) {
     container.innerHTML = "";
 
     if (mode === 'XI') {
-        // Check if XI data exists (Spectators might need to fetch this if not loaded)
-        if (d.xi && (d.xi.WK || d.xi.BAT)) {
-             // Reuse the exact same card generator as the Submit page
+        // CHECK: Does valid XI data exist?
+        if (d.xi && (d.xi.BAT || d.xi.WK || d.xi.BOWL)) {
+             // 🟢 USE THE EXACT SAME GENERATOR AS SUBMIT PAGE
+             // This ensures it looks 100% identical
              container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
         } else {
              container.innerHTML = `
                 <div style="text-align:center; padding:40px; color:#94a3b8; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
                     <div style="font-size:3rem; margin-bottom:10px; opacity:0.5;">🏏</div>
-                    <h3 style="margin:0; color:#fff;">XI Not Available</h3>
-                    <p style="font-size:0.9rem;">This team has not submitted their playing XI yet.</p>
+                    <h3 style="margin:0; color:#fff;">XI Not Submitted</h3>
+                    <p style="font-size:0.9rem;">This team hasn't finalized their Playing XI yet.</p>
                 </div>`;
         }
     } else {
-        // Full Squad View (2 Column Layout)
+        // FULL SQUAD VIEW (Uses the Premium V3 Card)
+        // Pass 'true' at the end to enable the "Popup Mode" (2-column mobile layout)
         container.innerHTML = generateFullSquadHTML(d.team, fullSquad, safePurse, "Manager", true);
     }
 }
@@ -2090,17 +2083,23 @@ window.downloadLeaderboardPNG = function() {
         a.click();
     });
 }
+// --- GLOBAL STORE FOR LEADERBOARD DATA ---
+let globalLeaderboardData = []; 
+
 socket.on("leaderboard", (board) => {
+    globalLeaderboardData = board; // Store locally to access later
+    
     const tbody = document.getElementById("leaderboardBody");
     if(tbody) {
         tbody.innerHTML = "";
         board.forEach((t, i) => {
             const tr = document.createElement("tr");
-          
+            
             // Status Badge
-            const statusHtml = t.disqualified
+            const statusHtml = t.disqualified 
                 ? `<span class="lb-status-badge lb-status-disqualified">❌ DQ</span>`
-                : `<span class="lb-status-badge lb-status-qualified">✅ OK</span>`;
+                : (t.xi && (t.xi.BAT || t.xi.WK) ? `<span class="lb-status-badge lb-status-qualified">✅ XI</span>` : `<span style="opacity:0.5; font-size:0.7rem;">-</span>`);
+
             tr.innerHTML = `
                 <td>#${i+1}</td>
                 <td>
@@ -2110,13 +2109,33 @@ socket.on("leaderboard", (board) => {
                 <td style="font-family:monospace; color:#ccc;">₹${Number(t.purse).toFixed(2)}</td>
                 <td>${statusHtml}</td>
                 <td style="text-align:center;">
-                    <button onclick='openSquadView(${JSON.stringify(t)})' class="lb-view-btn" title="View Squad">👁️</button>
+                    <button onclick="openSquadView('${t.team}')" class="lb-view-btn" title="View Squad">👁️</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
     }
 });
+
+// --- UPDATED OPEN POPUP LOGIC ---
+function openSquadView(teamName) {
+    // 1. Find data in the global store
+    const data = globalLeaderboardData.find(t => t.team === teamName);
+    if (!data) return alert("Data not found for " + teamName);
+
+    currentPopupData = data;
+    const overlay = document.getElementById("squadViewOverlay");
+    
+    // 2. Logic: If they have an XI submitted, show XI tab first. Else Full Squad.
+    // We check if 'xi' object exists and has keys
+    const hasXI = data.xi && (Object.keys(data.xi).length > 0);
+    const initialMode = hasXI ? 'XI' : 'FULL';
+    
+    switchPopupView(initialMode);
+    
+    overlay.classList.remove("hidden");
+}
+
 // ==========================================
 // 💎 PREMIUM SQUAD GENERATOR V3 (Final)
 // ==========================================
@@ -2769,7 +2788,11 @@ function refreshGlobalUI() {
     }
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
+    // Add this inside updateRulesUI or refreshGlobalUI
+    socket.emit("getAuctionState"); // Ensures leaderboard data is requested
+
 }
+
 
 
 
