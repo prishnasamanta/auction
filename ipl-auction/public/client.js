@@ -1625,36 +1625,40 @@ function closeUserListOutside(e) {
     }
 }
 function updateHeaderNotice() {
-    // 1. Handle Spectator Mode
+    const headerBadge = document.getElementById("headerTeamBadge");
+    const headerName = document.getElementById("headerTeamName");
+    const cardTeam = document.getElementById("noticeTeam"); // Only if used elsewhere
+    
+    // 1. Spectator Logic
     if (!myTeam) {
-        const teamEl = document.getElementById("noticeTeam");
-        const purseEl = document.getElementById("noticePurse");
-      
-        if(teamEl) {
-            teamEl.innerText = "SPECTATOR";
-            teamEl.style.color = "#94a3b8"; // Muted gray
-        }
-        if(purseEl) {
-            purseEl.innerText = ""; // Hide purse for spectators
+        if(headerBadge) headerBadge.classList.add("hidden");
+        // Update Card Context (if visible)
+        if(cardTeam) {
+            cardTeam.innerText = "SPECTATOR";
+            cardTeam.style.color = "#94a3b8";
         }
         return;
     }
-    // 2. Handle Team Owner Mode
-    const purse = teamPurse[myTeam] !== undefined ? teamPurse[myTeam] : 0;
-    const teamEl = document.getElementById("noticeTeam");
-    const purseEl = document.getElementById("noticePurse");
-    if(teamEl) {
-        teamEl.innerText = myTeam;
-        // Use the team color for the name
-        teamEl.style.color = TEAM_COLORS[myTeam] || "white";
-        // Optional: Add a text shadow for better visibility
-        teamEl.style.textShadow = `0 0 10px ${TEAM_COLORS[myTeam] || 'rgba(0,0,0,0)'}`;
+
+    // 2. Team Owner Logic
+    // Show Header Badge
+    if(headerBadge) {
+        headerBadge.classList.remove("hidden");
+        headerName.innerText = myTeam;
+        
+        // Apply Team Color Border to the badge
+        const color = TEAM_COLORS[myTeam] || '#fff';
+        headerBadge.style.borderLeft = `3px solid ${color}`;
+        headerName.style.color = "#fff";
     }
-    if(purseEl) {
-        purseEl.innerText = `₹${purse.toFixed(2)} Cr`;
-        purseEl.style.color = "#4ade80"; // Keep Green for money
+
+    // Update Card Context
+    if(cardTeam) {
+        cardTeam.innerText = myTeam;
+        cardTeam.style.color = TEAM_COLORS[myTeam] || "#fff";
     }
 }
+
 window.showRules = function() {
     document.getElementById('viewRulesOverlay').classList.remove('hidden');
     updateRulesUI();
@@ -2448,6 +2452,24 @@ window.forceAssign = function(playerName, teamName) {
         setTimeout(() => btn.innerText = originalText, 1000);
     }
 };
+window.copyRoomCode = function() {
+    const code = document.getElementById("roomCodeText").innerText;
+    if(!code) return;
+    
+    navigator.clipboard.writeText(code).then(() => {
+        const badge = document.getElementById("roomCodeBadge");
+        const original = badge.innerHTML;
+        
+        // Visual Feedback
+        badge.style.borderColor = "#4ade80";
+        badge.innerHTML = `<span style="color:#4ade80">COPIED!</span>`;
+        
+        setTimeout(() => {
+            badge.innerHTML = original;
+            badge.style.borderColor = "";
+        }, 1500);
+    });
+};
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2462,6 +2484,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
