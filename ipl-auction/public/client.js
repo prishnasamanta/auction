@@ -2086,163 +2086,141 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
 
-    // 2. Helper: Render Player Rows
+    // 2. Render Rows
     const renderRows = (list) => {
-        if (!list || list.length === 0) return '<div class="empty-slot">-</div>';
+        if (!list || list.length === 0) return '<div class="prem-empty">-</div>';
         return list.map(p => {
             const safeName = p.name.replace(/'/g, "\\'");
             return `
-            <div class="p-row" onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')">
-                <div class="p-left">
-                    <span class="p-role-indicator" style="background:${teamColor}"></span>
-                    <span class="p-name">${p.foreign ? '✈️ ' : ''}${p.name}</span>
+            <div class="prem-row" onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')">
+                <div class="prem-p-left">
+                    <div class="prem-role-dot" style="background:${teamColor}"></div>
+                    <div class="prem-p-name">${p.foreign ? '✈️ ' : ''}${p.name}</div>
                 </div>
-                <div class="p-right">
-                    <span class="p-price">₹${p.price.toFixed(2)}</span>
-                </div>
+                <div class="prem-p-price">₹${p.price.toFixed(2)}</div>
             </div>`;
         }).join('');
     };
 
-    // 3. Return HTML with Embedded Responsive CSS
+    // 3. Return HTML (With CSS strictly defined inside)
     return `
     <style>
-        /* --- PREMIUM CARD CSS --- */
-        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700;900&display=swap');
-
-        .premium-card-wrapper {
-            font-family: 'Exo 2', sans-serif;
-            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
-            border: 2px solid #facc15;
+        /* BASE CONTAINER */
+        #premium-squad-card {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1e2e 100%);
+            border: 2px solid #facc15; /* Gold Border */
             border-radius: 12px;
             width: 100%;
-            max-width: 1000px; /* PC Max Width */
+            max-width: 1000px;
             margin: 0 auto;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            color: white;
         }
 
-        /* Watermark */
-        .premium-watermark {
+        /* WATERMARK */
+        .prem-watermark {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 60%; height: 60%;
+            width: 50%; height: 50%;
             background-image: url('${logoUrl}');
             background-size: contain;
             background-repeat: no-repeat;
-            opacity: 0.08;
+            opacity: 0.05;
             filter: grayscale(100%);
-            pointer-events: none;
             z-index: 0;
+            pointer-events: none;
         }
 
-        /* Header */
-        .premium-header {
+        /* HEADER */
+        .prem-header {
             position: relative; z-index: 2;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.3);
             padding: 15px;
             text-align: center;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .prem-title {
-            margin: 0; font-size: 2.2rem; color: #fff; font-weight: 900;
+            margin: 0; font-size: 2rem; font-weight: 900; 
             text-transform: uppercase; letter-spacing: 1px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
-        .prem-subtitle {
-            color: #facc15; font-size: 0.85rem; letter-spacing: 3px;
-            text-transform: uppercase; font-weight: 700; margin-top: 4px;
+        .prem-sub {
+            color: #facc15; font-size: 0.8rem; font-weight: 700; 
+            letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;
         }
         .prem-stats {
-            display: flex; justify-content: center; gap: 20px;
-            margin-top: 8px; color: #cbd5e1; font-size: 0.9rem; font-weight: 600;
+            display: flex; justify-content: center; gap: 15px;
+            margin-top: 8px; font-size: 0.9rem; color: #ccc;
         }
 
-        /* The Grid Layout */
-        .premium-body {
+        /* BODY GRID */
+        .prem-body {
             position: relative; z-index: 2;
             padding: 15px;
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* Default: 4 Columns (PC) */
-            gap: 12px;
+            gap: 10px;
+            /* PC DEFAULT: 4 COLUMNS */
+            grid-template-columns: 1fr 1fr 1fr 1fr;
         }
 
-        /* Column Styling */
+        /* COLUMN */
         .prem-col {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.05);
             border-radius: 8px;
             padding: 8px;
-            display: flex; flex-direction: column;
         }
-        .prem-col-head {
-            text-align: center; color: ${teamColor};
-            font-weight: 800; font-size: 0.9rem; letter-spacing: 1px;
-            border-bottom: 2px solid ${teamColor};
+        .prem-col-title {
+            text-align: center; font-weight: 800; font-size: 0.85rem;
+            color: ${teamColor}; border-bottom: 2px solid ${teamColor};
             padding-bottom: 5px; margin-bottom: 8px;
-            text-transform: uppercase;
         }
 
-        /* Player Row Styling */
-        .p-row {
+        /* PLAYER ROW */
+        .prem-row {
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(255,255,255,0.05);
-            padding: 6px 8px; margin-bottom: 4px;
-            border-radius: 4px; cursor: pointer; transition: 0.2s;
+            padding: 5px 8px; margin-bottom: 4px;
+            border-radius: 4px; cursor: pointer;
         }
-        .p-row:hover { background: rgba(255,255,255,0.15); }
+        .prem-row:hover { background: rgba(255,255,255,0.15); }
         
-        .p-left { display: flex; align-items: center; gap: 6px; overflow: hidden; }
-        .p-role-indicator { width: 4px; height: 12px; border-radius: 2px; }
-        .p-name { 
-            color: #fff; font-weight: 700; font-size: 0.8rem; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-        }
-        .p-right { flex-shrink: 0; }
-        .p-price { color: #4ade80; font-weight: 700; font-size: 0.8rem; font-family: monospace; }
-        .empty-slot { text-align: center; color: #475569; font-size: 0.8rem; padding: 5px; }
+        .prem-p-left { display: flex; align-items: center; gap: 6px; overflow: hidden; }
+        .prem-role-dot { width: 4px; height: 10px; background: #fff; border-radius: 2px; }
+        .prem-p-name { font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+        .prem-p-price { font-size: 0.8rem; font-weight: 700; color: #4ade80; }
+        .prem-empty { text-align: center; color: #555; font-size: 0.8rem; }
 
-        .premium-footer {
+        /* FOOTER */
+        .prem-footer {
             position: relative; z-index: 2;
             background: rgba(0,0,0,0.4);
-            color: #64748b; font-size: 0.7rem; text-align: center;
-            padding: 8px;
-            letter-spacing: 1px;
+            text-align: center; padding: 8px;
+            font-size: 0.7rem; color: #666;
         }
 
-        /* --- 📱 MOBILE RESPONSIVE MAGIC --- */
-        @media (max-width: 768px) {
-            .premium-card-wrapper {
-                max-width: 100%; /* Use full width of phone */
-                border-radius: 8px;
-                border-width: 1px;
+        /* 📱 MOBILE RESPONSIVENESS (2 Columns) */
+        @media (max-width: 800px) {
+            .prem-body {
+                /* SWITCH TO 2 COLUMNS ON MOBILE */
+                grid-template-columns: 1fr 1fr !important;
             }
-            .premium-header { padding: 10px; }
-            .prem-title { font-size: 1.5rem; }
-            .prem-subtitle { font-size: 0.7rem; letter-spacing: 1px; }
-            .prem-stats { font-size: 0.75rem; gap: 10px; }
-
-            /* SWITCH TO 2x2 GRID */
-            .premium-body {
-                grid-template-columns: 1fr 1fr; /* 2 Columns */
-                gap: 8px;
-                padding: 10px;
-            }
-            
-            /* Make rows slightly smaller for tight screens */
-            .p-row { padding: 4px 6px; }
-            .p-name { font-size: 0.75rem; }
-            .p-price { font-size: 0.75rem; }
+            .prem-title { font-size: 1.5rem !important; }
+            .prem-stats { font-size: 0.8rem !important; }
+            .prem-p-name { font-size: 0.75rem !important; }
         }
     </style>
 
-    <div class="premium-card-wrapper" id="squad-card-capture">
-        <div class="premium-watermark"></div>
+    <div id="premium-squad-card">
+        <div class="prem-watermark"></div>
         
-        <div class="premium-header">
-            <h2 class="prem-title">${teamName}</h2>
-            <div class="prem-subtitle">OFFICIAL SQUAD • ${owner || 'Manager'}</div>
+        <div class="prem-header">
+            <h1 class="prem-title">${teamName}</h1>
+            <div class="prem-sub">OFFICIAL SQUAD • ${owner || 'Manager'}</div>
             <div class="prem-stats">
                 <span>💰 ₹${purse.toFixed(2)} Cr</span>
                 <span>👥 ${squad.length}/25</span>
@@ -2250,29 +2228,26 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
             </div>
         </div>
 
-        <div class="premium-body">
+        <div class="prem-body">
             <div class="prem-col">
-                <div class="prem-col-head">WK</div>
+                <div class="prem-col-title">WK</div>
                 ${renderRows(cat.WK)}
             </div>
-            
             <div class="prem-col">
-                <div class="prem-col-head">BAT</div>
+                <div class="prem-col-title">BAT</div>
                 ${renderRows(cat.BAT)}
             </div>
-
             <div class="prem-col">
-                <div class="prem-col-head">ALL</div>
+                <div class="prem-col-title">ALL</div>
                 ${renderRows(cat.ALL)}
             </div>
-
             <div class="prem-col">
-                <div class="prem-col-head">BOWL</div>
+                <div class="prem-col-title">BOWL</div>
                 ${renderRows(cat.BOWL)}
             </div>
         </div>
 
-        <div class="premium-footer">
+        <div class="prem-footer">
             IPL AUCTION 2025 • GENERATED BY DASHBOARD
         </div>
     </div>`;
@@ -2644,6 +2619,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
