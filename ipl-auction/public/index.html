@@ -16,32 +16,151 @@
 
 <body>
 
-    <section id="landing" class="screen">
-        <div class="landing-card glass">
-            <div class="coffee-banner">
-                <div class="coffee-content">
-                    <span class="coffee-icon">♨️</span>
-                    <span class="coffee-text">!! Early Access - Please report bugs !!</span>
-                </div>
-            </div>
-            <div style="font-size:3rem; margin-bottom:10px;">🏏</div>
-            <h1 class="title">IPL AUCTION</h1>
-            <h1 class="title" style="font-size:1.5rem; opacity:0.8; margin-top:5px;">LIVE SIMULATOR</h1>
+  <section id="landing" class="screen landing-scrollable">
+    
+    <div class="landing-bg">
+        <div class="bg-grid"></div>
+        <div class="bg-glow"></div>
+    </div>
 
-            <p class="subtitle">
-                Real-time bidding. Strategy. Pressure. <br>
-                Compete against friends to build the ultimate 11.
+    <nav class="landing-nav glass">
+        <div class="nav-brand">⚡ IPL AUCTION <span style="color:var(--gold)">PRO</span></div>
+        <div class="nav-links">
+            <a href="#how-to">How to Play</a>
+            <a href="#features">Features</a>
+            <a href="#faq">FAQ</a>
+        </div>
+    </nav>
+
+    <div class="hero-container">
+        <div class="hero-content">
+            <div class="new-badge pulse-anim">
+                <span class="badge-icon">✨</span> NEW: 2026 & LEGENDS POOLS LIVE
+            </div>
+
+            <h1 class="hero-title">
+                BUILD YOUR <br>
+                <span class="text-gradient">DREAM DYNASTY</span>
+            </h1>
+            
+            <p class="hero-subtitle">
+                Experience the thrill of the auction table. Real-time sockets, dynamic purses, and intense bidding wars against your friends.
             </p>
 
-            <div class="features">
-                <span>⚡ Live Sockets</span>
-                <span>💰 Purse Logic</span>
-                <span>🏆 Leaderboards</span>
+            <div class="hero-actions">
+                <button id="enterBtn" class="primary-btn hero-btn">
+                    ENTER ARENA <span style="margin-left:8px">→</span>
+                </button>
+                <button onclick="document.getElementById('how-to').scrollIntoView({behavior: 'smooth'})" class="secondary-btn hero-btn-outline">
+                    LEARN MORE
+                </button>
             </div>
 
-            <button id="enterBtn" class="primary-btn" style="width:100%;"> ENTER ARENA </button>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <b>500+</b> <span>Players</span>
+                </div>
+                <div class="v-line"></div>
+                <div class="stat-item">
+                    <b>10</b> <span>Teams</span>
+                </div>
+                <div class="v-line"></div>
+                <div class="stat-item">
+                    <b>0ms</b> <span>Lag</span>
+                </div>
+            </div>
         </div>
-    </section>
+    </div>
+
+    <div id="features" class="section-container">
+        <h2 class="section-title reveal">PRO FEATURES</h2>
+        <div class="features-grid">
+            <div class="feature-card glass reveal">
+                <div class="f-icon">⚡</div>
+                <h3>Real-Time Sockets</h3>
+                <p>Instant bid updates with zero latency. See who's bidding the moment they press the button.</p>
+            </div>
+            <div class="feature-card glass reveal">
+                <div class="f-icon">💰</div>
+                <h3>Smart Purse</h3>
+                <p>Advanced validation prevents overspending. The system calculates minimum squad requirements automatically.</p>
+            </div>
+            <div class="feature-card glass reveal">
+                <div class="f-icon">🏆</div>
+                <h3>Live Leaderboard</h3>
+                <p>Track squad strength, purse remaining, and foreign player quotas in real-time.</p>
+            </div>
+            <div class="feature-card glass reveal">
+                <div class="f-icon">📂</div>
+                <h3>Multiple Pools</h3>
+                <p>Choose between IPL 2026, Legends Cricket, or create your own custom player sets.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="how-to" class="section-container">
+        <h2 class="section-title reveal">HOW IT WORKS</h2>
+        <div class="steps-wrapper">
+            <div class="step-row reveal">
+                <div class="step-num">01</div>
+                <div class="step-content">
+                    <h3>Create a Room</h3>
+                    <p>Host a private room and share the 5-letter code with your friends.</p>
+                </div>
+            </div>
+            <div class="step-row reveal">
+                <div class="step-num">02</div>
+                <div class="step-content">
+                    <h3>Pick Your Team</h3>
+                    <p>Select your franchise (CSK, MI, RCB, etc.). First come, first served.</p>
+                </div>
+            </div>
+            <div class="step-row reveal">
+                <div class="step-num">03</div>
+                <div class="step-content">
+                    <h3>Start Bidding</h3>
+                    <p>The host starts the auction. Use the 'BID' button to raise the price. Manage your budget wisely!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="faq" class="section-container" style="padding-bottom: 80px;">
+        <h2 class="section-title reveal">F.A.Q.</h2>
+        <div class="faq-list glass reveal">
+            <details class="faq-item">
+                <summary>Is this free to play?</summary>
+                <div class="faq-body">Yes! This simulator is completely free for everyone.</div>
+            </details>
+            <details class="faq-item">
+                <summary>Can I play on mobile?</summary>
+                <div class="faq-body">Absolutely. The interface is fully optimized for mobile devices with a dedicated vertical view.</div>
+            </details>
+            <details class="faq-item">
+                <summary>How many players can join?</summary>
+                <div class="faq-body">Up to 10 users can join as Team Owners. Unlimited users can join as Spectators to watch.</div>
+            </details>
+            <details class="faq-item">
+                <summary>How do I save my team?</summary>
+                <div class="faq-body">At the end of the auction, you can download a high-quality image of your squad or playing XI.</div>
+            </details>
+        </div>
+    </div>
+
+    <footer class="landing-footer">
+        <div class="footer-content">
+            <div class="footer-brand">IPL AUCTION SIM</div>
+            <div class="footer-links">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="footer-copy">© 2025 Auction Dashboard. Built for Cricket Fans.</div>
+        </div>
+    </footer>
+
+</section>
+
 
     <section id="auth" class="screen hidden">
         <div class="auth-wrapper">
@@ -711,6 +830,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
