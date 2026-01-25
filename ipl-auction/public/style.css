@@ -1,4 +1,4 @@
-/* ================================================= */
+`/* ================================================= */
 /* ================= ROOT & THEME ================== */
 /* ================================================= */
 
@@ -3340,6 +3340,83 @@ body {
     .auction-wrapper { max-width: 600px; }
 }
 
+
+/* ================================================= */
+/* 🦶 UNIVERSAL FOOTER STYLES                        */
+/* ================================================= */
+
+.app-footer {
+    flex-shrink: 0; /* Prevents the footer from shrinking/disappearing */
+    width: 100%;
+    background: #020617; /* Darker than the background for contrast */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 0;
+    z-index: 50;
+    /* Respect iPhone X+ Safe Area so home bar doesn't cover text */
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* Allows wrapping on very tiny screens */
+    gap: 15px;       /* Space between elements */
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    color: #94a3b8;  /* Muted Text Color */
+}
+
+/* Link Styling (Support for Coffee) */
+.footer-link {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border-bottom: 1px dotted transparent;
+}
+
+.footer-link:hover {
+    color: #fff;
+    border-bottom-color: #fff;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+/* Dots between items */
+.separator {
+    color: #475569;
+    font-weight: bold;
+}
+
+/* Social Icons Container */
+.social-links {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Individual Social Icon Links */
+.social-links a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.social-links a:hover {
+    opacity: 1;
+    transform: translateY(-2px); /* Subtle lift effect */
+}
+
+/* Mobile Tweaks */
+@media (max-width: 400px) {
+    .footer-content {
+        gap: 8px;
+        font-size: 0.7rem;
+        padding: 0 10px;
+    }
+}
 
 
 
