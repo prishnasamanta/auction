@@ -193,12 +193,33 @@ window.switchAuthTab = function(tab) {
         socket.emit('getPublicRooms');
     }
 };
+// --- 1. EXIT TO HOME (Fixes Reconnect Loop) ---
 window.exitToHome = function() {
-    if(confirm("Are you sure you want to exit?")) {
-        sessionStorage.clear();
+    if(confirm("Return to Main Screen?")) {
+        // Critical: Clear session to stop auto-reconnect
+        sessionStorage.clear(); 
         window.location.href = "/";
     }
-}
+};
+
+// --- 2. BACK FROM LEADERBOARD (Fixes Empty Summary) ---
+window.goBackFromLeaderboard = function() {
+    // If Auction Ended -> Go to Summary & RENDER IT
+    if (document.getElementById('postAuctionSummary') && !document.getElementById('postAuctionSummary').classList.contains('hidden')) {
+        renderPostAuctionSummary(); // <--- FIX: Force re-render
+        showScreen('postAuctionSummary');
+    } 
+    // If Player in Game -> Go to XI Screen
+    else if (myTeam && !document.getElementById('playingXI').classList.contains('hidden')) {
+        showScreen('playingXI');
+    }
+    // Default Fallback (Spectator/End Game)
+    else {
+        renderPostAuctionSummary();
+        showScreen('postAuctionSummary');
+    }
+};
+
 window.shareRoomLink = async function() {
     const url = window.location.href;
     const shareData = {
@@ -2322,25 +2343,14 @@ window.forceAssign = function(playerName, teamName) {
 };
 // --- NAVIGATION LOGIC FIXES ---
 // 1. Smart Back Button for Leaderboard
-window.goBackFromLeaderboard = function() {
-    // If I have a team (Player), go to Selection Screen
-    if (myTeam && !document.getElementById('playingXI').classList.contains('hidden')) {
-        showScreen('playingXI');
-    }
-    // If I am Spectator OR Auction Ended, go to Summary
-    else if (document.getElementById('postAuctionSummary')) {
-        showScreen('postAuctionSummary');
-    }
-    else {
-        // Fallback
-        showScreen('playingXI');
-    }
-};
+
 // 2. Updated HTML Generator (Adds Ratings + Fits Mobile 2x2)
+// --- SHARED SQUAD CARD GENERATOR ---
 function generateFullSquadHTML(teamName, squad, purse, owner) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[teamName] || '#fff';
     const logoUrl = `/logos/${teamName}.png`;
+
     // Categorize
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
@@ -2348,56 +2358,64 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
         if (['PACE', 'SPIN'].includes(r)) r = 'BOWL';
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
-    // Helper to render rows (NOW INCLUDES RATING ⭐)
-    const renderRows = (list) => list.map(p => `
-        <div class="pro-player-card" style="border-left: 3px solid ${teamColor}; background: rgba(255,255,255,0.05); padding: 5px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px;">
-            <div class="pp-left" style="display:flex; align-items:center; gap:5px;">
-                <span class="pp-name" style="font-weight: bold; color: #fff; font-size: 0.8rem;">
-                    ${p.foreign ? '✈️ ' : ''}${p.name}
-                </span>
-                <span style="font-size:0.7rem; color:#fbbf24;">⭐${p.rating}</span>
+
+    // Helper to render Clickable Rows
+    const renderRows = (list) => list.map(p => {
+        // Safe name for onclick function
+        const safeName = p.name.replace(/'/g, "\\'");
+        
+        return `
+        <div class="pro-player-card clickable-row" 
+             onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')"
+             style="border-left: 3px solid ${teamColor};">
+            <div class="pp-left">
+                <span class="pp-name">${p.foreign ? '✈️ ' : ''}${p.name}</span>
+                <span class="pp-rating">⭐${p.rating}</span>
             </div>
             <div class="pp-right">
-                <span class="pp-price" style="color: #4ade80; font-size: 0.8rem;">₹${p.price.toFixed(2)}</span>
+                <span class="pp-price">₹${p.price.toFixed(2)}</span>
             </div>
         </div>
-    `).join('');
+    `}).join('');
+
     return `
-    <div class="team-sheet-card full-squad-mode" style="--team-logo-url: url('${logoUrl}'); width: 1000px; background-color: #020617; border: 2px solid #facc15; border-radius: 16px; position: relative; overflow: hidden; font-family: 'Exo 2', sans-serif;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 60%; background-image: url('${logoUrl}'); background-size: contain; background-repeat: no-repeat; opacity: 0.1; filter: grayscale(100%); pointer-events: none;"></div>
-        <div class="sheet-header" style="background: rgba(0,0,0,0.5); padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2;">
-            <h2 class="sheet-title" style="margin: 0; font-size: 3rem; color: #fff; text-transform: uppercase;">${teamName}</h2>
-            <div class="sheet-subtitle" style="color: #facc15; font-size: 1rem; letter-spacing: 3px;">FULL SQUAD • ${owner || 'Manager'}</div>
-            <div style="margin-top: 10px; display: flex; justify-content: center; gap: 20px; color: #ccc; font-weight: bold;">
+    <div class="team-sheet-card full-squad-mode" style="--team-logo-url: url('${logoUrl}');">
+        
+        <div class="sheet-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <h2 class="sheet-title" style="color:#fff;">${teamName}</h2>
+            <div class="sheet-subtitle" style="color:${teamColor}">${owner || 'Manager'}</div>
+            <div class="sheet-stats">
                 <span>💰 ₹${purse.toFixed(2)} Cr</span>
                 <span>👥 ${squad.length}</span>
                 <span>✈️ ${foreignCount}</span>
             </div>
         </div>
-        <div class="pro-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; position: relative; z-index: 2;">
+
+        <div class="pro-body">
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">WK</div>
+                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">WK</div>
                 ${renderRows(cat.WK)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">BAT</div>
+                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">BAT</div>
                 ${renderRows(cat.BAT)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">ALL</div>
+                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">ALL</div>
                 ${renderRows(cat.ALL)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">BOWL</div>
+                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">BOWL</div>
                 ${renderRows(cat.BOWL)}
             </div>
         </div>
-       
-        <div class="sheet-footer" style="padding: 15px; text-align: center; color: #64748b; font-size: 0.8rem; background: rgba(0,0,0,0.5);">
-            OFFICIAL SQUAD • GENERATED BY AUCTION DASHBOARD
+        
+        <div class="sheet-footer">
+            OFFICIAL SQUAD LIST • AUCTION DASHBOARD
         </div>
     </div>`;
 }
+
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2411,4 +2429,5 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
