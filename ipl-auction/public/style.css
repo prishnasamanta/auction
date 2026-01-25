@@ -3549,21 +3549,22 @@ body {
     font-size: 1.1rem;
     padding: 0; /* Remove padding */
 }
-
-/* 2. Transparent Auction Tile (For Background Animation) */
+/* 💎 TRANSPARENT AUCTION TILE */
 #auctionCard {
-    /* Glass Effect */
-    background: rgba(15, 23, 42, 0.2) !important; 
-    backdrop-filter: blur(6px); 
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    /* High Transparency Dark Blue */
+    background: rgba(15, 23, 42, 0.4) !important; 
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-/* Remove inner backgrounds so glass works */
+/* Remove inner solid backgrounds */
 .ac-top-row, .ac-bot-row {
     background: transparent !important;
-    border-color: rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
+
 
 /* 3. Popup Overlay Mobile Fix */
 .rules-overlay {
@@ -3575,4 +3576,68 @@ body {
     border-radius: 16px; /* All corners rounded */
     background: #0f172a; /* Solid bg for popup readability */
 }
+/* ↔️ HEADER SCROLL FIX */
+.top-right.custom-scroll-x {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Enable Horizontal Scroll */
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    
+    /* Aesthetics */
+    padding-left: 10px; /* Space for scroll start */
+    padding-right: 5px;
+    max-width: 100%; /* Ensure it fits in header */
+    scrollbar-width: none; /* Hide Scrollbar (Firefox) */
+}
+
+/* Hide Scrollbar (Chrome/Safari) */
+.top-right.custom-scroll-x::-webkit-scrollbar { 
+    display: none; 
+}
+
+/* Ensure buttons don't shrink */
+.header-icon-btn, .admin-group {
+    flex-shrink: 0 !important;
+}
+/* ↔️ JOIN PAGE CARDS SCROLL */
+.dataset-scroll-container {
+    display: flex;
+    gap: 10px;
+    
+    /* Enable Scroll */
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    
+    padding: 5px 2px; /* Padding for shadow/focus rings */
+    width: 100%;
+    scrollbar-width: none;
+}
+
+.dataset-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+.dataset-card {
+    flex: 0 0 110px; /* Fixed Width (Don't shrink) */
+    min-width: 110px;
+    
+    /* Card Style */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.dataset-card.active {
+    background: rgba(34, 197, 94, 0.15); /* Green Tint */
+    border-color: #22c55e;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.2) inset;
+}
+
 
