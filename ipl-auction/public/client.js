@@ -1975,6 +1975,7 @@ function renderPopupContent(mode) {
         // PASS TRUE AS THE LAST ARGUMENT FOR POPUP MODE
         // This triggers the 2-column layout
         container.innerHTML = generateFullSquadHTML(d.team, fullSquad, safePurse, "Manager", true);
+        
     }
 }
 
@@ -2033,13 +2034,32 @@ socket.on("leaderboard", (board) => {
     }
 });
 // Updated Generator Function
+// ==========================================
+// 💎 PREMIUM SQUAD GENERATOR V3 (Final)
+// ==========================================
+
 function generateFullSquadHTML(teamName, squad, purse, owner, isPopup = false) {
-    // 1. Setup Data
+    // 1. Data Setup
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[teamName] || '#facc15'; 
     const logoUrl = `/logos/${teamName}.png`;
 
-    // 2. Categorize Players
+    // 2. Name Shortener Helper (Trip Name Logic)
+    // Converts "Virat Kohli" -> "V. Kohli" if length > 14 chars
+    const formatPlayerName = (name) => {
+        if (!name) return "";
+        // Threshold: 14 characters
+        if (name.length > 14) {
+            const parts = name.split(' ');
+            if (parts.length > 1) {
+                // Return "V. Kohli" format
+                return parts[0].charAt(0) + '. ' + parts.slice(1).join(' ');
+            }
+        }
+        return name;
+    };
+
+    // 3. Categorize
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
         let r = p.role;
@@ -2047,69 +2067,71 @@ function generateFullSquadHTML(teamName, squad, purse, owner, isPopup = false) {
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
 
-    // 3. Helper: Render Player List
+    // 4. Render Rows with Badges
     const renderRows = (list) => {
-        if (!list || list.length === 0) return '<div class="empty-slot">Empty</div>';
+        if (!list || list.length === 0) return '<div class="empty-slot">-</div>';
+        
         return list.map(p => {
             const safeName = p.name.replace(/'/g, "\\'");
-            // Shorter name logic for popup view to prevent overflow
-            let dispName = p.name;
-            if(isPopup && dispName.length > 15) {
-                const parts = dispName.split(' ');
-                if(parts.length > 1) dispName = parts[0].charAt(0) + '. ' + parts.slice(1).join(' ');
-            }
+            // Apply shortening logic specifically for the badge
+            const displayName = formatPlayerName(p.name);
 
             return `
             <div class="p-row" onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')">
-                <div class="p-info">
-                    <span class="p-dot" style="background:${teamColor}"></span>
-                    <span class="p-name" title="${p.name}">${p.foreign ? '✈️' : ''} ${dispName}</span>
+                
+                <div class="player-badge">
+                    ${p.foreign ? '<span class="p-plane">✈</span>' : ''}
+                    <span class="p-name-text" title="${p.name}">${displayName}</span>
                 </div>
+
                 <div class="p-cost">₹${p.price.toFixed(2)}</div>
             </div>`;
         }).join('');
     };
 
-    // 4. Return HTML
-    // Note: Changed ID to CLASS, and added logic for 'narrow-view'
+    // 5. Return HTML
+    // Note: Inline style defines the CSS variables for color and logo
     return `
-    <div class="premium-squad-card ${isPopup ? 'narrow-view' : ''}" style="--team-color: ${teamColor}; --watermark-url: url('${logoUrl}');">
+    <div class="premium-squad-card ${isPopup ? 'narrow-view' : ''}" 
+         style="--team-color: ${teamColor}; --watermark-url: url('${logoUrl}');">
+        
         <div class="prem-watermark"></div>
         
         <div class="prem-header">
             <h1 class="prem-title">${teamName}</h1>
             <div class="prem-meta">FULL SQUAD • ${owner || 'Manager'}</div>
+            
             <div class="prem-stats">
-                <span class="stat-badge">💰 ₹${purse.toFixed(2)} Cr</span>
-                <span class="stat-badge">👥 ${squad.length} / 25</span>
-                <span class="stat-badge">✈️ ${foreignCount} OS</span>
+                <div class="stat-badge">💰 ₹${purse.toFixed(2)} Cr</div>
+                <div class="stat-badge">👥 ${squad.length} / 25</div>
+                <div class="stat-badge">✈️ ${foreignCount} OS</div>
             </div>
         </div>
 
         <div class="prem-body">
             <div class="prem-col">
-                <div class="col-title">WK</div>
+                <div class="col-title">Wicket Keepers</div>
                 ${renderRows(cat.WK)}
             </div>
             
             <div class="prem-col">
-                <div class="col-title">BAT</div>
+                <div class="col-title">Batters</div>
                 ${renderRows(cat.BAT)}
             </div>
 
             <div class="prem-col">
-                <div class="col-title">ALL</div>
+                <div class="col-title">All Rounders</div>
                 ${renderRows(cat.ALL)}
             </div>
 
             <div class="prem-col">
-                <div class="col-title">BOWL</div>
+                <div class="col-title">Bowlers</div>
                 ${renderRows(cat.BOWL)}
             </div>
         </div>
 
         <div class="prem-footer">
-            IPL AUCTION 2025 • GENERATED BY DASHBOARD
+            IPL AUCTION 2025 • OFFICIAL SQUAD CARD
         </div>
     </div>`;
 }
@@ -2480,6 +2502,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
