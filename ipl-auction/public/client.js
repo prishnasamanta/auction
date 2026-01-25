@@ -2458,44 +2458,70 @@ window.closePlayerCard = function(e) {
 }
 // --- POST AUCTION SUMMARY PAGE LOGIC ---
 
+/* ================================================= */
+/* 🏁 POST AUCTION SUMMARY LOGIC                     */
+/* ================================================= */
+
 function renderPostAuctionSummary() {
     const list = document.getElementById("summaryList");
     if(!list) return;
-    list.innerHTML = "";
+    
+    // Safety check: wait if data isn't loaded yet
+    if (!allSquads || Object.keys(allSquads).length === 0) {
+        list.innerHTML = "<div style='text-align:center; color:#666; padding:20px;'>Loading results...</div>";
+        setTimeout(renderPostAuctionSummary, 1000); 
+        return;
+    }
 
+    list.innerHTML = "";
     const teams = Object.keys(allSquads).sort();
 
     teams.forEach(team => {
         const squad = allSquads[team];
-        const purse = teamPurse[team];
+        const purse = teamPurse[team] || 0;
         const owner = teamOwners[team] || "Manager";
         const teamColor = TEAM_COLORS[team] || "#fff";
 
-        // Create Item Wrapper
+        // 1. Create Wrapper Card
         const item = document.createElement("div");
         item.className = "summary-item";
 
-        // Header (Always Visible)
+        // 2. Create Header (Visible Strip)
         const header = document.createElement("div");
         header.className = "summary-header";
         header.style.borderLeftColor = teamColor;
+        
         header.innerHTML = `
             <div class="sum-info">
                 <span class="sum-team" style="color:${teamColor}">${team}</span>
-                <span class="sum-meta">${owner} • 💰 ₹${purse.toFixed(2)} Cr • 👥 ${squad.length}</span>
+                <span class="sum-meta">
+                    ${owner} • <span style="color:#4ade80">₹${purse.toFixed(2)} Cr</span> • ${squad.length} Players
+                </span>
             </div>
-            <button class="sum-expand-btn">▼</button>
+            
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button class="secondary-btn" 
+                    style="padding:4px 8px; font-size:0.7rem; border-color:#475569;" 
+                    onclick="event.stopPropagation(); downloadSquadImage('${team}')">
+                    📸 Save
+                </button>
+                
+                <button class="sum-expand-btn">▼</button>
+            </div>
         `;
 
-        // Content (Hidden by default)
+        // 3. Create Content (Hidden Squad Card)
         const content = document.createElement("div");
         content.className = "summary-content hidden";
+        
+        // Uses the shared generator to create the 4-Column Card HTML
         content.innerHTML = generateFullSquadHTML(team, squad, purse, owner);
 
-        // Toggle Logic
+        // 4. Toggle Logic (Accordion)
         header.onclick = () => {
             const isHidden = content.classList.contains("hidden");
-            // Close all others (Accordion style - optional)
+            
+            // Optional: Close others for "Accordion" feel
             document.querySelectorAll('.summary-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.sum-expand-btn').forEach(b => b.innerText = "▼");
             
@@ -2710,6 +2736,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
