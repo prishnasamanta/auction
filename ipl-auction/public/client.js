@@ -534,6 +534,9 @@ if (data.auctionEnded) {
     if(squadWindow && !squadWindow.closed) {
         socket.emit("getSquads");
     }
+    if (data.auctionStarted) {
+        socket.emit("getAuctionState");
+    }
 });
 /* ================= USER LIST LOGIC (UPDATED PILL) ================= */
 let userListInterval = null; // Global interval for the timer
@@ -2450,6 +2453,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
