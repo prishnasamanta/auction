@@ -636,18 +636,27 @@ window.toggleCcExpand = function() {
 // (Optional: Call this on load if it doesn't default correctly)
 // switchCcTab('feed');
 function setupAuctionScreen() {
+    // 1. Switch Screens
     document.getElementById("landing").classList.add("hidden");
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("auctionUI").classList.remove("hidden");
+    
+    // 2. Lock Scroll
     document.body.style.overflow = "hidden";
-    document.getElementById("roomCodeBar").classList.remove("hidden");
-    document.getElementById("roomCodeText").innerText = roomCode;
-    document.getElementById("shareBtn").classList.remove("hidden");
+
+    // 3. Set Room Code (The Fix for "ID ---")
+    const codeEl = document.getElementById("roomCodeText");
+    if(codeEl) codeEl.innerText = roomCode; // Use the global 'roomCode' variable
+
+    // 4. Update URL
     updateBrowserURL(roomCode);
+
+    // 5. Fetch Initial Data
     socket.emit("getAuctionState");
     socket.emit("checkAdmin");
     socket.emit("getSquads");
 }
+
 socket.on("error", msg => {
     alert("❌ " + msg);
     if(msg.includes("not found") || msg.includes("closed") || msg.includes("expired")) {
@@ -1538,14 +1547,40 @@ window.admin = function(action) {
     if(action === 'end' && !confirm("End Auction?")) return;
     socket.emit("adminAction", action);
 };
-if(startBtn) startBtn.onclick = () => socket.emit("adminAction", "start");
-if(togglePauseBtn) togglePauseBtn.onclick = () => socket.emit("adminAction", "togglePause");
-if(skipBtn) skipBtn.onclick = () => socket.emit("adminAction", "skip");
-if(skipSetBtn) skipSetBtn.onclick = () => {
-    if(confirm("⚠ Skip set?")) socket.emit("adminAction", "skipSet");
-};
-// Optional: If you have an End Button in HTML
-if(endBtn) endBtn.onclick = () => window.admin('end');
+// ==========================================
+// 🛠️ ATTACH BUTTON LISTENERS (ROBUST FIX)
+// ==========================================
+function attachAdminListeners() {
+    // Helper to safely add click listener
+    const add = (id, action) => {
+        const btn = document.getElementById(id);
+        if(btn) btn.onclick = () => socket.emit("adminAction", action);
+    };
+
+    add("startBtn", "start");
+    add("togglePauseBtn", "togglePause");
+    add("skipBtn", "skip");
+    
+    // Skip Set with Confirmation
+    const skipSetBtn = document.getElementById("skipSetBtn");
+    if(skipSetBtn) {
+        skipSetBtn.onclick = () => {
+            if(confirm("⚠️ Skip this entire set?")) socket.emit("adminAction", "skipSet");
+        };
+    }
+
+    // End Game
+    const endBtn = document.getElementById("endBtn"); // If you renamed it in HTML, update ID here
+    // In your HTML it is: <button onclick="admin('end')" ...> so it works via inline JS
+}
+
+// CALL THIS ON LOAD
+document.addEventListener("DOMContentLoaded", () => {
+    initLandingAnimations();
+    initSquadTabs();
+    attachAdminListeners(); // 🔴 RUN THIS
+});
+
 /* ================================================= */
 /* ========= 7. UTILS & HELPERS ==================== */
 /* ================================================= */
@@ -2505,4 +2540,5 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
