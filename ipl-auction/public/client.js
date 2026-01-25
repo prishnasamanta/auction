@@ -925,49 +925,58 @@ socket.on("bidUpdate", data => {
     updateBidButton({ bid: data.bid, player: currentPlayer });
 });
 function updateBidButton(state) {
-    // 1. Basic Checks (Team, Auction Live, Paused)
+    const btn = document.getElementById("bidBtn");
+    const incText = document.getElementById("bidIncrementText");
+    const mySquad = allSquads[myTeam] || [];
+
+    // 1. Calculate Logic (Standard IPL logic example)
+    let currentBid = state ? (state.bid || 0) : 0;
+    let increment = 0.05;
+    
+    // Example Tiered Logic (Optional - stick to 0.05 if you prefer fixed)
+    if (currentBid >= 10) increment = 0.50;
+    else if (currentBid >= 2) increment = 0.20;
+    else if (currentBid >= 1) increment = 0.10;
+    else increment = 0.05;
+
+    // 2. Update the Text below button
+    if(incText) {
+        incText.innerText = `+ ₹${increment.toFixed(2)} Cr`;
+    }
+
+    // 3. Basic Checks
     if(!myTeam || !auctionLive || auctionPaused) {
-        bidBtn.disabled = true;
+        btn.disabled = true;
         return;
     }
-    // 2. Prevent Self-Bidding
     if(lastBidTeam === myTeam) {
-        bidBtn.disabled = true;
+        btn.disabled = true;
         return;
     }
-    // 3. PURSE CHECK
-    if(state && teamPurse && teamPurse[myTeam] !== undefined) {
-        const nextBid = (state.bid || 0) + 0.05;
+
+    // 4. Purse Check
+    const nextBid = currentBid + increment;
+    if(teamPurse && teamPurse[myTeam] !== undefined) {
         if(teamPurse[myTeam] < nextBid) {
-            bidBtn.disabled = true;
-            return; // Not enough money
+            btn.disabled = true;
+            return; 
         }
     }
-    // --- NEW LOGIC START ---
-    // Get my current squad
-    const mySquad = allSquads[myTeam] || [];
-  
-    // 4. MAX SQUAD SIZE CHECK
-    // (activeRules.maxPlayers is set in the Rules Popup)
+
+    // 5. Squad Size & Foreign Checks (Keep your existing logic here)
     if (activeRules.maxPlayers && mySquad.length >= activeRules.maxPlayers) {
-        bidBtn.disabled = true;
-        return; // Squad Full
+        btn.disabled = true; return; 
     }
-    // 5. MAX FOREIGNERS CHECK
-    // We need to know if the CURRENT player on auction is foreign.
-    // The 'state' object usually has the player details.
-    // Assuming state.player exists and has a 'foreign' boolean property.
     if (state.player && state.player.foreign) {
         const currentForeignCount = mySquad.filter(p => p.foreign).length;
         if (activeRules.maxForeign && currentForeignCount >= activeRules.maxForeign) {
-            bidBtn.disabled = true;
-            return; // Foreign Limit Reached
+            btn.disabled = true; return;
         }
     }
-    // --- NEW LOGIC END ---
-    // If all checks pass, enable button
-    bidBtn.disabled = false;
+
+    btn.disabled = false;
 }
+
 socket.on("sold", d => {
     safePlay(soundHammer);
     showResultStamp("SOLD", `TO ${d.team}`, TEAM_COLORS[d.team], false);
@@ -2453,6 +2462,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
