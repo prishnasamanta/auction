@@ -1,6 +1,3 @@
-/* ================================================= */
-/* ============= GLOBAL SETUP & STATE ============== */
-/* ================================================= */
 const socket = io();
 // --- GAME STATE ---
 let username = "";
@@ -2501,6 +2498,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
