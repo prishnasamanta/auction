@@ -3710,4 +3710,54 @@ body {
     padding-bottom: 10px;
 }
 
+/* ↔️ HEADER BUTTONS SCROLL FIX */
+.top-right.custom-scroll-x {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Enable Horizontal Scroll */
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    
+    /* Layout & Aesthetics */
+    max-width: 60vw; /* Limit width so it doesn't push the left side */
+    padding-bottom: 5px; /* Space for scrollbar (hidden below) */
+    
+    /* Hide Scrollbar (Firefox) */
+    scrollbar-width: none; 
+}
+
+/* Hide Scrollbar (Chrome/Safari) */
+.top-right.custom-scroll-x::-webkit-scrollbar { 
+    display: none; 
+}
+
+/* 🛑 PREVENT BUTTON SQUISHING */
+/* This is critical. It forces every button to keep its full size. */
+.header-icon-btn, 
+.admin-group, 
+.admin-group button {
+    flex-shrink: 0 !important;
+}
+/* 💎 ULTRA-TRANSPARENT AUCTION CARD */
+#auctionCard {
+    /* Very faint dark tint (20% opacity) for readability */
+    background: rgba(15, 23, 42, 0.2) !important; 
+    
+    /* Heavy Blur to make text readable over the stars */
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    
+    /* Glass Border */
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Remove solid colors from the inner rows */
+.ac-top-row, .ac-bot-row {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 
