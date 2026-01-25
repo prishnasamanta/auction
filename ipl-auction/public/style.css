@@ -3640,4 +3640,74 @@ body {
     box-shadow: 0 0 15px rgba(34, 197, 94, 0.2) inset;
 }
 
+/* ================================================= */
+/* 📱 MOBILE POPUP & CARD FIXES                      */
+/* ================================================= */
+
+/* 1. Ensure the Overlay allows centering */
+.rules-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px; /* Safe space from edges */
+    backdrop-filter: blur(5px);
+    z-index: 5000;
+}
+
+/* 2. The Popup Card Container */
+.rules-card {
+    background: #0f172a; /* Solid background for readability */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    
+    /* Responsive Size */
+    width: 95%; 
+    max-width: 500px; /* Keep it phone-sized width */
+    max-height: 85vh; /* Never exceed 85% screen height */
+    
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent body scroll */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* 3. The Scrollable Area Inside Popup */
+#squadCaptureArea {
+    flex: 1; /* Take remaining height */
+    overflow-y: auto; /* Enable Vertical Scroll */
+    overflow-x: hidden; /* Prevent Horizontal Scroll on the wrapper */
+    padding: 15px;
+    
+    /* Center the content */
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+}
+
+/* 4. Ensure the Fantasy Card fits */
+.fantasy-card {
+    /* Prevent overflow issues */
+    max-width: 100%; 
+    margin: 0 auto;
+}
+
+/* 5. Mobile Tweak: Scale down slightly if screen is tiny */
+@media (max-width: 380px) {
+    .fantasy-card, .premium-squad-card {
+        zoom: 0.9; /* Slight shrink for iPhone SE/Small Androids */
+    }
+}
+/* Fix for the Create Room section */
+#createSection {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Ensure the scroll container works */
+.dataset-scroll-container {
+    flex-shrink: 0; /* Don't squash the cards */
+    padding-bottom: 10px;
+}
+
 
