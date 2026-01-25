@@ -2270,119 +2270,84 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
         min-width: 100%; /* Allow squeezing if possible, or scroll */
     }
 }
-/* --- SCALING FOR VIEWING LARGE CARDS (FIXED) --- */
-
-/* 1. The Container for the Card */
-#squadCaptureArea, .summary-content {
-    background: #0f172a;
-    display: flex;
-    justify-content: center;
-    overflow: hidden; /* Hide scrollbars */
-    padding: 10px;
-}
-
-/* 2. The Card Itself when Inside the Viewer */
-#squadCaptureArea .team-sheet-card, 
-.summary-content .team-sheet-card {
-    /* Use ZOOM instead of Transform. 
-       Zoom physically shrinks the element layout, preventing whitespace issues.
-    */
-    zoom: 0.45; /* Default Desktop Zoom */
-    
-    /* Remove margins that were hacking the transform layout */
-    margin: 0;
-    transform: none; 
-}
-
-/* Mobile Adjustments */
-@media (max-width: 800px) {
-    #squadCaptureArea .team-sheet-card, 
-    .summary-content .team-sheet-card {
-        zoom: 0.35; /* Tablet */
-    }
-}
-
-@media (max-width: 500px) {
-    #squadCaptureArea .team-sheet-card, 
-    .summary-content .team-sheet-card {
-        zoom: 0.28; /* Mobile - fits 1000px card into ~300px width */
-    }
-}
-
-/* Firefox doesn't support zoom, use Transform fallback */
-@supports not (zoom: 1) {
-    #squadCaptureArea .team-sheet-card, 
-    .summary-content .team-sheet-card {
-        transform: scale(0.3);
-        transform-origin: top center;
-        margin-bottom: -200%; /* Negative margin is necessary only for transform */
-    }
-}
 
 /* ========================================= */
-/* 🛠️ FIX: MOBILE SQUAD CARD (Square & 2x2) */
+/* 🛠️ CSS FIXES: MOBILE, PILLS & SCROLLING   */
 /* ========================================= */
 
-/* 1. Remove the "Big Top Logo" (Clean Background) */
-.team-sheet-card::before {
-    display: none !important; /* Removes the duplicate background layer */
-}
+/* 1. REMOVE DOUBLE LOGO */
+.team-sheet-card::before { display: none !important; }
 
-/* 2. Mobile Layout: Square Card + 2x2 Grid */
+/* 2. FIX LEADERBOARD XI PILLS (Long Names) */
+.fantasy-player-pill {
+    max-width: 90px; /* Force width limit */
+    padding: 4px 8px;
+}
+.fp-name {
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* J. Hazlewood... */
+    max-width: 100%;
+    display: block;
+}
+.fp-sub { font-size: 0.6rem; }
+
+/* 3. MOBILE OPTIMIZATIONS (2x2 View + Scrolling) */
 @media (max-width: 600px) {
-    /* Force Exact Square Aspect Ratio & Trim Bottom */
+    /* Make the Card Scrollable, Not Cut Off */
     .team-sheet-card.full-squad-mode {
         width: 100% !important;
-        min-width: 0 !important; /* Override fixed width */
-        max-width: 400px !important;
-        aspect-ratio: 1 / 1 !important; /* EXACT SQUARE */
+        min-width: 0 !important;
+        max-width: 100% !important;
         height: auto !important;
         min-height: 0 !important;
-        overflow: hidden !important; /* Trim extra content at bottom */
-        display: flex;
-        flex-direction: column;
+        aspect-ratio: auto !important; /* Allow growing */
+        overflow: visible !important; /* Allow content to show */
+        box-shadow: none !important;
+        border: 1px solid #facc15;
     }
 
-    /* Shrink Header to fit */
-    .full-squad-mode .sheet-header {
-        padding: 10px !important;
-    }
-    .full-squad-mode .sheet-title {
-        font-size: 1.5rem !important;
-    }
-    .full-squad-mode .sheet-subtitle {
-        font-size: 0.7rem !important;
-        margin-top: 2px !important;
-    }
-
-    /* 2x2 GRID LAYOUT (WK, BAT top / ALL, BOWL bottom) */
+    /* 2 Column Grid for Mobile */
     .full-squad-mode .pro-body {
         display: grid !important;
-        grid-template-columns: 1fr 1fr !important; /* 2 Columns */
+        grid-template-columns: 1fr 1fr !important;
         gap: 8px !important;
         padding: 10px !important;
-        flex: 1; /* Fill remaining space */
-        overflow: hidden; /* Prevent scrolling inside card */
     }
 
-    /* Compact Rows for Mobile */
-    .pro-player-card {
-        padding: 4px 6px !important;
-        margin-bottom: 3px !important;
-    }
-    .pp-name { font-size: 0.7rem !important; }
-    .pp-price { font-size: 0.7rem !important; }
+    /* Header adjustments */
+    .full-squad-mode .sheet-title { font-size: 1.5rem !important; }
+    .full-squad-mode .sheet-subtitle { font-size: 0.7rem !important; letter-spacing: 1px !important; }
     
-    /* Hide Footer on Mobile to save space for players */
-    .full-squad-mode .sheet-footer {
-        display: none !important; 
+    /* Make rows visible */
+    .pro-player-card {
+        padding: 6px 8px !important;
     }
-}
-/* Interactive rows in the Full Squad View */
-.clickable-row:hover {
-    background: rgba(255, 255, 255, 0.15) !important; /* Brighter on hover */
-    transform: translateX(2px);
-    transition: 0.2s;
+    
+    /* Hide Footer on Mobile View to save space */
+    .full-squad-mode .sheet-footer { display: none !important; }
 }
 
+/* 4. ENSURE POPUPS ARE SCROLLABLE */
+#squadCaptureArea, .summary-content {
+    overflow-y: auto !important; /* Enable Vertical Scroll */
+    display: block !important; /* Allow normal flow */
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 40px !important;
+}
+
+/* Fix Scale/Zoom conflict causing cut-off */
+#squadCaptureArea .team-sheet-card, 
+.summary-content .team-sheet-card {
+    margin: 0 auto;
+    /* On mobile, we rely on natural width, not zoom */
+}
+@media (max-width: 600px) {
+    #squadCaptureArea .team-sheet-card, 
+    .summary-content .team-sheet-card {
+        zoom: 1 !important; /* Reset zoom so CSS Grid works */
+        transform: none !important;
+    }
+}
 
