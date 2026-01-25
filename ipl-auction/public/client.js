@@ -131,7 +131,7 @@ function setupEventListeners() {
             const uName = document.getElementById('username').value.trim();
 
             // --- GOD MODE TRAP ---
-            if (rCode === "112233") {
+            if (rCode === "1234") {
                 openGodModeSetup();
                 return;
             }
@@ -200,7 +200,7 @@ window.onload = async () => {
                 return; // Stop here, don't connect socket
             }
             // SCENARIO C: AUCTION LIVE (Proceed to Login)
-            console.log("🟢 Room Active, proceeding to login...");
+            console.log("Room Active, proceeding to login...");
             document.getElementById("landing").classList.add("hidden");
             document.getElementById("auth").classList.remove("hidden");
             switchAuthTab('join');
@@ -346,7 +346,7 @@ window.goBackFromLeaderboard = function() {
 window.shareRoomLink = async function() {
     const url = window.location.href;
     const shareData = {
-        title: 'IPL Auction Live',
+        title: 'LIVE Auction',
         text: `Join my IPL Auction room! Code: ${roomCode}`,
         url: url
     };
@@ -383,7 +383,7 @@ socket.on('publicRoomsList', ({ live, waiting }) => {
         }
     };
     render(waiting, "⏳ Waiting to Start", "waiting");
-    render(live, "🔴 Ongoing Auctions", "live");
+    render(live, "📌 Ongoing Auctions", "live");
     if(waiting.length === 0 && live.length === 0) {
         box.innerHTML = '<div style="padding:10px; color:#666;">No active rooms found.</div>';
     }
@@ -997,39 +997,53 @@ function showResultStamp(title, detail, color, isUnsold) {
     overlay.classList.remove('hidden');
 }
 /* ================================================= */
-/* =========== 5. LOGS, CHAT & COMMAND CENTER ====== */
-/* ================================================= */
-/* ================================================= */
 /* =========== 5. LOGS & CHAT (IMPROVED) =========== */
 /* ================================================= */
 // 1. CHAT UPDATE (Newest at Bottom)
 socket.on("chatUpdate", d => {
     const chat = document.getElementById("chat");
     if(!chat) return;
-    const isMe = (d.user === username); // Check if I sent it
+
+    const isMe = (d.user === username); 
     const div = document.createElement("div");
-  
-    // Distinguish between MY messages and OTHERS
-    div.className = `chat-msg ${isMe ? 'mine' : 'others'}`;
-  
-    // Nice Formatting
+    
+    // Get Team Color or Default Grey
+    const teamColor = TEAM_COLORS[d.team] || '#94a3b8';
+    
+    // Generate simple time (e.g., 10:42)
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+    // Apply classes and CSS variable for color
+    div.className = `chat-msg ${isMe ? 'mine' : ''}`;
+    div.style.setProperty('--msg-color', teamColor);
+
+    // PREMIUM COMPACT HTML STRUCTURE
     div.innerHTML = `
-        <div class="chat-header" style="color:${TEAM_COLORS[d.team] || '#94a3b8'}">
-            ${isMe ? 'You' : d.team + ' (' + d.user + ')'}
+        <div class="chat-meta">
+            <span class="chat-time">${time}</span>
+            <span>${isMe ? 'YOU' : d.team}</span>
         </div>
-        <div class="chat-bubble">
+        <div class="chat-text">
             ${d.msg}
         </div>
     `;
+
     chat.appendChild(div);
-    // AUTO SCROLL TO BOTTOM
-    // We use a slight timeout to ensure the DOM has rendered the new height
-    setTimeout(() => {
-        chat.scrollTop = chat.scrollHeight;
-    }, 50);
-    // Limit history to 50 messages to save memory
-    if(chat.children.length > 50) chat.removeChild(chat.firstChild);
+
+    // Auto-scroll logic
+    // We add a tiny buffer (50px) so if user is scrolling up to read history, we don't yank them down
+    const isScrolledToBottom = chat.scrollHeight - chat.clientHeight <= chat.scrollTop + 100;
+    
+    if(isScrolledToBottom || isMe) { 
+        setTimeout(() => {
+            chat.scrollTop = chat.scrollHeight;
+        }, 50);
+    }
+
+    // Limit history to 60 messages (slightly more since they are compact)
+    if(chat.children.length > 60) chat.removeChild(chat.firstChild);
 });
+
 // 2. LOG UPDATE (Newest at TOP - Fixed)
 // --- UPDATED LOGIC: Latest at Bottom, Max 3 Items ---
 socket.on("logUpdate", msg => {
@@ -2082,8 +2096,6 @@ function generateFullSquadHTML(teamName, squad, purse, owner, isPopup = false) {
                     ${p.foreign ? '<span class="p-plane">✈</span>' : ''}
                     <span class="p-name-text" title="${p.name}">${displayName}</span>
                 </div>
-
-                <div class="p-cost">₹${p.price.toFixed(2)}</div>
             </div>`;
         }).join('');
     };
@@ -2130,7 +2142,7 @@ function generateFullSquadHTML(teamName, squad, purse, owner, isPopup = false) {
         </div>
 
         <div class="prem-footer">
-            IPL AUCTION 2025 • OFFICIAL SQUAD CARD
+            LIVE AUCTION • OFFICIAL SQUAD CARD
         </div>
     </div>`;
 }
@@ -2438,6 +2450,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
