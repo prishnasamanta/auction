@@ -2987,13 +2987,15 @@ body {
 .ac-status-box {
     flex-shrink: 0;
     width: 50px !important; /* Fixed Width for Alignment */
-    display: flex; flex-direction: column; 
+    display: flex; flex-direction: column;
+    flex: none !important; /* Disable flex scaling */
+
     gap: 6px;
 }
 
 /* Timer */
 .ac-timer-box {
-    width: 100%; /* Fill the 75px */
+    width: 50% !important; /* Fill the 75px */
     text-align: center;
     font-family: monospace; font-size: 1.5rem; font-weight: 700;
     color: #f43f5e; background: rgba(0,0,0,0.3);
@@ -3003,7 +3005,7 @@ body {
 
 /* Team Badge (Below Timer) */
 .ac-leader-badge {
-    width: 100%; /* Fill the 75px */
+    width: 50% !important; /* Fill the 75px */
     text-align: center;
     font-size: 0.75rem; font-weight: 700; 
     color: #fff; background: #22c55e; 
@@ -3039,7 +3041,6 @@ body {
 .ac-main-bid-btn {
     width: 65% !important; /* Takes 65% of the row */
     height: 100%;
-    flex: none !important;
     background: var(--success);
     border: none; border-radius: 8px;
     color: #022c22; cursor: pointer;
@@ -3200,40 +3201,101 @@ body {
 /* ================================================= */
 /* ⚡ ULTIMATE APP LAYOUT (Mobile & PC Fixed)        */
 /* ================================================= */
+/* ================================================= */
+/* 🌌 SPACE AURORA BACKGROUND (CSS ONLY)             */
+/* ================================================= */
+
 body {
     margin: 0;
-    width: 100%; 
-    height: 100dvh; /* Mobile viewport fix */
+    width: 100%;
+    height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-
-    /* 1. Global Fonts/Colors */
+    
+    /* 1. Deep Space Base */
+    background-color: #020617; /* Pitch Black-Blue */
     color: var(--text-main);
     font-family: var(--font-body);
+    position: relative;
+    z-index: 0;
+}
 
-    /* 2. THE ANIMATION (Deep Gradient) */
-    background: linear-gradient(
-        300deg, 
-        #020617, /* Deep Black-Blue */
-        #1e1b4b, /* Dark Indigo */
-        #0f172a, /* Slate */
-        #312e81  /* Rich Purple-Blue */
+/* 2. The Aurora (Green/Blue Nebula) */
+body::before {
+    content: "";
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    z-index: -2;
+    
+    /* Complex Gradient Blob */
+    background: radial-gradient(
+        circle at center,
+        rgba(99, 102, 241, 0.15) 0%,   /* Indigo Center */
+        rgba(16, 185, 129, 0.1) 30%,   /* Emerald Mid */
+        rgba(6, 182, 212, 0.05) 50%,   /* Cyan Edge */
+        transparent 70%
     );
-    background-size: 400% 400%; /* Zooms in to allow movement */
-    animation: premiumGradient 15s ease infinite; /* The movement speed */
+    
+    /* Blur it into a cloud */
+    filter: blur(80px);
+    animation: auroraSpin 25s linear infinite;
+    opacity: 0.8;
 }
 
-/* 3. The Animation Keyframes (Paste this right after body) */
-@keyframes premiumGradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+/* 3. The Second Aurora (Purple/Pink Nebula) */
+body::after {
+    content: "";
+    position: absolute;
+    bottom: -50%; right: -50%;
+    width: 200%; height: 200%;
+    z-index: -2;
+    
+    background: radial-gradient(
+        circle at center,
+        rgba(236, 72, 153, 0.15) 0%,   /* Pink Center */
+        rgba(139, 92, 246, 0.1) 30%,   /* Purple Mid */
+        transparent 70%
+    );
+    
+    filter: blur(90px);
+    animation: auroraFlow 30s ease-in-out infinite alternate;
+    opacity: 0.6;
 }
 
-/* 4. CRITICAL: Make containers transparent so BG shows through */
+/* 4. Stars Texture (Static) */
+#auctionUI::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: 
+        radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
+        radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
+        radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
+    background-size: 550px 550px, 350px 350px, 250px 250px;
+    background-position: 0 0, 40px 60px, 130px 270px;
+    opacity: 0.4;
+}
+
+/* 5. Animations */
+@keyframes auroraSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes auroraFlow {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-30px, 20px) scale(1.1); }
+    100% { transform: translate(20px, -40px) scale(1); }
+}
+
+/* Ensure content sits on top */
 #auctionUI, .auction-wrapper, .screen {
     background: transparent !important;
+    position: relative;
+    z-index: 1;
 }
 
 /* 2. MAIN CONTAINER (Stacks Header, Body, Footer) */
@@ -3442,6 +3504,7 @@ body {
         padding: 0 10px;
     }
 }
+
 
 
 
