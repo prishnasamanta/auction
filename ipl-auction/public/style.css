@@ -478,60 +478,30 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
   cursor: pointer; transition: all 0.2s ease;
 }
 .team-btn:hover { background: var(--team-color); color: #000; }
+
+/* 💎 [REMOVED "FINAL FIXED PRO CARD" SECTION TO AVOID CONFLICT WITH JS] */
+
 /* ================================================= */
-/* 💎 FINAL FIXED PRO CARD (CSK STYLE)               */
+/* 💎 XI SELECTION STYLES (Kept for Playing XI)      */
 /* ================================================= */
 
-/* 1. Card Container - AUTO HEIGHT (Fixes Cracked Layout) */
-.team-sheet-card {
-    background-color: #020617; /* Dark Navy */
-    border: 2px solid #facc15; /* Gold */
+/* 1. XI Card Container */
+/* Note: Using .xi-container class instead of conflicting .team-sheet-card */
+.xi-container {
+    background-color: #020617; 
+    border: 2px solid #facc15; 
     border-radius: 12px;
     width: 100%;
-    max-width: 500px; /* Optimal reading width */
+    max-width: 500px; 
     margin: 0 auto;
     padding: 0;
     position: relative;
     overflow: hidden;
-    /* IMPORTANT: Allow height to grow based on content */
-    height: auto; 
     min-height: 400px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
     font-family: 'Exo 2', sans-serif;
 }
 
-/* Watermark */
-.team-sheet-card::before {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%; height: 80%;
-    background-image: var(--team-logo-url, none);
-    background-size: contain;
-    background-repeat: no-repeat;
-    opacity: 0.1;
-    z-index: 0;
-    filter: grayscale(100%);
-    pointer-events: none;
-}
-
-/* 2. Header */
-.sheet-header {
-    background: rgba(0,0,0,0.3);
-    padding: 20px;
-    text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    position: relative; z-index: 2;
-}
-.sheet-title {
-    margin: 0; font-size: 2.2rem; font-weight: 900; color: #fff; line-height: 1; text-transform: uppercase;
-}
-.sheet-subtitle {
-    font-size: 0.8rem; color: #facc15; letter-spacing: 4px; text-transform: uppercase; margin-top: 5px; font-weight: 700;
-}
-
-/* 3. Content Body */
+/* 2. XI Content Body */
 #sheetContent {
     padding: 20px;
     position: relative; z-index: 2;
@@ -540,7 +510,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     gap: 15px;
 }
 
-/* 4. Role Header */
+/* 3. Role Header */
 .xi-role-header {
     display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
     color: #94a3b8; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
@@ -553,14 +523,14 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     display: flex; justify-content: center; align-items: center; font-size: 0.85rem;
 }
 
-/* 5. The Grid (4 Columns, Responsive) */
+/* 4. The Grid (4 Columns, Responsive) */
 .xi-role-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* 4 Cards per row */
     gap: 8px;
 }
 
-/* 6. Player Card (Small Rect) */
+/* 5. Player Card (Small Rect for XI) */
 .xi-player-card {
     background: rgba(30, 41, 59, 0.6);
     border: 1px solid #334155;
@@ -585,24 +555,12 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     position: absolute; top: 2px; right: 2px; font-size: 0.6rem;
 }
 
-/* 7. Footer */
+/* 6. Footer */
 .sheet-footer {
     position: relative; z-index: 2; padding: 10px 20px;
     background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05);
     display: flex; justify-content: space-between;
     color: #64748b; font-size: 0.75rem;
-}
-
-/* --- MODAL FIXES (Fixes Leaderboard View) --- */
-/* Ensure the modal is large enough to show the full card without internal scroll issues */
-.rules-card {
-    max-height: 90vh !important; /* Allow it to be tall */
-    overflow-y: auto; /* Scroll the modal, not the card container */
-    display: flex; flex-direction: column;
-}
-#squadCaptureArea {
-    padding: 20px;
-    overflow: visible; /* Let the card expand naturally */
 }
 
 /* Mobile Tweak */
@@ -1401,20 +1359,6 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .bench-pill { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: #ccc; }
 
 /* --- RESPONSIVE PLAYING XI CARD --- */
-.team-sheet-card {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-    border: 2px solid var(--gold);
-    width: 100%; max-width: 600px; /* PC Size */
-    margin: 0 auto; padding: 20px;
-    aspect-ratio: 16/9; /* Standard layout */
-    display: flex; flex-direction: column;
-}
-@media (max-width: 768px) {
-    .team-sheet-card {
-        aspect-ratio: 9/16; /* Mobile Story Format */
-        max-width: 350px;
-    }
-}
 .sheet-role-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 12px; }
 .sheet-player-pill { 
     background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); 
@@ -1431,13 +1375,13 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 .pc-card[data-team="Unsold"] .pc-price-tag {
-    background: #475569;       /* Darker tag */
-    color: #94a3b8;            /* Muted text */
+    background: #475569;        /* Darker tag */
+    color: #94a3b8;             /* Muted text */
     box-shadow: none;
 }
 
 .pc-card[data-team="Unsold"] .pc-img-box {
-    border-color: #475569;     /* Neutral border */
+    border-color: #475569;      /* Neutral border */
 }
 /* --- COMPACT PLAYER CARD (Smaller Size) --- */
 .pc-card.compact {
@@ -1740,154 +1684,9 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .rating-tag { color: #888; font-size: 0.75rem; margin-left: 5px; }
 .price-tag { color: #4ade80; font-weight: bold; font-size: 0.9rem; }
 
-/* --- PROFESSIONAL CAPTURE CARD (1200x1200px) --- */
-#squad-card-capture {
-    position: fixed;
-    left: -9999px; /* Hide from view */
-    top: 0;
-    
-    width: 1200px;
-    height: 1200px;
-    
-    /* Deep Rich Background */
-    background: radial-gradient(circle at top right, #2a2a2a, #0d0d0d 80%);
-    color: #fff;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    border: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
+/* 💎 [REMOVED "UNIVERSAL SQUAD CARD STYLING" & "CAPTURE CARD" SECTIONS] */
+/* The styles for the Squad Card are now injected dynamically via JS */
 
-/* 1. Giant Faded Background Logo */
-.capture-bg-watermark {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 800px;
-    height: 800px;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: contain;
-    opacity: 0.07; /* Very subtle watermark */
-    z-index: 0;
-    filter: grayscale(100%);
-}
-
-/* 2. Top Header Bar */
-.pro-header {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 40px 60px;
-    background: rgba(0,0,0,0.6);
-    border-bottom: 2px solid rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px); /* Glass effect */
-}
-
-.pro-team-info h1 {
-    font-size: 5rem;
-    margin: 0;
-    text-transform: uppercase;
-    font-weight: 900;
-    letter-spacing: -2px;
-    line-height: 1;
-    /* Gradient Text Effect */
-    background: linear-gradient(to bottom, #fff, #bbb);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.pro-team-info h3 {
-    margin: 5px 0 0 5px;
-    font-size: 1.8rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.pro-header-stats {
-    text-align: right;
-}
-
-.stat-box {
-    background: rgba(255,255,255,0.1);
-    padding: 10px 20px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-.stat-label { font-size: 0.9rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
-.stat-val { font-size: 2rem; font-weight: bold; color: #fff; }
-
-/* 3. The Grid Layout (Body) */
-.pro-body {
-    position: relative;
-    z-index: 2;
-    flex-grow: 1;
-    padding: 40px 50px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr; /* 4 Columns */
-    gap: 25px;
-}
-
-/* Column Styling */
-.pro-col {
-    background: rgba(255,255,255,0.03);
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid rgba(255,255,255,0.05);
-    display: flex;
-    flex-direction: column;
-}
-
-.pro-col-header {
-    font-size: 1.5rem;
-    font-weight: 800;
-    text-align: center;
-    text-transform: uppercase;
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-    border-bottom: 2px solid; /* Color injected via JS */
-    color: #fff;
-    letter-spacing: 1px;
-}
-
-/* Player Cards inside Columns */
-.pro-player-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
-    margin-bottom: 10px;
-    padding: 12px 15px;
-    border-radius: 6px;
-    border-left: 4px solid #444; /* Default accent */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.pp-name { font-size: 1.1rem; font-weight: 600; color: #eee; }
-.pp-meta { text-align: right; }
-.pp-price { display: block; font-size: 1rem; color: #4ade80; font-weight: bold; }
-.pp-rating { font-size: 0.8rem; color: #777; }
-.foreign-badge { margin-right: 5px; filter: grayscale(0.2); }
-
-/* 4. Footer */
-.pro-footer {
-    position: relative;
-    z-index: 2;
-    padding: 20px;
-    text-align: center;
-    background: #000;
-    color: #444;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    border-top: 1px solid #222;
-}
 /* ================================================= */
 /* 🏟️ COMPACT FANTASY CARD (Fix for "Cracked" UI)    */
 /* ================================================= */
@@ -2230,65 +2029,6 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     }
 }
 
-/* ========================================= */
-/* 🛠️ CSS FIXES: MOBILE, PILLS & SCROLLING   */
-/* ========================================= */
-
-/* 1. REMOVE DOUBLE LOGO */
-.team-sheet-card::before { display: none !important; }
-
-/* 2. FIX LEADERBOARD XI PILLS (Long Names) */
-.fantasy-player-pill {
-    max-width: 90px; /* Force width limit */
-    padding: 4px 8px;
-}
-.fp-name {
-    font-size: 0.7rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; /* J. Hazlewood... */
-    max-width: 100%;
-    display: block;
-}
-.fp-sub { font-size: 0.6rem; }
-
-/* 3. MOBILE OPTIMIZATIONS (2x2 View + Scrolling) */
-@media (max-width: 600px) {
-    /* Make the Card Scrollable, Not Cut Off */
-    .team-sheet-card.full-squad-mode {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-        height: auto !important;
-        min-height: 0 !important;
-        aspect-ratio: auto !important; /* Allow growing */
-        overflow: visible !important; /* Allow content to show */
-        box-shadow: none !important;
-        border: 1px solid #facc15;
-    }
-
-    /* 2 Column Grid for Mobile */
-    .full-squad-mode .pro-body {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 8px !important;
-        padding: 10px !important;
-    }
-
-    /* Header adjustments */
-    .full-squad-mode .sheet-title { font-size: 1.5rem !important; }
-    .full-squad-mode .sheet-subtitle { font-size: 0.7rem !important; letter-spacing: 1px !important; }
-    
-    /* Make rows visible */
-    .pro-player-card {
-        padding: 6px 8px !important;
-    }
-    
-    /* Hide Footer on Mobile View to save space */
-    .full-squad-mode .sheet-footer { display: none !important; }
-}
-
-/* 4. ENSURE POPUPS ARE SCROLLABLE */
 /* --- PREMIUM SUMMARY PAGE --- */
 #postAuctionSummary {
     background: radial-gradient(circle at top, #1e293b, #0f172a);
@@ -2357,102 +2097,3 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     display: flex;
     justify-content: center;
 }
-/* --- UNIVERSAL SQUAD CARD STYLING --- */
-.team-sheet-card.full-squad-mode {
-    background-color: #020617;
-    border: 2px solid #facc15;
-    border-radius: 16px;
-    position: relative;
-    overflow: hidden;
-    font-family: 'Exo 2', sans-serif;
-    /* Desktop Default: Fixed Width for High Res Download */
-    width: 1000px;
-    min-width: 1000px;
-}
-
-/* Header & Stats */
-.full-squad-mode .sheet-header {
-    background: rgba(0,0,0,0.5);
-    padding: 30px;
-    text-align: center;
-}
-.full-squad-mode .sheet-title { margin: 0; font-size: 3.5rem; font-weight: 900; text-transform: uppercase; }
-.full-squad-mode .sheet-stats {
-    margin-top: 20px; display: flex; justify-content: center; gap: 40px; 
-    font-size: 1.3rem; color: #ccc; font-weight: bold;
-}
-
-/* Desktop Grid: 4 Columns */
-.full-squad-mode .pro-body {
-    padding: 30px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 20px;
-}
-
-/* Player Card Row */
-.pro-player-card {
-    background: rgba(255,255,255,0.05);
-    padding: 8px; margin-bottom: 6px;
-    border-radius: 4px;
-    display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer; transition: 0.2s;
-}
-.pro-player-card:hover { background: rgba(255,255,255,0.15); transform: translateX(2px); }
-
-.pp-left { display: flex; align-items: center; gap: 6px; }
-.pp-name { font-weight: bold; color: #fff; font-size: 0.9rem; }
-.pp-rating { font-size: 0.75rem; color: #fbbf24; }
-.pp-price { color: #4ade80; font-size: 0.9rem; font-weight: bold; }
-
-.pro-col-header {
-    border-bottom: 2px solid; font-weight: 800; margin-bottom: 15px; 
-    padding-bottom: 5px; text-align: center; font-size: 1.1rem;
-}
-
-/* Footer */
-.full-squad-mode .sheet-footer {
-    padding: 20px; text-align: center; color: #64748b; 
-    font-size: 0.9rem; background: rgba(0,0,0,0.5);
-}
-
-/* ========================================= */
-/* 📱 MOBILE RESPONSIVE OVERRIDES            */
-/* ========================================= */
-
-@media (max-width: 800px) {
-    /* 1. Reset Width constraint for Mobile View */
-    #squadCaptureArea .team-sheet-card, 
-    .summary-content .team-sheet-card {
-        width: 100% !important;
-        min-width: 0 !important;
-        zoom: 1 !important; /* Disable zoom, let flexbox work */
-    }
-
-    /* 2. Adjust Header Text */
-    .full-squad-mode .sheet-title { font-size: 2rem !important; }
-    .full-squad-mode .sheet-stats { gap: 15px !important; font-size: 0.9rem !important; }
-
-    /* 3. Switch to 2x2 Grid Layout */
-    .full-squad-mode .pro-body {
-        grid-template-columns: 1fr 1fr !important; /* 2 Columns */
-        gap: 10px !important;
-        padding: 15px !important;
-    }
-
-    /* 4. Compact Rows */
-    .pro-player-card { padding: 6px !important; }
-    .pp-name { font-size: 0.8rem !important; }
-
-    /* 5. Hide Footer to save space */
-    .full-squad-mode .sheet-footer { display: none !important; }
-
-    /* 6. Enable Scrolling in Container */
-    #squadCaptureArea, .summary-content {
-        overflow-x: hidden;
-        overflow-y: auto;
-        display: block;
-    }
-}
-
-
