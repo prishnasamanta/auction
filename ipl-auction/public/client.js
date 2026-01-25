@@ -208,7 +208,6 @@ window.onload = async () => {
         };
     }
 
-    const parts = path.split('/');
     // Format: /room/CODE/SUBPAGE
     const urlCode = (parts[1] === 'room' && parts[2]) ? parts[2].toUpperCase() : null;
     const subPage = (parts[1] === 'room' && parts[3]) ? parts[3].toLowerCase() : null;
@@ -2498,6 +2497,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
