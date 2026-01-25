@@ -1538,18 +1538,13 @@ window.admin = function(action) {
     if(action === 'end' && !confirm("End Auction?")) return;
     socket.emit("adminAction", action);
 };
-const startBtn = document.getElementById("startBtn");
 if(startBtn) startBtn.onclick = () => socket.emit("adminAction", "start");
-const togglePauseBtn = document.getElementById("togglePauseBtn");
 if(togglePauseBtn) togglePauseBtn.onclick = () => socket.emit("adminAction", "togglePause");
-const skipBtn = document.getElementById("skipBtn");
 if(skipBtn) skipBtn.onclick = () => socket.emit("adminAction", "skip");
-const skipSetBtn = document.getElementById("skipSetBtn");
 if(skipSetBtn) skipSetBtn.onclick = () => {
     if(confirm("⚠ Skip set?")) socket.emit("adminAction", "skipSet");
 };
 // Optional: If you have an End Button in HTML
-const endBtn = document.getElementById("endBtn");
 if(endBtn) endBtn.onclick = () => window.admin('end');
 /* ================================================= */
 /* ========= 7. UTILS & HELPERS ==================== */
@@ -2510,3 +2505,4 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
