@@ -197,7 +197,7 @@
 
                     <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 10px; font-weight:700; letter-spacing:1px;">SELECT PLAYER POOL</label>
                     
-                    <div class="dataset-scroll-container custom-scroll-x">
+                    <div class="dataset-scroll-container">
                         <div class="dataset-card active" onclick="selectDataset('ipl2026', this)">
                             <div class="ds-icon">🏆</div>
                             <div class="ds-title">IPL 2026</div>
@@ -471,20 +471,23 @@
     </section>
 
     <div id="squadViewOverlay" class="rules-overlay hidden">
-        <div class="glass rules-card" style="max-width:650px; width:95%; background: #0f172a; max-height:90vh; display:flex; flex-direction:column;">
-            <div style="padding:15px; border-bottom:1px solid #333; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
-                <div style="display:flex; gap:5px;">
-                    <button id="btnShowXI" onclick="switchPopupView('XI')" class="tab-btn active" style="font-size:0.8rem; padding:5px 10px;">Playing XI</button>
-                    <button id="btnShowFull" onclick="switchPopupView('FULL')" class="tab-btn" style="font-size:0.8rem; padding:5px 10px;">Full Squad</button>
-                </div>
-                <button onclick="document.getElementById('squadViewOverlay').classList.add('hidden')" style="background:none; border:none; color:#fff; font-size:1.5rem;">&times;</button>
+    <div class="glass rules-card">
+        <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:space-between; background:#0f172a;">
+            <div style="display:flex; gap:5px;">
+                <button id="btnShowXI" onclick="switchPopupView('XI')" class="tab-btn active" style="font-size:0.8rem; padding:6px 12px;">Playing XI</button>
+                <button id="btnShowFull" onclick="switchPopupView('FULL')" class="tab-btn" style="font-size:0.8rem; padding:6px 12px;">Full Squad</button>
             </div>
-            <div id="squadCaptureArea" style="padding:20px; overflow-y:auto; flex:1; display:flex; justify-content:center;"></div>
-            <div style="padding:15px; border-top:1px solid #333; flex-shrink:0;">
-                <button id="downloadPopupCard" class="primary-btn" style="width:100%;">📸 Download Card</button>
-            </div>
+            <button onclick="document.getElementById('squadViewOverlay').classList.add('hidden')" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+
+        <div id="squadCaptureArea"></div>
+
+        <div style="padding:15px; border-top:1px solid rgba(255,255,255,0.1); background:#0f172a;">
+            <button id="downloadPopupCard" onclick="downloadPopupCard()" class="primary-btn" style="width:100%;">📸 Download Card</button>
         </div>
     </div>
+</div>
+
 
     <div id="rulesScreen" class="rules-overlay hidden">
         <div class="overlay-card">
@@ -655,6 +658,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
