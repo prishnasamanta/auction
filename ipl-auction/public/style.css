@@ -3093,5 +3093,81 @@ body {
 }
 
 
+/* ================================================= */
+/* 💎 PREMIUM SOLD / UNSOLD OVERLAY (Full Cover)     */
+/* ================================================= */
+
+/* 1. The Container (Covers 100% of the card) */
+.ac-result-overlay {
+    position: absolute;
+    inset: 0; /* Top:0, Left:0, Right:0, Bottom:0 */
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85); /* Dark Navy Fade */
+    backdrop-filter: blur(12px); /* High Blur for Premium Feel */
+    z-index: 100; /* Highest Layer */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 16px; /* Match Card Radius */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+/* Show State */
+.ac-result-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* 2. The Stamp Animation */
+.premium-stamp {
+    border: 6px solid currentColor; /* Takes text color */
+    padding: 15px 40px;
+    border-radius: 12px;
+    text-align: center;
+    transform: rotate(-15deg) scale(2); /* Start Big & Rotated */
+    opacity: 0;
+    animation: stampSlam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    background: rgba(0, 0, 0, 0.4); /* Dark bg for contrast */
+    box-shadow: 0 0 30px currentColor; /* Glowing edge */
+}
+
+/* Inner Text */
+.premium-stamp h2 {
+    margin: 0;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 900;
+    font-size: 3.5rem;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    -webkit-text-stroke: 1px rgba(0,0,0,0.5); /* Crisp edge */
+}
+
+.premium-stamp div {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 5px;
+    letter-spacing: 1px;
+    text-shadow: none;
+}
+
+/* 3. The Animation Keyframes */
+@keyframes stampSlam {
+    0% {
+        transform: rotate(-15deg) scale(3);
+        opacity: 0;
+    }
+    100% {
+        transform: rotate(-15deg) scale(1);
+        opacity: 1;
+    }
+}
+
 
 
