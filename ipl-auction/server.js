@@ -13,8 +13,9 @@ const io = new Server(server, {
 
 // --- JSONBIN.IO CONFIGURATION ---
 // Replace these with your actual keys from jsonbin.io
-const BIN_ID = "6975f53dd0ea881f408405f6"; 
-const API_KEY = "$2a$10$9Dh8DOZ6UjWt0WEX0mjqnOvRDwK7xqrhCjS6ehCknAP9HSG0nyyt6"; 
+const BIN_ID = process.env.BIN_ID; 
+const API_KEY = process.env.API_KEY; 
+
 const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 // --- SERVER STATE ---
@@ -955,4 +956,5 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
