@@ -209,7 +209,6 @@ window.onload = async () => {
     }
 
     // Format: /room/CODE/SUBPAGE
-    const urlCode = (parts[1] === 'room' && parts[2]) ? parts[2].toUpperCase() : null;
     const subPage = (parts[1] === 'room' && parts[3]) ? parts[3].toLowerCase() : null;
     const sRoom = sessionStorage.getItem('ipl_room');
     const sUser = sessionStorage.getItem('ipl_user');
@@ -2497,6 +2496,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
