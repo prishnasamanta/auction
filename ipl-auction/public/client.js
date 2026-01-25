@@ -1985,24 +1985,51 @@ socket.on("submitResult", (res) => {
 
     if(status) {
         status.innerHTML = `
-        <div style="padding:15px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
-            <h2 style="margin:0 0 5px 0; color:${res.disqualified ? '#ef4444' : '#22c55e'}">${res.disqualified ? '❌ DISQUALIFIED' : '✅ APPROVED'}</h2>
-            <div style="font-size:0.9rem; color:#ccc;">RATING: <b style="color:#fff; font-size:1.1rem;">${res.rating}</b></div>
-            ${res.disqualified ? `<div style="margin-top:5px; color:#fca5a5; font-size:0.85rem;">Reason: ${res.reason}</div>` : ''}
+        <div class="status-box" style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             
-            ${res.disqualified ? `<button onclick="document.getElementById('submitXIBtn').disabled=false; document.getElementById('submitXIBtn').innerText='Fix Team'; this.parentElement.remove();" style="margin-top:10px; background:#334155; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Edit</button>` : ''}
+            <h2 style="margin:0 0 5px 0; font-size:1.4rem; color:${res.disqualified ? '#ef4444' : '#22c55e'}">
+                ${res.disqualified ? '❌ DISQUALIFIED' : '✅ APPROVED'}
+            </h2>
+            
+            <div style="font-size:0.9rem; color:#ccc;">RATING: <b style="color:#fff; font-size:1.1rem;">${res.rating}</b></div>
+            
+            ${res.disqualified ? `<div style="margin-top:8px; color:#fca5a5; font-size:0.85rem; background:rgba(239,68,68,0.1); padding:8px; border-radius:6px;">Reason: ${res.reason}</div>` : ''}
+            
+            <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+                ${res.disqualified 
+                    ? `<button onclick="editTeam()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444; padding:8px 20px;">✏️ Edit</button>` 
+                    : ''
+                }
+                <button onclick="showScreen('leaderboard')" class="primary-btn" style="padding:8px 20px;">🏆 Leaderboard</button>
+            </div>
+
         </div>`;
     }
 
+    // Hide the main submit button on success so they don't submit twice
     if (btn && !res.disqualified) {
         btn.classList.add("hidden");
+        // We removed the separate "Home" button, but "Save" can stay if needed
         document.getElementById("saveXIBtn").classList.remove("hidden");
         
-        // 🟢 FIX: FORCE REFRESH DATA IMMEDIATELY
+        // Refresh data
         console.log("✅ XI Approved. Refreshing Leaderboard...");
-        socket.emit("getAuctionState"); // Requests fresh leaderboard data
+        socket.emit("getAuctionState"); 
     }
 });
+
+// Helper function for the Edit button
+window.editTeam = function() {
+    // 1. Re-enable the submit button
+    const btn = document.getElementById('submitXIBtn');
+    if(btn) {
+        btn.disabled = false;
+        btn.innerText = 'Fix Team';
+    }
+    // 2. Clear the status box
+    const statusBox = document.getElementById("xiStatus");
+    if(statusBox) statusBox.innerHTML = "";
+};
 
 // --- LEADERBOARD POPUP LOGIC ---
 let currentPopupData = null;
@@ -2806,6 +2833,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
