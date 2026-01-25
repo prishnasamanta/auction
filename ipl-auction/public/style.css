@@ -230,173 +230,156 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ================================================= */
 /* 💎 PREMIUM COMPACT HEADER CSS                     */
 /* ================================================= */
+/* ================================================= */
+/* 💎 FINAL PREMIUM HEADER & CARD STYLES             */
+/* ================================================= */
 
+/* --- 1. COMPACT HEADER --- */
 .topbar {
-    height: 52px; /* Fixed minimal height */
+    height: 50px; /* Minimal Height */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
-    background: rgba(15, 23, 42, 0.95); /* Deep dark background */
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    gap: 15px;
+    padding: 0 10px;
+    background: #0f172a;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    position: sticky; top: 0; z-index: 2000;
 }
 
-/* --- Left Section (Fixed Context) --- */
-.top-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0; /* Never shrink these important badges */
+.top-left, .top-right {
+    display: flex; align-items: center; gap: 8px; height: 100%;
 }
 
-/* Premium Glass Badge (Room & Team) */
 .header-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 4px 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 4px 8px;
     border-radius: 6px;
-    font-family: 'Exo 2', monospace;
-    font-size: 0.75rem;
-    color: #e2e8f0;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    line-height: 1;
+    min-width: 40px; cursor: pointer;
 }
 
-.header-badge:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.3);
-}
+#headerTeamName { font-size: 0.9rem; text-transform: uppercase; color: #fff; }
 
-/* User Count Pill adjustment */
-.header-pill {
-    padding: 4px 8px !important;
-    background: transparent !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-}
-
-/* --- Right Section (Scrollable Actions) --- */
-.top-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    overflow-x: auto; /* 🟢 Enables horizontal scroll if buttons overflow */
-    white-space: nowrap;
-    scrollbar-width: none; /* Firefox hide scrollbar */
-    -ms-overflow-style: none; /* IE hide */
-    padding-right: 5px; /* Padding for end of scroll */
-}
-.top-right::-webkit-scrollbar { display: none; } /* Chrome hide */
-
-/* Divider line between normal/admin buttons */
-.v-divider {
-    width: 1px;
-    height: 18px;
-    background: rgba(255,255,255,0.15);
-    margin: 0 4px;
-}
-
-.admin-group { display: flex; align-items: center; gap: 8px; }
-
-/* Compact Professional Buttons */
-.header-btn {
+/* Icon Buttons */
+.header-icon-btn {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #94a3b8;
-    padding: 5px 12px;
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 6px;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
+    width: 36px; height: 34px; /* Fixed square-ish size */
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
+    transition: 0.2s;
     flex-shrink: 0;
 }
+.header-icon-btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+.header-icon-btn.primary { background: var(--primary); border: none; }
+.header-icon-btn.warning { border-color: #fca5a5; }
+.header-icon-btn.danger { border-color: #ef4444; }
 
-.header-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.4);
+/* Scrollable Right Side */
+.custom-scroll-x {
+    overflow-x: auto;
+    width: 100%;
+    justify-content: flex-end;
+    padding-right: 5px;
+}
+.custom-scroll-x::-webkit-scrollbar { display: none; } /* Clean look */
+
+/* User Dropdown Fix */
+.user-list-dropdown {
+    top: 130%; 
+    width: 200px;
+    max-height: 50vh;
 }
 
-.header-btn:active { transform: translateY(1px); }
-
-/* Variants */
-.header-btn.primary {
-    background: var(--primary);
-    border: none;
-    color: white;
-    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
-}
-.header-btn.danger {
-    border-color: #ef4444;
-    color: #ef4444;
-}
-.header-btn.danger:hover {
-    background: rgba(239, 68, 68, 0.1);
+/* --- 2. AUCTION CARD (Compact & Logic Based) --- */
+#auctionCard {
+    width: 100%; max-width: 500px;
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    transition: all 0.1s ease;
 }
 
-#adminControls {
-    display: flex;
-    justify-content: flex-end; /* Pushes buttons to the right */
-    gap: 8px; 
-    margin-top: 8px;
-    align-items: center;
-    flex-wrap: wrap;
+/* Pulse Animation (Green Border Flash) */
+#auctionCard.pulse {
+    border-color: #4ade80;
+    box-shadow: 0 0 25px rgba(74, 222, 128, 0.4) inset;
 }
 
-/* --- The "Glass" Button Style (Pause, Skip, Skip Set) --- */
-#adminControls button {
-    background: rgba(255, 255, 255, 0.05); /* Dark Glassy Background */
-    border: 1px solid rgba(255, 255, 255, 0.15); /* Subtle Light Border */
-    border-radius: 8px;     /* "Rules Button" Shape */
-    color: #94a3b8;         /* Muted Text Color */
-    padding: 6px 12px;      /* Compact Size */
-    font-size: 0.75rem;
-    font-weight: 600;
+/* Top Row: Name Left, Meta Right */
+.ac-top-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 15px;
+    background: radial-gradient(circle at center, #1e293b, #0f172a);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    min-height: 80px;
+}
+
+.ac-info-box { text-align: left; flex: 1; }
+.ac-name-text {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1.6rem; font-weight: 800; color: #fff;
+    line-height: 1.1; text-transform: uppercase;
+}
+.ac-role-text {
+    font-family: 'Inter', sans-serif;
+    color: var(--gold); font-size: 0.8rem; font-weight: 600;
+    margin-top: 4px; letter-spacing: 1px;
+}
+
+.ac-status-box {
+    display: flex; flex-direction: column; align-items: flex-end;
+    justify-content: center; gap: 6px;
+    min-width: 80px;
+}
+
+.ac-timer-box {
+    font-family: monospace; font-size: 1.2rem;
+    color: #f43f5e; background: rgba(0,0,0,0.3);
+    padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);
+}
+
+.ac-leader-badge {
+    background: #fff; color: #000;
+    font-weight: 800; font-size: 0.8rem;
+    padding: 2px 8px; border-radius: 4px;
+    text-transform: uppercase;
+}
+
+/* Bottom Row: Price Left, Button Right */
+.ac-bot-row {
+    display: flex; align-items: stretch;
+    height: 70px;
+    background: rgba(30, 41, 59, 0.3);
+}
+
+.ac-price-box {
+    flex: 1; /* Takes left side */
+    padding: 0 15px;
+    display: flex; flex-direction: column; justify-content: center;
+}
+.ac-price-box .lbl { font-size: 0.65rem; color: #64748b; font-weight: 700; letter-spacing: 1px; }
+.ac-price-box .val { font-family: 'Exo 2', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; }
+
+.ac-main-bid-btn {
+    flex: 1.2; /* Button is wider */
+    background: var(--success);
+    border: none; border-left: 1px solid rgba(255,255,255,0.1);
+    color: #022c22;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: none;       /* Flat look */
-    min-width: auto;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: background 0.1s;
 }
+.ac-main-bid-btn span { font-family: 'Exo 2', sans-serif; font-size: 1.4rem; font-weight: 800; line-height: 1; }
+.ac-main-bid-btn .sub-text { font-family: monospace; font-size: 0.85rem; font-weight: 600; margin-top: 2px; opacity: 0.8; }
 
-#adminControls button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.4);
-    color: #fff;
-}
-
-/* --- HIDING THE END BUTTON --- */
-#endBtn { display: none !important; }
-
-/* --- LEAVE BUTTON STYLE --- */
-#leaveBtn {
-    background: transparent !important;
-    border: 1px solid #ef4444 !important; /* Keep Red Border */
-    color: #ef4444 !important;            /* Keep Red Text */
-    border-radius: 8px !important;        
-    font-weight: bold;
-    cursor: pointer;
-    padding: 4px 8px !important;
-    font-size: 0.75rem !important;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-#leaveBtn:hover {
-    background: rgba(239, 68, 68, 0.1) !important;
-    color: #ef4444 !important;
-}
+.ac-main-bid-btn:active { background: #16a34a; }
+.ac-main-bid-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
 
 /* --- MAIN AUCTION GRID --- */
 .auction-wrapper {
@@ -2408,145 +2391,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 @media (max-width: 768px) {
     .prem-body { grid-template-columns: repeat(2, 1fr) !important; }
 }
-/* ================================================= */
-/* 💎 PREMIUM AUCTION CARD V2 (Compact Footer)       */
-/* ================================================= */
 
-#auctionCard {
-    width: 100%;
-    max-width: 500px;
-    background: #0f172a;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-    margin-bottom: 10px;
-}
-
-/* 1. Player Area */
-.ac-player-row {
-    position: relative;
-    padding: 25px 20px;
-    background: radial-gradient(circle at center, #1e293b, #0f172a);
-    text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-.ac-name {
-    font-family: 'Exo 2', sans-serif;
-    font-size: 2rem;
-    font-weight: 800;
-    color: #fff;
-    line-height: 1.1;
-    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-}
-
-.ac-role {
-    font-family: 'Inter', sans-serif;
-    color: var(--gold);
-    font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 2px;
-    margin-top: 6px;
-    text-transform: uppercase;
-}
-
-/* 2. Action Footer (The 3-Column Layout) */
-.ac-action-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 20px;
-    background: rgba(30, 41, 59, 0.4);
-    height: 90px; /* Fixed height for consistency */
-}
-
-/* --- Left Column: Price --- */
-.ac-col-left {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    flex: 1;
-}
-.ac-label { font-size: 0.65rem; color: #64748b; font-weight: 700; letter-spacing: 1px; }
-.ac-price { font-family: 'Exo 2', sans-serif; font-size: 1.5rem; font-weight: 800; color: #fff; }
-
-/* --- Middle Column: Button --- */
-.ac-col-mid {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex: 1;
-}
-.ac-bid-btn-small {
-    background: var(--success);
-    border: none;
-    color: #022c22;
-    font-family: 'Exo 2', sans-serif;
-    font-weight: 800;
-    font-size: 1.1rem;
-    padding: 10px 25px; /* Comfortable touch target */
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 4px 0 #15803d;
-    transition: transform 0.1s;
-    width: 100%; /* Fill middle col */
-    max-width: 120px;
-}
-.ac-bid-btn-small:active { transform: translateY(2px); box-shadow: none; }
-.ac-bid-btn-small:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; }
-
-.ac-inc-text {
-    font-size: 0.65rem;
-    color: #94a3b8;
-    margin-top: 5px;
-    font-family: monospace;
-}
-
-/* --- Right Column: Timer & Leader --- */
-.ac-col-right {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
-    flex: 1;
-    gap: 4px;
-}
-.ac-timer-small {
-    font-family: monospace;
-    font-size: 1.2rem;
-    background: #0f172a;
-    color: #f43f5e;
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-.ac-leader-text {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #fff;
-    background: rgba(255,255,255,0.1);
-    padding: 2px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    max-width: 100px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Result Overlay (Position Fix) */
-.ac-result-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.9);
-    z-index: 20;
-    display: flex; justify-content: center; align-items: center;
-}
 
 /* ================================================= */
 /* 💎 PREMIUM LANDING PAGE STYLES                    */
@@ -2696,6 +2541,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     .hero-stats { gap: 15px; }
     .nav-links { display: none; } /* Simple hide for now */
 }
+
 
 
 
