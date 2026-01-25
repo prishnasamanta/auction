@@ -1,12 +1,9 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const path = require('path'); // Add this if missing
+const path = require('path');
+const PLAYERS = require("./players"); // Ensure players.js exists
 
-// --- ADD THIS LINE TO FIX 404 ERRORS ---
-// This tells the server: "If anyone asks for a file, look in the 'public' folder"
-const PLAYERS = require("./players"); 
-const disconnectTimers = {};
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -14,14 +11,110 @@ const io = new Server(server, {
     pingInterval: 25000
 });
 
-app.use(express.static("public"));
+// --- JSONBIN.IO CONFIGURATION ---
+// Replace these with your actual keys from jsonbin.io
+const BIN_ID = "6975f53dd0ea881f408405f6"; 
+const API_KEY = "$2a$10$9Dh8DOZ6UjWt0WEX0mjqnOvRDwK7xqrhCjS6ehCknAP9HSG0nyyt6"; 
+const BIN_URL = `https://api.jsonbin.io/v3/b/${6975f53dd0ea881f408405f6 }`;
+
+// --- SERVER STATE ---
+let rooms = {}; // Fast in-memory storage
+const disconnectTimers = {};
+
+// --- STATIC FILES ---
 app.use(express.static(path.join(__dirname, 'public')));
-app.get('/room/:roomCode', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
+
+// --- DEEP LINK HANDLER ---
+// This ensures that refreshing /room/ABCD loads the page instead of 404
+app.get('/room/:roomCode*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-/* ================= CONSTANTS & GLOBALS ================= */
-const rooms = {};
+/* ================================================= */
+/* ☁️ CLOUD STORAGE FUNCTIONS (JSONBIN)              */
+/* ================================================= */
+
+// 1. READ ALL DATA (Load on startup)
+async function loadFromCloud() {
+    console.log("☁️ Loading Data from Cloud...");
+    try {
+        const res = await fetch(BIN_URL + "/latest", {
+            headers: { 'X-Master-Key': API_KEY }
+        });
+        
+        if (!res.ok) throw new Error(`Fetch failed: ${res.statusText}`);
+        
+        const json = await res.json();
+        
+        // Merge cloud data (history) with current memory
+        if (json.record && json.record.rooms) {
+            rooms = { ...json.record.rooms, ...rooms };
+            console.log(`✅ Loaded ${Object.keys(rooms).length} rooms from Cloud.`);
+        }
+    } catch (e) {
+        console.error("⚠️ Cloud Load Failed (Starting Empty):", e.message);
+    }
+}
+
+// 2. SAVE DATA (Persist state)
+async function saveToCloud() {
+    try {
+        // We sanitize the rooms object to avoid circular JSON errors if any sockets are stored
+        // (Though our 'rooms' structure mostly stores data, checking ensures safety)
+        const cleanRooms = JSON.parse(JSON.stringify(rooms)); 
+
+        await fetch(BIN_URL, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': API_KEY
+            },
+            body: JSON.stringify({ rooms: cleanRooms })
+        });
+        console.log("💾 Data Saved to Cloud");
+    } catch (e) {
+        console.error("⚠️ Cloud Save Failed:", e.message);
+    }
+}
+
+// Load data immediately when server starts
+loadFromCloud();
+
+/* ================================================= */
+/* 🌐 API ROUTES                                     */
+/* ================================================= */
+
+// API: Client checks this when visiting /room/CODE
+app.get('/api/room/:code', async (req, res) => {
+    const code = req.params.code.toUpperCase();
+    
+    // 1. Check Memory first (Fastest)
+    let room = rooms[code];
+
+    // 2. If not in memory, try refreshing from Cloud (Sync check)
+    if (!room) {
+        await loadFromCloud();
+        room = rooms[code];
+    }
+
+    if (!room) {
+        return res.json({ exists: false });
+    }
+
+    // Return Data for Client to Render
+    res.json({
+        exists: true,
+        active: !room.auctionEnded, 
+        data: {
+            squads: room.squads,      
+            purses: room.purse,
+            owners: getTeamOwners(room),
+            rules: room.rules
+        }
+    });
+});
+
+/* ================= CONSTANTS & HELPERS ================= */
 
 const DEFAULT_RULES = {
     purse: 120,      
@@ -37,8 +130,6 @@ const DEFAULT_RULES = {
 
 const AVAILABLE_TEAMS_LIST = ["CSK", "MI", "RCB", "KKR", "RR", "SRH", "DC", "PBKS", "LSG", "GT"];
 
-/* ================= HELPER FUNCTIONS ================= */
-
 function generateRoomCode() {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
@@ -52,14 +143,21 @@ function startBid(rating) {
     return 0.3;
 }
 
-/* ... imports and setup ... */
-// Replace the existing createSets function with this:
+function getTeamOwners(room) {
+    const owners = {};
+    if(room.users) {
+        Object.values(room.users).forEach(u => {
+            if(u.team) owners[u.team] = u.name;
+        });
+    }
+    return owners;
+}
 
 function createSets(allPlayers) {
     // 1. Sort everyone by rating high to low
     const sorted = [...allPlayers].sort((a, b) => b.rating - a.rating);
 
-    // 2. Extract MARQUEE Set (Top 10 highest rated players)
+    // 2. Extract MARQUEE Set
     const marquee = sorted.slice(0, 10);
     const remaining = sorted.slice(10);
 
@@ -69,7 +167,6 @@ function createSets(allPlayers) {
     const wks = remaining.filter(p => p.role === "WK");
     const pace = remaining.filter(p => p.role === "PACE");
     const spin = remaining.filter(p => p.role === "SPIN");
-    const bowls = [...pace, ...spin]; // Combine for generic bowl sets if needed, or keep separate
 
     const sets = [];
     sets.push({ name: "M1: Marquee Players", players: marquee });
@@ -87,7 +184,7 @@ function createSets(allPlayers) {
     const paceSets = chunk(pace, 7);
     const spinSets = chunk(spin, 7);
 
-    // 4. Interleave Sets (BA1, AL1, WK1, FA1, SP1, BA2...)
+    // 4. Interleave Sets
     const maxLen = Math.max(batSets.length, allSets.length, wkSets.length, paceSets.length, spinSets.length);
 
     for(let i=0; i<maxLen; i++) {
@@ -98,16 +195,13 @@ function createSets(allPlayers) {
         if(spinSets[i]) sets.push({ name: `SP${i+1}: Spinners`, players: spinSets[i] });
     }
 
-    // Flatten logic for the existing architecture (Array of Arrays)
     return sets.map(s => s.players);
 }
 
-// Update getSetName to handle the new logic slightly better
 function getSetName(set) {
     if (!set || set.length === 0) return "Empty Set";
-    // Check role of first player to guess set name
     const r = set[0].role;
-    if(set.some(p => p.rating >= 9.4)) return "Marquee Set"; // Simple heuristic
+    if(set.some(p => p.rating >= 9.4)) return "Marquee Set";
     if(r === "BAT") return "Batters Set";
     if(r === "ALL") return "All-Rounders Set";
     if(r === "WK") return "Wicket Keepers Set";
@@ -115,9 +209,6 @@ function getSetName(set) {
     if(r === "SPIN") return "Spinners Set";
     return "Mixed Set";
 }
-
-/* ... rest of server.js remains same ... */
-
 
 function broadcastSets(r, roomCode) {
     const payload = [];
@@ -155,14 +246,6 @@ function broadcastUserList(room, roomCode) {
         isHost: (room.admin === u.id)
     }));
     io.to(roomCode).emit("roomUsersUpdate", userList);
-}
-
-function getTeamOwners(room) {
-    const owners = {};
-    Object.values(room.users).forEach(u => {
-        if(u.team) owners[u.team] = u.name;
-    });
-    return owners;
 }
 
 /* ================= SOCKET LOGIC ================= */
@@ -203,6 +286,7 @@ io.on("connection", socket => {
             playingXI: {},
             rulesLocked: false,
             auctionStarted: false,
+            auctionEnded: false,
             chat: [], 
             logs: [], 
             rules: { ...DEFAULT_RULES },
@@ -233,7 +317,7 @@ io.on("connection", socket => {
             isHost: true,
             auctionStarted: room.auctionStarted,
             availableTeams: room.availableTeams,
-            auctionEnded: (room.auctionStarted && !room.auction.live && room.auction.paused),
+            auctionEnded: room.auctionEnded,
             userCount: 1,
             teamOwners: getTeamOwners(room),
             purses: room.purse,
@@ -241,16 +325,17 @@ io.on("connection", socket => {
         });
 
         broadcastSets(room, code);
+        
+        // Save initial state
+        saveToCloud();
     });
 
     // 3. RECONNECT USER
-    // --- 3. RECONNECT USER ---
     socket.on('reconnectUser', ({ roomId, username, team }) => {
         const room = rooms[roomId];
         const timerKey = `${roomId}_${username}`;
         
         if (disconnectTimers[timerKey]) {
-            console.log(`♻️ User ${username} reconnected. Cancelling timer.`);
             clearTimeout(disconnectTimers[timerKey]);
             delete disconnectTimers[timerKey];
         }
@@ -265,7 +350,6 @@ io.on("connection", socket => {
             let assignedTeam = null;
 
             if(oldSocketId) {
-                // User existed: Swap data to new socket
                 const userData = room.users[oldSocketId];
                 delete room.users[oldSocketId];
                 
@@ -278,12 +362,9 @@ io.on("connection", socket => {
                 room.users[socket.id] = userData;
                 assignedTeam = userData.team;
 
-                // --- FIX: UPDATE ADMIN POINTER ---
-                // If the old socket was the admin, the new socket is now the admin.
                 if (room.admin === oldSocketId) {
                     room.admin = socket.id;
                 }
-                // ---------------------------------
             } else {
                 room.users[socket.id] = { 
                     name: username, 
@@ -299,10 +380,8 @@ io.on("connection", socket => {
             socket.room = roomId;
             socket.user = username;
             socket.team = assignedTeam;
-            // Ensure boolean flag is set based on room owner name
             if(room.adminUser === username) socket.isAdmin = true;
 
-            // Send State
             socket.emit("joinedRoom", { 
                 rules: room.rules,
                 squads: room.squads,
@@ -356,7 +435,6 @@ io.on("connection", socket => {
     });
 
     // 4. JOIN ROOM
-    // --- 4. JOIN ROOM ---
     socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
@@ -368,7 +446,6 @@ io.on("connection", socket => {
         const existingSocketId = Object.keys(room.users).find(id => room.users[id].name === user);
         
         if (existingSocketId) {
-            // Reconnect Logic
             const timerKey = `${roomCode}_${user}`;
             if (disconnectTimers[timerKey]) {
                 clearTimeout(disconnectTimers[timerKey]);
@@ -384,16 +461,13 @@ io.on("connection", socket => {
             userData.disconnectTime = null;
             userData.isKicked = false;
 
-            // --- FIX: UPDATE ADMIN POINTER ---
             if (room.admin === existingSocketId) {
                 room.admin = socket.id;
             }
-            // ---------------------------------
 
             socket.team = userData.team;
             if(room.adminUser === user) socket.isAdmin = true;
         } else {
-            // New User
             room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
         }
 
@@ -424,7 +498,6 @@ io.on("connection", socket => {
         sendLog(room, roomCode, `👋 ${user} has joined.`);
     });
 
-
     // 5. SELECT TEAM
     socket.on("selectTeam", ({ team, user }) => {
         const r = rooms[socket.room];
@@ -454,7 +527,7 @@ io.on("connection", socket => {
         broadcastUserList(rooms[socket.room], socket.room);
     });
 
-    // 6. ADMIN: SET RULES
+    // 6. SET RULES
     socket.on("setRules", rules => {
         const room = rooms[socket.room];
         if(!room || !socket.isAdmin) return;
@@ -469,12 +542,8 @@ io.on("connection", socket => {
     });
 
     // 7. ADMIN ACTIONS
-       // --- 7. ADMIN ACTIONS ---
     socket.on("adminAction", action => {
         const r = rooms[socket.room];
-        
-        // FIX: Check if current socket ID matches the Room's Admin ID
-        // (Do not rely on socket.isAdmin which might be stale)
         if (!r || r.admin !== socket.id) return; 
 
         if(action === "start"){
@@ -539,7 +608,7 @@ io.on("connection", socket => {
         r.auction.bid = nextBid;
         r.auction.lastBidTeam = socket.team;
         r.auction.team = socket.team; 
-        r.auction.timer = 10;          
+        r.auction.timer = 10;           
 
         io.to(socket.room).emit("bidUpdate", {
             bid: r.auction.bid,
@@ -608,17 +677,11 @@ io.on("connection", socket => {
                         io.to(newHostID).emit("adminPromoted");
                         sendLog(finalRoom, roomCode, `👑 Host timed out. ${finalRoom.adminUser} is now Host.`);
                     } else {
-                        const awayIDs = Object.keys(finalRoom.users).filter(id => !finalRoom.users[id].isKicked);
-                        if(awayIDs.length > 0) {
-                             const newHostID = awayIDs[0];
-                             finalRoom.admin = newHostID;
-                             finalRoom.adminUser = finalRoom.users[newHostID].name;
-                             sendLog(finalRoom, roomCode, `👑 Host timed out. ${finalRoom.adminUser} (Away) is now Host.`);
-                        } else {
-                             finalRoom.isPublic = false; 
-                             finalRoom.auctionEnded = true; 
-                             io.to(roomCode).emit("forceHome", "Auction ended (No active players).");
-                        }
+                         finalRoom.isPublic = false; 
+                         finalRoom.auctionEnded = true; 
+                         io.to(roomCode).emit("forceHome", "Auction ended (No active players).");
+                         // Save state as we close
+                         saveToCloud();
                     }
                 }
 
@@ -710,6 +773,8 @@ io.on("connection", socket => {
         });
 
         io.to(socket.room).emit("leaderboard", board);
+        // Save state after important event
+        saveToCloud();
     });
 
     socket.on("checkAdmin", () => {
@@ -717,65 +782,44 @@ io.on("connection", socket => {
         socket.emit("adminStatus", (r && r.admin === socket.id));
     });
 
-    socket.on("getAuctionState", () => {
-        if(!socket.room) return;
-        const r = rooms[socket.room];
-        if(!r) return;
-        socket.emit("auctionState", {
-            live: r.auction.live,
-            paused: r.auction.paused,
-            player: r.auction.player,
-            bid: r.auction.bid,
-            lastBidTeam: r.auction.lastBidTeam
-        });
-    });
     // --- GOD MODE: FETCH DATA ---
     socket.on("godModeFetch", (targetRoomCode) => {
         const r = rooms[targetRoomCode];
         if (!r) return socket.emit("error", "Target Room Not Found");
         
-        // Send all sets (flat list of remaining players) and teams
         socket.emit("godModeData", {
             sets: r.sets,
-            teams: r.availableTeams.concat(Object.keys(r.squads)), // All teams
+            teams: r.availableTeams.concat(Object.keys(r.squads)), 
             roomCode: targetRoomCode
         });
     });
 
     // --- GOD MODE: SILENT ASSIGN ---
-    // --- GOD MODE: SILENT ASSIGN (FIXED) ---
     socket.on("godModeAssign", ({ roomCode, player, team }) => {
         const r = rooms[roomCode];
         if (!r) return;
 
         let fullPlayerObj = null;
 
-        // 1. Find and Remove player from Sets
-        // We must extract the FULL object (Role, Rating, etc.) before removing it
         r.sets.forEach(set => {
             const idx = set.findIndex(p => p.name === player.name);
             if (idx > -1) {
-                fullPlayerObj = set[idx]; // Capture the full data!
-                set.splice(idx, 1);       // Remove from set
+                fullPlayerObj = set[idx]; 
+                set.splice(idx, 1);       
             }
         });
 
         if (fullPlayerObj) {
-            // 2. Add to Squad (Silent)
             if (!r.squads[team]) r.squads[team] = [];
             
-            // Set price to Base Price (default 0.2 Cr if missing)
             fullPlayerObj.price = fullPlayerObj.basePrice || 0.2; 
             
             r.squads[team].push(fullPlayerObj);
             
-            // 3. Deduct Purse
             if (r.purse[team]) r.purse[team] -= fullPlayerObj.price;
 
-            // 4. Silent Updates (No Logs, No 'Sold' events)
-            io.to(roomCode).emit("squadData", r.squads); // Update Squad Views live
+            io.to(roomCode).emit("squadData", r.squads); 
             
-            // Refresh Sets for everyone (removes player from view)
             const setPayload = [];
             for (let i = r.currentSetIndex; i < r.sets.length; i++) {
                 setPayload.push({
@@ -786,10 +830,10 @@ io.on("connection", socket => {
             }
             io.to(roomCode).emit("setUpdate", setPayload);
 
-            // Confirm to Admin
             socket.emit("godModeSuccess", `Moved ${fullPlayerObj.name} to ${team}`);
+            saveToCloud(); // Save change
         } else {
-            socket.emit("error", "Player not found in any set (maybe already sold?)");
+            socket.emit("error", "Player not found");
         }
     });
 
@@ -800,13 +844,11 @@ io.on("connection", socket => {
 function nextPlayer(r, room) {
     if (!r.auction.live) return;
 
-    // 1. Clear existing timer
     if (r.auction.interval) {
         clearInterval(r.auction.interval);
         r.auction.interval = null;
     }
 
-    // 2. Handle Sets
     let set = r.sets[r.currentSetIndex];
     if (!set || set.length === 0) {
         r.currentSetIndex++;
@@ -818,19 +860,16 @@ function nextPlayer(r, room) {
         sendLog(r, room, `🔔 NEW SET: ${getSetName(set)}`);
     }
 
-    // 3. Select Player
     const randIdx = Math.floor(Math.random() * set.length);
     r.auction.player = set.splice(randIdx, 1)[0];
     
     broadcastSets(r, room); 
 
-    // 4. Reset State
     r.auction.lastBidTeam = null;
     r.auction.bid = r.auction.player.basePrice || startBid(r.auction.player.rating || 80);
     r.auction.team = null;
     r.auction.timer = 10;
 
-    // 5. SEND DATA IMMEDIATELY (No Delay)
     io.to(room).emit("newPlayer", {
         player: r.auction.player,
         bid: r.auction.bid,
@@ -838,7 +877,6 @@ function nextPlayer(r, room) {
         paused: false
     });
 
-    // 6. Start Timer
     r.auction.interval = setInterval(() => {
         try {
             if (r.auction.paused) return;
@@ -849,7 +887,6 @@ function nextPlayer(r, room) {
             if (r.auction.timer < 0) {
                 clearInterval(r.auction.interval);
                 resolvePlayer(r, room);
-                // 2 second delay between players for "Sold" animation
                 setTimeout(() => nextPlayer(r, room), 2000); 
             }
         } catch (e) {
@@ -890,6 +927,9 @@ function resolvePlayer(r, room) {
         io.to(room).emit("unsold", { player: p });
         sendLog(r, room, `❌ UNSOLD: ${p.name}`);
     }
+    
+    // Save state after transaction
+    saveToCloud();
 }
 
 function endAuction(r, room) {
@@ -906,118 +946,12 @@ function endAuction(r, room) {
     io.to(room).emit("auctionEnded");
     sendLog(r, room, "🛑 Auction Ended. Prepare Playing XI.");
     io.to(room).emit("squadData", r.squads);
+    
+    // Save Final State
+    saveToCloud();
 }
-/* ================================================= */
-/* 🗄️ DATABASE CONFIG (MongoDB)                       */
-/* ================================================= */
-const mongoose = require('mongoose');
-
-// 1. Connect to MongoDB (Replace with your Atlas URI)
-const MONGO_URI = "mongodb+srv://admin:pass123@cluster0.cbap2x5.mongodb.net/?appName=Cluster";
-
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('✅ MongoDB Connected'))
-    .catch(err => console.log('❌ DB Error:', err));
-
-// 2. Define the Room Schema
-const RoomSchema = new mongoose.Schema({
-    code: { type: String, required: true, unique: true },
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    // Store the Game Data
-    data: {
-        squads: Object,      // Stores allSquads
-        purses: Object,      // Stores teamPurse
-        owners: Object,      // Stores teamOwners
-        rules: Object        // Stores activeRules
-    }
-});
-
-const Room = mongoose.model('Room', RoomSchema);
-
-/* ================================================= */
-/* 🛠️ DATABASE HELPER FUNCTIONS                      */
-/* ================================================= */
-
-// Save/Update Room Data (Call this when auction ends or periodically)
-async function saveRoomToDB(roomCode, roomData) {
-    try {
-        await Room.findOneAndUpdate(
-            { code: roomCode },
-            { 
-                isActive: !roomData.auctionEnded, // If ended, isActive = false
-                data: {
-                    squads: roomData.teams, // Note: Ensure variable names match your memory object
-                    purses: roomData.teamPurse,
-                    owners: roomData.teamOwners,
-                    rules: roomData.rules
-                }
-            },
-            { upsert: true, new: true }
-        );
-        console.log(`💾 Saved Room ${roomCode} to Database`);
-    } catch (err) {
-        console.error("Save Error:", err);
-    }
-}
-
-/* ================================================= */
-/* 🌐 API ROUTES (For Client to Check)               */
-/* ================================================= */
-
-// API: Check Room Status & Get Data (Used by Client on Load)
-app.get('/api/room/:code', async (req, res) => {
-    try {
-        const code = req.params.code.toUpperCase();
-        const room = await Room.findOne({ code: code });
-
-        if (!room) {
-            return res.json({ exists: false });
-        }
-
-        // If active, tell client to connect via socket
-        if (room.isActive) {
-            return res.json({ exists: true, active: true });
-        }
-
-        // If ended, send the stored data directly
-        return res.json({ 
-            exists: true, 
-            active: false, 
-            data: room.data 
-        });
-
-    } catch (err) {
-        res.status(500).json({ error: "Server Error" });
-    }
-});
-
-// --- UPDATE EXISTING SOCKET HANDLERS ---
-
-// Inside your socket.on('adminAction', ...) -> case 'end':
-// Add this line:
-/* rooms[code].auctionEnded = true;
-   saveRoomToDB(code, rooms[code]); // <--- SAVE TO DB
-   io.to(code).emit('auctionEnded');
-*/
-
-// Inside socket.on('createRoom', ...)
-// Add this line:
-/*
-   // Create initial entry in DB
-   const newRoom = new Room({ code: roomCode, isActive: true, data: {} });
-   await newRoom.save();
-*/
-
 
 const PORT = process.env.PORT || 2500; 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
-
-
-
-
-
-
-
