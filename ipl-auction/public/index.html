@@ -264,48 +264,42 @@
 
 <div class="auction glass hidden" id="auctionCard">
     
-    <div class="ac-header">
-        <div class="ac-team-box">
-            <span style="color:#64748b; font-size:0.7rem;">YOUR TEAM</span>
-            <div id="noticeTeam" class="ac-team-name">SPECTATOR</div>
-        </div>
-        <div class="ac-purse-box">
-            <span style="color:#64748b; font-size:0.7rem;">PURSE</span>
-            <div id="noticePurse" class="ac-purse-val">₹0.00</div>
-        </div>
-    </div>
-
     <div class="ac-player-row">
-        <div class="ac-info">
-            <div id="playerName" class="ac-name">WAITING...</div>
-            <div id="playerMeta" class="ac-role">---</div>
-        </div>
         <div id="resultOverlay" class="ac-result-overlay hidden">
             <div class="stamp-container">
                 <div id="stampTitle" class="stamp-title">SOLD</div>
                 <div id="stampDetail" class="stamp-detail">TO CSK</div>
             </div>
         </div>
+
+        <div class="ac-info">
+            <div id="playerName" class="ac-name">WAITING...</div>
+            <div id="playerMeta" class="ac-role">---</div>
+        </div>
     </div>
 
     <div class="ac-action-row">
-        <div class="ac-bid-section">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                <span style="font-size:0.7rem; color:#64748b; font-weight:700;">CURRENT BID</span>
-                <div id="timer" class="ac-timer">10</div>
-            </div>
+        
+        <div class="ac-col-left">
+            <span class="ac-label">CURRENT BID</span>
             <div id="bid" class="ac-price">₹0.00 Cr</div>
-            
-            <div id="currentBidder" class="ac-bidder-badge hidden">
-                <span class="dot"></span> <span id="bidderName">CSK</span>
+        </div>
+
+        <div class="ac-col-mid">
+            <button id="bidBtn" class="ac-bid-btn-small">BID</button>
+            <div id="bidIncrementText" class="ac-inc-text">+0.05</div>
+        </div>
+
+        <div class="ac-col-right">
+            <div id="timer" class="ac-timer-small">10</div>
+            <div id="currentBidder" class="ac-leader-text hidden">
+                <span id="bidderName">CSK</span>
             </div>
         </div>
 
-        <button id="bidBtn" class="ac-bid-btn">
-            BID <br> <span style="font-size:0.8rem; font-weight:400;">+ 0.05 Cr</span>
-        </button>
     </div>
 </div>
+
 
 
 
@@ -770,6 +764,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
