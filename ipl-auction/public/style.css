@@ -3026,6 +3026,7 @@ body {
 .ac-price-box {
     width: 35% !important; /* Fixed width */
     display: flex; flex-direction: column; justify-content: center;
+    flex: none !important; /* Disable flex scaling */
     padding-left: 5px;
 }
 .ac-price-box .lbl { font-size: 0.6rem; color: #64748b; font-weight: 700; letter-spacing: 0.5px; }
@@ -3038,6 +3039,7 @@ body {
 .ac-main-bid-btn {
     width: 65% !important; /* Takes 65% of the row */
     height: 100%;
+    flex: none !important;
     background: var(--success);
     border: none; border-radius: 8px;
     color: #022c22; cursor: pointer;
@@ -3198,24 +3200,19 @@ body {
 /* ================================================= */
 /* ⚡ ULTIMATE APP LAYOUT (Mobile & PC Fixed)        */
 /* ================================================= */
-
-/* 1. LOCK SCREEN (Prevent Browser Scroll) */
-/* ================================================= */
-/* 🌌 UNIVERSAL PREMIUM BACKGROUND ANIMATION         */
-/* ================================================= */
-
-/* ================================================= */
-/* 🌌 FIXED: PREMIUM ANIMATED BACKGROUND             */
-/* ================================================= */
-
 body {
     margin: 0;
-    padding: 0;
-    width: 100vw;
+    width: 100%; 
     height: 100dvh; /* Mobile viewport fix */
     overflow: hidden;
-    
-    /* 1. The Deep Animated Gradient */
+    display: flex;
+    flex-direction: column;
+
+    /* 1. Global Fonts/Colors */
+    color: var(--text-main);
+    font-family: var(--font-body);
+
+    /* 2. THE ANIMATION (Deep Gradient) */
     background: linear-gradient(
         300deg, 
         #020617, /* Deep Black-Blue */
@@ -3223,38 +3220,20 @@ body {
         #0f172a, /* Slate */
         #312e81  /* Rich Purple-Blue */
     );
-    background-size: 400% 400%; /* Must be >100% to move */
-    
-    /* 2. The Animation */
-    animation: premiumGradient 15s ease infinite;
-    
-    /* 3. Text & Font Defaults */
-    color: var(--text-main);
-    font-family: var(--font-body);
+    background-size: 400% 400%; /* Zooms in to allow movement */
+    animation: premiumGradient 15s ease infinite; /* The movement speed */
 }
 
-/* 4. KEYFRAMES (Required for movement) */
+/* 3. The Animation Keyframes (Paste this right after body) */
 @keyframes premiumGradient {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
 
-/* 🟢 CRITICAL FIX: Make containers transparent so bg shows through */
-#auctionUI, 
-.auction-wrapper, 
-.screen {
-    background: transparent !important; /* Override solid colors */
-}
-
-/* Optional: Add a subtle mesh texture on top */
-body::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    pointer-events: none;
+/* 4. CRITICAL: Make containers transparent so BG shows through */
+#auctionUI, .auction-wrapper, .screen {
+    background: transparent !important;
 }
 
 /* 2. MAIN CONTAINER (Stacks Header, Body, Footer) */
@@ -3463,5 +3442,6 @@ body::before {
         padding: 0 10px;
     }
 }
+
 
 
