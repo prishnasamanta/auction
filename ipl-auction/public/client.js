@@ -1148,13 +1148,10 @@ window.downloadSquadImage = function() {
 function loadPlayerImage(imgEl, playerName) {
     if(!playerName) return;
     const raw = playerName.trim();
-    const noSpace = raw.replace(/\s+/g, '');
-    const withUnderscore = raw.replace(/\s+/g, '_');
+    
     const upperUnderscore = withUnderscore.toUpperCase();
     const candidates = [
         `/players/${upperUnderscore}.png`, // VIRAT_KOHLI.png
-        `/players/${noSpace}.png`, // ViratKohli.png
-        `/players/${raw}.png`, // Virat Kohli.png
         "https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png" // Fallback
     ];
     let attempt = 0;
@@ -2251,18 +2248,19 @@ function renderPostAuctionSummary() {
     });
 }
 
-
-// Override Exit Home to go to Summary if auction ended
+// --- EXIT TO HOME (Fixed: Forces return to Main Page) ---
 window.exitToHome = function() {
-    if (activeRules && document.getElementById("postAuctionSummary")) {
-        // If coming from Playing XI screen
-        showScreen("postAuctionSummary");
-        renderPostAuctionSummary();
-    } else if(confirm("Are you sure you want to exit?")) {
-        sessionStorage.clear();
+    // We removed the check for 'postAuctionSummary' so it doesn't loop back.
+    
+    if (confirm("Are you sure you want to exit to the Main Menu?")) {
+        // 1. Clear session to stop auto-reconnect logic on the landing page
+        sessionStorage.clear(); 
+        
+        // 2. Force hard redirect to root (Main Page)
         window.location.href = "/";
     }
-}
+};
+
 /* ================================================= */
 /* ============== GOD MODE (ADMIN) ================= */
 /* ================================================= */
@@ -2333,14 +2331,22 @@ window.toggleTeamSelect = function(btn) {
     popup.classList.toggle('hidden');
 };
 window.forceAssign = function(playerName, teamName) {
-    if(confirm(`Force assign ${playerName} to ${teamName}?`)) {
-        socket.emit("godModeAssign", {
-            roomCode: godTargetRoom,
-            player: { name: playerName },
-            team: teamName
-        });
+    // Direct assignment - No confirmation popup
+    socket.emit("godModeAssign", { 
+        roomCode: godTargetRoom, 
+        player: { name: playerName }, 
+        team: teamName 
+    });
+
+    // Optional: Visual feedback to know it worked
+    const btn = event.target; // Get the button that was clicked
+    if(btn) {
+        const originalText = btn.innerText;
+        btn.innerText = "✓";
+        setTimeout(() => btn.innerText = originalText, 1000);
     }
 };
+
 // --- NAVIGATION LOGIC FIXES ---
 // 1. Smart Back Button for Leaderboard
 
@@ -2429,5 +2435,6 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
