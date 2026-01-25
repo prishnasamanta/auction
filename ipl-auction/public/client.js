@@ -217,6 +217,8 @@ window.onload = async () => {
             // Fallback to normal flow if API fails
             document.getElementById("landing").classList.remove("hidden");
         }
+        socket.emit("getAuctionState");
+    socket.emit("getSquads");
     } else {
         // No code in URL -> Show Landing Page
         document.getElementById("landing").classList.remove("hidden");
@@ -1980,22 +1982,28 @@ window.downloadSheetPNG = function() {
 socket.on("submitResult", (res) => {
     const btn = document.getElementById("submitXIBtn");
     const status = document.getElementById("xiStatus");
-  
+
     if(status) {
         status.innerHTML = `
         <div style="padding:15px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             <h2 style="margin:0 0 5px 0; color:${res.disqualified ? '#ef4444' : '#22c55e'}">${res.disqualified ? '❌ DISQUALIFIED' : '✅ APPROVED'}</h2>
             <div style="font-size:0.9rem; color:#ccc;">RATING: <b style="color:#fff; font-size:1.1rem;">${res.rating}</b></div>
             ${res.disqualified ? `<div style="margin-top:5px; color:#fca5a5; font-size:0.85rem;">Reason: ${res.reason}</div>` : ''}
-          
+            
             ${res.disqualified ? `<button onclick="document.getElementById('submitXIBtn').disabled=false; document.getElementById('submitXIBtn').innerText='Fix Team'; this.parentElement.remove();" style="margin-top:10px; background:#334155; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Edit</button>` : ''}
         </div>`;
     }
+
     if (btn && !res.disqualified) {
         btn.classList.add("hidden");
         document.getElementById("saveXIBtn").classList.remove("hidden");
+        
+        // 🟢 FIX: FORCE REFRESH DATA IMMEDIATELY
+        console.log("✅ XI Approved. Refreshing Leaderboard...");
+        socket.emit("getAuctionState"); // Requests fresh leaderboard data
     }
 });
+
 // --- LEADERBOARD POPUP LOGIC ---
 let currentPopupData = null;
 
@@ -2022,29 +2030,35 @@ function renderPopupContent(mode) {
     if(!container || !currentPopupData) return;
 
     const d = currentPopupData;
-    // Fallback: If spectator doesn't have live squad data, fetch from allSquads global
+    // Fallback data
     const fullSquad = allSquads[d.team] || []; 
     const safePurse = Number(d.purse || teamPurse[d.team] || 0);
 
     container.innerHTML = "";
 
     if (mode === 'XI') {
-        // CHECK: Does valid XI data exist?
-        if (d.xi && (d.xi.BAT || d.xi.WK || d.xi.BOWL)) {
-             // 🟢 USE THE EXACT SAME GENERATOR AS SUBMIT PAGE
-             // This ensures it looks 100% identical
+        // 🟢 ROBUST CHECK: Ensure 'xi' exists and has at least one role with players
+        const hasValidXI = d.xi && (
+            (d.xi.WK && d.xi.WK.length > 0) || 
+            (d.xi.BAT && d.xi.BAT.length > 0) || 
+            (d.xi.BOWL && d.xi.BOWL.length > 0) ||
+            (d.xi.ALL && d.xi.ALL.length > 0)
+        );
+
+        if (hasValidXI) {
+             // Use the generator to show the Playing XI Card
              container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
         } else {
+             // Show "Not Submitted" State
              container.innerHTML = `
                 <div style="text-align:center; padding:40px; color:#94a3b8; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
                     <div style="font-size:3rem; margin-bottom:10px; opacity:0.5;">🏏</div>
-                    <h3 style="margin:0; color:#fff;">XI Not Submitted</h3>
-                    <p style="font-size:0.9rem;">This team hasn't finalized their Playing XI yet.</p>
+                    <h3 style="margin:0; color:#fff;">XI Not Available</h3>
+                    <p style="font-size:0.9rem;">${d.team} hasn't submitted a Playing XI yet.</p>
                 </div>`;
         }
     } else {
-        // FULL SQUAD VIEW (Uses the Premium V3 Card)
-        // Pass 'true' at the end to enable the "Popup Mode" (2-column mobile layout)
+        // Full Squad View
         container.innerHTML = generateFullSquadHTML(d.team, fullSquad, safePurse, "Manager", true);
     }
 }
@@ -2792,6 +2806,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
