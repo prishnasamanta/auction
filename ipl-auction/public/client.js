@@ -2598,6 +2598,141 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+/* ================================================= */
+/* 🌌 UNIVERSAL DARK PARTICLE ANIMATION              */
+/* ================================================= */
+
+(function initParticles() {
+    const canvas = document.getElementById('bg-canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    
+    // Reduce particle count on mobile for performance
+    const isMobile = window.innerWidth < 768;
+    const particleCount = isMobile ? 50 : 110; 
+    const connectionDist = isMobile ? 100 : 140; // Connect distance
+    const mouseDist = 150; // Mouse interaction distance
+
+    const particles = [];
+    const mouse = { x: -9999, y: -9999 };
+
+    // Resize Handler
+    const resize = () => {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Mouse Handler
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+    window.addEventListener('mouseleave', () => {
+        mouse.x = -9999;
+        mouse.y = -9999;
+    });
+
+    // Particle Class
+    class Particle {
+        constructor() {
+            this.reset();
+        }
+        reset() {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.vx = (Math.random() - 0.5) * 0.5; // Slow horizontal drift
+            this.vy = (Math.random() - 0.5) * 0.5; // Slow vertical drift
+            this.size = Math.random() * 2 + 0.5;
+            // Random blue/purple/white hues for "Space" look
+            const hue = Math.random() > 0.5 ? 230 : 260; // Indigo or Purple
+            this.color = `hsla(${hue}, 80%, 70%, ${Math.random() * 0.3 + 0.1})`;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Bounce off edges (or wrap around)
+            if (this.x < 0 || this.x > w) this.vx *= -1;
+            if (this.y < 0 || this.y > h) this.vy *= -1;
+
+            // Mouse interaction (Push away gently)
+            const dx = mouse.x - this.x;
+            const dy = mouse.y - this.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (dist < mouseDist) {
+                const forceDirectionX = dx / dist;
+                const forceDirectionY = dy / dist;
+                const force = (mouseDist - dist) / mouseDist;
+                const directionX = forceDirectionX * force * 0.6;
+                const directionY = forceDirectionY * force * 0.6;
+                this.x -= directionX;
+                this.y -= directionY;
+            }
+        }
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Initialize
+    for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+    }
+
+    // Animation Loop
+    function animate() {
+        ctx.clearRect(0, 0, w, h);
+        
+        // Loop particles
+        particles.forEach((p, index) => {
+            p.update();
+            p.draw();
+
+            // Draw Lines to neighbors
+            for (let j = index; j < particles.length; j++) {
+                const p2 = particles[j];
+                const dx = p.x - p2.x;
+                const dy = p.y - p2.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist < connectionDist) {
+                    ctx.beginPath();
+                    // Fade line based on distance
+                    const opacity = 1 - (dist / connectionDist);
+                    ctx.strokeStyle = `rgba(100, 116, 139, ${opacity * 0.15})`; // Slate color lines
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw Line to Mouse
+            const dx = mouse.x - p.x;
+            const dy = mouse.y - p.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 150) {
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(99, 102, 241, ${0.2 - dist/1500})`; // Indigo glow to mouse
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(mouse.x, mouse.y);
+                ctx.stroke();
+            }
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+})();
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
@@ -2610,6 +2745,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
