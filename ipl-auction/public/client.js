@@ -800,6 +800,30 @@ socket.on("rulesUpdated", data => {
 /* ================================================= */
 /* ============ 4. AUCTION GAMEPLAY ================ */
 /* ================================================= */
+const togglePauseBtn = document.getElementById("togglePauseBtn");
+if(togglePauseBtn) {
+    togglePauseBtn.onclick = () => {
+        socket.emit("adminAction", "togglePause");
+    };
+}
+
+// Update function to change icon state
+function updatePauseIcon(isPaused) {
+    const btn = document.getElementById("togglePauseBtn");
+    if(!btn) return;
+    
+    if(isPaused) {
+        // Show Play Icon (to resume)
+        btn.innerHTML = '▶'; 
+        btn.style.borderColor = "#4ade80";
+        btn.style.color = "#4ade80";
+    } else {
+        // Show Animated Pause Icon
+        btn.innerHTML = '<div class="pause-icon"><div class="pause-bar"></div><div class="pause-bar"></div></div>';
+        btn.style.borderColor = "";
+        btn.style.color = "";
+    }
+}
 socket.on("auctionStarted", () => {
     auctionLive = true;
     auctionPaused = false;
@@ -817,6 +841,7 @@ socket.on("auctionState", s => {
         updatePlayerCard(s.player, s.bid);
     }
     updateBidButton(s);
+    updatePauseIcon(s.paused); // 🔴 Call this
 });
 socket.on("newPlayer", d => {
     currentPlayer = d.player; // Store globally
@@ -876,20 +901,19 @@ socket.on("bidUpdate", data => {
     const badge = document.getElementById('currentBidder');
     badge.classList.remove('hidden');
     document.getElementById('bidderName').innerText = data.team;
-    
-    // Team Color for Leader Badge
-    const color = TEAM_COLORS[data.team] || "#fff";
-    badge.style.backgroundColor = color;
-    badge.style.color = (data.team === 'CSK' || data.team === 'GT') ? '#000' : '#fff'; // Contrast fix for bright colors
+    badge.style.backgroundColor = TEAM_COLORS[data.team] || "#22c55e";
 
-    // 🟢 ANIMATION RESTORED HERE
+    // 🔴 BLINK ANIMATION FIX
     const card = document.getElementById("auctionCard");
-    card.classList.remove("pulse"); // Reset
-    void card.offsetWidth; // Force Reflow
-    card.classList.add("pulse"); // Add
+    card.classList.add("pulse");
+    // Remove class after 500ms so it can blink again next time
+    setTimeout(() => {
+        card.classList.remove("pulse");
+    }, 500);
 
     updateBidButton({ bid: data.bid, player: currentPlayer });
 });
+
 
 function updateBidButton(state) {
     const btn = document.getElementById("bidBtn");
@@ -2431,13 +2455,50 @@ function initLandingAnimations() {
         revealOnScroll();
     }
 }
+// Add this helper function
+function smartTrimName(fullName) {
+    if (!fullName) return "";
+    // Threshold: If longer than 13 chars, trim it
+    if (fullName.length <= 13) return fullName;
+
+    const parts = fullName.split(' ');
+    if (parts.length > 1) {
+        // "Suryakumar Yadav" -> "S. Yadav"
+        return parts[0].charAt(0) + ". " + parts.slice(1).join(" ");
+    }
+    return fullName; // Single long name (e.g. "Venkatapathy")
+}
+
+// Update updatePlayerCard to use it
+function updatePlayerCard(player, bid) {
+    const nameEl = document.getElementById("playerName");
+    const metaEl = document.getElementById("playerMeta");
+    const bidEl = document.getElementById("bid");
+
+    if (nameEl) {
+        // 🔴 Apply Smart Trim
+        nameEl.innerText = smartTrimName(player.name);
+    }
+    if (metaEl) {
+        metaEl.innerText = `${player.role} • ⭐${player.rating}`;
+        // Color logic...
+        if(player.role === "BAT") metaEl.style.color = "#facc15";
+        else if(player.role === "BOWL" || player.role === "PACE" || player.role === "SPIN") metaEl.style.color = "#38bdf8";
+        else if(player.role === "ALL") metaEl.style.color = "#a855f7";
+        else if(player.role === "WK") metaEl.style.color = "#fb923c";
+        else metaEl.style.color = "#cbd5e1";
+    }
+    if (bidEl) {
+        // 🔴 Force Keep on One Line
+        bidEl.innerText = `₹${bid.toFixed(2)} Cr`;
+    }
+}
 
 // Call this when the page loads
 document.addEventListener("DOMContentLoaded", () => {
     initLandingAnimations();
 });
-/* ================= GLOBAL REFRESH LOGIC ================= */
-/* ================= GLOBAL REFRESH LOGIC ================= */
+
 /* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
     // 1. Refresh Squad View if active
@@ -2449,29 +2510,3 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
