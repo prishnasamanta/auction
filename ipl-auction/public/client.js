@@ -75,7 +75,7 @@ function safePlay(audioObj) {
     if (!audioObj) return;
     // Reset time to start (allows rapid re-play)
     audioObj.currentTime = 0;
-   
+  
     // Attempt to play, catch errors silently if user hasn't interacted yet
     const playPromise = audioObj.play();
     if (playPromise !== undefined) {
@@ -89,59 +89,51 @@ window.onload = async () => {
     const path = window.location.pathname;
     const parts = path.split('/');
     const urlCode = (parts[1] === 'room' && parts[2]) ? parts[2].toUpperCase() : null;
-
     // 2. SETUP LISTENERS (Buttons)
     setupEventListeners(); // (Move your existing btn onclicks here)
-
     // 3. IF URL HAS CODE -> CHECK DATABASE
     if (urlCode) {
         try {
             // Show loading state
             document.getElementById("landing").innerHTML = "<h2 style='color:white; text-align:center; margin-top:20%'>Loading Room...</h2>";
-
             // Fetch from Server API
             const response = await fetch(`/api/room/${urlCode}`);
             const result = await response.json();
-
             // SCENARIO A: ROOM NOT FOUND
             if (!result.exists) {
                 alert("❌ Room Expired or Invalid");
                 window.location.href = "/";
                 return;
             }
-
             // SCENARIO B: AUCTION ENDED (Show Summary Directly)
             if (!result.active) {
                 console.log("📜 Loading Archived Room Data...");
-                
+               
                 // 1. Populate Global Variables
                 allSquads = result.data.squads || {};
                 teamPurse = result.data.purses || {};
                 teamOwners = result.data.owners || {};
                 activeRules = result.data.rules || {};
                 roomCode = urlCode;
-
                 // 2. Setup UI
                 document.getElementById("landing").classList.add("hidden");
                 document.getElementById("auth").classList.add("hidden");
                 document.getElementById("auctionUI").classList.add("hidden");
-                
+               
                 // 3. Render Summary
                 document.getElementById("postAuctionSummary").classList.remove("hidden");
                 renderPostAuctionSummary();
-                
+               
                 // 4. Update URL
                 updateURL('summary');
                 return; // Stop here, don't connect socket
             }
-
             // SCENARIO C: AUCTION LIVE (Proceed to Login)
             console.log("🟢 Room Active, proceeding to login...");
             document.getElementById("landing").classList.add("hidden");
             document.getElementById("auth").classList.remove("hidden");
             switchAuthTab('join');
             document.getElementById('code').value = urlCode;
-
         } catch (err) {
             console.error("API Error:", err);
             // Fallback to normal flow if API fails
@@ -151,7 +143,6 @@ window.onload = async () => {
         // No code in URL -> Show Landing Page
         document.getElementById("landing").classList.remove("hidden");
     }
-
     // 4. Fetch Public Rooms (Background)
     socket.emit('getPublicRooms');
     // --- 1. SETUP EVENT LISTENERS ---
@@ -172,7 +163,7 @@ window.onload = async () => {
             const uName = usernameInput.value.trim();
             const isPublic = document.getElementById('isPublicRoom').checked;
             if(!uName) return alert("Please enter your name!");
-           
+          
             // Visual Feedback
             createBtn.innerText = "Creating...";
             createBtn.disabled = true;
@@ -194,7 +185,7 @@ window.onload = async () => {
             if(!uName) return alert("Please enter your name!");
             if(!rCode) return alert("Please enter a Room Code!");
             if(rCode.length !== 5) return alert("Room Code must be 5 characters!");
-           
+          
             // Visual Feedback
             joinBtn.innerText = "Joining...";
             joinBtn.disabled = true;
@@ -202,34 +193,33 @@ window.onload = async () => {
             roomCode = rCode;
             sessionStorage.setItem('ipl_room', roomCode);
             sessionStorage.setItem('ipl_user', username);
-           
+          
             console.log(`🚀 Sending join request: ${username} -> ${roomCode}`);
             socket.emit("joinRoom", { roomCode, user: username });
         };
     }
-
     // Format: /room/CODE/SUBPAGE
     const subPage = (parts[1] === 'room' && parts[3]) ? parts[3].toLowerCase() : null;
     const sRoom = sessionStorage.getItem('ipl_room');
     const sUser = sessionStorage.getItem('ipl_user');
-   
+  
     // SCENARIO A: Reconnecting (Session Valid)
     if (sUser && sRoom && (!urlCode || urlCode === sRoom)) {
         // ... (Keep existing reconnect logic) ...
         socket.emit('reconnectUser', { roomId: sRoom, username: sUser });
-       
+      
         // If deep link exists during reconnect, restore it
         if (subPage) sessionStorage.setItem('redirect_target', subPage);
     }
     // SCENARIO B: Visiting Link (New User)
     else if (urlCode) {
         console.log("🔗 Deep Link Detected:", urlCode);
-       
+      
         document.getElementById("landing").classList.add("hidden");
         document.getElementById("auth").classList.remove("hidden");
         switchAuthTab('join');
         document.getElementById('code').value = urlCode;
-       
+      
         // Store target to redirect AFTER login
         if (subPage) {
             sessionStorage.setItem('redirect_target', subPage);
@@ -247,7 +237,7 @@ function updateBrowserURL(code) {
 window.switchAuthTab = function(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab' + (tab === 'join' ? 'Join' : 'Create')).classList.add('active');
-   
+  
     if(tab === 'create') {
         document.getElementById('createSection').classList.remove('hidden');
         document.getElementById('joinSection').classList.add('hidden');
@@ -261,18 +251,17 @@ window.switchAuthTab = function(tab) {
 window.exitToHome = function() {
     if(confirm("Return to Main Screen?")) {
         // Critical: Clear session to stop auto-reconnect
-        sessionStorage.clear(); 
+        sessionStorage.clear();
         window.location.href = "/";
     }
 };
-
 // --- 2. BACK FROM LEADERBOARD (Fixes Empty Summary) ---
 window.goBackFromLeaderboard = function() {
     // If Auction Ended -> Go to Summary & RENDER IT
     if (document.getElementById('postAuctionSummary') && !document.getElementById('postAuctionSummary').classList.contains('hidden')) {
         renderPostAuctionSummary(); // <--- FIX: Force re-render
         showScreen('postAuctionSummary');
-    } 
+    }
     // If Player in Game -> Go to XI Screen
     else if (myTeam && !document.getElementById('playingXI').classList.contains('hidden')) {
         showScreen('playingXI');
@@ -283,7 +272,6 @@ window.goBackFromLeaderboard = function() {
         showScreen('postAuctionSummary');
     }
 };
-
 window.shareRoomLink = async function() {
     const url = window.location.href;
     const shareData = {
@@ -346,7 +334,7 @@ socket.on("joinedRoom", (data) => {
     if (data.updateOnly) {
         // Update Owners
         if(data.teamOwners) teamOwners = data.teamOwners;
-       
+      
         // KICK DETECTION: If my team is suddenly in the "Available" list, I timed out.
         if (myTeam && data.availableTeams && data.availableTeams.includes(myTeam)) {
              alert("⚠️ You were disconnected for too long. You are now a Spectator.");
@@ -384,7 +372,7 @@ socket.on("joinedRoom", (data) => {
         const logBox = document.getElementById("log");
         if(chatBox) chatBox.innerHTML = "";
         if(logBox) logBox.innerHTML = "";
-       
+      
         if(chatBox && data.history.chat) {
             data.history.chat.forEach(m => {
                 const div = document.createElement("div");
@@ -393,7 +381,7 @@ socket.on("joinedRoom", (data) => {
             });
             chatBox.scrollTop = chatBox.scrollHeight;
         }
-       
+      
         if(logBox && data.history.logs) {
             data.history.logs.forEach(m => {
                 const div = document.createElement("div");
@@ -407,15 +395,15 @@ socket.on("joinedRoom", (data) => {
     // --- 4. SAVE METADATA ---
     if (data.teamOwners) teamOwners = data.teamOwners;
     if (data.purses) teamPurse = data.purses;
-   
+  
     // --- 5. CHECK: HAS AUCTION ENDED? ---
    // Inside socket.on("joinedRoom", ...)
 if (data.auctionEnded) {
         setupAuctionScreen(); // Prepare UI
-       
+      
         // Check for specific deep link target
         const target = sessionStorage.getItem('redirect_target');
-       
+      
         if (target === 'summary') {
             renderPostAuctionSummary();
             showScreen("postAuctionSummary");
@@ -433,7 +421,7 @@ if (data.auctionEnded) {
                 showScreen("postAuctionSummary");
             }
         }
-       
+      
         // Clear redirection so it doesn't persist forever
         sessionStorage.removeItem('redirect_target');
         return;
@@ -441,12 +429,12 @@ if (data.auctionEnded) {
     // --- 6. STANDARD SETUP ---
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
-   
+  
     if(data.rules) activeRules = data.rules;
     if(data.squads) allSquads = data.squads;
     isHost = data.isHost;
     gameStarted = data.auctionStarted;
-   
+  
     setupAuctionScreen();
     // Render Teams
     if (data.availableTeams) {
@@ -468,9 +456,9 @@ if (data.auctionEnded) {
              updateHeaderNotice();
         }
     }
-   
+  
     updateAdminButtons(data.auctionStarted);
-   
+  
     // Auto-Refresh Squad Window if open
     if(squadWindow && !squadWindow.closed) {
         socket.emit("getSquads");
@@ -543,15 +531,15 @@ socket.on("roomUsersUpdate", (data) => {
         if (u.status === 'away') statusColor = '#eab308';
         if (u.status === 'kicked') statusColor = '#ef4444';
         const statusShadow = (u.status === 'away' || u.status === 'kicked') ? 'none' : `0 0 8px ${statusColor}`;
-       
+      
         let extraInfoHTML = "";
         if (u.status === 'away' && u.disconnectTime) {
             const targetTime = u.disconnectTime + GRACE_PERIOD_MS;
             extraInfoHTML = `<span class="away-timer" data-target="${targetTime}">...</span>`;
         }
-       
+      
         const crownHTML = u.isHost ? `<span title="Host" style="margin-right:4px;">🜲</span>` : ``;
-       
+      
         let badgeHTML = u.team
             ? `<span class="ul-team" style="color:${TEAM_COLORS[u.team] || '#fbbf24'}">${u.team}</span>`
             : `<span style="opacity:0.5; font-size:0.7rem;">Spectator</span>`;
@@ -615,9 +603,9 @@ window.switchCcTab = function(tabName) {
 window.toggleCcExpand = function() {
     const box = document.getElementById('commandCenter');
     const btn = document.getElementById('ccExpandBtn');
-   
+  
     box.classList.toggle('expanded');
-   
+  
     if(box.classList.contains('expanded')) {
         btn.innerText = "▲";
     } else {
@@ -659,7 +647,7 @@ function renderEmbeddedTeams(teams) {
     const box = document.getElementById("embeddedTeamList");
     if(!box) return;
     box.innerHTML = "";
-   
+  
     if(teams.length === 0) {
         box.innerHTML = "<p style='color:#ccc; padding:20px;'>All teams taken! You are a spectator.</p>";
         if(gameStarted) {
@@ -677,12 +665,12 @@ function renderEmbeddedTeams(teams) {
         btn.innerText = team;
         btn.className = "team-btn";
         btn.style.setProperty("--team-color", TEAM_COLORS[team] || "#94a3b8");
-       
+      
         btn.onclick = () => {
             myTeam = team;
             sessionStorage.setItem('ipl_team', team);
             socket.emit("selectTeam", { team, user: username });
-           
+          
             if(gameStarted) {
                 setGamePhase("AUCTION");
                 updateHeaderNotice();
@@ -691,13 +679,13 @@ function renderEmbeddedTeams(teams) {
                 document.getElementById("waitingForHostMsg").classList.remove("hidden");
                 updateHeaderNotice();
             }
-           
+          
             const lateBtn = document.getElementById("lateJoinBtn");
             if(lateBtn) lateBtn.classList.add("hidden");
         };
         box.appendChild(btn);
     });
-   
+  
     if(gameStarted) {
         const specBtn = document.createElement("button");
         specBtn.innerText = "👀 Watch as Spectator";
@@ -707,7 +695,7 @@ function renderEmbeddedTeams(teams) {
         specBtn.onclick = () => setGamePhase("AUCTION");
         box.appendChild(specBtn);
     }
-   
+  
     box.classList.remove("hidden");
 }
 socket.on("teamPicked", ({ team, user, remaining }) => {
@@ -779,7 +767,7 @@ socket.on("auctionStarted", () => {
     auctionLive = true;
     auctionPaused = false;
     gameStarted = true;
-   
+  
     if (myTeam) updateHeaderNotice();
     setGamePhase("AUCTION");
     updateAdminButtons(true);
@@ -799,11 +787,11 @@ socket.on("newPlayer", d => {
     auctionPaused = false;
     lastBidTeam = null;
     lastTickSecond = null;
-   
+  
     document.getElementById('resultOverlay').classList.add('hidden');
     document.getElementById('currentBidder').classList.add('hidden');
     document.getElementById("auctionCard").classList.remove("pulse");
-   
+  
     updatePlayerCard(d.player, d.bid);
     updateBidButton({ bid: d.bid, player: d.player});
 });
@@ -816,7 +804,7 @@ function updatePlayerCard(player, bid) {
     if(metaEl) {
         // Format: "BAT • ⭐85"
         metaEl.innerText = `${player.role} • ⭐${player.rating}`;
-       
+      
         // Optional: Color code the Role
         if(player.role === "BAT") metaEl.style.color = "#facc15"; // Yellow
         else if(player.role === "BOWL" || player.role === "PACE" || player.role === "SPIN") metaEl.style.color = "#38bdf8"; // Blue
@@ -845,18 +833,18 @@ if(bidBtn) {
 }
 socket.on("bidUpdate", data => {
     safePlay(soundBid);
-   
+  
     document.getElementById("bid").innerText = `₹${data.bid.toFixed(2)} Cr`;
     lastBidTeam = data.team;
-   
+  
     const badge = document.getElementById('currentBidder');
     badge.classList.remove('hidden');
     document.getElementById('bidderName').innerText = data.team;
-   
+  
     const color = TEAM_COLORS[data.team] || "#22c55e";
     badge.style.border = `1px solid ${color}`;
     badge.style.setProperty("--team", color);
-   
+  
     const card = document.getElementById("auctionCard");
     card.classList.add("pulse");
     setTimeout(() => card.classList.remove("pulse"), 300);
@@ -884,7 +872,7 @@ function updateBidButton(state) {
     // --- NEW LOGIC START ---
     // Get my current squad
     const mySquad = allSquads[myTeam] || [];
-   
+  
     // 4. MAX SQUAD SIZE CHECK
     // (activeRules.maxPlayers is set in the Rules Popup)
     if (activeRules.maxPlayers && mySquad.length >= activeRules.maxPlayers) {
@@ -911,7 +899,7 @@ socket.on("sold", d => {
     showResultStamp("SOLD", `TO ${d.team}`, TEAM_COLORS[d.team], false);
     if(d.purse) teamPurse = d.purse;
     updateHeaderNotice();
-   
+  
     // FIX: Live update without tab switch
     const currentTab = document.querySelector('.cc-tab-btn.active');
     // If we are in Squads tab AND looking at the team that just bought OR looking at 'Available'
@@ -949,10 +937,10 @@ socket.on("chatUpdate", d => {
     if(!chat) return;
     const isMe = (d.user === username); // Check if I sent it
     const div = document.createElement("div");
-   
+  
     // Distinguish between MY messages and OTHERS
     div.className = `chat-msg ${isMe ? 'mine' : 'others'}`;
-   
+  
     // Nice Formatting
     div.innerHTML = `
         <div class="chat-header" style="color:${TEAM_COLORS[d.team] || '#94a3b8'}">
@@ -978,11 +966,11 @@ socket.on("logUpdate", msg => {
     if(!log) return;
     const div = document.createElement("div");
     div.className = "log-item";
-   
+  
     // Simple Timestamp + Message
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     div.innerHTML = `<span style="color:var(--gold); margin-right:5px;">${time}</span> ${msg}`;
-   
+  
     // 1. APPEND (Add to bottom)
     log.appendChild(div);
     // 2. SCROLL TO BOTTOM (Show latest)
@@ -997,7 +985,7 @@ window.sendChat = function() {
     const msgInput = document.getElementById("msg");
     const text = msgInput.value.trim();
     if(!text) return;
-   
+  
     socket.emit("chat", { user: username, team: myTeam || "Spectator", msg: text });
     msgInput.value = "";
     msgInput.focus(); // Keep keyboard open
@@ -1022,7 +1010,7 @@ window.switchInfoTab = function(tabName) {
     document.getElementById(`tab-${tabName}`).classList.add('active');
     document.getElementById('panel-feed').classList.add('hidden');
     document.getElementById('panel-squads').classList.add('hidden');
-   
+  
     const target = document.getElementById(`panel-${tabName}`);
     if(target) {
         target.classList.remove('hidden');
@@ -1035,9 +1023,9 @@ window.switchInfoTab = function(tabName) {
 function renderSquadTabs() {
     const container = document.getElementById("squadTabList");
     if(!container) return;
-   
+  
     const teams = Object.keys(allSquads).sort();
-   
+  
     if (!selectedSquadTeam && myTeam) selectedSquadTeam = myTeam;
     if (!selectedSquadTeam && teams.length > 0) selectedSquadTeam = teams[0];
     container.innerHTML = teams.map(t =>
@@ -1061,10 +1049,10 @@ function initSquadTabs() {
         const btn = document.createElement('button');
         btn.innerText = team;
         btn.className = 'h-team-btn'; // Class for styling
-       
+      
         // When clicked, run the view function
         btn.onclick = () => viewEmbeddedSquad(team);
-       
+      
         tabContainer.appendChild(btn);
     });
 }
@@ -1126,7 +1114,7 @@ window.viewEmbeddedSquad = function(team) {
         </div>
         <div id="squad-card-capture">
             <div class="capture-bg-watermark" style="background-image: url('/logos/${team}.png');"></div>
-           
+          
             <div class="pro-header">
                 <div class="pro-team-info">
                     <h1 style="background: linear-gradient(to bottom, #fff, ${teamColor}); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${team}</h1>
@@ -1212,8 +1200,8 @@ window.downloadSquadImage = function() {
 function loadPlayerImage(imgEl, playerName) {
     if(!playerName) return;
     const raw = playerName.trim();
-    
-    const upperUnderscore = withUnderscore.toUpperCase();
+   
+    const upperUnderscore = raw.toUpperCase().replace(/\s+/g, '_'); // Fixed: Added definition
     const candidates = [
         `/players/${upperUnderscore}.png`, // VIRAT_KOHLI.png
         "https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png" // Fallback
@@ -1238,7 +1226,7 @@ window.openPlayerProfile = function(playerData, teamName, price) {
     const team = teamName || "Unsold";
     const amount = price ? `₹${price.toFixed(2)} Cr` : "---";
     const teamColor = TEAM_COLORS[team] || "#64748b";
-   
+  
     const html = `
     <div id="playerCardOverlay" class="player-card-overlay" onclick="closePlayerCard(event)">
         <div class="pc-card compact" data-team="${team}" onclick="event.stopPropagation()">
@@ -1248,7 +1236,7 @@ window.openPlayerProfile = function(playerData, teamName, price) {
                     <span style="font-weight:bold; color:rgba(255,255,255,0.5); font-size:0.9rem;">${team}</span>
                     <button onclick="document.getElementById('playerCardOverlay').remove()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">✕</button>
                 </div>
-               
+              
                 <div class="pc-img-box" style="border-color:${teamColor}">
                     <img id="activeCardImg" class="pc-img" alt="${playerData.name}">
                 </div>
@@ -1309,7 +1297,7 @@ let isSetsViewOpen = false;
 // --- UPDATED: Set Update Listener (Fixes Live Refresh) ---
 socket.on("setUpdate", data => {
     remainingSets = data;
-   
+  
     // Check if the panel is visible, if so, re-render immediately
     const setsPanel = document.getElementById("panel-sets");
     // We check if the panel exists and does NOT have the 'hidden' class
@@ -1322,7 +1310,7 @@ window.toggleSetsView = function() {
     const btn = document.getElementById("toggleSetsBtn");
     const setsPanel = document.getElementById("panel-sets");
     const tabs = document.getElementById("commandTabs");
-   
+  
     // Panels to hide/show
     const feedPanel = document.getElementById("panel-feed");
     const squadsPanel = document.getElementById("panel-squads");
@@ -1339,18 +1327,18 @@ window.toggleSetsView = function() {
         btn.innerText = "❌ Close Sets View";
         btn.style.borderColor = "var(--accent)";
         btn.style.color = "var(--accent)";
-       
+      
         // Hide normal tabs content & nav bar
         if(feedPanel) feedPanel.classList.add("hidden");
         if(squadsPanel) squadsPanel.classList.add("hidden");
         if(tabs) tabs.classList.add("hidden");
-       
+      
         // Show Sets Panel
         if(setsPanel) {
             setsPanel.classList.remove("hidden");
             renderSetsPanel();
         }
-       
+      
     } else {
         // --- CLOSE SETS VIEW (Back to Normal) ---
         btn.innerText = "📦 View Upcoming Sets";
@@ -1358,7 +1346,7 @@ window.toggleSetsView = function() {
         btn.style.color = "var(--gold)";
         if(setsPanel) setsPanel.classList.add("hidden");
         if(tabs) tabs.classList.remove("hidden");
-       
+      
         // Restore the "Feed" tab by default so the UI isn't empty
         switchInfoTab('feed');
     }
@@ -1372,7 +1360,7 @@ window.viewPlayerFromCard = function(name, role, rating, isForeign, price, teamN
         rating: rating,
         foreign: isForeign
     };
-   
+  
     // Call the existing profile opener
     openPlayerProfile(playerObj, teamName, price);
 };
@@ -1436,7 +1424,7 @@ function renderSetsPanel() {
 // --- UPDATED: Socket Listener for Squad Data ---
 socket.on("squadData", squads => {
     allSquads = squads; // Update global variable
-   
+  
     // LIVE REFRESH: If the "Squads" tab is currently open, refresh it immediately.
     const squadView = document.getElementById('view-squads');
     if (squadView && !squadView.classList.contains('hidden')) {
@@ -1455,10 +1443,10 @@ if (leaveBtn) {
         if (confirm("⚠️ LEAVE AUCTION?\n\nYou will lose your spot immediately and be marked as 'Away'.\nDo you want to continue?")) {
             // 1. Clear Local Session Data
             sessionStorage.clear();
-           
+          
             // 2. Force Socket Disconnect (Server marks you as 'Away' -> 'Kicked')
             socket.disconnect();
-           
+          
             // 3. Redirect to Main Screen
             window.location.href = "/";
         }
@@ -1476,10 +1464,10 @@ function updateAdminButtons(isStarted) {
     // --- CASE 1: YOU ARE HOST ---
     if (isHost) {
         adminPanel.classList.remove("hidden");
-       
+      
         // Host never sees "Leave", they must End the game
         if(leaveBtn) leaveBtn.classList.add("hidden");
-       
+      
         // Show "End" button for Host
         if(endBtn) {
             endBtn.classList.remove("hidden");
@@ -1554,7 +1542,7 @@ function setGamePhase(phase) {
 window.toggleLateJoin = function() {
     const teamCard = document.getElementById("teamSelectionMain");
     const auctionCard = document.getElementById("auctionCard");
-   
+  
     if (teamCard.classList.contains("hidden")) {
         teamCard.classList.remove("hidden");
         auctionCard.classList.add("hidden");
@@ -1583,7 +1571,7 @@ function updateHeaderNotice() {
     if (!myTeam) {
         const teamEl = document.getElementById("noticeTeam");
         const purseEl = document.getElementById("noticePurse");
-       
+      
         if(teamEl) {
             teamEl.innerText = "SPECTATOR";
             teamEl.style.color = "#94a3b8"; // Muted gray
@@ -1626,7 +1614,7 @@ function updateRulesUI() {
     set('pop_viewAR', r.minAll);
     set('pop_viewSpin', r.minSpin);
     set('pop_viewForeignXI', r.maxForeignXI);
-   
+  
     set('viewPurse', r.purse);
     set('viewSquadSize', r.maxPlayers);
     set('viewForeign', r.maxForeign);
@@ -1634,7 +1622,7 @@ function updateRulesUI() {
 function showScreen(id, updateHistory = true) {
     // 1. Hide all screens
     document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
-   
+  
     // 2. Show target screen
     const target = document.getElementById(id);
     if (target) target.classList.remove("hidden");
@@ -1667,7 +1655,7 @@ function showScreen(id, updateHistory = true) {
 socket.on("auctionEnded", () => {
     // Enable scrolling
     document.body.style.overflow = "auto";
-   
+  
     // Ensure we have the latest data
     socket.emit("getAuctionState");
     socket.emit("getSquads");
@@ -1689,7 +1677,7 @@ socket.on("mySquad", ({ squad, rules }) => {
     updateRulesUI();
     // Reset Selection
     selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
-   
+  
     const container = document.getElementById("mySquadList");
     if(!container || !squad) return;
     container.innerHTML = "";
@@ -1743,7 +1731,7 @@ function togglePlayerXI(p, btnElement, roleKey) {
     // RESET BUTTON STATE: If user changes anything, allow them to submit again
     const submitBtn = document.getElementById('submitXIBtn');
     const saveBtn = document.getElementById('saveXIBtn');
-   
+  
     if(submitBtn) {
         submitBtn.disabled = false;
         submitBtn.innerText = `Submit XI (${countTotalXI()}/11)`;
@@ -1759,7 +1747,7 @@ function togglePlayerXI(p, btnElement, roleKey) {
 // --- 5. SUBMIT LOGIC (FIXED) ---
 window.submitXI = function() {
     if(countTotalXI() !== 11) return alert("Please select exactly 11 players.");
-   
+  
     // Send the Object structure: { WK: [...], BAT: [...] }
     const payload = selectedXI;
     const btn = document.getElementById("submitXIBtn");
@@ -1775,7 +1763,7 @@ function countTotalXI() {
 function generateFantasyCardHTML(teamName, xiData, rating, count, isPreview = false) {
     const logoUrl = `/logos/${teamName}.png`;
     let grouped = { WK: [], BAT: [], ALL: [], BOWL: [] };
-   
+  
     if (Array.isArray(xiData)) {
         xiData.forEach(p => {
             let r = p.role;
@@ -1801,7 +1789,7 @@ function generateFantasyCardHTML(teamName, xiData, rating, count, isPreview = fa
                             const parts = displayName.split(' ');
                             if (parts.length > 1) displayName = parts[0][0] + ". " + parts.slice(1).join(" ");
                         }
-                       
+                      
                         return `
                         <div class="fantasy-player-pill ${p.foreign ? 'foreign' : ''}">
                             <div class="fp-name" title="${p.name}">${displayName}</div>
@@ -1831,7 +1819,7 @@ function generateFantasyCardHTML(teamName, xiData, rating, count, isPreview = fa
 function updateXIPreview() {
     const count = countTotalXI();
     const container = document.getElementById('xiCardWrapper'); // Wrapper div in HTML
-   
+  
     if(container) {
         container.innerHTML = generateFantasyCardHTML(myTeam || "MY TEAM", selectedXI, null, count, true);
         container.classList.remove('hidden');
@@ -1855,7 +1843,7 @@ function updateXIPreview() {
         btn.style.background = count === 11 ? "var(--success)" : "";
         btn.style.color = count === 11 ? "#000" : "#fff";
     }
-   
+  
     updateStatsBar();
 }
 function updateStatsBar() {
@@ -1865,7 +1853,7 @@ function updateStatsBar() {
     const all = [...selectedXI.WK, ...selectedXI.BAT, ...selectedXI.ALL, ...selectedXI.BOWL];
     const foreign = all.filter(p => p.foreign).length;
     const spinCount = selectedXI.BOWL.filter(p => p.role === "SPIN").length;
-   
+  
     const badge = (label, curr, req, isMax) => {
         const valid = isMax ? curr <= req : curr >= req;
         const color = valid ? '#4ade80' : '#f87171';
@@ -1901,14 +1889,14 @@ window.downloadSheetPNG = function() {
 socket.on("submitResult", (res) => {
     const btn = document.getElementById("submitXIBtn");
     const status = document.getElementById("xiStatus");
-   
+  
     if(status) {
         status.innerHTML = `
         <div style="padding:15px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             <h2 style="margin:0 0 5px 0; color:${res.disqualified ? '#ef4444' : '#22c55e'}">${res.disqualified ? '❌ DISQUALIFIED' : '✅ APPROVED'}</h2>
             <div style="font-size:0.9rem; color:#ccc;">RATING: <b style="color:#fff; font-size:1.1rem;">${res.rating}</b></div>
             ${res.disqualified ? `<div style="margin-top:5px; color:#fca5a5; font-size:0.85rem;">Reason: ${res.reason}</div>` : ''}
-           
+          
             ${res.disqualified ? `<button onclick="document.getElementById('submitXIBtn').disabled=false; document.getElementById('submitXIBtn').innerText='Fix Team'; this.parentElement.remove();" style="margin-top:10px; background:#334155; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Edit</button>` : ''}
         </div>`;
     }
@@ -1922,17 +1910,17 @@ let currentPopupData = null; // Store data to switch views
 function openSquadView(data) {
     currentPopupData = data;
     const overlay = document.getElementById("squadViewOverlay");
-   
+  
     // Default to Playing XI view
     renderPopupContent('XI');
-   
+  
     overlay.classList.remove("hidden");
 }
 window.switchPopupView = function(mode) {
     // Toggle Button Styles
     const btnXI = document.getElementById('btnShowXI');
     const btnFull = document.getElementById('btnShowFull');
-   
+  
     if(mode === 'XI') {
         btnXI.classList.add('active');
         btnFull.classList.remove('active');
@@ -1940,14 +1928,14 @@ window.switchPopupView = function(mode) {
         btnFull.classList.add('active');
         btnXI.classList.remove('active');
     }
-   
+  
     renderPopupContent(mode);
 }
 function renderPopupContent(mode) {
     const container = document.getElementById("squadCaptureArea");
     const d = currentPopupData;
     const fullSquad = allSquads[d.team] || [];
-   
+  
     // Ensure purse is a number for toFixed
     const safePurse = Number(d.purse || teamPurse[d.team] || 0);
     if (mode === 'XI') {
@@ -1962,7 +1950,6 @@ function renderPopupContent(mode) {
 // --- FIX: LEADERBOARD DOWNLOAD BUTTON ---
 window.downloadPopupCard = function() {
     if (!currentPopupData || !currentPopupData.team) return;
-
     // Check which tab is active
     if (document.getElementById('btnShowXI').classList.contains('active')) {
          // Download Playing XI (Capture the div)
@@ -1978,7 +1965,6 @@ window.downloadPopupCard = function() {
         downloadSquadImage(currentPopupData.team);
     }
 };
-
 window.downloadLeaderboardPNG = function() {
     const el = document.getElementById('generatedCard');
     html2canvas(el, { backgroundColor: null, scale: 3 }).then(canvas => {
@@ -1994,7 +1980,7 @@ socket.on("leaderboard", (board) => {
         tbody.innerHTML = "";
         board.forEach((t, i) => {
             const tr = document.createElement("tr");
-           
+          
             // Status Badge
             const statusHtml = t.disqualified
                 ? `<span class="lb-status-badge lb-status-disqualified">❌ DQ</span>`
@@ -2020,7 +2006,6 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[teamName] || '#fff';
     const logoUrl = `/logos/${teamName}.png`;
-
     // Categorize
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
@@ -2028,51 +2013,48 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
         if (['PACE', 'SPIN'].includes(r)) r = 'BOWL';
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
-
     // Helper: Compact Rows
     const renderRows = (list) => list.map(p => {
         const safeName = p.name.replace(/'/g, "\\'");
         return `
-        <div class="pro-player-card clickable-row" 
+        <div class="pro-player-card" 
              onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')"
              style="
-                background: rgba(255,255,255,0.05); 
+                background: rgba(255,255,255,0.05);
                 padding: 4px 8px; /* Tighter Padding */
                 margin-bottom: 2px; /* Tighter Margin */
-                border-radius: 4px; 
-                border-left: 3px solid ${teamColor}; 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: center; 
+                border-radius: 4px;
+                border-left: 3px solid ${teamColor};
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
                 cursor: pointer;
                 min-height: 28px;">
-            
+           
             <div class="pp-left" style="display:flex; align-items:center; gap:5px;">
                 <span class="pp-name" style="font-weight: bold; color: #fff; font-size: 0.75rem;">
                     ${p.foreign ? '✈️ ' : ''}${p.name}
                 </span>
                 <span style="font-size:0.65rem; color:#fbbf24;">⭐${p.rating}</span>
             </div>
-            
+           
             <div class="pp-right">
                 <span class="pp-price" style="color: #4ade80; font-size: 0.75rem;">₹${p.price.toFixed(2)}</span>
             </div>
         </div>
     `}).join('');
-
     return `
     <div class="team-sheet-card full-squad-mode" style="
-        --team-logo-url: url('${logoUrl}'); 
+        --team-logo-url: url('${logoUrl}');
         width: 800px; /* Reduced Width for better fit */
-        background-color: #020617; 
-        border: 2px solid #facc15; 
-        border-radius: 12px; 
-        position: relative; 
-        overflow: hidden; 
+        background-color: #020617;
+        border: 2px solid #facc15;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
         font-family: 'Exo 2', sans-serif;">
-        
+       
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50%; height: 50%; background-image: url('${logoUrl}'); background-size: contain; background-repeat: no-repeat; opacity: 0.1; filter: grayscale(100%); pointer-events: none;"></div>
-
         <div class="sheet-header" style="background: rgba(0,0,0,0.5); padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2;">
             <h2 class="sheet-title" style="margin: 0; font-size: 2.2rem; color: #fff; text-transform: uppercase;">${teamName}</h2>
             <div class="sheet-subtitle" style="color: #facc15; font-size: 0.9rem; letter-spacing: 2px;">FULL SQUAD • ${owner || 'Manager'}</div>
@@ -2082,7 +2064,6 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
                 <span>✈️ ${foreignCount} OS</span>
             </div>
         </div>
-
         <div class="pro-body" style="padding: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; position: relative; z-index: 2;">
             <div class="pro-col">
                 <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">WK</div>
@@ -2101,13 +2082,12 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
                 ${renderRows(cat.BOWL)}
             </div>
         </div>
-        
+       
         <div class="sheet-footer" style="padding: 10px; text-align: center; color: #64748b; font-size: 0.7rem; background: rgba(0,0,0,0.5);">
             OFFICIAL SQUAD • GENERATED BY AUCTION DASHBOARD
         </div>
     </div>`;
 }
-
 // Helper for Leaderboard Card (Not for selection)
 function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
     const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
@@ -2146,7 +2126,7 @@ function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
 // --- UPDATED: Smart Image Loader (Robust Version) ---
 function loadPlayerImage(imgEl, playerName) {
     if(!playerName) return;
-    const upperUnderscore = withUnderscore.toUpperCase();// "VIRAT_KOHLI" <--- Matches your specific file
+    const upperUnderscore = playerName.trim().toUpperCase().replace(/\s+/g, '_');
     const candidates = [
         // A. YOUR SPECIFIC FORMAT (All Caps Name + Underscore + .png)
         `/players/${upperUnderscore}.png`, // VIRAT_KOHLI.png
@@ -2154,17 +2134,17 @@ function loadPlayerImage(imgEl, playerName) {
     const defaultImg = "https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png";
     // 3. Recursive Loader
     let attempt = 0;
-   
+  
     function tryNext() {
         if (attempt >= candidates.length) {
             // console.warn(`[ImgFail] Could not find image for: ${playerName}`);
             imgEl.src = defaultImg;
             return;
         }
-       
+      
         const currentSrc = candidates[attempt];
         imgEl.src = currentSrc;
-       
+      
         imgEl.onerror = function() {
             attempt++;
             tryNext();
@@ -2180,7 +2160,7 @@ window.openPlayerProfile = function(playerData, teamName, price) {
     const team = teamName || "Unsold";
     const amount = price ? `₹${price.toFixed(2)} Cr` : "---";
     const teamColor = TEAM_COLORS[team] || "#64748b";
-   
+  
     const html = `
     <div id="playerCardOverlay" class="player-card-overlay" onclick="closePlayerCard(event)">
         <div class="pc-card compact" data-team="${team}" onclick="event.stopPropagation()">
@@ -2190,7 +2170,7 @@ window.openPlayerProfile = function(playerData, teamName, price) {
                     <span style="font-weight:bold; color:rgba(255,255,255,0.5); font-size:0.9rem;">${team}</span>
                     <button onclick="document.getElementById('playerCardOverlay').remove()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">✕</button>
                 </div>
-               
+              
                 <div class="pc-img-box" style="border-color:${teamColor}">
                     <img id="activeCardImg" class="pc-img" alt="${playerData.name}">
                 </div>
@@ -2218,7 +2198,7 @@ window.openPlayerProfile = function(playerData, teamName, price) {
     </div>
     `;
     document.body.insertAdjacentHTML('beforeend', html);
-   
+  
     // Trigger the smart loader
     const imgEl = document.getElementById('activeCardImg');
     loadPlayerImage(imgEl, playerData.name);
@@ -2231,13 +2211,12 @@ window.closePlayerCard = function(e) {
 /* 🏁 POST AUCTION SUMMARY LOGIC */
 /* ================================================= */
 /* ================================================= */
-/* 🏁 POST AUCTION SUMMARY LOGIC                     */
+/* 🏁 POST AUCTION SUMMARY LOGIC */
 /* ================================================= */
-
 function renderPostAuctionSummary() {
     const list = document.getElementById("summaryList");
     if(!list) return;
-    
+   
     // RETRY LOGIC: If squads aren't loaded, try again in 500ms
     // This prevents the "Undefined" error if the user lands here directly
   if (!allSquads || Object.keys(allSquads).length === 0) {
@@ -2248,22 +2227,19 @@ function renderPostAuctionSummary() {
     }
     list.innerHTML = "";
     const teams = Object.keys(allSquads).sort();
-
     teams.forEach(team => {
         const squad = allSquads[team];
         const purse = teamPurse[team] || 0;
         const owner = teamOwners[team] || "Manager";
         const teamColor = TEAM_COLORS[team] || "#fff";
-
         // 1. Create Wrapper
         const item = document.createElement("div");
         item.className = "summary-item";
-
         // 2. Create Header
         const header = document.createElement("div");
         header.className = "summary-header";
         header.style.borderLeftColor = teamColor;
-        
+       
         header.innerHTML = `
             <div class="sum-info">
                 <span class="sum-team" style="color:${teamColor}">${team}</span>
@@ -2271,57 +2247,52 @@ function renderPostAuctionSummary() {
                     ${owner} • <span style="color:#4ade80">₹${purse.toFixed(2)} Cr</span> • ${squad.length} Players
                 </span>
             </div>
-            
+           
             <div style="display:flex; gap:10px; align-items:center;">
-                <button class="secondary-btn" 
-                    style="padding:4px 8px; font-size:0.7rem; border-color:#475569;" 
+                <button class="secondary-btn"
+                    style="padding:4px 8px; font-size:0.7rem; border-color:#475569;"
                     onclick="event.stopPropagation(); downloadSquadImage('${team}')">
                     📸 Save
                 </button>
-                
+               
                 <button class="sum-expand-btn">▼</button>
             </div>
         `;
-
         // 3. Create Content (The Full Squad Card)
         const content = document.createElement("div");
         content.className = "summary-content hidden";
         content.innerHTML = generateFullSquadHTML(team, squad, purse, owner);
-
         // 4. Toggle Logic (Accordion Style)
         header.onclick = () => {
             const isHidden = content.classList.contains("hidden");
-            
+           
             // Close all others first
             document.querySelectorAll('.summary-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.sum-expand-btn').forEach(b => b.innerText = "▼");
-            
+           
             // Open clicked one
             if(isHidden) {
                 content.classList.remove("hidden");
                 header.querySelector('.sum-expand-btn').innerText = "▲";
             }
         };
-
         item.appendChild(header);
         item.appendChild(content);
         list.appendChild(item);
     });
 }
-
 // --- EXIT TO HOME (Fixed: Forces return to Main Page) ---
 window.exitToHome = function() {
     // We removed the check for 'postAuctionSummary' so it doesn't loop back.
-    
+   
     if (confirm("Are you sure you want to exit to the Main Menu?")) {
         // 1. Clear session to stop auto-reconnect logic on the landing page
-        sessionStorage.clear(); 
-        
+        sessionStorage.clear();
+       
         // 2. Force hard redirect to root (Main Page)
         window.location.href = "/";
     }
 };
-
 /* ================================================= */
 /* ============== GOD MODE (ADMIN) ================= */
 /* ================================================= */
@@ -2334,7 +2305,7 @@ function openGodModeSetup() {
 window.connectGodMode = function() {
     const target = document.getElementById("godTargetInput").value.trim().toUpperCase();
     if(!target) return alert("Enter Target Room Code");
-   
+  
     godTargetRoom = target;
     socket.emit("godModeFetch", godTargetRoom);
 };
@@ -2349,7 +2320,7 @@ socket.on("godModeSuccess", (msg) => {
     // Simple visual feedback
     list.style.opacity = "0.5";
     setTimeout(() => list.style.opacity = "1", 200);
-   
+  
     socket.emit("godModeFetch", godTargetRoom);
 });
 function renderGodList(sets, teams) {
@@ -2368,7 +2339,7 @@ function renderGodList(sets, teams) {
                 </div>
                 <div class="g-actions" style="position:relative;">
                     <button class="g-btn" onclick="toggleTeamSelect(this)" style="background:#ef4444; color:#fff; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer;">+</button>
-                   
+                  
                     <div class="team-select-popup hidden" style="position:absolute; right:35px; top:-10px; background:#1e1e1e; border:1px solid #ef4444; border-radius:6px; width:100px; max-height:200px; overflow-y:auto; z-index:100; box-shadow:0 5px 15px rgba(0,0,0,0.5);">
                         ${teamOptions.map(t => `
                             <div class="ts-option"
@@ -2387,18 +2358,17 @@ function renderGodList(sets, teams) {
 window.toggleTeamSelect = function(btn) {
     // Close any other open popups first
     document.querySelectorAll('.team-select-popup').forEach(el => el.classList.add('hidden'));
-   
+  
     const popup = btn.nextElementSibling;
     popup.classList.toggle('hidden');
 };
 window.forceAssign = function(playerName, teamName) {
     // Direct assignment - No confirmation popup
-    socket.emit("godModeAssign", { 
-        roomCode: godTargetRoom, 
-        player: { name: playerName }, 
-        team: teamName 
+    socket.emit("godModeAssign", {
+        roomCode: godTargetRoom,
+        player: { name: playerName },
+        team: teamName
     });
-
     // Optional: Visual feedback to know it worked
     const btn = event.target; // Get the button that was clicked
     if(btn) {
@@ -2408,16 +2378,10 @@ window.forceAssign = function(playerName, teamName) {
     }
 };
 
-// --- NAVIGATION LOGIC FIXES ---
-// 1. Smart Back Button for Leaderboard
-
-// 2. Updated HTML Generator (Adds Ratings + Fits Mobile 2x2)
-// --- SHARED SQUAD CARD GENERATOR ---
 function generateFullSquadHTML(teamName, squad, purse, owner) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[teamName] || '#fff';
     const logoUrl = `/logos/${teamName}.png`;
-
     // Categorize
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
@@ -2425,18 +2389,17 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
         if (['PACE', 'SPIN'].includes(r)) r = 'BOWL';
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
-
     // Helper to render Clickable Rows
     const renderRows = (list) => list.map(p => {
         // Safe name for onclick function
         const safeName = p.name.replace(/'/g, "\\'");
-        
         return `
-        <div class="pro-player-card clickable-row" 
-             onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')"
-             style="border-left: 3px solid ${teamColor};">
+        <div class="pro-player-card clickable-row"
+             onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')">
             <div class="pp-left">
-                <span class="pp-name">${p.foreign ? '✈️ ' : ''}${p.name}</span>
+                <span class="pp-name">
+                    ${p.foreign ? '✈️ ' : ''}${p.name}
+                </span>
                 <span class="pp-rating">⭐${p.rating}</span>
             </div>
             <div class="pp-right">
@@ -2444,45 +2407,40 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
             </div>
         </div>
     `}).join('');
-
     return `
     <div class="team-sheet-card full-squad-mode" style="--team-logo-url: url('${logoUrl}');">
-        
-        <div class="sheet-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <h2 class="sheet-title" style="color:#fff;">${teamName}</h2>
-            <div class="sheet-subtitle" style="color:${teamColor}">${owner || 'Manager'}</div>
-            <div class="sheet-stats">
+        <div class="sheet-header" style="background: rgba(0,0,0,0.5); padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2;">
+            <h2 class="sheet-title" style="margin: 0; font-size: 2.2rem; color: #fff; text-transform: uppercase;">${teamName}</h2>
+            <div class="sheet-subtitle" style="color: #facc15; font-size: 0.9rem; letter-spacing: 2px;">FULL SQUAD • ${owner || 'Manager'}</div>
+            <div style="margin-top: 8px; display: flex; justify-content: center; gap: 20px; color: #ccc; font-weight: bold; font-size: 1rem;">
                 <span>💰 ₹${purse.toFixed(2)} Cr</span>
                 <span>👥 ${squad.length}</span>
-                <span>✈️ ${foreignCount}</span>
+                <span>✈️ ${foreignCount} OS</span>
             </div>
         </div>
-
-        <div class="pro-body">
+        <div class="pro-body" style="padding: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; position: relative; z-index: 2;">
             <div class="pro-col">
-                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">WK</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">WK</div>
                 ${renderRows(cat.WK)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">BAT</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">BAT</div>
                 ${renderRows(cat.BAT)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">ALL</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">ALL</div>
                 ${renderRows(cat.ALL)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color:${teamColor}; border-color:${teamColor}">BOWL</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">BOWL</div>
                 ${renderRows(cat.BOWL)}
             </div>
         </div>
-        
-        <div class="sheet-footer">
-            OFFICIAL SQUAD LIST • AUCTION DASHBOARD
+        <div class="sheet-footer" style="padding: 10px; text-align: center; color: #64748b; font-size: 0.7rem; background: rgba(0,0,0,0.5);">
+            OFFICIAL SQUAD • GENERATED BY AUCTION DASHBOARD
         </div>
     </div>`;
 }
-
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2496,6 +2454,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
