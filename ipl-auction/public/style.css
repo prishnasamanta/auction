@@ -3168,6 +3168,35 @@ body {
         opacity: 1;
     }
 }
+/* ================================================= */
+/* 🚑 EMERGENCY ORDER FIX (Paste at bottom of CSS)   */
+/* ================================================= */
+
+@media (max-width: 900px) {
+    /* 1. Reset Flex Order so Tile stays on top */
+    .auction-center {
+        order: 0 !important; /* Force it back to natural order */
+        margin-bottom: 0 !important; /* Remove gap logic */
+    }
+
+    /* 2. Ensure Wrapper stacks vertical */
+    .auction-wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        height: calc(100vh - 50px) !important; /* Fixed height */
+        padding-bottom: 0 !important; /* Remove bottom padding */
+    }
+
+    /* 3. Ensure Command Center fills space */
+    #commandCenter {
+        order: 1 !important; /* Ensure it comes after tile */
+        flex: 1 !important;
+        margin-bottom: 0 !important;
+        border-radius: 12px 12px 0 0 !important; /* Clean bottom look */
+    }
+}
+
 
 
 
