@@ -870,75 +870,60 @@ if(bidBtn) {
 }
 socket.on("bidUpdate", data => {
     safePlay(soundBid);
-  
     document.getElementById("bid").innerText = `₹${data.bid.toFixed(2)} Cr`;
     lastBidTeam = data.team;
-  
+
     const badge = document.getElementById('currentBidder');
     badge.classList.remove('hidden');
     document.getElementById('bidderName').innerText = data.team;
-  
-    const color = TEAM_COLORS[data.team] || "#22c55e";
-    badge.style.border = `1px solid ${color}`;
-    badge.style.setProperty("--team", color);
-  
+    
+    // Team Color for Leader Badge
+    const color = TEAM_COLORS[data.team] || "#fff";
+    badge.style.backgroundColor = color;
+    badge.style.color = (data.team === 'CSK' || data.team === 'GT') ? '#000' : '#fff'; // Contrast fix for bright colors
+
+    // 🟢 ANIMATION RESTORED HERE
     const card = document.getElementById("auctionCard");
-    card.classList.add("pulse");
-    setTimeout(() => card.classList.remove("pulse"), 300);
+    card.classList.remove("pulse"); // Reset
+    void card.offsetWidth; // Force Reflow
+    card.classList.add("pulse"); // Add
+
     updateBidButton({ bid: data.bid, player: currentPlayer });
 });
+
 function updateBidButton(state) {
     const btn = document.getElementById("bidBtn");
-    const incText = document.getElementById("bidIncrementText");
+    const btnText = document.getElementById("btnIncText");
     const mySquad = allSquads[myTeam] || [];
 
-    // 1. Calculate Logic (Standard IPL logic example)
+    // Logic
     let currentBid = state ? (state.bid || 0) : 0;
     let increment = 0.05;
-    
-    // Example Tiered Logic (Optional - stick to 0.05 if you prefer fixed)
     if (currentBid >= 10) increment = 0.50;
     else if (currentBid >= 2) increment = 0.20;
     else if (currentBid >= 1) increment = 0.10;
-    else increment = 0.05;
 
-    // 2. Update the Text below button
-    if(incText) {
-        incText.innerText = `+ ₹${increment.toFixed(2)} Cr`;
-    }
+    // UPDATE BUTTON TEXT
+    if(btnText) btnText.innerText = `+ ${increment.toFixed(2)} Cr`;
 
-    // 3. Basic Checks
-    if(!myTeam || !auctionLive || auctionPaused) {
-        btn.disabled = true;
-        return;
-    }
-    if(lastBidTeam === myTeam) {
-        btn.disabled = true;
-        return;
-    }
+    // Checks
+    if(!myTeam || !auctionLive || auctionPaused) { btn.disabled = true; return; }
+    if(lastBidTeam === myTeam) { btn.disabled = true; return; }
 
-    // 4. Purse Check
     const nextBid = currentBid + increment;
-    if(teamPurse && teamPurse[myTeam] !== undefined) {
-        if(teamPurse[myTeam] < nextBid) {
-            btn.disabled = true;
-            return; 
-        }
+    if(teamPurse && teamPurse[myTeam] !== undefined && teamPurse[myTeam] < nextBid) {
+        btn.disabled = true; return;
     }
-
-    // 5. Squad Size & Foreign Checks (Keep your existing logic here)
-    if (activeRules.maxPlayers && mySquad.length >= activeRules.maxPlayers) {
-        btn.disabled = true; return; 
-    }
+    // Squad checks...
+    if (activeRules.maxPlayers && mySquad.length >= activeRules.maxPlayers) { btn.disabled = true; return; }
     if (state.player && state.player.foreign) {
-        const currentForeignCount = mySquad.filter(p => p.foreign).length;
-        if (activeRules.maxForeign && currentForeignCount >= activeRules.maxForeign) {
-            btn.disabled = true; return;
-        }
+        const fCount = mySquad.filter(p => p.foreign).length;
+        if (activeRules.maxForeign && fCount >= activeRules.maxForeign) { btn.disabled = true; return; }
     }
 
     btn.disabled = false;
 }
+
 
 socket.on("sold", d => {
     safePlay(soundHammer);
@@ -1594,35 +1579,17 @@ function closeUserListOutside(e) {
 function updateHeaderNotice() {
     const headerBadge = document.getElementById("headerTeamBadge");
     const headerName = document.getElementById("headerTeamName");
-    const cardTeam = document.getElementById("noticeTeam"); // Only if used elsewhere
     
-    // 1. Spectator Logic
     if (!myTeam) {
         if(headerBadge) headerBadge.classList.add("hidden");
-        // Update Card Context (if visible)
-        if(cardTeam) {
-            cardTeam.innerText = "SPECTATOR";
-            cardTeam.style.color = "#94a3b8";
-        }
         return;
     }
 
-    // 2. Team Owner Logic
-    // Show Header Badge
     if(headerBadge) {
         headerBadge.classList.remove("hidden");
         headerName.innerText = myTeam;
-        
-        // Apply Team Color Border to the badge
         const color = TEAM_COLORS[myTeam] || '#fff';
         headerBadge.style.borderLeft = `3px solid ${color}`;
-        headerName.style.color = "#fff";
-    }
-
-    // Update Card Context
-    if(cardTeam) {
-        cardTeam.innerText = myTeam;
-        cardTeam.style.color = TEAM_COLORS[myTeam] || "#fff";
     }
 }
 
@@ -2482,6 +2449,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
