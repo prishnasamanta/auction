@@ -478,9 +478,11 @@ socket.on("joinedRoom", (data) => {
     // --- 6. SETUP UI ---
     setupAuctionScreen();
     updateAdminButtons(data.auctionStarted);
-
-    if (data.auctionStarted) {
+if (data.auctionStarted) {
         socket.emit("getAuctionState");
+        
+        // Force switch to Auction View immediately
+        setGamePhase("AUCTION"); 
     }
 });
 
@@ -842,16 +844,40 @@ socket.on("auctionStarted", () => {
     setGamePhase("AUCTION");
     updateAdminButtons(true);
 });
-socket.on("auctionState", s => {
-    auctionLive = s.live;
-    auctionPaused = s.paused;
-    lastBidTeam = s.lastBidTeam;
-    if(s.player) {
-        updatePlayerCard(s.player, s.bid);
+socket.on("auctionState", (state) => {
+    console.log("State Sync:", state);
+
+    // 1. Sync Globals
+    auctionLive = state.live;
+    auctionPaused = state.paused;
+    lastBidTeam = state.lastBidTeam;
+
+    // 2. Update Player Details
+    if (state.player) {
+        currentPlayer = state.player; // Critical: Store for bid logic
+        
+        // Update the visual card
+        updatePlayerCard(state.player, state.bid);
+        
+        // Ensure card is visible
+        document.getElementById("auctionCard").classList.remove("hidden");
     }
-    updateBidButton(s);
-    updatePauseIcon(s.paused); // 🔴 Call this
+
+    // 3. Update Leader Badge (Current Highest Bidder)
+    const badge = document.getElementById('currentBidder');
+    if (state.lastBidTeam) {
+        badge.classList.remove('hidden');
+        document.getElementById('bidderName').innerText = state.lastBidTeam;
+        badge.style.backgroundColor = TEAM_COLORS[state.lastBidTeam] || "#22c55e";
+    } else {
+        badge.classList.add('hidden');
+    }
+
+    // 4. Update Button & Pause UI
+    updateBidButton({ bid: state.bid, player: state.player });
+    updatePauseIcon(state.paused);
 });
+
 socket.on("newPlayer", d => {
     currentPlayer = d.player; // Store globally
     auctionLive = true;
@@ -2573,6 +2599,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
