@@ -243,66 +243,45 @@
 
 <header class="topbar">
     <div class="top-left">
-        <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()">
-            <span style="opacity:0.5; font-size:0.6rem;">ID</span>
-            <span id="roomCodeText" style="color:var(--primary); font-weight:800;">---</span>
+        <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" style="background:transparent; border:1px dashed #334155;">
+            <span id="roomCodeText" style="color:#fff; font-family:monospace; font-size:1rem; letter-spacing:1px; font-weight:bold;">---</span>
         </div>
 
-        <div id="headerTeamBadge" class="header-badge hidden">
-            <span id="headerTeamName" style="font-weight:700;">---</span>
+        <div id="headerTeamBadge" class="header-badge hidden" style="border:none; padding-left:0;">
+            <span id="headerTeamName" style="font-weight:800; font-size:0.9rem; color:var(--gold);">---</span>
         </div>
 
         <div style="position: relative;">
             <button onclick="toggleUserList()" class="count-pill-btn header-pill">
-                <span class="pulse-dot"></span>
-                <span id="liveUserCount">0</span>
+                <span class="pulse-dot"></span> <span id="liveUserCount">0</span>
             </button>
-            <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:0; right:auto;"> 
-                <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">ACTIVE</h4>
+            <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:0;">
                 <div id="userListContent"></div>
             </div>
         </div>
     </div>
 
     <div class="top-right custom-scroll-x">
-        
-        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden" title="Join">
-            ➕ <span style="font-size:0.7rem; margin-left:4px;">JOIN</span>
-        </button>
+        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden">➕</button>
+        <button onclick="showRules()" class="header-icon-btn">📜</button>
 
-        <button onclick="showRules()" class="header-icon-btn" title="Rules">
-            <img src="https://img.icons8.com/ios-glyphs/30/ffffff/rules.png" width="18" height="18"/>
-        </button>
-
-        <span id="adminControls" class="admin-group hidden" style="display:flex; gap:5px; margin-left:5px;">
+        <span id="adminControls" class="admin-group hidden" style="display:flex; gap:5px;">
             <div class="v-divider"></div>
+            <button id="startBtn" class="header-icon-btn primary">▶</button>
             
-            <button id="startBtn" class="header-icon-btn primary" title="Start">
-                <img src="https://img.icons8.com/ios-filled/30/ffffff/play--v1.png" width="16" height="16"/>
+            <button id="togglePauseBtn" class="header-icon-btn">
+                <div class="pause-icon"><div class="pause-bar"></div><div class="pause-bar"></div></div>
             </button>
 
-            <button id="togglePauseBtn" class="header-icon-btn" title="Pause">
-                <img src="https://img.icons8.com/ios-filled/30/ffffff/pause--v1.png" width="18" height="18"/>
-            </button>
-
-            <button id="skipBtn" class="header-icon-btn" title="Skip Player">
-                <img src="https://img.icons8.com/ios-filled/30/ffffff/end--v1.png" width="18" height="18"/>
-            </button>
-
-            <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">
-                <img src="https://img.icons8.com/ios-filled/30/ffffff/fast-forward.png" width="18" height="18"/>
-            </button>
-
-            <button onclick="admin('end')" class="header-icon-btn danger" title="End Auction">
-                <img src="https://img.icons8.com/ios-filled/30/ffffff/stop.png" width="16" height="16"/>
-            </button>
+            <button id="skipBtn" class="header-icon-btn">➠</button>
+            <button id="skipSetBtn" class="header-icon-btn warning">⏭</button>
+            <button onclick="admin('end')" class="header-icon-btn danger">⏻</button>
         </span>
 
-        <button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">
-            <img src="https://img.icons8.com/ios-filled/30/ffffff/exit.png" width="18" height="18"/>
-        </button>
+        <button id="leaveBtn" class="header-icon-btn danger hidden">🏃</button>
     </div>
 </header>
+
 
 
 
@@ -347,14 +326,15 @@
 
 
 <div class="auction glass hidden" id="auctionCard">
-    <div id="resultOverlay" class="ac-result-overlay hidden">
-        <div class="stamp-container">
-            <div id="stampTitle" class="stamp-title">SOLD</div>
-            <div id="stampDetail" class="stamp-detail">TO CSK</div>
-        </div>
-    </div>
-
     <div class="ac-top-row">
+        
+        <div id="resultOverlay" class="ac-result-overlay hidden">
+            <div class="stamp-container">
+                <div id="stampTitle" class="stamp-title">SOLD</div>
+                <div id="stampDetail" class="stamp-detail">TO CSK</div>
+            </div>
+        </div>
+
         <div class="ac-info-box">
             <div id="playerName" class="ac-name-text">WAITING...</div>
             <div id="playerMeta" class="ac-role-text">---</div>
@@ -362,7 +342,7 @@
 
         <div class="ac-status-box">
             <div id="timer" class="ac-timer-box">15</div>
-            <div id="currentBidder" class="ac-leader-badge hidden">
+            <div id="currentBidder" style="font-size:0.8rem; font-weight:700; color:#fff; margin-top:5px; background:#22c55e; padding:2px 6px; border-radius:4px;" class="hidden">
                 <span id="bidderName">---</span>
             </div>
         </div>
@@ -374,9 +354,11 @@
             <div id="bid" class="val">₹0.00 Cr</div>
         </div>
 
+        <div></div> 
+
         <button id="bidBtn" class="ac-main-bid-btn">
-            <span>BID</span>
-            <span id="btnIncText" class="sub-text">+ 0.00 Cr</span>
+            <span style="font-size:1.4rem; font-weight:800;">BID</span>
+            <span id="btnIncText" style="font-size:0.8rem; opacity:0.8;">+0.05</span>
         </button>
     </div>
 </div>
@@ -844,6 +826,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
