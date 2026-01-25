@@ -406,18 +406,8 @@
                     📸 Save
                 </button>
             </div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 25px;">
-                <button onclick="showScreen('leaderboard')" class="secondary-btn" style="flex: 1; border-color:#334155; background:rgba(255,255,255,0.05);">
-                    🏆 Leaderboard
-                </button>
-                <button onclick="exitToHome()" class="secondary-btn" style="flex: 1; border-color:#334155; color:#94a3b8;">
-                    🏠 Home
-                </button>
-            </div>
-
             <h3 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; color:#94a3b8; font-size:0.9rem; text-transform:uppercase;">
-                👇 Tap to Add
+                👇 Add to Playing XI
             </h3>
             
             <div id="mySquadList"></div>
@@ -427,7 +417,7 @@
     <section id="leaderboard" class="screen hidden">
         <header class="topbar glass" style="justify-content: center; position: relative;">
             <button onclick="goBackFromLeaderboard()" class="secondary-btn" style="position: absolute; left: 15px; border:none; font-size:1rem;">
-                ← Back
+                [←]
             </button>
             <span class="brand" style="font-size: 1.2rem;">🏆 TOURNAMENT STANDINGS</span>
         </header>
@@ -456,8 +446,8 @@
             <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
                 <span class="brand">🏁 AUCTION SUMMARY</span>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="showScreen('leaderboard')" class="secondary-btn" style="font-size:0.8rem;">🏆 Leaderboard</button>
-                    <button onclick="exitToHome()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">🏠 Home</button>
+                    <button onclick="showScreen('leaderboard')" class="secondary-btn" style="font-size:0.8rem;">[🏆]</button>
+                    <button onclick="exitToHome()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">[🏠]</button>
                 </div>
             </div>
         </header>
@@ -658,6 +648,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
