@@ -241,17 +241,15 @@
 
 
 
-  <header class="topbar">
+<header class="topbar">
     <div class="top-left">
-        
-        <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" title="Tap to Copy">
-            <span style="opacity:0.5">ID:</span>
-            <span id="roomCodeText" style="color:var(--primary); font-weight:bold;">---</span>
+        <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()">
+            <span style="opacity:0.5; font-size:0.6rem;">ID</span>
+            <span id="roomCodeText" style="color:var(--primary); font-weight:800;">---</span>
         </div>
 
         <div id="headerTeamBadge" class="header-badge hidden">
-            <span style="opacity:0.5">TEAM:</span>
-            <span id="headerTeamName">---</span>
+            <span id="headerTeamName" style="font-weight:700;">---</span>
         </div>
 
         <div style="position: relative;">
@@ -259,8 +257,8 @@
                 <span class="pulse-dot"></span>
                 <span id="liveUserCount">0</span>
             </button>
-            <div id="userListDropdown" class="user-list-dropdown hidden glass">
-                <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">ACTIVE PLAYERS</h4>
+            <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:0; right:auto;"> 
+                <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">ACTIVE</h4>
                 <div id="userListContent"></div>
             </div>
         </div>
@@ -268,24 +266,44 @@
 
     <div class="top-right custom-scroll-x">
         
-        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-btn hidden" style="border-color:var(--gold); color:var(--gold);">
-            + Join
+        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden" title="Join">
+            ➕ <span style="font-size:0.7rem; margin-left:4px;">JOIN</span>
         </button>
 
-        <button onclick="showRules()" class="header-btn">📜 Rules</button>
+        <button onclick="showRules()" class="header-icon-btn" title="Rules">
+            <img src="https://img.icons8.com/ios-glyphs/30/ffffff/rules.png" width="18" height="18"/>
+        </button>
 
-        <span id="adminControls" class="admin-group hidden">
+        <span id="adminControls" class="admin-group hidden" style="display:flex; gap:5px; margin-left:5px;">
             <div class="v-divider"></div>
-            <button id="startBtn" class="header-btn primary">START</button>
-            <button id="togglePauseBtn" class="header-btn">Pause</button>
-            <button id="skipBtn" class="header-btn">⏭</button>
-            <button id="skipSetBtn" class="header-btn" style="color:#fca5a5;">Set</button>
-            <button onclick="admin('end')" class="header-btn danger">End</button>
+            
+            <button id="startBtn" class="header-icon-btn primary" title="Start">
+                <img src="https://img.icons8.com/ios-filled/30/ffffff/play--v1.png" width="16" height="16"/>
+            </button>
+
+            <button id="togglePauseBtn" class="header-icon-btn" title="Pause">
+                <img src="https://img.icons8.com/ios-filled/30/ffffff/pause--v1.png" width="18" height="18"/>
+            </button>
+
+            <button id="skipBtn" class="header-icon-btn" title="Skip Player">
+                <img src="https://img.icons8.com/ios-filled/30/ffffff/end--v1.png" width="18" height="18"/>
+            </button>
+
+            <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">
+                <img src="https://img.icons8.com/ios-filled/30/ffffff/fast-forward.png" width="18" height="18"/>
+            </button>
+
+            <button onclick="admin('end')" class="header-icon-btn danger" title="End Auction">
+                <img src="https://img.icons8.com/ios-filled/30/ffffff/stop.png" width="16" height="16"/>
+            </button>
         </span>
 
-        <button id="leaveBtn" class="header-btn danger hidden">Run 🏃</button>
+        <button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">
+            <img src="https://img.icons8.com/ios-filled/30/ffffff/exit.png" width="18" height="18"/>
+        </button>
     </div>
 </header>
+
 
 
 
@@ -329,43 +347,39 @@
 
 
 <div class="auction glass hidden" id="auctionCard">
-    
-    <div class="ac-player-row">
-        <div id="resultOverlay" class="ac-result-overlay hidden">
-            <div class="stamp-container">
-                <div id="stampTitle" class="stamp-title">SOLD</div>
-                <div id="stampDetail" class="stamp-detail">TO CSK</div>
-            </div>
-        </div>
-
-        <div class="ac-info">
-            <div id="playerName" class="ac-name">WAITING...</div>
-            <div id="playerMeta" class="ac-role">---</div>
+    <div id="resultOverlay" class="ac-result-overlay hidden">
+        <div class="stamp-container">
+            <div id="stampTitle" class="stamp-title">SOLD</div>
+            <div id="stampDetail" class="stamp-detail">TO CSK</div>
         </div>
     </div>
 
-    <div class="ac-action-row">
-        
-        <div class="ac-col-left">
-            <span class="ac-label">CURRENT BID</span>
-            <div id="bid" class="ac-price">₹0.00 Cr</div>
+    <div class="ac-top-row">
+        <div class="ac-info-box">
+            <div id="playerName" class="ac-name-text">WAITING...</div>
+            <div id="playerMeta" class="ac-role-text">---</div>
         </div>
 
-        <div class="ac-col-mid">
-            <button id="bidBtn" class="ac-bid-btn-small">BID</button>
-            <div id="bidIncrementText" class="ac-inc-text">+0.05</div>
-        </div>
-
-        <div class="ac-col-right">
-            <div id="timer" class="ac-timer-small">10</div>
-            <div id="currentBidder" class="ac-leader-text hidden">
-                <span id="bidderName">CSK</span>
+        <div class="ac-status-box">
+            <div id="timer" class="ac-timer-box">15</div>
+            <div id="currentBidder" class="ac-leader-badge hidden">
+                <span id="bidderName">---</span>
             </div>
         </div>
+    </div>
 
+    <div class="ac-bot-row">
+        <div class="ac-price-box">
+            <span class="lbl">CURRENT BID</span>
+            <div id="bid" class="val">₹0.00 Cr</div>
+        </div>
+
+        <button id="bidBtn" class="ac-main-bid-btn">
+            <span>BID</span>
+            <span id="btnIncText" class="sub-text">+ 0.00 Cr</span>
+        </button>
     </div>
 </div>
-
 
 
 
@@ -830,6 +844,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
