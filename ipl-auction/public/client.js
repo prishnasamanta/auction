@@ -2033,7 +2033,6 @@ socket.on("leaderboard", (board) => {
         });
     }
 });
-// Updated Generator Function
 // ==========================================
 // 💎 PREMIUM SQUAD GENERATOR V3 (Final)
 // ==========================================
@@ -2502,6 +2501,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
