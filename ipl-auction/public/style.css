@@ -2097,74 +2097,90 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     display: flex;
     justify-content: center;
 }
+
 /* ================================================= */
-/* 💎 PREMIUM SQUAD CARD (Corrected Class-Based)     */
+/* 💎 PREMIUM SQUAD CARD V3 (Final Polish)           */
 /* ================================================= */
 
-/* Change #premium-squad-card to .premium-squad-card */
 .premium-squad-card {
     box-sizing: border-box;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background: linear-gradient(145deg, #020617 0%, #0f172a 100%);
-    border: 2px solid var(--team-color, #facc15);
+    font-family: 'Exo 2', sans-serif;
+    /* Deep premium gradient background */
+    background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 4px solid var(--team-color, #facc15);
     border-radius: 16px;
     width: 100%;
-    /* Remove fixed max-width so it fills the modal/popup */
     margin: 0 auto;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8);
     color: white;
 }
 
+/* 🟢 WATERMARK FIX: Increased opacity and size */
 .prem-watermark {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%; height: 80%; /* Increased size */
+    position: absolute;
+    top: 50%; 
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg) scale(1.2);
+    width: 100%; 
+    height: 100%;
+    /* Ensure the variable is used here */
     background-image: var(--watermark-url);
     background-size: contain;
+    background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.08;
-    filter: grayscale(100%);
+    opacity: 0.12; /* Increased for visibility */
+    filter: grayscale(100%) contrast(1.2);
     z-index: 0;
     pointer-events: none;
 }
 
-/* Header Section */
+/* Header */
 .prem-header {
     position: relative; z-index: 2;
-    background: rgba(255,255,255,0.03);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: 20px 15px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 20px;
     text-align: center;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(4px);
 }
 
 .prem-title {
-    margin: 0; font-size: 2.2rem; font-weight: 900; 
-    text-transform: uppercase; letter-spacing: 2px;
-    color: #fff; text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    margin: 0;
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     line-height: 1;
 }
 
 .prem-meta {
-    color: var(--team-color, #facc15); 
-    font-size: 0.8rem; font-weight: 700; 
-    letter-spacing: 3px; text-transform: uppercase; margin-top: 8px;
-    opacity: 0.9;
+    color: var(--team-color);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 6px;
+    text-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 .prem-stats {
-    display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
-    margin-top: 15px;
+    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 15px;
 }
 
 .stat-badge {
-    background: rgba(255,255,255,0.1);
-    padding: 4px 12px; border-radius: 20px;
-    font-size: 0.8rem; font-weight: 600; color: #e2e8f0;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #cbd5e1;
     border: 1px solid rgba(255,255,255,0.1);
-    white-space: nowrap;
 }
 
 /* Body Grid */
@@ -2173,11 +2189,10 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     padding: 15px;
     display: grid;
     gap: 10px;
-    /* DEFAULT: 4 Columns (Good for Desktop Download) */
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr); /* Desktop Default */
 }
 
-/* 🟢 FORCE 2 COLUMNS IN POPUPS OR MOBILE */
+/* Responsive Switch */
 .premium-squad-card.narrow-view .prem-body,
 .modal-content .premium-squad-card .prem-body {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -2185,55 +2200,102 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 /* Columns */
 .prem-col {
-    background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
     padding: 8px;
     display: flex; flex-direction: column;
+    min-height: 120px;
 }
 
 .col-title {
-    text-align: center; color: var(--team-color, #facc15);
-    font-weight: 800; font-size: 0.8rem; letter-spacing: 1px;
-    border-bottom: 2px solid var(--team-color, #facc15);
-    padding-bottom: 6px; margin-bottom: 8px;
+    text-align: center;
+    color: var(--team-color);
+    font-weight: 800; font-size: 0.7rem; letter-spacing: 1px;
+    border-bottom: 2px solid var(--team-color);
+    padding-bottom: 5px; margin-bottom: 8px;
     text-transform: uppercase;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+    padding-top: 4px;
+    border-radius: 4px 4px 0 0;
 }
 
-/* Player Rows */
+/* 🟢 PLAYER ROW & BADGE STYLING */
 .p-row {
-    display: flex; justify-content: space-between; align-items: center;
-    background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
-    padding: 6px 8px; margin-bottom: 4px;
-    border-radius: 4px; cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
-    border-left: 2px solid transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    cursor: pointer;
 }
 
-.p-row:hover {
-    background: rgba(255,255,255,0.1);
-    border-left: 2px solid var(--team-color, #facc15);
+/* The Name Badge */
+.player-badge {
+    flex: 1; /* Take available width */
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 3px solid var(--team-color); /* Team Accent */
+    border-radius: 4px; /* Slight round */
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    /* Fixed Height Logic */
+    height: 32px; 
+    transition: all 0.2s;
+    margin-right: 6px;
+    overflow: hidden;
+}
+
+.p-row:hover .player-badge {
+    background: rgba(255, 255, 255, 0.15);
     transform: translateX(2px);
 }
 
-.p-info { display: flex; align-items: center; gap: 6px; overflow: hidden; flex: 1; }
-.p-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--team-color); flex-shrink: 0;}
-.p-name { font-size: 0.8rem; font-weight: 600; white-space: nowrap; color: #f1f5f9; overflow: hidden; text-overflow: ellipsis; }
-.p-cost { font-size: 0.8rem; font-weight: 700; color: #4ade80; font-family: monospace; margin-left: 5px;}
-.empty-slot { text-align: center; color: #475569; font-size: 0.75rem; padding: 8px; font-style: italic; }
+.p-name-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    white-space: nowrap; /* Keep on one line usually */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Foreign Plane Icon */
+.p-plane {
+    font-size: 0.65rem;
+    color: #38bdf8; /* Cyan for plane */
+    opacity: 0.8;
+}
+
+/* Price Tag (Outside Badge) */
+.p-cost {
+    font-family: monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #4ade80; /* Green */
+    background: rgba(0,0,0,0.3);
+    padding: 4px 6px;
+    border-radius: 4px;
+    min-width: 50px;
+    text-align: right;
+}
+
+.empty-slot {
+    text-align: center; color: #475569; font-size: 0.7rem; padding: 15px 0; font-style: italic; opacity: 0.5;
+}
 
 .prem-footer {
     position: relative; z-index: 2;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.4);
     text-align: center; padding: 10px;
-    font-size: 0.7rem; color: #64748b; letter-spacing: 1px;
+    font-size: 0.65rem; color: #64748b; letter-spacing: 1px;
     border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-/* Mobile Media Query */
-@media (max-width: 800px) {
-    .prem-body {
-        grid-template-columns: repeat(2, 1fr); 
-    }
+/* Mobile */
+@media (max-width: 768px) {
+    .prem-body { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
