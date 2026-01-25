@@ -907,11 +907,115 @@ function endAuction(r, room) {
     sendLog(r, room, "🛑 Auction Ended. Prepare Playing XI.");
     io.to(room).emit("squadData", r.squads);
 }
+/* ================================================= */
+/* 🗄️ DATABASE CONFIG (MongoDB)                       */
+/* ================================================= */
+const mongoose = require('mongoose');
+
+// 1. Connect to MongoDB (Replace with your Atlas URI)
+const MONGO_URI = "mongodb+srv://YOUR_USER:YOUR_PASS@cluster0.mongodb.net/ipl_auction?retryWrites=true&w=majority"; 
+// OR local: "mongodb://localhost:27017/ipl_auction"
+
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('✅ MongoDB Connected'))
+    .catch(err => console.log('❌ DB Error:', err));
+
+// 2. Define the Room Schema
+const RoomSchema = new mongoose.Schema({
+    code: { type: String, required: true, unique: true },
+    isActive: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now },
+    // Store the Game Data
+    data: {
+        squads: Object,      // Stores allSquads
+        purses: Object,      // Stores teamPurse
+        owners: Object,      // Stores teamOwners
+        rules: Object        // Stores activeRules
+    }
+});
+
+const Room = mongoose.model('Room', RoomSchema);
+
+/* ================================================= */
+/* 🛠️ DATABASE HELPER FUNCTIONS                      */
+/* ================================================= */
+
+// Save/Update Room Data (Call this when auction ends or periodically)
+async function saveRoomToDB(roomCode, roomData) {
+    try {
+        await Room.findOneAndUpdate(
+            { code: roomCode },
+            { 
+                isActive: !roomData.auctionEnded, // If ended, isActive = false
+                data: {
+                    squads: roomData.teams, // Note: Ensure variable names match your memory object
+                    purses: roomData.teamPurse,
+                    owners: roomData.teamOwners,
+                    rules: roomData.rules
+                }
+            },
+            { upsert: true, new: true }
+        );
+        console.log(`💾 Saved Room ${roomCode} to Database`);
+    } catch (err) {
+        console.error("Save Error:", err);
+    }
+}
+
+/* ================================================= */
+/* 🌐 API ROUTES (For Client to Check)               */
+/* ================================================= */
+
+// API: Check Room Status & Get Data (Used by Client on Load)
+app.get('/api/room/:code', async (req, res) => {
+    try {
+        const code = req.params.code.toUpperCase();
+        const room = await Room.findOne({ code: code });
+
+        if (!room) {
+            return res.json({ exists: false });
+        }
+
+        // If active, tell client to connect via socket
+        if (room.isActive) {
+            return res.json({ exists: true, active: true });
+        }
+
+        // If ended, send the stored data directly
+        return res.json({ 
+            exists: true, 
+            active: false, 
+            data: room.data 
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// --- UPDATE EXISTING SOCKET HANDLERS ---
+
+// Inside your socket.on('adminAction', ...) -> case 'end':
+// Add this line:
+/* rooms[code].auctionEnded = true;
+   saveRoomToDB(code, rooms[code]); // <--- SAVE TO DB
+   io.to(code).emit('auctionEnded');
+*/
+
+// Inside socket.on('createRoom', ...)
+// Add this line:
+/*
+   // Create initial entry in DB
+   const newRoom = new Room({ code: roomCode, isActive: true, data: {} });
+   await newRoom.save();
+*/
+
 
 const PORT = process.env.PORT || 2500; 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
