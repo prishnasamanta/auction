@@ -37,6 +37,48 @@ const soundBid = new Audio("/sounds/bid.mp3");
 const soundHammer = new Audio("/sounds/sold.mp3");
 const soundUnsold = new Audio("/sounds/unsold.mp3");
 const soundTick = new Audio("/sounds/beep.mp3");
+/* ================================================= */
+/* 🌐 URL ROUTING & NAVIGATION MANAGER               */
+/* ================================================= */
+
+// Updates the browser URL bar without reloading
+function updateURL(state) {
+    if (!roomCode) return; 
+
+    let newPath = `/room/${roomCode}`;
+    let pageTitle = `IPL Auction - ${roomCode}`;
+
+    if (state === 'summary') {
+        newPath += '/summary';
+        pageTitle = `Summary - ${roomCode}`;
+    } else if (state === 'leaderboard') {
+        newPath += '/leaderboard';
+        pageTitle = `Leaderboard - ${roomCode}`;
+    } else if (state === 'xi') {
+        newPath += '/xi';
+        pageTitle = `Select XI - ${roomCode}`;
+    }
+
+    // Push to history only if it changed
+    if (window.location.pathname !== newPath) {
+        window.history.pushState({ page: state, room: roomCode }, pageTitle, newPath);
+        document.title = pageTitle;
+    }
+}
+
+// Handle Browser "Back" Button
+window.onpopstate = function(event) {
+    if (event.state) {
+        // Route based on history state
+        if (event.state.page === 'summary') showScreen('postAuctionSummary', false);
+        else if (event.state.page === 'leaderboard') showScreen('leaderboard', false);
+        else if (event.state.page === 'xi') showScreen('playingXI', false);
+        else showScreen('auctionUI', false);
+    } else {
+        // Fallback
+        window.location.href = "/";
+    }
+};
 
 /* ================================================= */
 /* ========= 1. INITIALIZATION & NAVIGATION ======== */
@@ -115,37 +157,36 @@ window.onload = () => {
         };
     }
 
-    // --- 2. URL & SESSION HANDLING ---
-    const path = window.location.pathname;
-    const urlCode = path.startsWith('/room/') ? path.split('/')[2] : null;
+const path = window.location.pathname;
+    const parts = path.split('/'); 
+    // Format: /room/CODE/SUBPAGE
+    const urlCode = (parts[1] === 'room' && parts[2]) ? parts[2].toUpperCase() : null;
+    const subPage = (parts[1] === 'room' && parts[3]) ? parts[3].toLowerCase() : null;
 
     const sRoom = sessionStorage.getItem('ipl_room');
     const sUser = sessionStorage.getItem('ipl_user');
-    const sTeam = sessionStorage.getItem('ipl_team');
-
-    // SCENARIO A: Reconnecting
+    
+    // SCENARIO A: Reconnecting (Session Valid)
     if (sUser && sRoom && (!urlCode || urlCode === sRoom)) {
-        console.log("🔄 Reconnecting...");
-        username = sUser;
-        roomCode = sRoom;
-        if(sTeam) myTeam = sTeam;
+        // ... (Keep existing reconnect logic) ...
+        socket.emit('reconnectUser', { roomId: sRoom, username: sUser });
         
-        updateBrowserURL(sRoom);
-        
-        socket.emit('reconnectUser', { roomId: sRoom, username: sUser, team: sTeam });
-        
-        document.getElementById('landing').classList.add('hidden');
-        document.getElementById('auth').classList.add('hidden');
-        document.getElementById('auctionUI').classList.remove('hidden');
+        // If deep link exists during reconnect, restore it
+        if (subPage) sessionStorage.setItem('redirect_target', subPage);
     }
-    // SCENARIO B: Visiting Link
+    // SCENARIO B: Visiting Link (New User)
     else if (urlCode) {
-        console.log("🔗 Shared Link Detected:", urlCode);
+        console.log("🔗 Deep Link Detected:", urlCode);
+        
         document.getElementById("landing").classList.add("hidden");
         document.getElementById("auth").classList.remove("hidden");
         switchAuthTab('join');
         document.getElementById('code').value = urlCode;
-        document.getElementById('code').style.borderColor = "var(--primary)";
+        
+        // Store target to redirect AFTER login
+        if (subPage) {
+            sessionStorage.setItem('redirect_target', subPage);
+        }
     }
 
     // 3. Fetch Public Rooms
@@ -321,28 +362,31 @@ socket.on("joinedRoom", (data) => {
     // --- 5. CHECK: HAS AUCTION ENDED? ---
    // Inside socket.on("joinedRoom", ...)
 if (data.auctionEnded) {
-        const savedRoom = sessionStorage.getItem('ipl_room');
-        roomCode = data.roomCode; // Ensure room code is set
-        sessionStorage.setItem('ipl_room', roomCode);
-
-        // Save data so we can render the summary
-        if(data.squads) allSquads = data.squads;
-        if(data.rules) activeRules = data.rules;
+        setupAuctionScreen(); // Prepare UI
         
-        setupAuctionScreen(); 
-
-        // REDIRECTION LOGIC
-        if (myTeam) {
-            // Players go to Submit XI
-            showScreen("playingXI");
-            document.body.style.overflow = "auto";
-            socket.emit("getMySquad"); 
-            updateRulesUI();
-        } else {
-            // Spectators go DIRECTLY to Summary
+        // Check for specific deep link target
+        const target = sessionStorage.getItem('redirect_target');
+        
+        if (target === 'summary') {
             renderPostAuctionSummary();
             showScreen("postAuctionSummary");
+        } 
+        else if (target === 'leaderboard') {
+            showScreen("leaderboard");
         }
+        else {
+            // Default Logic
+            if (myTeam) {
+                showScreen("playingXI");
+                socket.emit("getMySquad"); 
+            } else {
+                renderPostAuctionSummary();
+                showScreen("postAuctionSummary");
+            }
+        }
+        
+        // Clear redirection so it doesn't persist forever
+        sessionStorage.removeItem('redirect_target');
         return; 
     }
 
@@ -1699,9 +1743,22 @@ function updateRulesUI() {
     set('viewForeign', r.maxForeign);
 }
 
-function showScreen(id){
-    document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
-    document.getElementById(id).classList.remove("hidden");
+function showScreen(id, updateHistory = true) {
+    // 1. Hide all screens
+    document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
+    
+    // 2. Show target screen
+    const target = document.getElementById(id);
+    if (target) target.classList.remove("hidden");
+
+    // 3. Update URL (Routing)
+    // We pass false to updateHistory when using Back Button to avoid loop
+    if (updateHistory) {
+        if (id === 'postAuctionSummary') updateURL('summary');
+        else if (id === 'leaderboard') updateURL('leaderboard');
+        else if (id === 'playingXI') updateURL('xi');
+        else if (id === 'auctionUI') updateURL('auction');
+    }
 }
 
 /* ================================================= */
@@ -1858,23 +1915,18 @@ function countTotalXI() {
 // Shared function for both Preview & Leaderboard to ensure they match
 function generateFantasyCardHTML(teamName, xiData, rating, count, isPreview = false) {
     const logoUrl = `/logos/${teamName}.png`;
-    
-    // Determine source format (Array vs Object)
     let grouped = { WK: [], BAT: [], ALL: [], BOWL: [] };
     
     if (Array.isArray(xiData)) {
-        // If flat array (from server leaderboard)
         xiData.forEach(p => {
             let r = p.role;
             if (['PACE', 'SPIN'].includes(r)) r = 'BOWL';
             if (grouped[r]) grouped[r].push(p);
         });
     } else {
-        // If object (local state)
         grouped = xiData;
     }
 
-    // Generate Rows
     const roles = ['WK', 'BAT', 'ALL', 'BOWL'];
     let rowsHTML = '';
 
@@ -1885,12 +1937,20 @@ function generateFantasyCardHTML(teamName, xiData, rating, count, isPreview = fa
             <div class="fantasy-row">
                 <div class="fantasy-role-label">${r}</div>
                 <div class="fantasy-player-row">
-                    ${players.map(p => `
+                    ${players.map(p => {
+                        // Truncate Name Logic
+                        let displayName = p.name;
+                        if (displayName.length > 12) {
+                            const parts = displayName.split(' ');
+                            if (parts.length > 1) displayName = parts[0][0] + ". " + parts.slice(1).join(" ");
+                        }
+                        
+                        return `
                         <div class="fantasy-player-pill ${p.foreign ? 'foreign' : ''}">
-                            <div class="fp-name" title="${p.name}">${p.name}</div>
+                            <div class="fp-name" title="${p.name}">${displayName}</div>
                             <div class="fp-sub">${p.foreign ? '✈️ ' : ''}⭐${p.rating}</div>
-                        </div>
-                    `).join('')}
+                        </div>`;
+                    }).join('')}
                 </div>
             </div>`;
         }
@@ -2059,16 +2119,24 @@ function renderPopupContent(mode) {
 }
 
 
-// Download Handler for Popup
+// --- FIX: LEADERBOARD DOWNLOAD BUTTON ---
 window.downloadPopupCard = function() {
-    const el = document.getElementById('squadCaptureArea').firstElementChild;
-    html2canvas(el, { backgroundColor: "#020617", scale: 2, useCORS:true }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `${currentPopupData.team}_Card.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-    });
-}
+    if (currentPopupData && currentPopupData.team) {
+        // If viewing Playing XI, capture the div
+        if (document.getElementById('btnShowXI').classList.contains('active')) {
+             const el = document.getElementById('squadCaptureArea').firstElementChild;
+             html2canvas(el, { backgroundColor: "#020617", scale: 3 }).then(c => {
+                 const a = document.createElement('a');
+                 a.download = `${currentPopupData.team}_XI.png`;
+                 a.href = c.toDataURL();
+                 a.click();
+             });
+        } else {
+            // If viewing Full Squad, use the High-Res Generator
+            downloadSquadImage(currentPopupData.team);
+        }
+    }
+};
 
 
 window.downloadLeaderboardPNG = function() {
@@ -2116,12 +2184,12 @@ socket.on("leaderboard", (board) => {
 /* ================================================= */
 
 // 1. SHARED HTML GENERATOR (Returns High-Res HTML String)
+// 1. SHARED HTML GENERATOR (Clickable & Responsive)
 function generateFullSquadHTML(teamName, squad, purse, owner) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[teamName] || '#fff';
     const logoUrl = `/logos/${teamName}.png`;
 
-    // Categorize
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
         let r = p.role;
@@ -2129,87 +2197,64 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
 
-    // Helper to render rows (Exact Pro Player Card Style)
-    const renderRows = (list) => list.map(p => `
-        <div class="pro-player-card" style="
-            background: rgba(255,255,255,0.05); 
-            padding: 8px; 
-            margin-bottom: 5px; 
-            border-radius: 4px; 
-            border-left: 3px solid ${teamColor}; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;">
-            <div class="pp-left">
-                <span class="pp-name" style="font-weight: bold; color: #fff; font-size: 0.85rem;">
+    const renderRows = (list) => list.map(p => {
+        // Safe name for onclick
+        const safeName = p.name.replace(/'/g, "\\'"); 
+        
+        return `
+        <div class="pro-player-card clickable-row"
+             onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')"
+             style="background: rgba(255,255,255,0.05); padding: 6px; margin-bottom: 4px; border-radius: 4px; border-left: 3px solid ${teamColor}; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+            <div class="pp-left" style="display:flex; align-items:center; gap:6px;">
+                <span class="pp-name" style="font-weight: bold; color: #fff; font-size: 0.8rem;">
                     ${p.foreign ? '✈️ ' : ''}${p.name}
                 </span>
+                <span style="font-size:0.7rem; color:#fbbf24;">⭐${p.rating}</span>
             </div>
             <div class="pp-right">
                 <span class="pp-price" style="color: #4ade80; font-size: 0.85rem;">₹${p.price.toFixed(2)}</span>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 
-    // RETURN THE EXACT HTML STRUCTURE FROM YOUR DOWNLOAD FUNCTION
     return `
-    <div class="team-sheet-card full-squad-mode" style="
-        --team-logo-url: url('${logoUrl}'); 
-        width: 1000px; 
-        min-width: 1000px; /* Force Width */
-        background-color: #020617; 
-        border: 2px solid #facc15; 
-        border-radius: 16px; 
-        position: relative; 
-        overflow: hidden; 
-        font-family: 'Exo 2', sans-serif; 
-        box-shadow: 0 0 50px rgba(0,0,0,0.5);">
-        
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background-image: url('${logoUrl}'); background-size: contain; background-repeat: no-repeat; opacity: 0.1; filter: grayscale(100%); pointer-events: none;"></div>
+    <div class="team-sheet-card full-squad-mode" style="--team-logo-url: url('${logoUrl}'); width: 1000px; background-color: #020617; border: 2px solid #facc15; border-radius: 16px; position: relative; overflow: hidden; font-family: 'Exo 2', sans-serif;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 60%; background-image: url('${logoUrl}'); background-size: contain; background-repeat: no-repeat; opacity: 0.1; filter: grayscale(100%); pointer-events: none;"></div>
 
-        <div class="sheet-header" style="background: rgba(0,0,0,0.3); padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2;">
-            <h2 class="sheet-title" style="margin: 0; font-size: 3.5rem; font-weight: 900; color: #fff; text-transform: uppercase; line-height: 1;">${teamName}</h2>
-            <div class="sheet-subtitle" style="font-size: 1.1rem; color: #facc15; letter-spacing: 4px; text-transform: uppercase; margin-top: 5px; font-weight: 700;">FULL SQUAD • ${owner || 'Manager'}</div>
-            
-            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 40px; font-size: 1.3rem; color: #ccc; font-weight: bold;">
-                <span style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
-                    💰 ₹${purse.toFixed(2)} Cr
-                </span>
-                <span style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
-                    👥 ${squad.length} Players
-                </span>
-                <span style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
-                    ✈️ ${foreignCount} OS
-                </span>
+        <div class="sheet-header" style="background: rgba(0,0,0,0.5); padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2;">
+            <h2 class="sheet-title" style="margin: 0; font-size: 3rem; color: #fff; text-transform: uppercase;">${teamName}</h2>
+            <div class="sheet-subtitle" style="color: #facc15; font-size: 1rem; letter-spacing: 3px;">FULL SQUAD • ${owner || 'Manager'}</div>
+            <div style="margin-top: 10px; display: flex; justify-content: center; gap: 20px; color: #ccc; font-weight: bold;">
+                <span>💰 ₹${purse.toFixed(2)} Cr</span>
+                <span>👥 ${squad.length}</span>
+                <span>✈️ ${foreignCount} OS</span>
             </div>
         </div>
 
-        <div class="pro-body" style="padding: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; position: relative; z-index: 2;">
+        <div class="pro-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; position: relative; z-index: 2;">
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; margin-bottom: 15px; font-weight: 800; font-size: 1.1rem; padding-bottom: 5px; text-transform: uppercase;">🧤 WICKET KEEPERS</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">WK</div>
                 ${renderRows(cat.WK)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; margin-bottom: 15px; font-weight: 800; font-size: 1.1rem; padding-bottom: 5px; text-transform: uppercase;">🏏 BATTERS</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">BAT</div>
                 ${renderRows(cat.BAT)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; margin-bottom: 15px; font-weight: 800; font-size: 1.1rem; padding-bottom: 5px; text-transform: uppercase;">⚡ ALL ROUNDERS</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">ALL</div>
                 ${renderRows(cat.ALL)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; margin-bottom: 15px; font-weight: 800; font-size: 1.1rem; padding-bottom: 5px; text-transform: uppercase;">🥎 BOWLERS</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">BOWL</div>
                 ${renderRows(cat.BOWL)}
             </div>
         </div>
         
-        <div class="sheet-footer" style="background: rgba(0,0,0,0.3); padding: 20px 40px; display: flex; justify-content: space-between; color: #64748b; font-size: 1rem; border-top: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; text-transform: uppercase; font-weight: 600;">
-            <span>OFFICIAL SQUAD LIST</span>
-            <span>Generated by AuctionDashboard</span>
+        <div class="sheet-footer" style="padding: 15px; text-align: center; color: #64748b; font-size: 0.8rem; background: rgba(0,0,0,0.5);">
+            OFFICIAL SQUAD • GENERATED BY AUCTION DASHBOARD
         </div>
     </div>`;
 }
-
 
 // Helper for Leaderboard Card (Not for selection)
 function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
@@ -2665,6 +2710,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
