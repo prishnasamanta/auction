@@ -1879,17 +1879,24 @@ function renderPopupContent(mode) {
 }
 // --- FIX: LEADERBOARD DOWNLOAD BUTTON ---
 window.downloadPopupCard = function() {
-    if (currentPopupData && currentPopupData.team) {
-        const el = document.getElementById('squadCaptureArea').firstElementChild;
-        const isXI = document.getElementById('btnShowXI').classList.contains('active');
-        html2canvas(el, { backgroundColor: "#020617", scale: 3 }).then(c => {
-            const a = document.createElement('a');
-            a.download = `${currentPopupData.team}_${isXI ? 'XI' : 'Squad'}.png`;
-            a.href = c.toDataURL();
-            a.click();
-        });
+    if (!currentPopupData || !currentPopupData.team) return;
+
+    // Check which tab is active
+    if (document.getElementById('btnShowXI').classList.contains('active')) {
+         // Download Playing XI (Capture the div)
+         const el = document.getElementById('squadCaptureArea').firstElementChild;
+         html2canvas(el, { backgroundColor: "#020617", scale: 3 }).then(c => {
+             const a = document.createElement('a');
+             a.download = `${currentPopupData.team}_XI.png`;
+             a.href = c.toDataURL();
+             a.click();
+         });
+    } else {
+        // Download Full Squad (Use the generator function)
+        downloadSquadImage(currentPopupData.team);
     }
 };
+
 window.downloadLeaderboardPNG = function() {
     const el = document.getElementById('generatedCard');
     html2canvas(el, { backgroundColor: null, scale: 3 }).then(canvas => {
@@ -2144,31 +2151,40 @@ window.closePlayerCard = function(e) {
 /* ================================================= */
 /* 🏁 POST AUCTION SUMMARY LOGIC */
 /* ================================================= */
+/* ================================================= */
+/* 🏁 POST AUCTION SUMMARY LOGIC                     */
+/* ================================================= */
+
 function renderPostAuctionSummary() {
     const list = document.getElementById("summaryList");
     if(!list) return;
-   
-    // Safety check: wait if data isn't loaded yet
+    
+    // RETRY LOGIC: If squads aren't loaded, try again in 500ms
+    // This prevents the "Undefined" error if the user lands here directly
     if (!allSquads || Object.keys(allSquads).length === 0) {
         list.innerHTML = "<div style='text-align:center; color:#666; padding:20px;'>Loading results...</div>";
-        setTimeout(renderPostAuctionSummary, 1000);
+        setTimeout(renderPostAuctionSummary, 500); 
         return;
     }
+
     list.innerHTML = "";
     const teams = Object.keys(allSquads).sort();
+
     teams.forEach(team => {
         const squad = allSquads[team];
         const purse = teamPurse[team] || 0;
         const owner = teamOwners[team] || "Manager";
         const teamColor = TEAM_COLORS[team] || "#fff";
-        // 1. Create Wrapper Card
+
+        // 1. Create Wrapper
         const item = document.createElement("div");
         item.className = "summary-item";
-        // 2. Create Header (Visible Strip)
+
+        // 2. Create Header
         const header = document.createElement("div");
         header.className = "summary-header";
         header.style.borderLeftColor = teamColor;
-       
+        
         header.innerHTML = `
             <div class="sum-info">
                 <span class="sum-team" style="color:${teamColor}">${team}</span>
@@ -2176,41 +2192,45 @@ function renderPostAuctionSummary() {
                     ${owner} • <span style="color:#4ade80">₹${purse.toFixed(2)} Cr</span> • ${squad.length} Players
                 </span>
             </div>
-           
+            
             <div style="display:flex; gap:10px; align-items:center;">
-                <button class="secondary-btn"
-                    style="padding:4px 8px; font-size:0.7rem; border-color:#475569;"
-                    onclick="event.stopPropagation(); downloadSummaryCard(this)">
+                <button class="secondary-btn" 
+                    style="padding:4px 8px; font-size:0.7rem; border-color:#475569;" 
+                    onclick="event.stopPropagation(); downloadSquadImage('${team}')">
                     📸 Save
                 </button>
-               
+                
                 <button class="sum-expand-btn">▼</button>
             </div>
         `;
-        // 3. Create Content (Hidden Squad Card)
+
+        // 3. Create Content (The Full Squad Card)
         const content = document.createElement("div");
         content.className = "summary-content hidden";
-       
-        // Uses the shared generator to create the 4-Column Card HTML
         content.innerHTML = generateFullSquadHTML(team, squad, purse, owner);
-        // 4. Toggle Logic (Accordion)
+
+        // 4. Toggle Logic (Accordion Style)
         header.onclick = () => {
             const isHidden = content.classList.contains("hidden");
-           
-            // Optional: Close others for "Accordion" feel
+            
+            // Close all others first
             document.querySelectorAll('.summary-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.sum-expand-btn').forEach(b => b.innerText = "▼");
-           
+            
+            // Open clicked one
             if(isHidden) {
                 content.classList.remove("hidden");
                 header.querySelector('.sum-expand-btn').innerText = "▲";
             }
         };
+
         item.appendChild(header);
         item.appendChild(content);
         list.appendChild(item);
     });
 }
+
+
 // Override Exit Home to go to Summary if auction ended
 window.exitToHome = function() {
     if (activeRules && document.getElementById("postAuctionSummary")) {
@@ -2391,3 +2411,4 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
