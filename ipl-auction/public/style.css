@@ -2097,7 +2097,6 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     display: flex;
     justify-content: center;
 }
-
 /* ================================================= */
 /* 💎 PREMIUM SQUAD CARD V3 (Final Polish)           */
 /* ================================================= */
@@ -2298,4 +2297,5 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 @media (max-width: 768px) {
     .prem-body { grid-template-columns: repeat(2, 1fr) !important; }
 }
+
 
