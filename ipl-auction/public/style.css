@@ -1478,56 +1478,80 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     overflow: hidden;
     position: relative;
 }
+/* --- PREMIUM COMPACT CHAT FEED --- */
 
 #chat {
     flex: 1;
     overflow-y: auto;
-    padding: 15px;
-    display: flex; flex-direction: column; gap: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px; /* Very tight gap between messages */
+    font-family: 'Inter', sans-serif;
 }
 
-/* 4. CHAT BUBBLES (My vs Others) */
+/* Base Message Row */
 .chat-msg {
-    display: flex; flex-direction: column;
-    max-width: 80%;
-    animation: popIn 0.2s ease-out;
-}
-
-/* Position */
-.chat-msg.mine { align-self: flex-end; align-items: flex-end; }
-.chat-msg.others { align-self: flex-start; align-items: flex-start; }
-
-/* Header (Name) */
-.chat-header { 
-    font-size: 0.65rem; 
-    margin-bottom: 3px; 
-    padding: 0 4px;
-    opacity: 0.8;
-}
-
-/* Bubbles */
-.chat-bubble {
-    padding: 8px 14px;
-    border-radius: 16px;
-    font-size: 0.95rem;
+    display: flex;
+    align-items: baseline; /* Aligns text perfectly */
+    width: 100%;
+    padding: 6px 10px;
+    background: rgba(30, 41, 59, 0.4); /* Subtle dark background */
+    border-radius: 4px;
+    border-left: 3px solid var(--msg-color); /* Team Color Bar */
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    transition: background 0.1s;
     line-height: 1.4;
     position: relative;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    animation: slideInLeft 0.2s ease-out;
 }
 
-/* MY BUBBLE STYLE */
-.chat-msg.mine .chat-bubble {
-    background: var(--primary); /* Gold/Yellow */
-    color: #000;
-    border-bottom-right-radius: 2px; /* Distinct shape */
+/* Hover Effect for readability */
+.chat-msg:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
-/* OTHERS BUBBLE STYLE (Improved) */
-.chat-msg.others .chat-bubble {
-    background: #334155;        /* Slate Gray */
-    color: #fff;
-    border-bottom-left-radius: 2px; /* Distinct shape */
-    border: 1px solid rgba(255,255,255,0.1);
+/* Highlight "My" Messages subtly */
+.chat-msg.mine {
+    background: rgba(99, 102, 241, 0.1); /* Very faint Primary tint */
+    border-left-width: 4px; /* Slightly thicker border */
+}
+
+/* Metadata (Time & Name) */
+.chat-meta {
+    flex-shrink: 0;
+    margin-right: 8px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--msg-color);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* The actual text message */
+.chat-text {
+    color: #f1f5f9;
+    word-break: break-word;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+/* Timestamp styling */
+.chat-time {
+    color: #64748b;
+    font-family: monospace;
+    font-size: 0.7rem;
+    font-weight: 400;
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-5px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
 /* 3. INPUT AREA */
@@ -2297,5 +2321,6 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 @media (max-width: 768px) {
     .prem-body { grid-template-columns: repeat(2, 1fr) !important; }
 }
+
 
 
