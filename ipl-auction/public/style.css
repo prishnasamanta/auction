@@ -3198,13 +3198,6 @@ body {
         border-radius: 12px 12px 0 0 !important; /* Clean bottom look */
     }
 }
-/* ================================================= */
-/* ⚡ ULTIMATE APP LAYOUT (Mobile & PC Fixed)        */
-/* ================================================= */
-/* ================================================= */
-/* 🌌 SPACE AURORA BACKGROUND (CSS ONLY)             */
-/* ================================================= */
-
 body {
     margin: 0;
     width: 100%;
@@ -3213,89 +3206,28 @@ body {
     display: flex;
     flex-direction: column;
     
-    /* 1. Deep Space Base */
-    background-color: #020617; /* Pitch Black-Blue */
+    /* Deep Space Base Color (Static) */
+    background: radial-gradient(circle at bottom, #1e1b4b 0%, #020617 60%, #000000 100%);
+    
     color: var(--text-main);
     font-family: var(--font-body);
-    position: relative;
-    z-index: 0;
 }
 
-/* 2. The Aurora (Green/Blue Nebula) */
-body::before {
-    content: "";
-    position: absolute;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    z-index: -2;
-    
-    /* Complex Gradient Blob */
-    background: radial-gradient(
-        circle at center,
-        rgba(99, 102, 241, 0.15) 0%,   /* Indigo Center */
-        rgba(16, 185, 129, 0.1) 30%,   /* Emerald Mid */
-        rgba(6, 182, 212, 0.05) 50%,   /* Cyan Edge */
-        transparent 70%
-    );
-    
-    /* Blur it into a cloud */
-    filter: blur(80px);
-    animation: auroraSpin 25s linear infinite;
-    opacity: 0.8;
+/* Position the canvas behind everything */
+#bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; /* Behind UI */
+    pointer-events: none; /* Let clicks pass through */
+    opacity: 0.6; /* Adjust brightness of particles */
 }
 
-/* 3. The Second Aurora (Purple/Pink Nebula) */
-body::after {
-    content: "";
-    position: absolute;
-    bottom: -50%; right: -50%;
-    width: 200%; height: 200%;
-    z-index: -2;
-    
-    background: radial-gradient(
-        circle at center,
-        rgba(236, 72, 153, 0.15) 0%,   /* Pink Center */
-        rgba(139, 92, 246, 0.1) 30%,   /* Purple Mid */
-        transparent 70%
-    );
-    
-    filter: blur(90px);
-    animation: auroraFlow 30s ease-in-out infinite alternate;
-    opacity: 0.6;
-}
-
-/* 4. Stars Texture (Static) */
-#auctionUI::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image: 
-        radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
-        radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
-        radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
-    background-size: 550px 550px, 350px 350px, 250px 250px;
-    background-position: 0 0, 40px 60px, 130px 270px;
-    opacity: 0.4;
-}
-
-/* 5. Animations */
-@keyframes auroraSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-@keyframes auroraFlow {
-    0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(-30px, 20px) scale(1.1); }
-    100% { transform: translate(20px, -40px) scale(1); }
-}
-
-/* Ensure content sits on top */
+/* Ensure UI is transparent so particles show through */
 #auctionUI, .auction-wrapper, .screen {
     background: transparent !important;
     position: relative;
-    z-index: 1;
+    z-index: 5;
 }
 
 /* 2. MAIN CONTAINER (Stacks Header, Body, Footer) */
@@ -3504,41 +3436,37 @@ body::after {
         padding: 0 10px;
     }
 }
-
-
-/* ================================================= */
-/* 🌌 STARBACK CANVAS (Behind Everything)            */
-/* ================================================= */
-
-/* 1. Reset Body to allow canvas to show */
 body {
     margin: 0;
     width: 100%;
     height: 100dvh;
     overflow: hidden;
-    background: #020617; /* Fallback color */
+    display: flex;
+    flex-direction: column;
+    
+    /* Deep Space Base Color (Static) */
+    background: radial-gradient(circle at bottom, #1e1b4b 0%, #020617 60%, #000000 100%);
+    
     color: var(--text-main);
     font-family: var(--font-body);
-    position: relative;
 }
 
-/* 2. Position the Canvas Fixed at the back */
-#starback-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1; /* Behind all content */
-    pointer-events: none;
+/* Position the canvas behind everything */
+#bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; /* Behind UI */
+    pointer-events: none; /* Let clicks pass through */
+    opacity: 0.6; /* Adjust brightness of particles */
 }
 
-/* 3. Ensure your UI sits on top */
+/* Ensure UI is transparent so particles show through */
 #auctionUI, .auction-wrapper, .screen {
-    position: relative;
-    z-index: 10;
     background: transparent !important;
+    position: relative;
+    z-index: 5;
 }
-
+3. Add Java
 
 
