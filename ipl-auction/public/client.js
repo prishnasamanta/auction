@@ -1997,21 +1997,23 @@ socket.on("submitResult", (res) => {
     }
 });
 // --- LEADERBOARD POPUP LOGIC ---
-let currentPopupData = null; // Store data to switch views
+let currentPopupData = null;
+
 function openSquadView(data) {
     currentPopupData = data;
     const overlay = document.getElementById("squadViewOverlay");
-  
-    // Default to Playing XI view
-    renderPopupContent('XI');
-  
+    
+    // Default to 'XI' view if they have submitted one, otherwise Full Squad
+    const initialMode = (data.xi && (data.xi.BAT || data.xi.WK)) ? 'XI' : 'FULL';
+    switchPopupView(initialMode); 
+    
     overlay.classList.remove("hidden");
 }
 window.switchPopupView = function(mode) {
-    // Toggle Button Styles
     const btnXI = document.getElementById('btnShowXI');
     const btnFull = document.getElementById('btnShowFull');
-  
+
+    // Toggle Active Classes
     if(mode === 'XI') {
         btnXI.classList.add('active');
         btnFull.classList.remove('active');
@@ -2019,25 +2021,48 @@ window.switchPopupView = function(mode) {
         btnFull.classList.add('active');
         btnXI.classList.remove('active');
     }
-  
+
     renderPopupContent(mode);
 }
+
+// --- 3. RENDER CONTENT (The Core Fix) ---
 function renderPopupContent(mode) {
     const container = document.getElementById("squadCaptureArea");
+    if(!container || !currentPopupData) return;
+
     const d = currentPopupData;
-    const fullSquad = allSquads[d.team] || [];
+    // Fallback: If spectator doesn't have live squad data, fetch from allSquads global
+    const fullSquad = allSquads[d.team] || []; 
     const safePurse = Number(d.purse || teamPurse[d.team] || 0);
 
+    container.innerHTML = "";
+
     if (mode === 'XI') {
-        container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
+        // Check if XI data exists (Spectators might need to fetch this if not loaded)
+        if (d.xi && (d.xi.WK || d.xi.BAT)) {
+             // Reuse the exact same card generator as the Submit page
+             container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
+        } else {
+             container.innerHTML = `
+                <div style="text-align:center; padding:40px; color:#94a3b8; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+                    <div style="font-size:3rem; margin-bottom:10px; opacity:0.5;">🏏</div>
+                    <h3 style="margin:0; color:#fff;">XI Not Available</h3>
+                    <p style="font-size:0.9rem;">This team has not submitted their playing XI yet.</p>
+                </div>`;
+        }
     } else {
-        // PASS TRUE AS THE LAST ARGUMENT FOR POPUP MODE
-        // This triggers the 2-column layout
+        // Full Squad View (2 Column Layout)
         container.innerHTML = generateFullSquadHTML(d.team, fullSquad, safePurse, "Manager", true);
-        
     }
 }
 
+// --- 4. DATASET SELECTION HELPER ---
+window.selectDataset = function(id, el) {
+    document.getElementById('selectedSetId').value = id;
+    // Visually update selection
+    document.querySelectorAll('.dataset-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+}
 // --- FIX: LEADERBOARD DOWNLOAD BUTTON ---
 window.downloadPopupCard = function() {
     if (!currentPopupData || !currentPopupData.team) return;
@@ -2745,6 +2770,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
