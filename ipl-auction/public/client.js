@@ -2086,219 +2086,194 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
 
-    // 2. Helper: Render Rows (Premium Styling)
-    const renderRows = (list) => list.map(p => {
-        const safeName = p.name.replace(/'/g, "\\'");
-        return `
-        <div class="pro-player-card" 
-             onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')">
-            
-            <div class="pp-left">
-                <span class="pp-role-dot" style="background:${teamColor}"></span>
-                <span class="pp-name">
-                    ${p.foreign ? '<span class="plane-icon">✈️</span>' : ''}${p.name}
-                </span>
-            </div>
-            
-            <div class="pp-right">
-                <span class="pp-rating">⭐${p.rating}</span>
-                <span class="pp-price">₹${p.price.toFixed(2)}</span>
-            </div>
-        </div>
-    `}).join('');
+    // 2. Helper: Render Player Rows
+    const renderRows = (list) => {
+        if (!list || list.length === 0) return '<div class="empty-slot">-</div>';
+        return list.map(p => {
+            const safeName = p.name.replace(/'/g, "\\'");
+            return `
+            <div class="p-row" onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')">
+                <div class="p-left">
+                    <span class="p-role-indicator" style="background:${teamColor}"></span>
+                    <span class="p-name">${p.foreign ? '✈️ ' : ''}${p.name}</span>
+                </div>
+                <div class="p-right">
+                    <span class="p-price">₹${p.price.toFixed(2)}</span>
+                </div>
+            </div>`;
+        }).join('');
+    };
 
-    // 3. Return HTML with Embedded CSS
+    // 3. Return HTML with Embedded Responsive CSS
     return `
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&display=swap');
+        /* --- PREMIUM CARD CSS --- */
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700;900&display=swap');
 
-        .squad-view-wrapper {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            overflow: hidden; /* Hide overflow from scaling */
-            padding: 10px;
-        }
-
-        .team-sheet-card {
-            width: 900px; /* Fixed "Premium" Width */
-            min-width: 900px;
-            background: linear-gradient(145deg, #0f172a 0%, #020617 100%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid ${teamColor};
-            border-radius: 16px;
-            position: relative;
+        .premium-card-wrapper {
             font-family: 'Exo 2', sans-serif;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            border: 2px solid #facc15;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 1000px; /* PC Max Width */
+            margin: 0 auto;
             overflow: hidden;
-            transform-origin: top center;
-            transition: transform 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            position: relative;
         }
 
-        /* WATERMARK */
-        .card-watermark {
-            position: absolute;
-            top: 50%; left: 50%;
+        /* Watermark */
+        .premium-watermark {
+            position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             width: 60%; height: 60%;
             background-image: url('${logoUrl}');
             background-size: contain;
             background-repeat: no-repeat;
-            opacity: 0.05;
+            opacity: 0.08;
             filter: grayscale(100%);
             pointer-events: none;
+            z-index: 0;
         }
 
-        /* HEADER */
-        .sheet-header {
-            background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(0,0,0,0.2));
-            padding: 20px 0;
+        /* Header */
+        .premium-header {
+            position: relative; z-index: 2;
+            background: rgba(0,0,0,0.4);
+            padding: 15px;
             text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            position: relative;
-            z-index: 2;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .sheet-title {
-            margin: 0;
-            font-size: 2.8rem;
-            color: #fff;
-            text-transform: uppercase;
-            font-weight: 900;
-            letter-spacing: 2px;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        .prem-title {
+            margin: 0; font-size: 2.2rem; color: #fff; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
-        .sheet-subtitle {
-            color: #fbbf24;
-            font-size: 0.9rem;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-top: 5px;
-            opacity: 0.9;
+        .prem-subtitle {
+            color: #facc15; font-size: 0.85rem; letter-spacing: 3px;
+            text-transform: uppercase; font-weight: 700; margin-top: 4px;
         }
-        .sheet-stats {
-            margin-top: 12px;
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-        }
-        .stat-badge {
-            background: rgba(255,255,255,0.1);
-            padding: 4px 12px;
-            border-radius: 20px;
-            color: #e2e8f0;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .prem-stats {
+            display: flex; justify-content: center; gap: 20px;
+            margin-top: 8px; color: #cbd5e1; font-size: 0.9rem; font-weight: 600;
         }
 
-        /* BODY GRID */
-        .pro-body {
-            padding: 20px;
+        /* The Grid Layout */
+        .premium-body {
+            position: relative; z-index: 2;
+            padding: 15px;
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            position: relative;
-            z-index: 2;
+            grid-template-columns: repeat(4, 1fr); /* Default: 4 Columns (PC) */
+            gap: 12px;
         }
-        .pro-col-header {
-            color: ${teamColor};
-            text-align: center;
+
+        /* Column Styling */
+        .prem-col {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex; flex-direction: column;
+        }
+        .prem-col-head {
+            text-align: center; color: ${teamColor};
+            font-weight: 800; font-size: 0.9rem; letter-spacing: 1px;
+            border-bottom: 2px solid ${teamColor};
+            padding-bottom: 5px; margin-bottom: 8px;
             text-transform: uppercase;
-            font-weight: 800;
-            font-size: 1rem;
-            padding-bottom: 8px;
-            border-bottom: 2px solid rgba(255,255,255,0.1);
-            margin-bottom: 10px;
-            letter-spacing: 1px;
         }
 
-        /* PLAYER CARDS */
-        .pro-player-card {
-            background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
-            padding: 6px 10px;
-            margin-bottom: 4px;
-            border-radius: 6px;
-            border-left: 2px solid ${teamColor};
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        /* Player Row Styling */
+        .p-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.05);
+            padding: 6px 8px; margin-bottom: 4px;
+            border-radius: 4px; cursor: pointer; transition: 0.2s;
         }
-        .pro-player-card:hover {
-            background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-            transform: translateX(2px);
-        }
-        .pp-left { display: flex; align-items: center; gap: 8px; }
-        .pp-name { font-weight: 700; color: #f1f5f9; font-size: 0.85rem; }
-        .plane-icon { margin-right: 4px; font-size: 0.8rem; }
-        .pp-right { display: flex; flex-direction: column; align-items: flex-end; line-height: 1; }
-        .pp-rating { font-size: 0.65rem; color: #94a3b8; margin-bottom: 2px; }
-        .pp-price { color: #4ade80; font-size: 0.8rem; font-weight: 700; font-family: monospace; }
+        .p-row:hover { background: rgba(255,255,255,0.15); }
         
-        .sheet-footer {
-            padding: 12px;
-            text-align: center;
-            color: #475569;
-            font-size: 0.7rem;
+        .p-left { display: flex; align-items: center; gap: 6px; overflow: hidden; }
+        .p-role-indicator { width: 4px; height: 12px; border-radius: 2px; }
+        .p-name { 
+            color: #fff; font-weight: 700; font-size: 0.8rem; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        }
+        .p-right { flex-shrink: 0; }
+        .p-price { color: #4ade80; font-weight: 700; font-size: 0.8rem; font-family: monospace; }
+        .empty-slot { text-align: center; color: #475569; font-size: 0.8rem; padding: 5px; }
+
+        .premium-footer {
+            position: relative; z-index: 2;
+            background: rgba(0,0,0,0.4);
+            color: #64748b; font-size: 0.7rem; text-align: center;
+            padding: 8px;
             letter-spacing: 1px;
-            border-top: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* 📱 MOBILE RESPONSIVENESS: MAGIC SCALING */
-        /* On screens smaller than the card width (900px), scale it down */
-        @media (max-width: 920px) {
-            .team-sheet-card {
-                /* Calculate scale: Screen Width / Card Width */
-                /* We leave a little margin (95vw) */
-                transform: scale(calc(96vw / 900));
-                margin-left: calc((96vw - 900px) / 2); /* Center it after scaling */
-                margin-bottom: -40%; /* Remove huge gap caused by scaling */
-                margin-top: -20px;
+        /* --- 📱 MOBILE RESPONSIVE MAGIC --- */
+        @media (max-width: 768px) {
+            .premium-card-wrapper {
+                max-width: 100%; /* Use full width of phone */
+                border-radius: 8px;
+                border-width: 1px;
             }
+            .premium-header { padding: 10px; }
+            .prem-title { font-size: 1.5rem; }
+            .prem-subtitle { font-size: 0.7rem; letter-spacing: 1px; }
+            .prem-stats { font-size: 0.75rem; gap: 10px; }
+
+            /* SWITCH TO 2x2 GRID */
+            .premium-body {
+                grid-template-columns: 1fr 1fr; /* 2 Columns */
+                gap: 8px;
+                padding: 10px;
+            }
+            
+            /* Make rows slightly smaller for tight screens */
+            .p-row { padding: 4px 6px; }
+            .p-name { font-size: 0.75rem; }
+            .p-price { font-size: 0.75rem; }
         }
     </style>
 
-    <div class="squad-view-wrapper">
-        <div class="team-sheet-card full-squad-mode" id="squad-card-capture">
-            
-            <div class="card-watermark"></div>
-
-            <div class="sheet-header">
-                <h2 class="sheet-title">${teamName}</h2>
-                <div class="sheet-subtitle">OFFICIAL SQUAD • ${owner || 'Manager'}</div>
-                <div class="sheet-stats">
-                    <div class="stat-badge">💰 ₹${purse.toFixed(2)} Cr</div>
-                    <div class="stat-badge">👥 ${squad.length} / 25</div>
-                    <div class="stat-badge">✈️ ${foreignCount} Overseas</div>
-                </div>
+    <div class="premium-card-wrapper" id="squad-card-capture">
+        <div class="premium-watermark"></div>
+        
+        <div class="premium-header">
+            <h2 class="prem-title">${teamName}</h2>
+            <div class="prem-subtitle">OFFICIAL SQUAD • ${owner || 'Manager'}</div>
+            <div class="prem-stats">
+                <span>💰 ₹${purse.toFixed(2)} Cr</span>
+                <span>👥 ${squad.length}/25</span>
+                <span>✈️ ${foreignCount} OS</span>
             </div>
+        </div>
 
-            <div class="pro-body">
-                <div class="pro-col">
-                    <div class="pro-col-header">Wicket Keepers</div>
-                    ${renderRows(cat.WK)}
-                </div>
-                <div class="pro-col">
-                    <div class="pro-col-header">Batters</div>
-                    ${renderRows(cat.BAT)}
-                </div>
-                <div class="pro-col">
-                    <div class="pro-col-header">All Rounders</div>
-                    ${renderRows(cat.ALL)}
-                </div>
-                <div class="pro-col">
-                    <div class="pro-col-header">Bowlers</div>
-                    ${renderRows(cat.BOWL)}
-                </div>
+        <div class="premium-body">
+            <div class="prem-col">
+                <div class="prem-col-head">WK</div>
+                ${renderRows(cat.WK)}
             </div>
             
-            <div class="sheet-footer">
-                IPL AUCTION 2025 • GENERATED BY AUCTION DASHBOARD
+            <div class="prem-col">
+                <div class="prem-col-head">BAT</div>
+                ${renderRows(cat.BAT)}
             </div>
+
+            <div class="prem-col">
+                <div class="prem-col-head">ALL</div>
+                ${renderRows(cat.ALL)}
+            </div>
+
+            <div class="prem-col">
+                <div class="prem-col-head">BOWL</div>
+                ${renderRows(cat.BOWL)}
+            </div>
+        </div>
+
+        <div class="premium-footer">
+            IPL AUCTION 2025 • GENERATED BY DASHBOARD
         </div>
     </div>`;
 }
@@ -2669,6 +2644,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
