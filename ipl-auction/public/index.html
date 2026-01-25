@@ -240,7 +240,7 @@
 
     <header class="topbar">
         <div class="top-left">
-            <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" title="Tap to Copy">
+            <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" style="background:transparent;">
                 <span id="roomCodeText" style="color:var(--primary); font-family:monospace; font-size:1rem; font-weight:800; letter-spacing:1px;">---</span>
             </div>
 
@@ -280,6 +280,7 @@
         </div>
     </header>
 
+
     <div class="auction-wrapper">
         
         <div class="auction-center">
@@ -309,7 +310,7 @@
 
                     <div class="ac-status-box">
                         <div id="timer" class="ac-timer-box">15</div>
-                        <div id="currentBidder" class="hidden" style="font-size:0.8rem; font-weight:700; color:#fff; background:#22c55e; padding:2px 6px; border-radius:4px; text-transform:uppercase;">
+                        <div id="currentBidder" class="ac-leader-badge hidden">
                             <span id="bidderName">---</span>
                         </div>
                     </div>
@@ -330,6 +331,7 @@
         </div>
 
         <div id="commandCenter" class="glass">
+            
             <div class="cc-tabs">
                 <button class="cc-tab-btn" onclick="switchCcTab('sets')">📦 Sets</button>
                 <button class="cc-tab-btn active" onclick="switchCcTab('feed')">💬 Feed</button>
@@ -366,15 +368,15 @@
                     </div>
                 </div>
             </div>
+            
         </div>
 
-    </div>
-
-    <footer class="app-footer-fixed">
+    </div> <footer class="app-footer-fixed">
         IPL AUCTION SIM • LIVE BETA
     </footer>
 
 </section>
+
     <section id="playingXI" class="screen hidden">
         <div style="max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh;">
             
@@ -653,6 +655,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
