@@ -858,7 +858,12 @@ socket.on("newPlayer", d => {
     auctionPaused = false;
     lastBidTeam = null;
     lastTickSecond = null;
-  
+    const overlay = document.getElementById('resultOverlay');
+    if(overlay) {
+        overlay.classList.remove("active");
+        overlay.classList.add("hidden");
+        overlay.innerHTML = ""; // Clear content
+    }
     document.getElementById('resultOverlay').classList.add('hidden');
     document.getElementById('currentBidder').classList.add('hidden');
     document.getElementById("auctionCard").classList.remove("pulse");
@@ -872,18 +877,17 @@ function updatePlayerCard(player, bid) {
     const metaEl = document.getElementById("playerMeta");
     const bidEl = document.getElementById("bid");
 
-    if (nameEl) {
+if (nameEl) {
         nameEl.innerText = player.name;
         
-        // Font Sizing Logic
-        // Reset
-        nameEl.style.fontSize = "1.8rem"; 
-        
-        // Check Length
-        if (player.name.length > 20) {
-            nameEl.style.fontSize = "1.1rem"; // Very small for huge names
-        } else if (player.name.length > 15) {
-            nameEl.style.fontSize = "1.4rem"; // Medium small
+        // 🔴 DYNAMIC FONT SIZING LOGIC
+        const len = player.name.length;
+        if (len > 18) {
+            nameEl.style.fontSize = "1.1rem"; // Very Long (e.g. R. van der Dussen)
+        } else if (len > 14) {
+            nameEl.style.fontSize = "1.4rem"; // Long (e.g. Suryakumar Yadav)
+        } else {
+            nameEl.style.fontSize = "1.8rem"; // Normal (e.g. Virat Kohli)
         }
     }
     // 2. Update Meta (Center Item: Role & Rating)
@@ -926,16 +930,20 @@ socket.on("bidUpdate", data => {
     document.getElementById('bidderName').innerText = data.team;
     badge.style.backgroundColor = TEAM_COLORS[data.team] || "#22c55e";
 
-    // 🔴 BLINK ANIMATION FIX
-    const card = document.getElementById("auctionCard");
-    card.classList.add("pulse");
-    // Remove class after 500ms so it can blink again next time
-    setTimeout(() => {
-        card.classList.remove("pulse");
-    }, 500);
+    // 🔴 CONDITIONAL BLINK LOGIC
+    if (data.team === myTeam) {
+        const card = document.getElementById("auctionCard");
+        card.classList.remove("pulse-green"); // Reset
+        void card.offsetWidth; // Force Reflow
+        card.classList.add("pulse-green"); // Add
+        
+        // Remove after animation so it can trigger again
+        setTimeout(() => card.classList.remove("pulse-green"), 500);
+    }
 
     updateBidButton({ bid: data.bid, player: currentPlayer });
 });
+
 
 
 function updateBidButton(state) {
@@ -992,16 +1000,23 @@ safePlay(soundUnsold);
     showResultStamp("UNSOLD", "PASSED IN", "#f43f5e", true);
 });
 function showResultStamp(title, detail, color, isUnsold) {
-    bidBtn.disabled = true;
+    // Disable button immediately
+    const btn = document.getElementById("bidBtn");
+    if(btn) btn.disabled = true;
+
     const overlay = document.getElementById('resultOverlay');
-    const t = document.getElementById('stampTitle');
-    const d = document.getElementById('stampDetail');
-    const c = document.querySelector('.stamp-container');
-    t.innerText = title;
-    d.innerText = detail;
-    c.style.borderColor = isUnsold ? "" : color;
-    if(isUnsold) c.classList.add('unsold'); else c.classList.remove('unsold');
-    overlay.classList.remove('hidden');
+    if(!overlay) return;
+
+    // 🔴 NEW PREMIUM HTML STRUCTURE
+    overlay.innerHTML = `
+        <div class="premium-stamp" style="color:${color}; border-color:${color};">
+            ${title}
+            <div style="color:#fff;">${detail}</div>
+        </div>
+    `;
+
+    overlay.classList.remove("hidden");
+    overlay.classList.add("active");
 }
 /* ================================================= */
 /* =========== 5. LOGS & CHAT (IMPROVED) =========== */
@@ -2441,24 +2456,42 @@ window.forceAssign = function(playerName, teamName) {
         setTimeout(() => btn.innerText = originalText, 1000);
     }
 };
-window.copyRoomCode = function() {
-    const code = document.getElementById("roomCodeText").innerText;
-    if(!code) return;
+window.copyRoomCode = async function() {
+    // Get code from global variable or text
+    const code = roomCode || document.getElementById("roomCodeText").innerText;
+    const url = window.location.href;
     
-    navigator.clipboard.writeText(code).then(() => {
-        const badge = document.getElementById("roomCodeBadge");
-        const original = badge.innerHTML;
-        
-        // Visual Feedback
-        badge.style.borderColor = "#4ade80";
-        badge.innerHTML = `<span style="color:#4ade80">COPIED!</span>`;
-        
-        setTimeout(() => {
-            badge.innerHTML = original;
-            badge.style.borderColor = "";
-        }, 1500);
-    });
+    // Share Data
+    const shareData = {
+        title: 'IPL Auction Live',
+        text: `Join my IPL Auction room! Code: ${code}`,
+        url: url
+    };
+
+    // Try Native Share first (Mobile)
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else {
+            // Fallback to Clipboard (PC)
+            await navigator.clipboard.writeText(url);
+            
+            // Visual Feedback in the Header Badge
+            const badge = document.getElementById("roomCodeText");
+            const original = badge.innerText;
+            badge.innerText = "COPIED!";
+            badge.style.color = "#4ade80";
+            
+            setTimeout(() => {
+                badge.innerText = original;
+                badge.style.color = "var(--primary)";
+            }, 1500);
+        }
+    } catch (err) {
+        console.error("Share failed:", err);
+    }
 };
+
 // ==========================================
 // LANDING PAGE ANIMATIONS
 // ==========================================
@@ -2541,6 +2574,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
