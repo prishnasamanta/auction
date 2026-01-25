@@ -87,7 +87,76 @@ function safePlay(audioObj) {
         });
     }
 }
-window.onload = () => {
+window.onload = async () => {
+    // 1. Check URL for Room Code
+    const path = window.location.pathname;
+    const parts = path.split('/');
+    const urlCode = (parts[1] === 'room' && parts[2]) ? parts[2].toUpperCase() : null;
+
+    // 2. SETUP LISTENERS (Buttons)
+    setupEventListeners(); // (Move your existing btn onclicks here)
+
+    // 3. IF URL HAS CODE -> CHECK DATABASE
+    if (urlCode) {
+        try {
+            // Show loading state
+            document.getElementById("landing").innerHTML = "<h2 style='color:white; text-align:center; margin-top:20%'>Loading Room...</h2>";
+
+            // Fetch from Server API
+            const response = await fetch(`/api/room/${urlCode}`);
+            const result = await response.json();
+
+            // SCENARIO A: ROOM NOT FOUND
+            if (!result.exists) {
+                alert("❌ Room Expired or Invalid");
+                window.location.href = "/";
+                return;
+            }
+
+            // SCENARIO B: AUCTION ENDED (Show Summary Directly)
+            if (!result.active) {
+                console.log("📜 Loading Archived Room Data...");
+                
+                // 1. Populate Global Variables
+                allSquads = result.data.squads || {};
+                teamPurse = result.data.purses || {};
+                teamOwners = result.data.owners || {};
+                activeRules = result.data.rules || {};
+                roomCode = urlCode;
+
+                // 2. Setup UI
+                document.getElementById("landing").classList.add("hidden");
+                document.getElementById("auth").classList.add("hidden");
+                document.getElementById("auctionUI").classList.add("hidden");
+                
+                // 3. Render Summary
+                document.getElementById("postAuctionSummary").classList.remove("hidden");
+                renderPostAuctionSummary();
+                
+                // 4. Update URL
+                updateURL('summary');
+                return; // Stop here, don't connect socket
+            }
+
+            // SCENARIO C: AUCTION LIVE (Proceed to Login)
+            console.log("🟢 Room Active, proceeding to login...");
+            document.getElementById("landing").classList.add("hidden");
+            document.getElementById("auth").classList.remove("hidden");
+            switchAuthTab('join');
+            document.getElementById('code').value = urlCode;
+
+        } catch (err) {
+            console.error("API Error:", err);
+            // Fallback to normal flow if API fails
+            document.getElementById("landing").classList.remove("hidden");
+        }
+    } else {
+        // No code in URL -> Show Landing Page
+        document.getElementById("landing").classList.remove("hidden");
+    }
+
+    // 4. Fetch Public Rooms (Background)
+    socket.emit('getPublicRooms');
     // --- 1. SETUP EVENT LISTENERS ---
     const enterBtn = document.getElementById("enterBtn");
     const createBtn = document.getElementById("createBtn");
@@ -2176,12 +2245,12 @@ function renderPostAuctionSummary() {
     
     // RETRY LOGIC: If squads aren't loaded, try again in 500ms
     // This prevents the "Undefined" error if the user lands here directly
-    if (!allSquads || Object.keys(allSquads).length === 0) {
-        list.innerHTML = "<div style='text-align:center; color:#666; padding:20px;'>Loading results...</div>";
-        setTimeout(renderPostAuctionSummary, 500); 
+  if (!allSquads || Object.keys(allSquads).length === 0) {
+        list.innerHTML = "<div style='text-align:center; color:#94a3b8; padding:30px; font-family:monospace;'>fetching historical data...</div>";
+        // Retry logic is less critical now, but kept for safety
+        setTimeout(renderPostAuctionSummary, 1000);
         return;
     }
-
     list.innerHTML = "";
     const teams = Object.keys(allSquads).sort();
 
@@ -2432,6 +2501,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
