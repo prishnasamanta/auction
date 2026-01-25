@@ -2098,20 +2098,18 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     justify-content: center;
 }
 /* ================================================= */
-/* 💎 PREMIUM SQUAD CARD (PC = 4 Col, Mobile = 2x2)  */
+/* 💎 PREMIUM SQUAD CARD (Corrected Class-Based)     */
 /* ================================================= */
 
-/* Base Container */
-#premium-squad-card {
+/* Change #premium-squad-card to .premium-squad-card */
+.premium-squad-card {
     box-sizing: border-box;
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    /* Deep Navy Gradient Background */
     background: linear-gradient(145deg, #020617 0%, #0f172a 100%);
-    /* Dynamic Border Color via Variable */
     border: 2px solid var(--team-color, #facc15);
     border-radius: 16px;
     width: 100%;
-    max-width: 1000px; /* PC Max Width */
+    /* Remove fixed max-width so it fills the modal/popup */
     margin: 0 auto;
     overflow: hidden;
     position: relative;
@@ -2119,15 +2117,14 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     color: white;
 }
 
-/* Watermark (Logo Background) */
 .prem-watermark {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 60%; height: 60%;
+    width: 80%; height: 80%; /* Increased size */
     background-image: var(--watermark-url);
     background-size: contain;
     background-repeat: no-repeat;
-    opacity: 0.06;
+    opacity: 0.08;
     filter: grayscale(100%);
     z-index: 0;
     pointer-events: none;
@@ -2138,13 +2135,13 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     position: relative; z-index: 2;
     background: rgba(255,255,255,0.03);
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: 25px 20px;
+    padding: 20px 15px;
     text-align: center;
     backdrop-filter: blur(5px);
 }
 
 .prem-title {
-    margin: 0; font-size: 2.8rem; font-weight: 900; 
+    margin: 0; font-size: 2.2rem; font-weight: 900; 
     text-transform: uppercase; letter-spacing: 2px;
     color: #fff; text-shadow: 0 4px 15px rgba(0,0,0,0.5);
     line-height: 1;
@@ -2152,47 +2149,54 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 .prem-meta {
     color: var(--team-color, #facc15); 
-    font-size: 0.9rem; font-weight: 700; 
+    font-size: 0.8rem; font-weight: 700; 
     letter-spacing: 3px; text-transform: uppercase; margin-top: 8px;
     opacity: 0.9;
 }
 
 .prem-stats {
-    display: flex; justify-content: center; gap: 25px;
+    display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
     margin-top: 15px;
 }
 
 .stat-badge {
     background: rgba(255,255,255,0.1);
-    padding: 6px 14px; border-radius: 20px;
-    font-size: 0.9rem; font-weight: 600; color: #e2e8f0;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 0.8rem; font-weight: 600; color: #e2e8f0;
     border: 1px solid rgba(255,255,255,0.1);
+    white-space: nowrap;
 }
 
-/* Body Grid (The Layout Magic) */
+/* Body Grid */
 .prem-body {
     position: relative; z-index: 2;
-    padding: 20px;
+    padding: 15px;
     display: grid;
-    gap: 15px;
-    /* PC DEFAULT: 4 COLUMNS (Classic View) */
+    gap: 10px;
+    /* DEFAULT: 4 Columns (Good for Desktop Download) */
     grid-template-columns: repeat(4, 1fr);
+}
+
+/* 🟢 FORCE 2 COLUMNS IN POPUPS OR MOBILE */
+.premium-squad-card.narrow-view .prem-body,
+.modal-content .premium-squad-card .prem-body {
+    grid-template-columns: repeat(2, 1fr) !important;
 }
 
 /* Columns */
 .prem-col {
     background: rgba(0,0,0,0.2);
     border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 10px;
-    padding: 10px;
+    border-radius: 8px;
+    padding: 8px;
     display: flex; flex-direction: column;
 }
 
 .col-title {
     text-align: center; color: var(--team-color, #facc15);
-    font-weight: 800; font-size: 0.9rem; letter-spacing: 1px;
+    font-weight: 800; font-size: 0.8rem; letter-spacing: 1px;
     border-bottom: 2px solid var(--team-color, #facc15);
-    padding-bottom: 8px; margin-bottom: 10px;
+    padding-bottom: 6px; margin-bottom: 8px;
     text-transform: uppercase;
 }
 
@@ -2200,8 +2204,8 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .p-row {
     display: flex; justify-content: space-between; align-items: center;
     background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
-    padding: 8px 10px; margin-bottom: 5px;
-    border-radius: 6px; cursor: pointer;
+    padding: 6px 8px; margin-bottom: 4px;
+    border-radius: 4px; cursor: pointer;
     transition: transform 0.2s, background 0.2s;
     border-left: 2px solid transparent;
 }
@@ -2209,48 +2213,27 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .p-row:hover {
     background: rgba(255,255,255,0.1);
     border-left: 2px solid var(--team-color, #facc15);
-    transform: translateX(4px);
+    transform: translateX(2px);
 }
 
-.p-info { display: flex; align-items: center; gap: 8px; overflow: hidden; }
-.p-dot { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 5px var(--team-color); }
-.p-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; color: #f1f5f9; }
-.p-cost { font-size: 0.85rem; font-weight: 700; color: #4ade80; font-family: monospace; }
-.empty-slot { text-align: center; color: #475569; font-size: 0.8rem; padding: 10px; font-style: italic; }
+.p-info { display: flex; align-items: center; gap: 6px; overflow: hidden; flex: 1; }
+.p-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--team-color); flex-shrink: 0;}
+.p-name { font-size: 0.8rem; font-weight: 600; white-space: nowrap; color: #f1f5f9; overflow: hidden; text-overflow: ellipsis; }
+.p-cost { font-size: 0.8rem; font-weight: 700; color: #4ade80; font-family: monospace; margin-left: 5px;}
+.empty-slot { text-align: center; color: #475569; font-size: 0.75rem; padding: 8px; font-style: italic; }
 
-/* Footer */
 .prem-footer {
     position: relative; z-index: 2;
     background: rgba(0,0,0,0.3);
-    text-align: center; padding: 12px;
-    font-size: 0.75rem; color: #64748b; letter-spacing: 1px;
+    text-align: center; padding: 10px;
+    font-size: 0.7rem; color: #64748b; letter-spacing: 1px;
     border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-/* ========================================= */
-/* 📱 MOBILE RESPONSIVENESS (2x2 Grid)       */
-/* ========================================= */
+/* Mobile Media Query */
 @media (max-width: 800px) {
-    #premium-squad-card {
-        border-radius: 0; /* Full width feel */
-        border-width: 2px 0; /* Only top/bottom borders */
-        box-shadow: none;
-    }
-    .prem-header { padding: 15px; }
-    .prem-title { font-size: 2rem; }
-    .prem-meta { font-size: 0.75rem; }
-    .prem-stats { gap: 10px; flex-wrap: wrap; }
-    .stat-badge { font-size: 0.8rem; padding: 4px 10px; }
-
-    /* SWITCH TO 2x2 GRID */
-    /* This ensures names don't get crushed */
     .prem-body {
-        grid-template-columns: 1fr 1fr; 
-        gap: 10px; padding: 10px;
+        grid-template-columns: repeat(2, 1fr); 
     }
-    
-    /* Slightly compact rows for mobile */
-    .p-name { font-size: 0.75rem; } 
-    .p-cost { font-size: 0.75rem; }
 }
 
