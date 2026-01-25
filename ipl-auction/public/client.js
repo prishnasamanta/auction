@@ -2585,7 +2585,18 @@ function updatePlayerCard(player, bid) {
 
 // Call this when the page loads
 document.addEventListener("DOMContentLoaded", () => {
-    initLandingAnimations();
+    const canvas = document.getElementById('starback-canvas');
+    if (canvas) {
+        new Starback(canvas, {
+            type: 'dot',
+            quantity: 100,
+            direction: 225,
+            backgroundColor: ['#0f172a', '#1e1b4b'], // Your Deep Navy/Indigo colors
+            randomOpacity: true,
+            starSize: [0, 2],
+            speed: 0.5
+        });
+    }
 });
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2599,6 +2610,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
