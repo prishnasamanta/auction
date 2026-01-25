@@ -51,7 +51,7 @@ body {
   flex: 1; /* Takes all available space between header/footer */
   overflow-y: auto; /* Enables scrolling inside this area */
   -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
-  padding-bottom: 20px;
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1072,7 +1072,6 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     height: auto !important; 
     overflow-y: auto !important;
     display: block; 
-    padding-bottom: 20px; /* Space above footer */
   }
 
   /* 2. AUCTION PAGE */
@@ -3416,18 +3415,6 @@ body {
         font-size: 0.7rem;
         padding: 0 10px;
     }
-}
-
-/* 🚑 FOOTER GAP FIX */
-#auctionUI.screen {
-    padding-bottom: 0 !important; /* Removes the 20px gap */
-}
-
-/* Ensure Footer is flushed to bottom */
-.app-footer {
-    margin-bottom: 0 !important;
-    /* Optional: If the text feels too high inside the footer */
-    padding-bottom: env(safe-area-inset-bottom, 10px); 
 }
 
 
