@@ -872,39 +872,38 @@ socket.on("newPlayer", d => {
     updateBidButton({ bid: d.bid, player: d.player});
 });
 function updatePlayerCard(player, bid) {
-    // 1. Update Name (Big Text)
-   const nameEl = document.getElementById("playerName");
+    const nameEl = document.getElementById("playerName");
     const metaEl = document.getElementById("playerMeta");
     const bidEl = document.getElementById("bid");
 
-if (nameEl) {
+    if (nameEl) {
         nameEl.innerText = player.name;
         
-        // 🔴 DYNAMIC FONT SIZING LOGIC
+        // 🔴 LOGIC: Minimize text size if name is long
         const len = player.name.length;
+        
+        // Reset base size
+        nameEl.style.fontSize = "1.8rem"; 
+        
         if (len > 18) {
-            nameEl.style.fontSize = "1.1rem"; // Very Long (e.g. R. van der Dussen)
-        } else if (len > 14) {
-            nameEl.style.fontSize = "1.4rem"; // Long (e.g. Suryakumar Yadav)
-        } else {
-            nameEl.style.fontSize = "1.8rem"; // Normal (e.g. Virat Kohli)
+            nameEl.style.fontSize = "1.1rem"; // Very Long Name -> Small Font
+        } else if (len > 12) {
+            nameEl.style.fontSize = "1.4rem"; // Medium Long -> Medium Font
         }
+        // Else stays 1.8rem
     }
-    // 2. Update Meta (Center Item: Role & Rating)
-    if(metaEl) {
-        // Format: "BAT • ⭐85"
+
+    if (metaEl) {
         metaEl.innerText = `${player.role} • ⭐${player.rating}`;
-      
-        // Optional: Color code the Role
-        if(player.role === "BAT") metaEl.style.color = "#facc15"; // Yellow
-        else if(player.role === "BOWL" || player.role === "PACE" || player.role === "SPIN") metaEl.style.color = "#38bdf8"; // Blue
-        else if(player.role === "ALL") metaEl.style.color = "#a855f7"; // Purple
-        else if(player.role === "WK") metaEl.style.color = "#fb923c"; // Orange
-        else metaEl.style.color = "#cbd5e1"; // Default
+        const r = player.role;
+        metaEl.style.color = (r==="BAT"?"#facc15" : r.includes("BOWL")?"#38bdf8" : r==="ALL"?"#a855f7" : r==="WK"?"#fb923c" : "#ccc");
     }
-    // 3. Update Bid Amount
-    if(bidEl) bidEl.innerText = `₹${bid.toFixed(2)} Cr`;
+
+    if (bidEl) {
+        bidEl.innerText = `₹${bid.toFixed(2)} Cr`;
+    }
 }
+
 socket.on("timer", t => {
     document.getElementById("timer").innerText = "" + t;
     if(auctionLive && !auctionPaused && t <= 3 && t > 0 && t !== lastTickSecond) {
@@ -2574,6 +2573,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
