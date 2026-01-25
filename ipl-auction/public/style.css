@@ -3418,6 +3418,18 @@ body {
     }
 }
 
+/* 🚑 FOOTER GAP FIX */
+#auctionUI.screen {
+    padding-bottom: 0 !important; /* Removes the 20px gap */
+}
+
+/* Ensure Footer is flushed to bottom */
+.app-footer {
+    margin-bottom: 0 !important;
+    /* Optional: If the text feels too high inside the footer */
+    padding-bottom: env(safe-area-inset-bottom, 10px); 
+}
+
 
 
 
