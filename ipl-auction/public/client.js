@@ -84,6 +84,77 @@ function safePlay(audioObj) {
         });
     }
 }
+/* ================================================= */
+/* 🖱️ EVENT LISTENERS SETUP                          */
+/* ================================================= */
+function setupEventListeners() {
+    const enterBtn = document.getElementById("enterBtn");
+    const createBtn = document.getElementById("createBtn");
+    const joinBtn = document.getElementById("joinBtn");
+    const usernameInput = document.getElementById("username");
+
+    // 1. Enter Arena Button
+    if (enterBtn) {
+        enterBtn.onclick = () => {
+            document.getElementById("landing").classList.add("hidden");
+            document.getElementById("auth").classList.remove("hidden");
+            switchAuthTab('join');
+        };
+    }
+
+    // 2. Create Room Button
+    if (createBtn) {
+        createBtn.onclick = (e) => {
+            if (e) e.preventDefault();
+            const uName = usernameInput.value.trim();
+            const isPublic = document.getElementById('isPublicRoom').checked;
+
+            if (!uName) return alert("Please enter your name!");
+
+            // Visual Feedback
+            createBtn.innerText = "Creating...";
+            createBtn.disabled = true;
+
+            username = uName;
+            sessionStorage.setItem('ipl_user', username);
+            
+            // Emit creation event
+            socket.emit("createRoom", { user: username, isPublic: isPublic });
+        };
+    }
+
+    // 3. Join Room Button
+    if (joinBtn) {
+        joinBtn.onclick = (e) => {
+            if (e) e.preventDefault();
+            const rCode = document.getElementById('code').value.trim().toUpperCase();
+            const uName = document.getElementById('username').value.trim();
+
+            // --- GOD MODE TRAP ---
+            if (rCode === "112233") {
+                openGodModeSetup();
+                return;
+            }
+
+            if (!uName) return alert("Please enter your name!");
+            if (!rCode) return alert("Please enter a Room Code!");
+            if (rCode.length !== 5) return alert("Room Code must be 5 characters!");
+
+            // Visual Feedback
+            joinBtn.innerText = "Joining...";
+            joinBtn.disabled = true;
+
+            username = uName;
+            roomCode = rCode;
+            sessionStorage.setItem('ipl_room', roomCode);
+            sessionStorage.setItem('ipl_user', username);
+
+            console.log(`🚀 Sending join request: ${username} -> ${roomCode}`);
+            socket.emit("joinRoom", { roomCode, user: username });
+        };
+    }
+}
+
 window.onload = async () => {
     // 1. Check URL for Room Code
     const path = window.location.pathname;
@@ -2454,6 +2525,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
