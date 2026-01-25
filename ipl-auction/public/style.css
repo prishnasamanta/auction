@@ -3438,35 +3438,35 @@ body {
 }
 body {
     margin: 0;
+    padding: 0;
     width: 100%;
-    height: 100dvh;
+    height: 100dvh; /* Mobile Viewport Fix */
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
     
-    /* Deep Space Base Color (Static) */
+    /* 1. Deep Space Base Color (Static Background) */
     background: radial-gradient(circle at bottom, #1e1b4b 0%, #020617 60%, #000000 100%);
     
     color: var(--text-main);
     font-family: var(--font-body);
+    position: relative;
 }
 
-/* Position the canvas behind everything */
+/* 2. The Particle Canvas (Fixed Behind Everything) */
 #bg-canvas {
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 0; /* Behind UI */
-    pointer-events: none; /* Let clicks pass through */
-    opacity: 0.6; /* Adjust brightness of particles */
+    top: 0; 
+    left: 0;
+    width: 100vw; 
+    height: 100vh;
+    z-index: -1; /* 🟢 CRITICAL: Puts canvas BEHIND the text */
+    pointer-events: none; /* Allows clicking through to buttons */
+    opacity: 0.8; /* Visibility of stars */
 }
 
-/* Ensure UI is transparent so particles show through */
+/* 3. Make App Transparent so Stars Show Through */
 #auctionUI, .auction-wrapper, .screen {
     background: transparent !important;
     position: relative;
-    z-index: 5;
+    z-index: 10;
 }
-3. Add Java
-
 
