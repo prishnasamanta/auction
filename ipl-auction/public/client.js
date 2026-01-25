@@ -1951,18 +1951,13 @@ socket.on("leaderboard", (board) => {
         });
     }
 });
-// --- SHARED HELPER: GENERATE 4-COLUMN SQUAD CARD HTML ---
-/* ================================================= */
-/* 🛠️ SQUAD CARD UTILITIES (VIEW & DOWNLOAD) */
-/* ================================================= */
-// 1. SHARED HTML GENERATOR (Returns High-Res HTML String)
-// 1. SHARED HTML GENERATOR (Clickable & Responsive)
+// 1. SHARED HTML GENERATOR (Compact & Viewable)
 function generateFullSquadHTML(teamName, squad, purse, owner) {
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[teamName] || '#fff';
     const logoUrl = `/logos/${teamName}.png`;
 
-    // Categorize players
+    // Categorize
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
         let r = p.role;
@@ -1970,69 +1965,85 @@ function generateFullSquadHTML(teamName, squad, purse, owner) {
         if (cat[r]) cat[r].push(p); else cat.BOWL.push(p);
     });
 
-    // Helper to render rows (includes Click Logic + Ratings)
+    // Helper: Compact Rows
     const renderRows = (list) => list.map(p => {
-        // Safe name for onclick
         const safeName = p.name.replace(/'/g, "\\'");
-        
         return `
         <div class="pro-player-card clickable-row" 
              onclick="viewPlayerFromCard('${safeName}', '${p.role}', ${p.rating}, ${p.foreign}, ${p.price}, '${teamName}')"
-             style="background: rgba(255,255,255,0.05); padding: 6px; margin-bottom: 4px; border-radius: 4px; border-left: 3px solid ${teamColor}; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+             style="
+                background: rgba(255,255,255,0.05); 
+                padding: 4px 8px; /* Tighter Padding */
+                margin-bottom: 2px; /* Tighter Margin */
+                border-radius: 4px; 
+                border-left: 3px solid ${teamColor}; 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center; 
+                cursor: pointer;
+                min-height: 28px;">
             
-            <div class="pp-left" style="display:flex; align-items:center; gap:6px;">
-                <span class="pp-name" style="font-weight: bold; color: #fff; font-size: 0.85rem;">
+            <div class="pp-left" style="display:flex; align-items:center; gap:5px;">
+                <span class="pp-name" style="font-weight: bold; color: #fff; font-size: 0.75rem;">
                     ${p.foreign ? '✈️ ' : ''}${p.name}
                 </span>
-                <span style="font-size:0.7rem; color:#fbbf24;">⭐${p.rating}</span>
+                <span style="font-size:0.65rem; color:#fbbf24;">⭐${p.rating}</span>
             </div>
             
             <div class="pp-right">
-                <span class="pp-price" style="color: #4ade80; font-size: 0.85rem;">₹${p.price.toFixed(2)}</span>
+                <span class="pp-price" style="color: #4ade80; font-size: 0.75rem;">₹${p.price.toFixed(2)}</span>
             </div>
         </div>
     `}).join('');
 
-    // Return the MASTER HTML Layout (1000px wide default)
     return `
-    <div class="team-sheet-card full-squad-mode" style="--team-logo-url: url('${logoUrl}'); width: 1000px; background-color: #020617; border: 2px solid #facc15; border-radius: 16px; position: relative; overflow: hidden; font-family: 'Exo 2', sans-serif;">
+    <div class="team-sheet-card full-squad-mode" style="
+        --team-logo-url: url('${logoUrl}'); 
+        width: 800px; /* Reduced Width for better fit */
+        background-color: #020617; 
+        border: 2px solid #facc15; 
+        border-radius: 12px; 
+        position: relative; 
+        overflow: hidden; 
+        font-family: 'Exo 2', sans-serif;">
         
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 60%; background-image: url('${logoUrl}'); background-size: contain; background-repeat: no-repeat; opacity: 0.1; filter: grayscale(100%); pointer-events: none;"></div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50%; height: 50%; background-image: url('${logoUrl}'); background-size: contain; background-repeat: no-repeat; opacity: 0.1; filter: grayscale(100%); pointer-events: none;"></div>
 
-        <div class="sheet-header" style="background: rgba(0,0,0,0.5); padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2;">
-            <h2 class="sheet-title" style="margin: 0; font-size: 3rem; color: #fff; text-transform: uppercase;">${teamName}</h2>
-            <div class="sheet-subtitle" style="color: #facc15; font-size: 1rem; letter-spacing: 3px;">FULL SQUAD • ${owner || 'Manager'}</div>
-            <div style="margin-top: 10px; display: flex; justify-content: center; gap: 20px; color: #ccc; font-weight: bold;">
+        <div class="sheet-header" style="background: rgba(0,0,0,0.5); padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2;">
+            <h2 class="sheet-title" style="margin: 0; font-size: 2.2rem; color: #fff; text-transform: uppercase;">${teamName}</h2>
+            <div class="sheet-subtitle" style="color: #facc15; font-size: 0.9rem; letter-spacing: 2px;">FULL SQUAD • ${owner || 'Manager'}</div>
+            <div style="margin-top: 8px; display: flex; justify-content: center; gap: 20px; color: #ccc; font-weight: bold; font-size: 1rem;">
                 <span>💰 ₹${purse.toFixed(2)} Cr</span>
                 <span>👥 ${squad.length}</span>
                 <span>✈️ ${foreignCount} OS</span>
             </div>
         </div>
 
-        <div class="pro-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; position: relative; z-index: 2;">
+        <div class="pro-body" style="padding: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; position: relative; z-index: 2;">
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">WK</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">WK</div>
                 ${renderRows(cat.WK)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">BAT</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">BAT</div>
                 ${renderRows(cat.BAT)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">ALL</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">ALL</div>
                 ${renderRows(cat.ALL)}
             </div>
             <div class="pro-col">
-                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 10px;">BOWL</div>
+                <div class="pro-col-header" style="color: ${teamColor}; border-bottom: 2px solid ${teamColor}; font-weight: 800; margin-bottom: 8px; font-size: 0.9rem; text-align:center;">BOWL</div>
                 ${renderRows(cat.BOWL)}
             </div>
         </div>
         
-        <div class="sheet-footer" style="padding: 15px; text-align: center; color: #64748b; font-size: 0.8rem; background: rgba(0,0,0,0.5);">
+        <div class="sheet-footer" style="padding: 10px; text-align: center; color: #64748b; font-size: 0.7rem; background: rgba(0,0,0,0.5);">
             OFFICIAL SQUAD • GENERATED BY AUCTION DASHBOARD
         </div>
     </div>`;
 }
+
 // Helper for Leaderboard Card (Not for selection)
 function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
     const roles = { WK: [], BAT: [], ALL: [], BOWL: [] };
@@ -2071,35 +2082,10 @@ function generateCreativeCardHTML(teamName, players, rating, count, fullSquad) {
 // --- UPDATED: Smart Image Loader (Robust Version) ---
 function loadPlayerImage(imgEl, playerName) {
     if(!playerName) return;
-   
-    // 1. Prepare Name Variations
-    const raw = playerName.trim(); // "Virat Kohli"
-    const upperRaw = raw.toUpperCase(); // "VIRAT KOHLI"
-   
-    const noSpace = raw.replace(/\s+/g, ''); // "ViratKohli"
-    const upperNoSpace = noSpace.toUpperCase(); // "VIRATKOHLI"
-   
-    const withUnderscore = raw.replace(/\s+/g, '_'); // "Virat_Kohli"
     const upperUnderscore = withUnderscore.toUpperCase();// "VIRAT_KOHLI" <--- Matches your specific file
-   
-    const lower = noSpace.toLowerCase(); // "viratkohli"
-    // 2. Define the Candidate List (Priority Order)
     const candidates = [
         // A. YOUR SPECIFIC FORMAT (All Caps Name + Underscore + .png)
         `/players/${upperUnderscore}.png`, // VIRAT_KOHLI.png
-        `/players/${upperUnderscore}.PNG`, // VIRAT_KOHLI.PNG
-        // B. Standard Formats
-        `/players/${noSpace}.png`, // ViratKohli.png
-        `/players/${withUnderscore}.png`, // Virat_Kohli.png
-        `/players/${raw}.png`, // Virat Kohli.png
-        `/players/${lower}.png`, // viratkohli.png
-        // C. All Caps Extensions
-        `/players/${noSpace}.PNG`, // ViratKohli.PNG
-        `/players/${withUnderscore}.PNG`, // Virat_Kohli.PNG
-       
-        // D. JPG/JPEG Fallbacks
-        `/players/${upperUnderscore}.jpg`,
-        `/players/${noSpace}.jpg`
     ];
     const defaultImg = "https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png";
     // 3. Recursive Loader
@@ -2446,6 +2432,7 @@ function refreshGlobalUI() {
     updateHeaderNotice();
     updateAdminButtons(gameStarted);
 }
+
 
 
 
