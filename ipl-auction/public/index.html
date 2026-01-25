@@ -241,11 +241,11 @@
     <header class="topbar">
         <div class="top-left">
             <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" style="background:transparent;">
-                <span id="roomCodeText" style="color:var(--primary); font-family:monospace; font-size:1rem; font-weight:800; letter-spacing:1px;">---</span>
+                <span id="roomCodeText" style="color:var(--primary); font-family:monospace; font-size:0.9rem; font-weight:700; letter-spacing:1px;">---</span>
             </div>
 
             <div id="headerTeamBadge" class="header-badge hidden" style="border:none; padding-left:0;">
-                <span id="headerTeamName" style="font-weight:800; font-size:0.9rem; color:var(--gold);">---</span>
+                <span id="headerTeamName" style="font-weight:600; font-size:0.8rem; color:var(--gold);">---</span>
             </div>
 
             <div style="position: relative;">
@@ -309,7 +309,7 @@
                     </div>
 
                     <div class="ac-status-box">
-                        <div id="timer" class="ac-timer-box">15</div>
+                        <div id="timer" class="ac-timer-box">10</div>
                         <div id="currentBidder" class="ac-leader-badge hidden">
                             <span id="bidderName">---</span>
                         </div>
@@ -324,7 +324,7 @@
 
                     <button id="bidBtn" class="ac-main-bid-btn">
                         <span style="font-size:1.5rem; font-weight:800;">BID</span>
-                        <span id="btnIncText" style="font-size:0.75rem; font-family:monospace; opacity:0.8;">+0.05</span>
+                        <span id="btnIncText" style="font-size:0.75rem; font-family:monospace; opacity:0.8;"></span>
                     </button>
                 </div>
             </div>
@@ -668,6 +668,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
