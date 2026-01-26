@@ -712,8 +712,6 @@ function renderEmbeddedTeams(teams) {
             // Optimistic UI Update
             myTeam = team;
             sessionStorage.setItem('ipl_team', team);
-            
-            // Send to Server
             socket.emit("selectTeam", { team, user: username });
             
             // Update UI immediately
@@ -723,6 +721,27 @@ function renderEmbeddedTeams(teams) {
             } else {
                 document.getElementById("embeddedTeamList").classList.add("hidden");
                 document.getElementById("waitingForHostMsg").classList.remove("hidden");
+                waitMsg.classList.remove("hidden");
+                waitMsg.innerHTML = `
+        <div style="text-align:center;">
+            <h1 style="font-size:3rem; margin:0;">${team}</h1>
+            <p style="color:#4ade80; margin-top:0;">✅ YOU ARE THE OWNER</p>
+            
+            <div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                <div style="color:#aaa; font-size:0.8rem; margin-bottom:5px;">INVITE FRIENDS</div>
+                <div style="font-family:monospace; font-size:1.2rem; color:#fff; letter-spacing:2px; margin-bottom:10px;">
+                    ${roomCode}
+                </div>
+                <button onclick="shareRoomLink()" class="primary-btn" style="width:100%; font-size:0.8rem;">
+                    🔗 SHARE ROOM LINK
+                </button>
+            </div>
+            
+            <p style="color:#666; font-size:0.8rem; margin-top:20px;">Waiting for host to start...</p>
+        </div>
+    `;
+
+    updateHeaderNotice();
                 updateHeaderNotice();
             }
             
@@ -1691,6 +1710,7 @@ function updateHeaderNotice() {
 }
 
 window.showRules = function() {
+    socket.emit("getAuctionState");
     document.getElementById('viewRulesOverlay').classList.remove('hidden');
     updateRulesUI();
 };
@@ -1766,49 +1786,112 @@ socket.on("auctionEnded", () => {
 });
 // --- 2. RENDER SELECTION LIST (FIXED) ---
 socket.on("mySquad", ({ squad, rules }) => {
+    // 1. Sync Rules
     if(rules) activeRules = rules;
-    updateRulesUI();
-    // Reset Selection
-    selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
-  
+    if(typeof updateRulesUI === 'function') updateRulesUI();
+
+    // 2. Get DOM Elements
     const container = document.getElementById("mySquadList");
+    const statusDiv = document.getElementById("xiStatus");
+    const submitBtn = document.getElementById("submitXIBtn");
+    const saveBtn = document.getElementById("saveXIBtn");
+    const placeholder = document.getElementById("xiPlaceholder");
+    const cardWrapper = document.getElementById("xiCardWrapper");
+
+    // Safety Check
     if(!container || !squad) return;
+
+    // 3. DISQUALIFICATION CHECK (The Fix)
+    if (squad.length < 11) {
+        // Hide Selection UI
+        container.innerHTML = ""; 
+        if(placeholder) placeholder.classList.add("hidden");
+        if(cardWrapper) cardWrapper.classList.add("hidden");
+        if(submitBtn) submitBtn.classList.add("hidden"); 
+        if(saveBtn) saveBtn.classList.add("hidden");
+
+        // Show DQ Message
+        if(statusDiv) {
+            statusDiv.innerHTML = `
+                <div style="text-align:center; padding:30px; background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:12px; margin-top:20px;">
+                    <h2 style="color:#ef4444; margin:0 0 10px 0; font-size:1.8rem;">❌ DISQUALIFIED</h2>
+                    <p style="color:#fff; margin:0 0 5px 0; font-size:1.1rem;">
+                        Squad Size: <b style="color:#fca5a5;">${squad.length}/11</b>
+                    </p>
+                    <p style="font-size:0.9rem; color:#ccc; margin-bottom:20px;">
+                        You need at least 11 players to form a team.
+                    </p>
+                    
+                    <button onclick="showScreen('leaderboard')" class="primary-btn" style="width:100%; max-width:250px;">
+                        🏆 View Leaderboard
+                    </button>
+                </div>
+            `;
+        }
+        return; // STOP HERE
+    }
+
+    // 4. NORMAL STATE (Reset & Render)
+    
+    // Reset Data
+    selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
+    
+    // Reset UI visibility
     container.innerHTML = "";
+    if(statusDiv) statusDiv.innerHTML = ""; 
+    if(submitBtn) {
+        submitBtn.classList.remove("hidden");
+        submitBtn.disabled = true; // Disabled until 11 selected
+        submitBtn.innerText = "Submit XI (0/11)";
+    }
+    if(placeholder) placeholder.classList.remove("hidden");
+    if(cardWrapper) cardWrapper.classList.add("hidden");
+
+    // 5. Build Grid
     const grid = document.createElement("div");
     grid.className = "xi-select-container";
-    // Standard Cricket Role Order
+    
+    // Define Roles
     const roleGroups = { WK: "Wicket Keepers", BAT: "Batsmen", ALL: "All Rounders", BOWL: "Bowlers" };
+    
     Object.keys(roleGroups).forEach(key => {
-        // Filter players (Combine Pace/Spin into Bowl)
+        // Filter Logic
         const players = squad.filter(p => {
             if(key === "BOWL") return ["PACE", "SPIN", "BOWL"].includes(p.role);
             return p.role === key;
         });
+
         if(players.length > 0) {
             // Group Title
             const title = document.createElement("div");
             title.className = "role-group-title";
             title.innerText = roleGroups[key];
             grid.appendChild(title);
-            // Player Selection Buttons
+
+            // Player Buttons
             players.forEach(p => {
                 const btn = document.createElement("div");
                 btn.className = "xi-player-btn";
-                btn.id = `sel-btn-${p.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+                // Create unique ID for toggle logic
+                btn.id = `sel-btn-${p.name.replace(/[^a-zA-Z0-9]/g, '')}`; 
+                
                 btn.innerHTML = `
                     <div style="font-weight:bold;">${p.name} ${p.foreign ? '✈️' : ''}</div>
                     <div style="font-size:0.75rem; color:#aaa;">⭐${p.rating} • ₹${p.price}</div>
                 `;
+                
                 btn.onclick = () => togglePlayerXI(p, btn, key);
                 grid.appendChild(btn);
             });
         }
     });
+
     container.appendChild(grid);
-    updateXIPreview();
+    
+    // Update the visual card (it will be empty initially)
+    if(typeof updateXIPreview === 'function') updateXIPreview();
 });
-// --- 3. TOGGLE PLAYERS ---
-// --- 3. TOGGLE PLAYERS (FIXED BUTTON LOGIC) ---
+
 // --- 3. TOGGLE PLAYERS (FIXED BUTTON RESET) ---
 function togglePlayerXI(p, btnElement, roleKey) {
     const list = selectedXI[roleKey];
@@ -2794,6 +2877,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     animate();
 })();
+// Add these if missing or inside another scope
+window.showScreen = function(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
+    
+    // If going to Leaderboard, ensure we render it
+    if(id === 'leaderboard') {
+        socket.emit("getAuctionState"); // Requests fresh leaderboard data
+    }
+};
+
+window.editTeam = function() {
+    // Enable Submit Button again
+    const btn = document.getElementById('submitXIBtn');
+    if(btn) {
+        btn.disabled = false;
+        btn.innerText = `Submit XI (${countTotalXI()}/11)`;
+        btn.classList.remove("hidden");
+    }
+    // Remove the Success/Status message
+    document.getElementById("xiStatus").innerHTML = "";
+};
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
@@ -2809,6 +2914,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
