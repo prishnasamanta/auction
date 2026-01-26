@@ -4456,8 +4456,8 @@ body {
 
 /* 3. Header - Minimal or no side padding */
 .topbar {
-  padding-left: 5px !important; /* Optional small padding if needed, else 0 */
-  padding-right: 5px !important;
+  padding-left: 0 !important; /* Optional small padding if needed, else 0 */
+  padding-right: 0 !important;
 }
 
 /* 4. Footer - No side padding needed (already vertical-only) */
@@ -4505,18 +4505,6 @@ body {
   max-width: 100% !important;
   width: 100% !important;
   margin: 0 !important;
-}
-
-/* 3. Header - Minimal side padding */
-.topbar {
-  padding-left: 5px !important;
-  padding-right: 5px !important;
-}
-
-/* 4. Footer - Minimal side padding if needed */
-.app-footer, .app-footer-fixed {
-  padding-left: 5px !important;
-  padding-right: 5px !important;
 }
 
 /* 5. Auction Center/Card - Minimal padding between header and tile */
@@ -4713,5 +4701,6 @@ body {
     gap: 0 !important; /* Remove gap between tiles to make borders touch/visible */
   }
 }
+
 
 
