@@ -3941,3 +3941,72 @@ body {
         margin-top: 15px !important;
     }
 }
+/* 🚑 ADD SCROLLING TO FULL SQUAD VIEW (Popup/Embedded) */
+.prem-body {
+    max-height: 400px !important; /* Limit height to enable scroll if content overflows */
+    overflow-y: auto !important; /* Enable vertical scrolling */
+    -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS/mobile */
+    padding-right: 10px !important; /* Space for scrollbar */
+}
+
+/* Mobile Adjustment: Shorter max-height on small screens */
+@media (max-width: 500px) {
+    .prem-body {
+        max-height: 300px !important;
+    }
+}
+/* 🚑 TEAM SELECTION TILE SIZE MATCH (Same as Auction Tile) */
+#teamSelectionMain {
+    min-height: 160px !important; /* Match auction tile's typical height (top 95px + bot 80px - padding) */
+    height: auto !important; /* Allow dynamic growth */
+    padding: 20px !important; /* Match auction padding */
+    border-radius: 16px !important; /* Match auction radius */
+    background: rgba(15, 23, 42, 0.4) !important; /* Match transparency */
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important; /* Match shadow */
+}
+
+/* Small Buttons in Team Selection Grid */
+.team-list {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important; /* Smaller columns */
+    gap: 8px !important; /* Tighter spacing */
+}
+
+.team-btn {
+    padding: 8px 5px !important; /* Smaller padding */
+    font-size: 0.85rem !important; /* Smaller text */
+    letter-spacing: 0.5px !important;
+}
+
+/* Mobile: Adjust for fit */
+@media (max-width: 500px) {
+    .team-list {
+        grid-template-columns: repeat(3, 1fr) !important; /* 3 per row on small screens */
+    }
+}
+/* 🚑 DISQUALIFIED MESSAGE POSITION FIX (Below Buttons, Same Length) */
+#xiStatus {
+    margin-top: 20px !important; /* Place below submit/reset buttons */
+    width: 100% !important; /* Same full length as button row */
+    max-width: 100% !important; /* Prevent overflow */
+    text-align: center !important; /* Center content */
+    position: relative !important; /* Not absolute/overlay */
+    z-index: 1 !important; /* Below buttons (buttons have higher z-index if needed) */
+    padding: 15px !important; /* Internal spacing */
+    border-radius: 12px !important;
+    background: rgba(15, 23, 42, 0.85) !important; /* Semi-transparent bg, not full overlay */
+}
+
+/* Button Row: Ensure above status */
+div[style*="position: sticky; top: 10px;"] { /* Targets the button container */
+    z-index: 50 !important; /* High z-index to stay on top */
+    background: rgba(15, 23, 42, 0.9) !important; /* Match bg */
+}
+
+/* Mobile: Adjust margin */
+@media (max-width: 500px) {
+    #xiStatus {
+        margin-top: 15px !important;
+    }
+}
+
