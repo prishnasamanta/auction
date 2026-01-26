@@ -825,26 +825,20 @@ if(togglePauseBtn) {
     };
 }
 
-// Update function to change icon state
+// Update function to change icon state (no emoji, just visual animation)
 function updatePauseIcon(isPaused) {
     const btn = document.getElementById("togglePauseBtn");
     if(!btn) return;
     
-    // Visual state changes: icon + appearance
+    // Visual state changes: no emoji, just CSS animation
     if(isPaused) {
-        btn.innerHTML = "▶"; // Play icon
+        btn.innerHTML = ""; // Empty - animation shows state
         btn.title = "Resume";
         btn.classList.add("is-paused");
-        // Visual feedback: green border/glow when paused
-        btn.style.borderColor = "rgba(74,222,128,0.9)";
-        btn.style.color = "#4ade80";
     } else {
-        btn.innerHTML = "⏸"; // Pause icon (two vertical bars)
+        btn.innerHTML = ""; // Empty - default state
         btn.title = "Pause";
         btn.classList.remove("is-paused");
-        // Reset to default
-        btn.style.borderColor = "";
-        btn.style.color = "";
     }
 }
 
@@ -882,6 +876,20 @@ socket.on("auctionState", (state) => {
     }
     
     updatePauseIcon(state.paused);
+    updatePauseBadge(state.paused);
+});
+
+// Handle pause/resume events
+socket.on("auctionPaused", () => {
+    auctionPaused = true;
+    updatePauseIcon(true);
+    updatePauseBadge(true);
+});
+
+socket.on("auctionResumed", () => {
+    auctionPaused = false;
+    updatePauseIcon(false);
+    updatePauseBadge(false);
 });
 // Add this function to force transparency in JS (run after showing auctionCard)
 function forceAuctionTileTransparency() {
@@ -1166,7 +1174,10 @@ socket.on("chatUpdate", d => {
     const color = TEAM_COLORS[d.team] || '#aaa';
 
     div.innerHTML = `
-        <div class="chat-meta" style="color:${color}">${d.team} <span style="opacity:0.5; font-weight:400; font-size:0.65rem;">${time}</span></div>
+        <div class="chat-meta" style="color:${color}">
+            <div class="chat-meta-top">${d.team}</div>
+            <div class="chat-meta-bottom">${d.user || 'Player'}</div>
+        </div>
         <div class="chat-text" style="color:#eee;">${d.msg}</div>
     `;
     
@@ -1189,11 +1200,11 @@ socket.on("logUpdate", msg => {
     div.className = "chat-msg log-message"; // Special class for log messages
     chatLogCount++;
     
-    // Simple Timestamp + Message (styled like log)
+    // Simple Timestamp + Message (styled like log - compact)
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     div.innerHTML = `
-        <div class="chat-meta" style="color:#fbbf24; opacity:0.8;">${time}</div>
-        <div class="chat-text" style="color:#94a3b8;">${msg}</div>
+        <div class="chat-meta log-meta" style="color:#fbbf24; opacity:0.8;">${time}</div>
+        <div class="chat-text log-text" style="color:#94a3b8;">${msg}</div>
     `;
     
     // Style log messages differently (no team color border)
