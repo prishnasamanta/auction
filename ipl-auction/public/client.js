@@ -929,7 +929,11 @@ socket.on("newPlayer", d => {
     }
     document.getElementById('resultOverlay').classList.add('hidden');
     document.getElementById('currentBidder').classList.add('hidden');
-    document.getElementById("auctionCard").classList.remove("pulse");
+    const auctionCard = document.getElementById("auctionCard");
+    if(auctionCard) {
+        auctionCard.classList.remove("pulse");
+        auctionCard.classList.remove("blur-content"); // Remove blur when overlay is hidden
+    }
   
     updatePlayerCard(d.player, d.bid);
     updateBidButton({ bid: d.bid, player: d.player});
@@ -1103,6 +1107,15 @@ function showResultStamp(title, detail, color, isUnsold) {
 
     overlay.classList.remove("hidden");
     overlay.classList.add("active");
+    
+    // Add blur class to auction card for CSS blur effect
+    const auctionCard = document.getElementById("auctionCard");
+    if(auctionCard) auctionCard.classList.add("blur-content");
+    
+    // Remove blur after animation completes
+    setTimeout(() => {
+        if(auctionCard) auctionCard.classList.remove("blur-content");
+    }, 2000);
 }
 /* ================================================= */
 /* =========== 5. LOGS & CHAT (IMPROVED) =========== */
@@ -1903,6 +1916,10 @@ socket.on("mySquad", ({ squad, rules }) => {
         if(cardWrapper) cardWrapper.classList.add("hidden");
         if(submitBtn) submitBtn.classList.add("hidden"); 
         if(saveBtn) saveBtn.classList.add("hidden");
+        
+        // Hide button row when disqualified
+        const xiButtonRow = document.getElementById("xiButtonRow");
+        if(xiButtonRow) xiButtonRow.classList.add("hidden");
 
         // Show DQ Message
         if(statusDiv) {
@@ -2230,6 +2247,11 @@ socket.on("submitResult", (res) => {
 
     // 🔴 HIDE THE PLAYER LIST AFTER SUBMIT (Approved or Disqualified)
     if(listDiv) listDiv.classList.add("hidden");
+    
+    // Hide button row when disqualified
+    if (res.disqualified && xiButtonRow) {
+        xiButtonRow.classList.add("hidden");
+    }
 
     if (!res.disqualified) {
         if(btn) btn.classList.add("hidden");
