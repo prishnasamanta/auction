@@ -673,34 +673,41 @@ socket.on("forceHome", (msg) => {
     sessionStorage.clear();
     window.location.href = "/";
 });
-/* ================================================= */
-/* ========= 3. TEAM SELECTION & SETUP ============= */
-/* ================================================= */
+// --- RECONNECTION & STATE HANDLING ---
+socket.on('connect', () => {
+    // If we have session data, try to reconnect user to room
+    if (username && roomCode) {
+        console.log("🔄 Reconnecting...");
+        socket.emit('reconnectUser', { roomId: roomCode, username: username });
+        // Request immediate state update to fix "Waiting..." issue for late joiners
+        socket.emit("getAuctionState"); 
+    }
+});
+
+// --- UI UPDATE: RENDER EMBEDDED TEAMS ---
 function renderEmbeddedTeams(teams) {
     const box = document.getElementById("embeddedTeamList");
+    const waitMsg = document.getElementById("waitingForHostMsg");
     if(!box) return;
     
     box.innerHTML = "";
-    
-    // 🔴 FIX: Unhide the box immediately so messages are visible
     box.classList.remove("hidden");
+    if(waitMsg) waitMsg.classList.add("hidden"); // Reset waiting msg
 
-    // Case 1: No teams available
+    // Spectator Button
+    if(gameStarted) {
+        const specDiv = document.createElement("div");
+        specDiv.innerHTML = `<button class="secondary-btn" style="width:100%; margin-bottom:10px;" onclick="setGamePhase('AUCTION')">👀 Watch as Spectator</button>`;
+        box.appendChild(specDiv);
+    }
+
     if(!teams || teams.length === 0) {
-        box.innerHTML = `
-            <div style="text-align:center; padding:20px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                <div style="color:#cbd5e1; font-size:0.9rem; margin-bottom:10px;">All teams are taken!</div>
-                <button class="primary-btn" style="width:100%; font-size:0.9rem;" onclick="setGamePhase('AUCTION')">
-                    👀 Watch as Spectator
-                </button>
-            </div>
-        `;
+        box.innerHTML += `<div style="text-align:center; color:#94a3b8;">All teams taken.</div>`;
         return;
     }
 
-    // Case 2: Render Buttons
     const grid = document.createElement("div");
-    grid.className = "team-list"; 
+    grid.className = "team-list";
     
     teams.sort().forEach(team => {
         const btn = document.createElement("button");
@@ -708,64 +715,48 @@ function renderEmbeddedTeams(teams) {
         btn.className = "team-btn";
         btn.style.setProperty("--team-color", TEAM_COLORS[team] || "#94a3b8");
         
+        // 🟢 FIX: Handle Team Select Click
         btn.onclick = () => {
-            // Optimistic UI Update
             myTeam = team;
             sessionStorage.setItem('ipl_team', team);
             socket.emit("selectTeam", { team, user: username });
+
+            // Hide List
+            box.classList.add("hidden");
             
-            // Update UI immediately
-            if(gameStarted) {
-                setGamePhase("AUCTION");
-                updateHeaderNotice();
-            } else {
-                document.getElementById("embeddedTeamList").classList.add("hidden");
-                document.getElementById("waitingForHostMsg").classList.remove("hidden");
+            // Show "You Selected" UI
+            if(waitMsg) {
                 waitMsg.classList.remove("hidden");
                 waitMsg.innerHTML = `
-        <div style="text-align:center;">
-            <h1 style="font-size:3rem; margin:0;">${team}</h1>
-            <p style="color:#4ade80; margin-top:0;">✅ YOU ARE THE OWNER</p>
-            
-            <div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                <div style="color:#aaa; font-size:0.8rem; margin-bottom:5px;">INVITE FRIENDS</div>
-                <div style="font-family:monospace; font-size:1.2rem; color:#fff; letter-spacing:2px; margin-bottom:10px;">
-                    ${roomCode}
-                </div>
-                <button onclick="shareRoomLink()" class="primary-btn" style="width:100%; font-size:0.8rem;">
-                    🔗 SHARE ROOM LINK
-                </button>
-            </div>
-            
-            <p style="color:#666; font-size:0.8rem; margin-top:20px;">Waiting for host to start...</p>
-        </div>
-    `;
+                    <div style="text-align:center; animation: popIn 0.3s ease;">
+                        <div style="font-size:3rem; margin-bottom:5px;">${team}</div>
+                        <div style="color:${TEAM_COLORS[team]}; font-weight:bold;">YOU ARE THE OWNER</div>
+                        
+                        <div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px;">
+                            <div style="color:#94a3b8; font-size:0.8rem; margin-bottom:5px;">ROOM CODE</div>
+                            <div id="copyCodeArea" onclick="copyRoomCode()" style="font-family:monospace; font-size:1.5rem; color:#fff; font-weight:bold; letter-spacing:3px; cursor:pointer;">
+                                ${roomCode}
+                            </div>
+                            <button onclick="shareRoomLink()" class="primary-btn" style="width:100%; margin-top:10px; font-size:0.8rem;">🔗 Share Link</button>
+                        </div>
 
-    updateHeaderNotice();
-                updateHeaderNotice();
+                        <div style="display:flex; gap:10px; margin-top:15px;">
+                            <button onclick="showRules()" class="secondary-btn" style="flex:1;">📜 Check Rules</button>
+                        </div>
+
+                        <p style="color:#64748b; font-size:0.8rem; margin-top:20px;">
+                            ${isHost ? "You are Host. Press Start in Header." : "Waiting for Host to start..."}
+                        </p>
+                    </div>
+                `;
             }
-            
-            // Hide header join button if it exists
-            const lateBtn = document.getElementById("lateJoinBtn");
-            if(lateJoinBtn) lateBtn.classList.add("hidden");
+            updateHeaderNotice();
         };
         grid.appendChild(btn);
     });
-
     box.appendChild(grid);
-
-    // Case 3: Add Spectator Option at bottom (Only if game started)
-    if(gameStarted) {
-        const specDiv = document.createElement("div");
-        specDiv.style.marginTop = "15px";
-        specDiv.innerHTML = `
-            <button class="secondary-btn" style="width:100%; font-size:0.8rem; border-style:dashed;" onclick="setGamePhase('AUCTION')">
-                Skip & Watch as Spectator
-            </button>
-        `;
-        box.appendChild(specDiv);
-    }
 }
+
 
 socket.on("teamPicked", ({ team, user, remaining }) => {
     // 1. UPDATE OWNERS LIST IMMEDIATELY
@@ -866,36 +857,29 @@ socket.on("auctionStarted", () => {
     updateAdminButtons(true);
 });
 socket.on("auctionState", (state) => {
-    console.log("State Sync:", state);
-
     // 1. Sync Globals
     auctionLive = state.live;
     auctionPaused = state.paused;
     lastBidTeam = state.lastBidTeam;
 
-    // 2. Update Player Details
+    // 2. IMMEDIATE UI UPDATE
     if (state.player) {
-        currentPlayer = state.player; // Critical: Store for bid logic
-        
-        // Update the visual card
-        updatePlayerCard(state.player, state.bid);
-        
-        // Ensure card is visible
+        currentPlayer = state.player;
+        // Show the card
         document.getElementById("auctionCard").classList.remove("hidden");
+        // Update texts
+        updatePlayerCard(state.player, state.bid);
+        updateBidButton({ bid: state.bid, player: state.player });
     }
 
-    // 3. Update Leader Badge (Current Highest Bidder)
+    // 3. Update Bidder Badge
     const badge = document.getElementById('currentBidder');
     if (state.lastBidTeam) {
         badge.classList.remove('hidden');
         document.getElementById('bidderName').innerText = state.lastBidTeam;
         badge.style.backgroundColor = TEAM_COLORS[state.lastBidTeam] || "#22c55e";
-    } else {
-        badge.classList.add('hidden');
     }
-
-    // 4. Update Button & Pause UI
-    updateBidButton({ bid: state.bid, player: state.player });
+    
     updatePauseIcon(state.paused);
 });
 
@@ -1768,7 +1752,8 @@ function showScreen(id, updateHistory = true) {
 socket.on("auctionEnded", () => {
     // Enable scrolling
     document.body.style.overflow = "auto";
-  
+  gameStarted = true;
+    auctionLive = false;
     // Ensure we have the latest data
     socket.emit("getAuctionState");
     socket.emit("getSquads");
@@ -2102,17 +2087,7 @@ socket.on("submitResult", (res) => {
 });
 
 // Helper function for the Edit button
-window.editTeam = function() {
-    // 1. Re-enable the submit button
-    const btn = document.getElementById('submitXIBtn');
-    if(btn) {
-        btn.disabled = false;
-        btn.innerText = 'Fix Team';
-    }
-    // 2. Clear the status box
-    const statusBox = document.getElementById("xiStatus");
-    if(statusBox) statusBox.innerHTML = "";
-};
+
 
 // --- LEADERBOARD POPUP LOGIC ---
 let currentPopupData = null;
@@ -2882,22 +2857,21 @@ window.showScreen = function(id) {
     document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
     
-    // If going to Leaderboard, ensure we render it
-    if(id === 'leaderboard') {
-        socket.emit("getAuctionState"); // Requests fresh leaderboard data
-    }
+    // Auto-refresh data based on screen
+    if(id === 'leaderboard') socket.emit("getAuctionState"); // Fetches latest leaderboard
+    if(id === 'playingXI') socket.emit("getMySquad");
 };
-
 window.editTeam = function() {
-    // Enable Submit Button again
     const btn = document.getElementById('submitXIBtn');
+    const statusBox = document.getElementById("xiStatus");
+    
     if(btn) {
+        btn.classList.remove('hidden');
         btn.disabled = false;
-        btn.innerText = `Submit XI (${countTotalXI()}/11)`;
-        btn.classList.remove("hidden");
+        btn.innerText = `Update XI (${countTotalXI()}/11)`;
     }
-    // Remove the Success/Status message
-    document.getElementById("xiStatus").innerHTML = "";
+    // Clear the success/DQ message so user can edit
+    if(statusBox) statusBox.innerHTML = "";
 };
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2914,6 +2888,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
