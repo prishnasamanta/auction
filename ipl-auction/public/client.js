@@ -2306,7 +2306,7 @@ socket.on("leaderboard", (board) => {
         });
     }
 });
-});
+
 
 // --- UPDATED OPEN POPUP LOGIC ---
 function openSquadView(teamName) {
@@ -3003,6 +3003,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
