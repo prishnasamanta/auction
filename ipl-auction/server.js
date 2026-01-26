@@ -595,6 +595,11 @@ socket.on("getAuctionState", () => {
         }
         if(action === "togglePause"){
             r.auction.paused = !r.auction.paused;
+            if(r.auction.paused) {
+                sendLog(r, socket.room, "⏸ Auction Paused");
+            } else {
+                sendLog(r, socket.room, "▶ Auction Resumed");
+            }
             io.to(socket.room).emit(r.auction.paused ? "auctionPaused" : "auctionResumed");
         }
         if(action === "skip"){
@@ -991,7 +996,7 @@ function endAuction(r, room) {
     saveToCloud();
 }
 
-const PORT = process.env.PORT || 2500; 
+const PORT = process.env.PORT || 3000; 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
