@@ -4491,4 +4491,67 @@ body {
   }
 }
 
+/* Disable Side Padding for Full-Width with Minimal Adjustments */
+
+/* 1. Main UI - Minimal side padding for borders */
+#auctionUI {
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+}
+
+/* 2. Auction Wrapper - Near full width, minimal padding */
+.auction-wrapper {
+  padding: 5px !important; /* Minimal all-around, shows borders */
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* 3. Header - Minimal side padding */
+.topbar {
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+}
+
+/* 4. Footer - Minimal side padding if needed */
+.app-footer, .app-footer-fixed {
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+}
+
+/* 5. Auction Center/Card - Minimal padding between header and tile */
+.auction-center {
+  padding: 5px !important; /* Minimal side/top/bottom */
+  margin-top: 5px !important; /* Space between header and tile */
+}
+#auctionCard {
+  border-left: 1px solid rgba(255, 255, 255, 0.15) !important; /* Restore side borders */
+  border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 16px !important; /* Full round for visibility */
+}
+
+/* 6. Command Center - Ensure borders visible */
+#commandCenter {
+  border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important; /* Full round */
+}
+
+/* Mobile-Specific Override */
+@media (max-width: 900px) {
+  .auction-wrapper {
+    padding: 5px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  #auctionUI {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+  .auction-center {
+    padding: 5px !important;
+    margin-top: 5px !important;
+  }
+}
 
