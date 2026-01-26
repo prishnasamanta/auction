@@ -9,7 +9,6 @@
     <link rel="apple-touch-icon" href="/logo.png?v=2">
 
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/starback@2.1.1/dist/starback.global.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="/style.css">
 </head>
@@ -225,47 +224,42 @@
 
 <section id="auctionUI" class="screen hidden">
 
-    <header class="topbar">
-        <div class="top-left">
-            <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" style="background:transparent;">
-                <span id="roomCodeText" style="color:var(--primary); font-family:monospace; font-size:0.9rem; font-weight:700; letter-spacing:1px;">---</span>
-            </div>
-
-            <div id="headerTeamBadge" class="header-badge hidden" style="border:none; padding-left:0;">
-                <span id="headerTeamName" style="font-weight:600; font-size:0.8rem; color:var(--gold);">---</span>
-            </div>
-
-            <div style="position: relative;">
-                <button onclick="toggleUserList()" class="count-pill-btn header-pill">
-                    <span class="pulse-dot"></span> <span id="liveUserCount">0</span>
-                </button>
-                <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:0;">
-                    <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">ACTIVE</h4>
-                    <div id="userListContent"></div>
-                </div>
-            </div>
+<header class="topbar">
+    <div class="top-left">
+        <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" style="border:1px solid var(--primary); color:var(--primary);">
+            <span id="roomCodeText" style="font-family:monospace; font-weight:700;">---</span>
         </div>
 
-        <div class="top-right custom-scroll-x">
-            <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden" title="Join Team">➕</button>
-            <button onclick="showRules()" class="header-icon-btn" title="Rules">📜</button>
-
-            <span id="adminControls" class="admin-group hidden" style="display:flex; gap:5px; margin-left:5px;">
-                <div class="v-divider"></div>
-                <button id="startBtn" class="header-icon-btn primary" title="Start">▶</button>
-                
-                <button id="togglePauseBtn" class="header-icon-btn" title="Pause">
-                    ⏸
-                </button>
-
-                <button id="skipBtn" class="header-icon-btn" title="Skip Player">⏭</button>
-                <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">📦</button>
-                <button onclick="admin('end')" class="header-icon-btn danger" title="End Game">⏹</button>
-            </span>
-
-            <button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">🏃</button>
+        <div id="headerTeamBadge" class="header-badge hidden" style="background:var(--gold); color:#000; font-weight:600; border:none;">
+            <span id="headerTeamName">---</span>
         </div>
-    </header>
+
+        <button onclick="toggleUserList()" class="count-pill-btn" style="margin:0; padding:2px 8px; height:28px;">
+            <span class="pulse-dot"></span> <span id="liveUserCount">0</span>
+        </button>
+    </div>
+
+    <div class="top-right">
+        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden" style="background:var(--success); color:#000;">➕</button>
+        
+        <button onclick="showRules()" class="header-icon-btn" title="Rules">📜</button>
+
+        <span id="adminControls" class="admin-group hidden" style="display:flex; gap:5px;">
+            <button id="startBtn" class="header-icon-btn primary" title="Start">▶</button>
+            <button id="togglePauseBtn" class="header-icon-btn" title="Pause">⏸</button>
+            <button id="skipBtn" class="header-icon-btn" title="Skip">⏭</button>
+            <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">📦</button>
+            <button onclick="admin('end')" class="header-icon-btn danger" title="End Game">⏹</button>
+        </span>
+
+        <button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">🏃</button>
+    </div>
+    
+    <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:10px; top:50px;">
+        <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem;">ACTIVE USERS</h4>
+        <div id="userListContent"></div>
+    </div>
+</header>
 
 
     <div class="auction-wrapper">
@@ -648,6 +642,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
