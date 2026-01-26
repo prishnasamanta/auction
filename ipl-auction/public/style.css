@@ -3911,3 +3911,33 @@ body {
 
 
 
+/* 🚑 FIX STATUS DISPLAY (Make Inline Below Buttons) */
+#xiStatus {
+    position: relative !important; /* Remove any absolute/fixed positioning */
+    z-index: 1 !important; /* Low z-index to not block buttons */
+    margin-top: 20px !important; /* Space after button row */
+    width: 100% !important; /* Full width */
+    pointer-events: auto !important; /* Ensure clicks pass through */
+    background: transparent !important; /* No overlay bg */
+    border: none !important; /* No borders that might overlap */
+    padding: 0 !important; /* Reset padding */
+}
+
+/* Ensure inner buttons are clickable */
+#xiStatus button {
+    pointer-events: auto !important; /* Force clickable */
+    cursor: pointer !important;
+}
+
+/* Button Row: Ensure it's above status and not blocked */
+#playingXI .primary-btn, #playingXI .secondary-btn {
+    position: relative !important;
+    z-index: 10 !important; /* Higher than status */
+}
+
+/* Mobile Fix: No overflow issues */
+@media (max-width: 500px) {
+    #xiStatus {
+        margin-top: 15px !important;
+    }
+}
