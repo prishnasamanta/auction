@@ -3827,6 +3827,87 @@ body {
     flex-shrink: 0 !important;
 }
 
+/* 🚑 FINAL TRANSPARENCY FIX (Overrides All Previous) */
+#auctionCard {
+    background: rgba(15, 23, 42, 0.2) !important; /* 80% transparent dark blue */
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.ac-top-row,
+.ac-bot-row {
+    background: transparent !important; /* Force transparent */
+    backdrop-filter: blur(8px) !important; /* Add blur to rows for consistency */
+    -webkit-backdrop-filter: blur(8px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; /* Subtle divider */
+}
+
+/* Media Query Fix for Mobile (Ensures No Override) */
+@media (max-width: 900px) {
+    #auctionCard,
+    .ac-top-row,
+    .ac-bot-row {
+        background: transparent !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+    }
+}
+/* 🚑 HEADER BUTTON SIZE FIX */
+.header-icon-btn {
+    width: 24px !important; /* Smaller square */
+    height: 24px !important;
+    min-width: 24px !important;
+    font-size: 0.9rem !important; /* Adjust icon size inside */
+    padding: 0 !important; /* No extra space */
+    border-radius: 6px !important; /* Keep rounded */
+}
+
+.header-badge {
+    height: 24px !important; /* Match button height */
+    min-width: 40px !important; /* Slightly wider for text like room code */
+    padding: 2px 6px !important; /* Adjust padding */
+    font-size: 0.75rem !important;
+}
+
+/* Admin Group: Ensure buttons don't squash */
+.admin-group {
+    gap: 4px !important; /* Tighter spacing */
+}
+
+/* Mobile: Even smaller if needed */
+@media (max-width: 500px) {
+    .header-icon-btn {
+        width: 22px !important;
+        height: 22px !important;
+    }
+}
+/* 🚑 INVISIBLE LINE/GAP FIX (Adjusted for Closer Spacing) */
+.ac-info-box {
+    padding-right: 5px !important; /* Reduced gap: Moves line closer to timer with minimal space */
+    overflow: hidden !important; /* Prevent name overflow */
+}
+
+.ac-name-text {
+    white-space: nowrap !important; /* Keep on one line */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important; /* ... for very long names */
+    max-width: 100% !important; /* Fill available space */
+}
+
+.ac-status-box {
+    width: 60px !important; /* Keep width fixed to maintain timer position */
+}
+
+/* Mobile: Adjust for smaller screens (Keep minimal space) */
+@media (max-width: 500px) {
+    .ac-info-box {
+        padding-right: 4px !important; /* Even closer on tiny screens, but still a little space */
+    }
+    .ac-status-box {
+        width: 55px !important; /* Slight adjustment if needed, but keeps timer in place */
+    }
+}
 
 
 
