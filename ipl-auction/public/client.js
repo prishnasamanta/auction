@@ -884,6 +884,7 @@ socket.on("auctionPaused", () => {
     auctionPaused = true;
     updatePauseIcon(true);
     updatePauseBadge(true);
+    
 });
 
 socket.on("auctionResumed", () => {
@@ -946,38 +947,60 @@ socket.on("newPlayer", d => {
     updatePlayerCard(d.player, d.bid);
     updateBidButton({ bid: d.bid, player: d.player});
 });
+// --- UPDATED: Render Player Card with Badges ---
 function updatePlayerCard(player, bid) {
     const nameEl = document.getElementById("playerName");
-    const metaEl = document.getElementById("playerMeta");
     const bidEl = document.getElementById("bid");
 
     if (nameEl) {
         nameEl.innerText = player.name;
-        
-        // 🔴 LOGIC: Minimize text size if name is long
+        // Text sizing logic
         const len = player.name.length;
-        
-        // Reset base size
         nameEl.style.fontSize = "1.8rem"; 
-        
-        if (len > 18) {
-            nameEl.style.fontSize = "1.1rem"; // Very Long Name -> Small Font
-        } else if (len > 12) {
-            nameEl.style.fontSize = "1.4rem"; // Medium Long -> Medium Font
-        }
-        // Else stays 1.8rem
-    }
-
-    if (metaEl) {
-        metaEl.innerText = `${player.role} • ⭐${player.rating}`;
-        const r = player.role;
-        metaEl.style.color = (r==="BAT"?"#facc15" : r.includes("BOWL")?"#38bdf8" : r==="ALL"?"#a855f7" : r==="WK"?"#fb923c" : "#ccc");
+        if (len > 18) nameEl.style.fontSize = "1.1rem";
+        else if (len > 12) nameEl.style.fontSize = "1.4rem";
     }
 
     if (bidEl) {
         bidEl.innerText = `₹${bid.toFixed(2)} Cr`;
     }
+
+    // Render the Meta Badges
+    renderPlayerMeta(player);
 }
+
+// --- NEW HELPER: Handles the HTML for Role/Rating/Paused ---
+function renderPlayerMeta(player) {
+    const metaEl = document.getElementById("playerMeta");
+    if (!metaEl) return;
+
+    // 1. Determine Color
+    const r = player.role;
+    const color = (r==="BAT"?"#facc15" : r.includes("BOWL")?"#38bdf8" : r==="ALL"?"#a855f7" : r==="WK"?"#fb923c" : "#ccc");
+
+    // 2. Generate HTML
+    // We create the Premium Badge AND the Paused Badge (hidden by default)
+    metaEl.innerHTML = `
+        <div class="meta-badge-premium" style="color: ${color} !important;">
+            ${player.role} • ⭐${player.rating}
+        </div>
+        <div id="pausedBadge" class="meta-badge-paused ${auctionPaused ? 'visible' : ''}">
+            ⏸ PAUSED
+        </div>
+    `;
+}
+
+// --- NEW HELPER: Toggle Paused Badge without re-rendering player ---
+function updatePauseBadge(isPaused) {
+    const badge = document.getElementById("pausedBadge");
+    if(badge) {
+        if(isPaused) badge.classList.add("visible");
+        else badge.classList.remove("visible");
+    }
+    // Also sync the global variable just in case
+    auctionPaused = isPaused; 
+}
+
 
 socket.on("timer", t => {
     const timerEl = document.getElementById("timer");
@@ -3305,5 +3328,6 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
