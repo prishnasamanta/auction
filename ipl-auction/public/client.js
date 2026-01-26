@@ -684,77 +684,70 @@ socket.on('connect', () => {
     }
 });
 
-// --- UI UPDATE: RENDER EMBEDDED TEAMS ---
+// REPLACE your existing renderEmbeddedTeams function with this:
 function renderEmbeddedTeams(teams) {
     const box = document.getElementById("embeddedTeamList");
-    const waitMsg = document.getElementById("waitingForHostMsg");
-    if(!box) return;
+    const container = document.getElementById("teamSelectionMain"); // Get the main card
+    
+    if(!box || !container) return;
     
     box.innerHTML = "";
-    box.classList.remove("hidden");
-    if(waitMsg) waitMsg.classList.add("hidden"); // Reset waiting msg
-
-    // Spectator Button
-    if(gameStarted) {
-        const specDiv = document.createElement("div");
-        specDiv.innerHTML = `<button class="secondary-btn" style="width:100%; margin-bottom:10px;" onclick="setGamePhase('AUCTION')">👀 Watch as Spectator</button>`;
-        box.appendChild(specDiv);
-    }
-
-    if(!teams || teams.length === 0) {
-        box.innerHTML += `<div style="text-align:center; color:#94a3b8;">All teams taken.</div>`;
-        return;
-    }
-
-    const grid = document.createElement("div");
-    grid.className = "team-list";
     
-    teams.sort().forEach(team => {
-        const btn = document.createElement("button");
-        btn.innerText = team;
-        btn.className = "team-btn";
-        btn.style.setProperty("--team-color", TEAM_COLORS[team] || "#94a3b8");
+    // --- 1. RENDER TEAM BUTTONS (Standard View) ---
+    if(!myTeam) {
+        // If game started, allow spectator mode
+        if(gameStarted) {
+             const specBtn = document.createElement("div");
+             specBtn.innerHTML = `<button class="secondary-btn" style="width:100%; margin-bottom:10px; border-style:dashed;" onclick="setGamePhase('AUCTION')">👀 Watch as Spectator</button>`;
+             box.appendChild(specBtn);
+        }
+
+        if(!teams || teams.length === 0) {
+            box.innerHTML += `<div style="text-align:center; color:#94a3b8; padding:20px;">All teams taken!</div>`;
+            return;
+        }
+
+        const grid = document.createElement("div");
+        grid.className = "team-list";
         
-        // 🟢 FIX: Handle Team Select Click
-        btn.onclick = () => {
-            myTeam = team;
-            sessionStorage.setItem('ipl_team', team);
-            socket.emit("selectTeam", { team, user: username });
-
-            // Hide List
-            box.classList.add("hidden");
+        teams.sort().forEach(team => {
+            const btn = document.createElement("button");
+            btn.innerText = team;
+            btn.className = "team-btn";
+            btn.style.setProperty("--team-color", TEAM_COLORS[team] || "#94a3b8");
             
-            // Show "You Selected" UI
-            if(waitMsg) {
-                waitMsg.classList.remove("hidden");
-                waitMsg.innerHTML = `
-                    <div style="text-align:center; animation: popIn 0.3s ease;">
-                        <div style="font-size:3rem; margin-bottom:5px;">${team}</div>
-                        <div style="color:${TEAM_COLORS[team]}; font-weight:bold;">YOU ARE THE OWNER</div>
-                        
-                        <div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px;">
-                            <div style="color:#94a3b8; font-size:0.8rem; margin-bottom:5px;">ROOM CODE</div>
-                            <div id="copyCodeArea" onclick="copyRoomCode()" style="font-family:monospace; font-size:1.5rem; color:#fff; font-weight:bold; letter-spacing:3px; cursor:pointer;">
-                                ${roomCode}
+            // --- ON CLICK: SWAP CONTENT (Don't Hide) ---
+            btn.onclick = () => {
+                myTeam = team;
+                sessionStorage.setItem('ipl_team', team);
+                socket.emit("selectTeam", { team, user: username });
+
+                // 🟢 FIX: Replace the WHOLE container content to keep size stable
+                container.innerHTML = `
+                    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; min-height:300px; animation: popIn 0.3s ease;">
+                        <h2 style="color:var(--primary); margin:0 0 5px 0;">YOU SELECTED</h2>
+                        <h1 style="font-size:3.5rem; margin:0; line-height:1; color:${TEAM_COLORS[team] || '#fff'}; text-shadow:0 0 20px rgba(0,0,0,0.5);">${team}</h1>
+                        <p style="color:#4ade80; font-weight:bold; margin-top:5px; font-size:0.9rem;">✅ OWNER CONFIRMED</p>
+
+                        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; width:100%; margin-top:20px;">
+                            <div style="color:#64748b; font-size:0.75rem; font-weight:700; letter-spacing:1px; margin-bottom:5px;">ROOM CODE</div>
+                            <div onclick="copyRoomCode()" style="font-family:monospace; font-size:1.8rem; font-weight:700; color:#fff; cursor:pointer; letter-spacing:3px;">
+                                ${roomCode} <span style="font-size:1rem; opacity:0.5;">📋</span>
                             </div>
-                            <button onclick="shareRoomLink()" class="primary-btn" style="width:100%; margin-top:10px; font-size:0.8rem;">🔗 Share Link</button>
                         </div>
 
-                        <div style="display:flex; gap:10px; margin-top:15px;">
-                            <button onclick="showRules()" class="secondary-btn" style="flex:1;">📜 Check Rules</button>
+                        <div style="margin-top:20px; color:#94a3b8; font-size:0.85rem; font-style:italic;">
+                            ${isHost ? "You are the Host.<br>Press ▶ in header to start." : "Waiting for Host to start auction..."}
                         </div>
-
-                        <p style="color:#64748b; font-size:0.8rem; margin-top:20px;">
-                            ${isHost ? "You are Host. Press Start in Header." : "Waiting for Host to start..."}
-                        </p>
                     </div>
                 `;
-            }
-            updateHeaderNotice();
-        };
-        grid.appendChild(btn);
-    });
-    box.appendChild(grid);
+                
+                updateHeaderNotice();
+            };
+            grid.appendChild(btn);
+        });
+        box.appendChild(grid);
+    }
 }
 
 
@@ -2852,15 +2845,74 @@ document.addEventListener("DOMContentLoaded", () => {
 
     animate();
 })();
-// Add these if missing or inside another scope
-window.showScreen = function(id) {
-    document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
-    document.getElementById(id).classList.remove("hidden");
+/* ================================================= */
+/* 🛠️ GLOBAL BUTTON HANDLERS (MUST BE HERE)          */
+/* ================================================= */
+
+// 1. Edit Team Handler
+window.editTeam = function() {
+    console.log("✏️ Edit Team Triggered");
     
-    // Auto-refresh data based on screen
-    if(id === 'leaderboard') socket.emit("getAuctionState"); // Fetches latest leaderboard
-    if(id === 'playingXI') socket.emit("getMySquad");
+    // Enable Submit Button again
+    const btn = document.getElementById('submitXIBtn');
+    if(btn) {
+        btn.disabled = false;
+        btn.classList.remove("hidden"); // Ensure it's visible
+        btn.innerText = `Submit XI (${countTotalXI()}/11)`;
+        btn.style.background = ""; // Reset color
+    }
+    
+    // Clear the Status/Result Message
+    const statusBox = document.getElementById("xiStatus");
+    if(statusBox) statusBox.innerHTML = "";
+    
+    // Hide Save Button
+    document.getElementById("saveXIBtn").classList.add("hidden");
 };
+
+// 2. Navigation Handler
+window.showScreen = function(screenId) {
+    console.log("🔄 Switching to:", screenId);
+    
+    // Hide all screens
+    document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
+    
+    // Show target
+    const target = document.getElementById(screenId);
+    if(target) target.classList.remove("hidden");
+
+    // Special logic for specific screens
+    if (screenId === 'leaderboard') {
+        socket.emit("getAuctionState"); // Refresh Data
+        updateURL('leaderboard');
+    } else if (screenId === 'playingXI') {
+        updateURL('xi');
+    } else if (screenId === 'postAuctionSummary') {
+        updateURL('summary');
+    }
+};
+
+// 3. Reset Handler (Optional but useful)
+window.resetXISelection = function() {
+    if(confirm("Clear all selected players?")) {
+        selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
+        document.querySelectorAll('.xi-player-btn').forEach(b => b.classList.remove('picked'));
+        
+        // Reset Button
+        const btn = document.getElementById('submitXIBtn');
+        if(btn) {
+             btn.disabled = false;
+             btn.innerText = "Submit XI (0/11)";
+        }
+        
+        // Hide Card/Save
+        document.getElementById('xiCardWrapper').classList.add('hidden');
+        document.getElementById('xiPlaceholder').classList.remove('hidden');
+        
+        updateXIPreview();
+    }
+};
+
 window.editTeam = function() {
     const btn = document.getElementById('submitXIBtn');
     const statusBox = document.getElementById("xiStatus");
@@ -2888,6 +2940,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
