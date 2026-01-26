@@ -2966,12 +2966,12 @@ body {
     flex: 1; /* Takes all available space */
     min-width: 0; /* Allows text truncation */
     display: flex; flex-direction: column; justify-content: center;
-    padding-right: 15px; /* The "Invisible Line" gap */
+    padding-right: 6px; /* The "Invisible Line" gap */
 }
 
 .ac-name-text {
     font-family: 'Exo 2', sans-serif;
-    font-weight: 800; color: #fff;
+    font-weight: 650; color: #fff;
     line-height: 1; text-transform: uppercase;
     white-space: nowrap; 
     /* Font size handled by JS */
@@ -3759,5 +3759,6 @@ body {
     background: transparent !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 
 
