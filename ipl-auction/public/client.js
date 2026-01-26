@@ -659,6 +659,8 @@ function setupAuctionScreen() {
     socket.emit("getAuctionState");
     socket.emit("checkAdmin");
     socket.emit("getSquads");
+    forceAuctionTileTransparency();
+
 }
 
 socket.on("error", msg => {
@@ -751,6 +753,7 @@ function renderEmbeddedTeams(teams) {
 }
 
 
+// In socket.on("teamPicked", ...): Replace the entire block with this
 socket.on("teamPicked", ({ team, user, remaining }) => {
     // 1. UPDATE OWNERS LIST IMMEDIATELY
     if (team && user) {
@@ -761,15 +764,11 @@ socket.on("teamPicked", ({ team, user, remaining }) => {
     }
     // 2. Logic for ME
     if(myTeam === team) {
-        document.getElementById("teamSelectionMain").classList.add("hidden");
         if(gameStarted) {
+            document.getElementById("teamSelectionMain").classList.add("hidden");
             setGamePhase("AUCTION");
-        } else {
-            document.getElementById("waitingForHostMsg").classList.remove("hidden");
-        }
+        } // else: Do NOT hide - Keep custom "YOU SELECTED" screen with waiting message
         updateHeaderNotice();
-        const lateBtn = document.getElementById("lateJoinBtn");
-        if(lateBtn) lateBtn.classList.add("hidden");
     }
     // 3. Logic for OTHERS (Update buttons)
     if(!myTeam) {
@@ -875,7 +874,34 @@ socket.on("auctionState", (state) => {
     
     updatePauseIcon(state.paused);
 });
+// Add this function to force transparency in JS (run after showing auctionCard)
+function forceAuctionTileTransparency() {
+    const auctionCard = document.getElementById("auctionCard");
+    const topRow = document.querySelector(".ac-top-row");
+    const botRow = document.querySelector(".ac-bot-row");
 
+    if (auctionCard) {
+        auctionCard.style.background = "rgba(15, 23, 42, 0.2)";
+        auctionCard.style.backdropFilter = "blur(12px)";
+        auctionCard.style.webkitBackdropFilter = "blur(12px)";
+    }
+    if (topRow) {
+        topRow.style.background = "transparent";
+        topRow.style.backdropFilter = "blur(8px)";
+        topRow.style.webkitBackdropFilter = "blur(8px)";
+    }
+    if (botRow) {
+        botRow.style.background = "transparent";
+        botRow.style.backdropFilter = "blur(8px)";
+        botRow.style.webkitBackdropFilter = "blur(8px)";
+    }
+}
+
+// Call this in setupAuctionScreen() at the end
+// Inside setupAuctionScreen function, add:
+
+// Also call it in setGamePhase("AUCTION") to re-apply when switching
+// Inside setGamePhase function, in "AUCTION" case:
 socket.on("newPlayer", d => {
     currentPlayer = d.player; // Store globally
     auctionLive = true;
@@ -1639,6 +1665,7 @@ function setGamePhase(phase) {
         if(auctionCard) auctionCard.classList.remove("hidden");
         // Show "Join" button in header if I am a spectator
         if(lateJoinBtn && !myTeam) lateJoinBtn.classList.remove("hidden");
+        forceAuctionTileTransparency();
     }
 }
 
@@ -2049,13 +2076,13 @@ window.downloadSheetPNG = function() {
     });
 };
 // --- 6. LEADERBOARD & RESULT ---
+// --- UPDATED: socket.on("submitResult") - Render Status Inline ---
 socket.on("submitResult", (res) => {
     const btn = document.getElementById("submitXIBtn");
     const status = document.getElementById("xiStatus");
-
     if(status) {
         status.innerHTML = `
-        <div class="status-box" style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; margin-top:20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+        <div class="status-box" style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             
             <h2 style="margin:0 0 5px 0; font-size:1.4rem; color:${res.disqualified ? '#ef4444' : '#22c55e'}">
                 ${res.disqualified ? '❌ DISQUALIFIED' : '✅ APPROVED'}
@@ -2072,10 +2099,8 @@ socket.on("submitResult", (res) => {
                 }
                 <button onclick="showScreen('leaderboard')" class="primary-btn" style="padding:8px 20px;">🏆 Leaderboard</button>
             </div>
-
         </div>`;
     }
-
     // Hide the main submit button on success so they don't submit twice
     if (btn && !res.disqualified) {
         btn.classList.add("hidden");
@@ -2087,7 +2112,6 @@ socket.on("submitResult", (res) => {
         socket.emit("getAuctionState"); 
     }
 });
-
 // Helper function for the Edit button
 
 
@@ -2941,6 +2965,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
