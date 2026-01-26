@@ -319,6 +319,7 @@ io.on("connection", socket => {
             auctionStarted: room.auctionStarted,
             availableTeams: room.availableTeams,
             auctionEnded: room.auctionEnded,
+            leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : [],
             userCount: 1,
             teamOwners: getTeamOwners(room),
             purses: room.purse,
@@ -330,27 +331,56 @@ io.on("connection", socket => {
         // Save initial state
         saveToCloud();
     });
+// Add or Update this handler
+socket.on("getAuctionState", () => {
+    const r = rooms[socket.room];
+    if(!r) return;
+
+    // Send Auction Data
+    socket.emit("auctionState", {
+        live: r.auction.live,
+        paused: r.auction.paused,
+        player: r.auction.player,
+        bid: r.auction.bid,
+        lastBidTeam: r.auction.lastBidTeam
+    });
+
+    // Send Leaderboard if data exists (Fixes Issue 4)
+    if (Object.keys(r.playingXI).length > 0) {
+        const board = Object.values(r.playingXI).sort((a,b) => {
+            if(b.rating !== a.rating) return b.rating - a.rating; 
+            return (b.purse || 0) - (a.purse || 0); 
+        });
+        socket.emit("leaderboard", board);
+    }
+});
 
     // 3. RECONNECT USER
-    socket.on('reconnectUser', ({ roomId, username, team }) => {
+    // 3. RECONNECT USER (Updated Logic)
+    socket.on('reconnectUser', ({ roomId, username }) => {
         const room = rooms[roomId];
         const timerKey = `${roomId}_${username}`;
         
+        // 1. Cancel any pending "Kick" timer
         if (disconnectTimers[timerKey]) {
             clearTimeout(disconnectTimers[timerKey]);
             delete disconnectTimers[timerKey];
         }
 
         if (room) {
+            // Find user by name (since socket ID changes on reconnect)
             let oldSocketId = Object.keys(room.users).find(key => room.users[key].name === username);
             
+            // If user wasn't in room and auction ended -> block them unless they just want to see results
+            // (Optional: You can remove this check if you want to allow late spectators)
             if (!oldSocketId && room.auctionEnded) {
-                return socket.emit("error", "Auction Closed.");
+                // Allow them as a spectator to see results
             }
 
             let assignedTeam = null;
 
             if(oldSocketId) {
+                // Restore old user data to new socket ID
                 const userData = room.users[oldSocketId];
                 delete room.users[oldSocketId];
                 
@@ -363,10 +393,12 @@ io.on("connection", socket => {
                 room.users[socket.id] = userData;
                 assignedTeam = userData.team;
 
+                // Restore Admin Status if they were host
                 if (room.admin === oldSocketId) {
                     room.admin = socket.id;
                 }
             } else {
+                // New User / Spectator joining mid-game or post-game
                 room.users[socket.id] = { 
                     name: username, 
                     team: null, 
@@ -377,12 +409,14 @@ io.on("connection", socket => {
                 assignedTeam = null;
             }
 
+            // Join socket.io room
             socket.join(roomId);
             socket.room = roomId;
             socket.user = username;
             socket.team = assignedTeam;
             if(room.adminUser === username) socket.isAdmin = true;
 
+            // 2. SEND SYNC DATA
             socket.emit("joinedRoom", { 
                 rules: room.rules,
                 squads: room.squads,
@@ -395,9 +429,12 @@ io.on("connection", socket => {
                 userCount: Object.keys(room.users).length,
                 teamOwners: getTeamOwners(room),
                 history: { chat: room.chat, logs: room.logs },
-                yourTeam: assignedTeam 
+                yourTeam: assignedTeam,
+                // Critical Fix: Send Leaderboard Data if game is over
+                leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : [] 
             });
             
+            // Broadcast user list update
             broadcastUserList(room, roomId);
             broadcastSets(room, roomId);
 
@@ -405,23 +442,11 @@ io.on("connection", socket => {
                 socket.emit("teamPicked", { team: assignedTeam, remaining: room.availableTeams });
             } 
 
-            socket.emit("auctionState", {
-                live: room.auction.live,
-                paused: room.auction.paused,
-                player: room.auction.player,
-                bid: room.auction.bid,
-                lastBidTeam: room.auction.lastBidTeam
-            });
-
-            if(room.auction.player){
-                 socket.emit("newPlayer", { 
-                    player: room.auction.player, 
-                    bid: room.auction.bid 
-                 });
-            }
-
-            if(room.auctionEnded) {
-                socket.emit("squadData", room.squads);
+            // 3. HANDLE GAME PHASE ROUTING
+            if (room.auctionEnded) {
+                socket.emit("auctionEnded"); // Triggers client routing (XI or Summary)
+                
+                // Send Leaderboard if available
                 if(Object.keys(room.playingXI).length > 0){
                     const board = Object.values(room.playingXI).sort((a,b) => {
                        if(b.rating !== a.rating) return b.rating - a.rating; 
@@ -429,7 +454,21 @@ io.on("connection", socket => {
                     });
                     socket.emit("leaderboard", board);
                 }
+            } else if (room.auctionStarted) {
+                // If auction is LIVE, send current player data immediately
+                socket.emit("auctionStarted");
+                
+                if(room.auction.player){
+                     socket.emit("auctionState", {
+                        live: room.auction.live,
+                        paused: room.auction.paused,
+                        player: room.auction.player,
+                        bid: room.auction.bid,
+                        lastBidTeam: room.auction.lastBidTeam
+                    });
+                }
             }
+
         } else {
             socket.emit("error", "Room expired or not found");
         }
@@ -956,5 +995,6 @@ const PORT = process.env.PORT || 2500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
