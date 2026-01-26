@@ -222,7 +222,7 @@
             <button id="startBtn" class="header-icon-btn primary" title="Start">▶</button>
             <button id="togglePauseBtn" class="header-icon-btn" title="Pause">⏸</button>
             <button id="skipBtn" class="header-icon-btn" title="Skip">⏭</button>
-            <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">📦</button>
+            <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">⏩</button>
             <button onclick="admin('end')" class="header-icon-btn danger" title="End Game">⏹</button>
         </span>
 
@@ -240,24 +240,20 @@
         
         <div class="auction-center">
             
-            <div id="teamSelectionMain" class="glass" style="width: 100%; max-width: 500px;">
-                <h2 style="color:var(--primary); margin-top:0;">CHOOSE YOUR TEAM</h2>
-                <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">
-                    Select a team to participate.
-                </p>
+            <div id="teamSelectionMain" class="glass" style="width: 100%; max-width: 530px;">
+                <h2 style="color:var(--primary); margin:0 0 4px 0; font-size:1rem;">CHOOSE YOUR TEAM</h2>
+                <p style="color:#aaa; font-size:0.8rem; margin:0 0 10px 0;">Select a team to participate.</p>
                 <div id="embeddedTeamList" class="team-list"></div>
-                <div id="waitingForHostMsg" class="hidden" style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                    <h3 style="margin:0 0 5px 0; color:#22c55e;">✅ Team Selected</h3>
-                    <p style="color:#aaa; font-size:0.9rem; margin:0;">Waiting for Host to start...</p>
+                <div id="waitingForHostMsg" class="hidden" style="margin-top:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                    <h3 style="margin:0 0 2px 0; font-size:0.95rem; color:#22c55e;">✅ Team Selected</h3>
+                    <p style="color:#aaa; font-size:0.8rem; margin:0;">Waiting for Host to start...</p>
                 </div>
             </div>
 
             <div class="auction glass hidden" id="auctionCard">
-                
-                <div class="ac-top-row">
-                    <div id="resultOverlay" class="ac-result-overlay hidden">
-                        </div>
+                <div id="resultOverlay" class="ac-result-overlay hidden"></div>
 
+                <div class="ac-top-row">
                     <div class="ac-info-box">
                         <div id="playerName" class="ac-name-text">WAITING...</div>
                         <div id="playerMeta" class="ac-role-text">---</div>
@@ -375,7 +371,7 @@
             </button>
         </div>
 
-        <div id="xiStatus" style="margin-top: 20px; margin-bottom: 25px; position: relative; z-index: 1; min-height: 20px;"></div>
+        <div id="xiStatus" class="hidden" style="margin-top: 20px; margin-bottom: 25px; position: relative; z-index: 1; min-height: 20px;"></div>
 
         <div id="mySquadList"></div>
     </div>
@@ -438,7 +434,7 @@
 
         <div id="squadCaptureArea"></div>
 
-        <div style="padding:15px; border-top:1px solid rgba(255,255,255,0.1); background:#0f172a;">
+        <div id="popupDownloadFooter" style="padding:15px; border-top:1px solid rgba(255,255,255,0.1); background:#0f172a;">
             <button id="downloadPopupCard" onclick="downloadPopupCard()" class="primary-btn" style="width:100%;">📸 Download Card</button>
         </div>
     </div>
@@ -614,27 +610,3 @@
     <script src="/client.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
