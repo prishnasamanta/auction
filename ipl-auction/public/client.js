@@ -1710,19 +1710,21 @@ function updateRulesUI() {
     set('viewForeign', r.maxForeign);
 }
 function showScreen(id, updateHistory = true) {
-    // 1. Hide all screens
+    // Hide all screens
     document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
-  
-    // 2. Show target screen
+
+    // Show target
     const target = document.getElementById(id);
     if (target) target.classList.remove("hidden");
-    // 3. Update URL (Routing)
-    // We pass false to updateHistory when using Back Button to avoid loop
-    if (updateHistory) {
-        if (id === 'postAuctionSummary') updateURL('summary');
-        else if (id === 'leaderboard') updateURL('leaderboard');
-        else if (id === 'playingXI') updateURL('xi');
-        else if (id === 'auctionUI') updateURL('auction');
+
+    // 🔴 NEW: Special Refresh for Leaderboard (Fix: Empty/Outdated Data)
+    if (id === 'leaderboard') {
+        socket.emit("getAuctionState"); // Force refresh on show
+        updateURL('leaderboard');
+    } else if (id === 'playingXI') {
+        updateURL('xi');
+    } else if (id === 'postAuctionSummary') {
+        updateURL('summary');
     }
 }
 /* ================================================= */
@@ -1900,14 +1902,21 @@ function togglePlayerXI(p, btnElement, roleKey) {
 }
 // --- 5. SUBMIT LOGIC (FIXED) ---
 window.submitXI = function() {
-    if(countTotalXI() !== 11) return alert("Please select exactly 11 players.");
-  
+    if (countTotalXI() !== 11) return alert("Please select exactly 11 players.");
+
     // Send the Object structure: { WK: [...], BAT: [...] }
     const payload = selectedXI;
     const btn = document.getElementById("submitXIBtn");
-    if(btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
+    if (btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
+
     // Send 'team' explicitly to prevent server silent fail
     socket.emit("submitXI", { team: myTeam, xi: payload });
+
+    // 🔴 NEW: Force data refresh after submit (Fixes leaderboard sync)
+    setTimeout(() => {
+        socket.emit("getAuctionState"); // Refresh global state
+        socket.emit("getSquads"); // Refresh squads
+    }, 500); // Small delay to let server process
 };
 function countTotalXI() {
     return selectedXI.WK.length + selectedXI.BAT.length + selectedXI.ALL.length + selectedXI.BOWL.length;
@@ -2845,30 +2854,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     animate();
 })();
-/* ================================================= */
-/* 🛠️ GLOBAL BUTTON HANDLERS (MUST BE HERE)          */
-/* ================================================= */
 
-// 1. Edit Team Handler
-window.editTeam = function() {
-    console.log("✏️ Edit Team Triggered");
-    
-    // Enable Submit Button again
-    const btn = document.getElementById('submitXIBtn');
-    if(btn) {
-        btn.disabled = false;
-        btn.classList.remove("hidden"); // Ensure it's visible
-        btn.innerText = `Submit XI (${countTotalXI()}/11)`;
-        btn.style.background = ""; // Reset color
-    }
-    
-    // Clear the Status/Result Message
-    const statusBox = document.getElementById("xiStatus");
-    if(statusBox) statusBox.innerHTML = "";
-    
-    // Hide Save Button
-    document.getElementById("saveXIBtn").classList.add("hidden");
-};
 
 // 2. Navigation Handler
 window.showScreen = function(screenId) {
@@ -2916,14 +2902,29 @@ window.resetXISelection = function() {
 window.editTeam = function() {
     const btn = document.getElementById('submitXIBtn');
     const statusBox = document.getElementById("xiStatus");
-    
-    if(btn) {
+    const saveBtn = document.getElementById("saveXIBtn");
+
+    if (btn) {
         btn.classList.remove('hidden');
-        btn.disabled = false;
+        btn.disabled = false; // Re-enable
         btn.innerText = `Update XI (${countTotalXI()}/11)`;
+        btn.style.background = ""; // Reset style
     }
-    // Clear the success/DQ message so user can edit
-    if(statusBox) statusBox.innerHTML = "";
+
+    // Clear Status Message
+    if (statusBox) statusBox.innerHTML = "";
+
+    // Hide Save Button (until re-submit)
+    if (saveBtn) saveBtn.classList.add('hidden');
+
+    // 🔴 NEW: Re-enable all player toggle buttons (Fix: They were not clickable after submit)
+    document.querySelectorAll('.xi-player-btn').forEach(b => {
+        b.style.pointerEvents = "auto"; // Re-enable clicks
+        b.style.opacity = "1"; // Visual reset
+    });
+
+    // Refresh Preview (in case)
+    updateXIPreview();
 };
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
@@ -2940,6 +2941,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
