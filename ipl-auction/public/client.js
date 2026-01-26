@@ -2069,11 +2069,39 @@ function updateStatsBar() {
 // --- 5. SUBMIT ---
 window.resetXISelection = function() {
     if(confirm("Reset Selection?")) {
+        // 1. Clear Data
         selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
+        
+        // 2. Clear Visual Selection in the List
         document.querySelectorAll('.xi-player-btn').forEach(b => b.classList.remove('picked'));
+        
+        // 3. Reset Button State
+        const submitBtn = document.getElementById('submitXIBtn');
+        const saveBtn = document.getElementById('saveXIBtn');
+        const statusDiv = document.getElementById("xiStatus");
+        const listDiv = document.getElementById("mySquadList"); // The list container
+
+        if(submitBtn) {
+             submitBtn.disabled = false;
+             submitBtn.innerText = "Submit XI (0/11)";
+             submitBtn.classList.remove('hidden');
+             submitBtn.style.background = ""; 
+        }
+        
+        if(saveBtn) saveBtn.classList.add('hidden');
+        
+        // 4. Clear Status & Unhide List
+        if(statusDiv) statusDiv.innerHTML = "";
+        if(listDiv) listDiv.classList.remove("hidden"); // Show players again
+
+        // 5. Reset Card View
+        document.getElementById('xiCardWrapper').classList.add('hidden');
+        document.getElementById('xiPlaceholder').classList.remove('hidden');
+        
         updateXIPreview();
     }
 };
+
 window.downloadSheetPNG = function() {
     const el = document.getElementById('xiCardTarget');
     html2canvas(el, { backgroundColor: null, scale: 3, useCORS: true }).then(canvas => {
@@ -2088,6 +2116,8 @@ window.downloadSheetPNG = function() {
 socket.on("submitResult", (res) => {
     const btn = document.getElementById("submitXIBtn");
     const status = document.getElementById("xiStatus");
+    const listDiv = document.getElementById("mySquadList");
+
     if(status) {
         status.innerHTML = `
         <div class="status-box" style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
@@ -2109,19 +2139,45 @@ socket.on("submitResult", (res) => {
             </div>
         </div>`;
     }
-    // Hide the main submit button on success so they don't submit twice
-    if (btn && !res.disqualified) {
-        btn.classList.add("hidden");
-        // We removed the separate "Home" button, but "Save" can stay if needed
+
+    if (!res.disqualified) {
+        if(btn) btn.classList.add("hidden");
         document.getElementById("saveXIBtn").classList.remove("hidden");
         
-        // Refresh data
-        console.log("✅ XI Approved. Refreshing Leaderboard...");
+        // 🔴 HIDE THE PLAYER LIST ON SUCCESS
+        if(listDiv) listDiv.classList.add("hidden");
+
         socket.emit("getAuctionState"); 
     }
 });
-// Helper function for the Edit button
 
+// Update Edit Function to show list again
+window.editTeam = function() {
+    const btn = document.getElementById('submitXIBtn');
+    const statusBox = document.getElementById("xiStatus");
+    const saveBtn = document.getElementById("saveXIBtn");
+    const listDiv = document.getElementById("mySquadList");
+
+    if (btn) {
+        btn.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerText = `Update XI (${countTotalXI()}/11)`;
+        btn.style.background = ""; 
+    }
+
+    if (statusBox) statusBox.innerHTML = "";
+    if (saveBtn) saveBtn.classList.add('hidden');
+    
+    // 🔴 SHOW LIST AGAIN
+    if(listDiv) listDiv.classList.remove("hidden");
+
+    document.querySelectorAll('.xi-player-btn').forEach(b => {
+        b.style.pointerEvents = "auto";
+        b.style.opacity = "1";
+    });
+
+    updateXIPreview();
+};
 
 // --- LEADERBOARD POPUP LOGIC ---
 let currentPopupData = null;
@@ -2149,26 +2205,23 @@ function renderPopupContent(mode) {
     if(!container || !currentPopupData) return;
 
     const d = currentPopupData;
-    // Fallback data
     const fullSquad = allSquads[d.team] || []; 
     const safePurse = Number(d.purse || teamPurse[d.team] || 0);
 
     container.innerHTML = "";
 
     if (mode === 'XI') {
-        // 🟢 ROBUST CHECK: Ensure 'xi' exists and has at least one role with players
         const hasValidXI = d.xi && (
             (d.xi.WK && d.xi.WK.length > 0) || 
             (d.xi.BAT && d.xi.BAT.length > 0) || 
-            (d.xi.BOWL && d.xi.BOWL.length > 0) ||
-            (d.xi.ALL && d.xi.ALL.length > 0)
+            (d.xi.BOWL && d.xi.BOWL.length > 0)
         );
 
         if (hasValidXI) {
-             // Use the generator to show the Playing XI Card
+             // 🔴 USE generateFantasyCardHTML (The image generator from Submit page)
+             // We pass 'false' at the end so it doesn't use the 'generatedCard' ID which might conflict
              container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
         } else {
-             // Show "Not Submitted" State
              container.innerHTML = `
                 <div style="text-align:center; padding:40px; color:#94a3b8; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
                     <div style="font-size:3rem; margin-bottom:10px; opacity:0.5;">🏏</div>
@@ -2181,7 +2234,6 @@ function renderPopupContent(mode) {
         container.innerHTML = generateFullSquadHTML(d.team, fullSquad, safePurse, "Manager", true);
     }
 }
-
 // --- 4. DATASET SELECTION HELPER ---
 window.selectDataset = function(id, el) {
     document.getElementById('selectedSetId').value = id;
@@ -2218,9 +2270,8 @@ window.downloadLeaderboardPNG = function() {
 }
 // --- GLOBAL STORE FOR LEADERBOARD DATA ---
 let globalLeaderboardData = []; 
-
 socket.on("leaderboard", (board) => {
-    globalLeaderboardData = board; // Store locally to access later
+    globalLeaderboardData = board; 
     
     const tbody = document.getElementById("leaderboardBody");
     if(tbody) {
@@ -2228,10 +2279,16 @@ socket.on("leaderboard", (board) => {
         board.forEach((t, i) => {
             const tr = document.createElement("tr");
             
-            // Status Badge
-            const statusHtml = t.disqualified 
-                ? `<span class="lb-status-badge lb-status-disqualified">❌ DQ</span>`
-                : (t.xi && (t.xi.BAT || t.xi.WK) ? `<span class="lb-status-badge lb-status-qualified">✅ XI</span>` : `<span style="opacity:0.5; font-size:0.7rem;">-</span>`);
+            // 🔴 LOGIC: Status Icons
+            let statusHtml = '<span class="lb-status-icon lb-dash">-</span>';
+            
+            if (t.disqualified) {
+                statusHtml = `<span class="lb-status-icon lb-cross">❌</span>`;
+            } 
+            // Check if XI exists and has players (valid submission)
+            else if (t.xi && (t.xi.BAT?.length > 0 || t.xi.WK?.length > 0)) {
+                statusHtml = `<span class="lb-status-icon lb-tick">✅</span>`;
+            }
 
             tr.innerHTML = `
                 <td>#${i+1}</td>
@@ -2248,6 +2305,7 @@ socket.on("leaderboard", (board) => {
             tbody.appendChild(tr);
         });
     }
+});
 });
 
 // --- UPDATED OPEN POPUP LOGIC ---
@@ -2931,34 +2989,6 @@ window.resetXISelection = function() {
     }
 };
 
-window.editTeam = function() {
-    const btn = document.getElementById('submitXIBtn');
-    const statusBox = document.getElementById("xiStatus");
-    const saveBtn = document.getElementById("saveXIBtn");
-
-    if (btn) {
-        btn.classList.remove('hidden');
-        btn.disabled = false; // Re-enable
-        btn.innerText = `Update XI (${countTotalXI()}/11)`;
-        btn.style.background = ""; // Reset style
-    }
-
-    // Clear Status Message
-    if (statusBox) statusBox.innerHTML = "";
-
-    // Hide Save Button (until re-submit)
-    if (saveBtn) saveBtn.classList.add('hidden');
-
-    // 🔴 NEW: Re-enable all player toggle buttons (Fix: They were not clickable after submit)
-    document.querySelectorAll('.xi-player-btn').forEach(b => {
-        b.style.pointerEvents = "auto"; // Re-enable clicks
-        b.style.opacity = "1"; // Visual reset
-    });
-
-    // Refresh Preview (in case)
-    updateXIPreview();
-};
-
 /* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
     // 1. Refresh Squad View if active
@@ -2973,6 +3003,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
