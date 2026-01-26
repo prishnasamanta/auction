@@ -2643,30 +2643,6 @@ function smartTrimName(fullName) {
     return fullName; // Single long name (e.g. "Venkatapathy")
 }
 
-// Update updatePlayerCard to use it
-function updatePlayerCard(player, bid) {
-    const nameEl = document.getElementById("playerName");
-    const metaEl = document.getElementById("playerMeta");
-    const bidEl = document.getElementById("bid");
-
-    if (nameEl) {
-        // 🔴 Apply Smart Trim
-        nameEl.innerText = smartTrimName(player.name);
-    }
-    if (metaEl) {
-        metaEl.innerText = `${player.role} • ⭐${player.rating}`;
-        // Color logic...
-        if(player.role === "BAT") metaEl.style.color = "#facc15";
-        else if(player.role === "BOWL" || player.role === "PACE" || player.role === "SPIN") metaEl.style.color = "#38bdf8";
-        else if(player.role === "ALL") metaEl.style.color = "#a855f7";
-        else if(player.role === "WK") metaEl.style.color = "#fb923c";
-        else metaEl.style.color = "#cbd5e1";
-    }
-    if (bidEl) {
-        // 🔴 Force Keep on One Line
-        bidEl.innerText = `₹${bid.toFixed(2)} Cr`;
-    }
-}
 
 // Call this when the page loads
 document.addEventListener("DOMContentLoaded", () => {
@@ -2833,6 +2809,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
