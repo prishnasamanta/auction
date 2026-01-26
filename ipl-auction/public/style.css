@@ -4702,5 +4702,281 @@ body {
   }
 }
 
+/* ================================================= */
+/* 🎯 FIX: Command Center, Auction Card, Header/Footer Width & Borders */
+/* ================================================= */
+
+/* 1. Command Center: Match Team Selection Main width (530px) and styling */
+#commandCenter {
+    width: 100% !important;
+    max-width: 530px !important;
+    margin: 0 auto !important; /* No top margin - spacing handled by gap or consistent margin */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    background: rgba(15, 23, 42, 0.4) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
+    align-self: center !important; /* Center within flex container */
+}
+
+/* 2. Auction Card: Match Team Selection Main styling exactly */
+#auctionCard {
+    width: 100% !important;
+    max-width: 530px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    background: rgba(15, 23, 42, 0.4) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
+}
+
+/* 3. Team Selection Main: Ensure consistent styling */
+#teamSelectionMain {
+    width: 100% !important;
+    max-width: 530px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    background: rgba(15, 23, 42, 0.4) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
+}
+
+/* 4. Consistent spacing between tiles - match header spacing */
+.auction-center {
+    margin-bottom: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+/* Match spacing between header and auction tile with auction tile and CC tile */
+/* Command center should have consistent spacing whether after team selection or auction card */
+#commandCenter {
+    margin-top: 0 !important; /* Spacing will be consistent via flex gap or margin */
+}
+
+/* 5. Remove header padding - fill screen completely and touch section */
+.topbar {
+    padding: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+.top-left {
+    padding-left: 5px !important;
+}
+
+.top-right {
+    padding-right: 5px !important;
+}
+
+/* 6. Remove footer padding - fill screen completely and touch section */
+.app-footer {
+    padding: 12px 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+.footer-content {
+    padding: 0 5px !important;
+}
+
+/* 7. Ensure auction-wrapper centers children with consistent spacing */
+.auction-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0 !important; /* No gap - spacing handled by margins for consistency */
+}
+
+/* 8. Blur auction card content when sold/unsold animation appears */
+#auctionCard .ac-result-overlay.active ~ .ac-top-row,
+#auctionCard .ac-result-overlay.active ~ .ac-bot-row {
+    filter: blur(4px) !important;
+    transition: filter 0.3s ease !important;
+}
+
+/* Blur all content when overlay is active (using sibling selector) */
+#auctionCard:has(.ac-result-overlay.active) .ac-top-row,
+#auctionCard:has(.ac-result-overlay.active) .ac-bot-row {
+    filter: blur(4px) !important;
+    transition: filter 0.3s ease !important;
+}
+
+/* Fallback for browsers without :has() support - blur via JS class */
+#auctionCard.blur-content .ac-top-row,
+#auctionCard.blur-content .ac-bot-row {
+    filter: blur(4px) !important;
+    transition: filter 0.3s ease !important;
+}
+
+/* 9. Ensure section touches header and footer */
+#auctionUI {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* 10. Add internal scrolling to embeddedSquadView */
+#embeddedSquadView {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: 100% !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 !important;
+}
+
+/* 11. Fix spacing: Match spacing between auction card and CC with team selection and CC */
+/* Both should have the same spacing - use consistent margin-top on command center */
+.auction-wrapper {
+    gap: 0 !important; /* No gap - spacing handled by margin-top on command center */
+}
+
+/* Command center gets consistent margin-top whether after team selection or auction card */
+/* This ensures same spacing in both scenarios */
+#commandCenter {
+    margin-top: 0 !important; /* Same spacing whether after team selection or auction card */
+}
+
+/* Ensure no conflicting margins on parent containers */
+.auction-center {
+    margin-bottom: 0 !important;
+}
+
+#teamSelectionMain {
+    margin-bottom: 0 !important;
+}
+
+/* 12. Fix headers in postAuctionSummary and leaderboard - prevent button text overlap on mobile */
+#postAuctionSummary .topbar,
+#leaderboard .topbar {
+    padding: 0 10px !important;
+    min-height: 45px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: relative !important;
+}
+
+#postAuctionSummary .topbar > div,
+#leaderboard .topbar {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+}
+
+#leaderboard .topbar button {
+    position: absolute !important;
+    left: 10px !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
+    min-width: 40px !important;
+}
+
+#leaderboard .topbar .brand {
+    flex: 1 !important;
+    text-align: center !important;
+    margin: 0 auto !important;
+    padding: 0 50px !important; /* Space for back button */
+}
+
+#postAuctionSummary .topbar .brand {
+    flex: 1 !important;
+    text-align: left !important;
+    padding-left: 0 !important;
+}
+
+#postAuctionSummary .topbar > div > div:last-child {
+    flex-shrink: 0 !important;
+    display: flex !important;
+    gap: 10px !important;
+}
+
+/* Mobile: Adjust header spacing */
+@media (max-width: 600px) {
+    #postAuctionSummary .topbar,
+    #leaderboard .topbar {
+        padding: 0 8px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    #leaderboard .topbar .brand {
+        padding: 0 45px !important;
+        font-size: 0.95rem !important;
+    }
+    
+    #leaderboard .topbar button {
+        left: 8px !important;
+        padding: 4px 8px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    #postAuctionSummary .topbar .brand {
+        font-size: 0.9rem !important;
+    }
+    
+    #postAuctionSummary .topbar button {
+        padding: 4px 8px !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+/* 13. Reduce team button sizes in teamSelectionMain - make everything smaller to fit */
+#teamSelectionMain {
+    padding: 8px !important; /* Reduced from 12px */
+}
+
+#teamSelectionMain h2 {
+    font-size: 0.85rem !important; /* Reduced from 1rem */
+    margin: 0 0 3px 0 !important; /* Reduced from 4px */
+}
+
+#teamSelectionMain p {
+    font-size: 0.7rem !important; /* Reduced from 0.8rem */
+    margin: 0 0 6px 0 !important; /* Reduced from 10px */
+}
+
+#embeddedTeamList {
+    gap: 4px !important; /* Reduced from 8px */
+    padding: 0 !important;
+}
+
+#embeddedTeamList .team-btn {
+    padding: 6px 4px !important; /* Reduced from 10px 6px */
+    font-size: 0.75rem !important; /* Reduced from 0.85rem */
+    min-height: 32px !important; /* Reduced from 40px */
+    letter-spacing: 0.3px !important; /* Reduced from 0.5px */
+}
+
+/* Further reduce on very small screens */
+@media (max-width: 400px) {
+    #teamSelectionMain {
+        padding: 6px !important;
+    }
+    
+    #teamSelectionMain h2 {
+        font-size: 0.8rem !important;
+    }
+    
+    #teamSelectionMain p {
+        font-size: 0.65rem !important;
+        margin: 0 0 4px 0 !important;
+    }
+    
+    #embeddedTeamList {
+        gap: 3px !important;
+    }
+    
+    #embeddedTeamList .team-btn {
+        padding: 5px 3px !important;
+        font-size: 0.7rem !important;
+        min-height: 28px !important;
+    }
+}
+
 
 
