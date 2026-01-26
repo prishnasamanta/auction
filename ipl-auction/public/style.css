@@ -3795,6 +3795,38 @@ body {
     background: transparent !important; 
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
+/* 🚑 EMERGENCY CSS FIXES (Paste at the very bottom of style.css) */
+
+/* 1. Fix Black Tile - Force Glass Effect */
+#auctionCard {
+    background: rgba(15, 23, 42, 0.4) !important; /* Semi-transparent */
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Ensure inner rows are transparent so the blur shows through */
+.ac-top-row, .ac-bot-row {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 2. Fix Header Scrolling */
+.top-right {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    gap: 5px !important;
+    scrollbar-width: none; /* Firefox */
+}
+.top-right::-webkit-scrollbar { display: none; } /* Chrome */
+
+/* Prevent button squishing */
+.header-icon-btn, .admin-group {
+    flex-shrink: 0 !important;
+}
+
 
 
 
