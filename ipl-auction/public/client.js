@@ -3100,6 +3100,165 @@ window.resetXISelection = function() {
         updateXIPreview();
     }
 };
+/* ================================================= */
+/* 💎 CUSTOM POPUP SYSTEM LOGIC (ADAPTER)            */
+/* ================================================= */
+
+// 1. Core Toggle Logic
+function toggleCustomPopup(show) {
+    const el = document.getElementById('customPopup');
+    if(show) {
+        el.classList.remove('hidden');
+        requestAnimationFrame(() => el.classList.add('active'));
+    } else {
+        el.classList.remove('active');
+        setTimeout(() => el.classList.add('hidden'), 200);
+    }
+}
+
+// 2. Promise-Based Confirm (Replacing confirm())
+window.showConfirm = function(message, title = "CONFIRMATION", icon = "⚠️") {
+    return new Promise((resolve) => {
+        const titleEl = document.getElementById('cpTitle');
+        const msgEl = document.getElementById('cpMessage');
+        const iconEl = document.getElementById('cpIcon');
+        const okBtn = document.getElementById('cpBtnOk');
+        const cancelBtn = document.getElementById('cpBtnCancel');
+
+        titleEl.innerText = title;
+        msgEl.innerHTML = message.replace(/\n/g, '<br>'); // Support line breaks
+        iconEl.innerText = icon;
+        
+        cancelBtn.classList.remove('hidden');
+        okBtn.innerText = "CONFIRM";
+        
+        // Remove old listeners to prevent stacking
+        const newOk = okBtn.cloneNode(true);
+        const newCancel = cancelBtn.cloneNode(true);
+        okBtn.parentNode.replaceChild(newOk, okBtn);
+        cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+        newOk.addEventListener('click', () => { toggleCustomPopup(false); resolve(true); });
+        newCancel.addEventListener('click', () => { toggleCustomPopup(false); resolve(false); });
+
+        toggleCustomPopup(true);
+    });
+};
+
+// 3. Simple Popup (Replacing alert())
+window.showPopup = function(message, title = "NOTICE", icon = "ℹ️", isError = false) {
+    const titleEl = document.getElementById('cpTitle');
+    const msgEl = document.getElementById('cpMessage');
+    const iconEl = document.getElementById('cpIcon');
+    const okBtn = document.getElementById('cpBtnOk');
+    const cancelBtn = document.getElementById('cpBtnCancel');
+
+    titleEl.innerText = title;
+    titleEl.style.color = isError ? "#ef4444" : "#fff";
+    msgEl.innerText = message;
+    iconEl.innerText = icon;
+
+    // Hide Cancel button for alerts
+    cancelBtn.classList.add('hidden');
+    okBtn.innerText = "OK";
+
+    // Clean listeners
+    const newOk = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOk, okBtn);
+    
+    newOk.addEventListener('click', () => toggleCustomPopup(false));
+    toggleCustomPopup(true);
+};
+
+/* ================================================= */
+/* 🔄 OVERRIDE EXISTING FUNCTIONS (ADAPTATION)       */
+/* ================================================= */
+
+// Override Browser Alert (Catch-all)
+window.alert = (msg) => showPopup(msg);
+
+// 1. Redefine Exit To Home
+window.exitToHome = async function() {
+    const yes = await showConfirm("Are you sure you want to exit to the Main Menu?", "EXIT GAME?", "🏠");
+    if (yes) {
+        sessionStorage.clear();
+        window.location.href = "/";
+    }
+};
+
+// 2. Redefine Reset XI
+window.resetXISelection = async function() {
+    const yes = await showConfirm("Clear all selected players from your Playing XI?", "RESET SELECTION?", "↻");
+    if(yes) {
+        selectedXI = { WK: [], BAT: [], ALL: [], BOWL: [] };
+        document.querySelectorAll('.xi-player-btn').forEach(b => b.classList.remove('picked'));
+        
+        const btn = document.getElementById('submitXIBtn');
+        const saveBtn = document.getElementById('saveXIBtn');
+        const statusDiv = document.getElementById("xiStatus");
+        const listDiv = document.getElementById("mySquadList");
+
+        if(btn) {
+             btn.disabled = false;
+             btn.innerText = "Submit XI (0/11)";
+             btn.classList.remove('hidden');
+             btn.style.background = ""; 
+        }
+        if(saveBtn) saveBtn.classList.add('hidden');
+        if(statusDiv) { statusDiv.innerHTML = ""; statusDiv.classList.add("hidden"); }
+        if(listDiv) listDiv.classList.remove("hidden");
+        document.getElementById('xiCardWrapper').classList.add('hidden');
+        document.getElementById('xiPlaceholder').classList.remove('hidden');
+        
+        updateXIPreview();
+    }
+};
+
+// 3. Redefine Admin Button Logic
+window.admin = async function(action) {
+    if(action === 'end') {
+        const yes = await showConfirm("This will end the auction permanently and generate summaries.\n\nAre you sure?", "END AUCTION?", "🛑");
+        if(!yes) return;
+    }
+    socket.emit("adminAction", action);
+};
+
+// 4. Redefine Skip Set Button Logic (must be re-attached)
+const skipSetBtn = document.getElementById("skipSetBtn");
+if(skipSetBtn) {
+    skipSetBtn.onclick = async () => {
+        const yes = await showConfirm("Skip this entire set? All remaining players will be marked Unsold.", "SKIP SET?", "⏩");
+        if(yes) socket.emit("adminAction", "skipSet");
+    };
+}
+
+// 5. Redefine Leave Button Logic
+const leaveBtn = document.getElementById("leaveBtn");
+if (leaveBtn) {
+    leaveBtn.onclick = async () => {
+        const yes = await showConfirm("You will lose your spot immediately.\n\nDo you want to leave?", "LEAVE ROOM?", "🏃");
+        if (yes) {
+            sessionStorage.clear();
+            socket.disconnect();
+            window.location.href = "/";
+        }
+    };
+}
+
+// 6. Redefine Error Handler
+socket.off("error"); // Remove old listener
+socket.on("error", msg => {
+    // Handle "Room not found" specifically
+    if(msg.includes("not found") || msg.includes("closed") || msg.includes("expired")) {
+        showPopup(msg, "CONNECTION ERROR", "❌", true);
+        setTimeout(() => {
+            sessionStorage.clear();
+            window.location.href = "/";
+        }, 2000); // Give user 2 seconds to read
+    } else {
+        showPopup(msg, "ERROR", "⚠️", true);
+    }
+});
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
@@ -3115,3 +3274,4 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
