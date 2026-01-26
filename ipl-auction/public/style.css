@@ -4438,49 +4438,57 @@ body {
     border-bottom: none !important;
     flex: 1 !important; /* Force it to fill all remaining vertical space */
 }
-/* ================================================= */
-/* 📱 MOBILE FULL-WIDTH FIX (Paste at Very Bottom)   */
-/* ================================================= */
+/* Disable Side Padding for Full-Width */
 
-@media (max-width: 768px) {
-    /* 1. Force the main container to touch screen edges */
-    .auction-wrapper {
-        padding: 0 !important;       /* Remove the 10px side gap */
-        width: 100vw !important;     /* Force full viewport width */
-        max-width: 100vw !important; /* Override any desktop limits */
-        margin: 0 !important;
-    }
+/* 1. Main UI - Remove left/right padding */
+#auctionUI {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
 
-    /* 2. Stretch the Top Card (Auction Tile) */
-    .auction-center {
-        width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
+/* 2. Auction Wrapper - Full width, no padding/margin limits */
+.auction-wrapper {
+  padding: 0 !important; /* Removes all padding, including sides */
+  max-width: 100% !important; /* Full screen */
+  width: 100% !important;
+  margin: 0 !important; /* No centering */
+}
 
-    #auctionCard {
-        width: 100% !important;
-        border-radius: 0 !important; /* Square corners since it touches edges */
-        border-left: none !important;
-        border-right: none !important;
-        box-shadow: none !important; /* Remove shadow to save space */
-    }
+/* 3. Header - Minimal or no side padding */
+.topbar {
+  padding-left: 5px !important; /* Optional small padding if needed, else 0 */
+  padding-right: 5px !important;
+}
 
-    /* 3. Stretch the Bottom Panel (Command Center/Feed) */
-    #commandCenter {
-        width: 100% !important;
-        border-radius: 0 !important; /* Square corners */
-        border-left: none !important;
-        border-right: none !important;
-        margin: 0 !important;
-    }
-    
-    /* 4. Ensure Header touches edges */
-    .topbar {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        width: 100% !important;
-    }
+/* 4. Footer - No side padding needed (already vertical-only) */
+.app-footer, .app-footer-fixed {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 5. Auction Center/Card - No side padding */
+.auction-center {
+  padding: 0 !important;
+}
+#auctionCard {
+  border-left: none !important; /* Optional: remove side borders for true edge-to-edge */
+  border-right: none !important;
+}
+
+/* Mobile-Specific Override (to ensure no shrinkage) */
+@media (max-width: 900px) {
+  .auction-wrapper {
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  #auctionUI {
+    padding: 0 !important;
+  }
+  .auction-center {
+    padding: 0 !important;
+  }
 }
 
 
