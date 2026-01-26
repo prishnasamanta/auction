@@ -706,12 +706,12 @@ function renderEmbeddedTeams(teams) {
         // If game started, allow spectator mode
         if(gameStarted) {
              const specBtn = document.createElement("div");
-             specBtn.innerHTML = `<button class="secondary-btn" style="width:100%; margin-bottom:10px; border-style:dashed;" onclick="setGamePhase('AUCTION')">👀 Watch as Spectator</button>`;
+             specBtn.innerHTML = `<button class="secondary-btn" style="width:100%; margin-bottom:6px; padding:8px; font-size:0.85rem; border-style:dashed;" onclick="setGamePhase('AUCTION')">👀 Watch as Spectator</button>`;
              box.appendChild(specBtn);
         }
 
         if(!teams || teams.length === 0) {
-            box.innerHTML += `<div style="text-align:center; color:#94a3b8; padding:20px;">All teams taken!</div>`;
+            box.innerHTML += `<div style="text-align:center; color:#94a3b8; padding:10px; font-size:0.85rem;">All teams taken!</div>`;
             return;
         }
 
@@ -730,22 +730,22 @@ function renderEmbeddedTeams(teams) {
                 sessionStorage.setItem('ipl_team', team);
                 socket.emit("selectTeam", { team, user: username });
 
-                // 🟢 FIX: Replace the WHOLE container content to keep size stable
+                // 🟢 FIX: Replace the WHOLE container content to keep size stable (530×177px tile)
                 container.innerHTML = `
-                    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; min-height:300px; animation: popIn 0.3s ease;">
-                        <h2 style="color:var(--primary); margin:0 0 5px 0;">YOU SELECTED</h2>
-                        <h1 style="font-size:3.5rem; margin:0; line-height:1; color:${TEAM_COLORS[team] || '#fff'}; text-shadow:0 0 20px rgba(0,0,0,0.5);">${team}</h1>
-                        <p style="color:#4ade80; font-weight:bold; margin-top:5px; font-size:0.9rem;">✅ OWNER CONFIRMED</p>
+                    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; animation: popIn 0.3s ease;">
+                        <h2 style="color:var(--primary); margin:0 0 2px 0; font-size:0.85rem;">YOU SELECTED</h2>
+                        <h1 style="font-size:2rem; margin:0; line-height:1; color:${TEAM_COLORS[team] || '#fff'}; text-shadow:0 0 12px rgba(0,0,0,0.5);">${team}</h1>
+                        <p style="color:#4ade80; font-weight:bold; margin:2px 0 0 0; font-size:0.75rem;">✅ OWNER CONFIRMED</p>
 
-                        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; width:100%; margin-top:20px;">
-                            <div style="color:#64748b; font-size:0.75rem; font-weight:700; letter-spacing:1px; margin-bottom:5px;">ROOM CODE</div>
-                            <div onclick="copyRoomCode()" style="font-family:monospace; font-size:1.8rem; font-weight:700; color:#fff; cursor:pointer; letter-spacing:3px;">
-                                ${roomCode} <span style="font-size:1rem; opacity:0.5;">📋</span>
+                        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px; width:100%; margin-top:8px;">
+                            <div style="color:#64748b; font-size:0.65rem; font-weight:700; letter-spacing:1px; margin-bottom:2px;">ROOM CODE</div>
+                            <div onclick="copyRoomCode()" style="font-family:monospace; font-size:1.1rem; font-weight:700; color:#fff; cursor:pointer; letter-spacing:2px;">
+                                ${roomCode} <span style="font-size:0.85rem; opacity:0.5;">📋</span>
                             </div>
                         </div>
 
-                        <div style="margin-top:20px; color:#94a3b8; font-size:0.85rem; font-style:italic;">
-                            ${isHost ? "You are the Host.<br>Press ▶ in header to start." : "Waiting for Host to start auction..."}
+                        <div style="margin-top:6px; color:#94a3b8; font-size:0.7rem; font-style:italic;">
+                            ${isHost ? "You are the Host. Press ▶ in header to start." : "Waiting for Host to start auction..."}
                         </div>
                     </div>
                 `;
@@ -836,12 +836,12 @@ function updatePauseIcon(isPaused) {
     // Simple Text Swap: Less CPU usage
     if(isPaused) {
         btn.innerText = "▶"; // Play
-        btn.style.color = "#4ade80";
-        btn.style.borderColor = "#4ade80";
+        btn.title = "Resume";
+        btn.classList.add("is-paused");
     } else {
         btn.innerText = "⏸"; // Pause (Vertical bars)
-        btn.style.color = "";
-        btn.style.borderColor = "";
+        btn.title = "Pause";
+        btn.classList.remove("is-paused");
     }
 }
 
@@ -887,19 +887,23 @@ function forceAuctionTileTransparency() {
     const botRow = document.querySelector(".ac-bot-row");
 
     if (auctionCard) {
-        auctionCard.style.background = "rgba(15, 23, 42, 0.2)";
-        auctionCard.style.backdropFilter = "blur(12px)";
-        auctionCard.style.webkitBackdropFilter = "blur(12px)";
+        auctionCard.style.background = "transparent";
+        auctionCard.style.backdropFilter = "none";
+        auctionCard.style.webkitBackdropFilter = "none";
+        auctionCard.style.boxShadow = "none";
+        auctionCard.style.borderColor = "rgba(255, 255, 255, 0.15)";
     }
     if (topRow) {
         topRow.style.background = "transparent";
-        topRow.style.backdropFilter = "blur(8px)";
-        topRow.style.webkitBackdropFilter = "blur(8px)";
+        topRow.style.backdropFilter = "none";
+        topRow.style.webkitBackdropFilter = "none";
+        topRow.style.borderBottomColor = "rgba(255, 255, 255, 0.1)";
     }
     if (botRow) {
         botRow.style.background = "transparent";
-        botRow.style.backdropFilter = "blur(8px)";
-        botRow.style.webkitBackdropFilter = "blur(8px)";
+        botRow.style.backdropFilter = "none";
+        botRow.style.webkitBackdropFilter = "none";
+        botRow.style.borderBottomColor = "rgba(255, 255, 255, 0.1)";
     }
 }
 
@@ -1062,11 +1066,10 @@ function showResultStamp(title, detail, color, isUnsold) {
     const overlay = document.getElementById('resultOverlay');
     if(!overlay) return;
 
-    // 🔴 NEW PREMIUM HTML STRUCTURE
     overlay.innerHTML = `
-        <div class="premium-stamp" style="color:${color}; border-color:${color};">
-            ${title}
-            <div style="color:#fff;">${detail}</div>
+        <div class="premium-fullcard">
+            <div class="pf-title" style="color:${color};">${title}</div>
+            <div class="pf-detail">${detail}</div>
         </div>
     `;
 
@@ -1715,7 +1718,10 @@ function updateHeaderNotice() {
         headerBadge.classList.remove("hidden");
         headerName.innerText = myTeam;
         const color = TEAM_COLORS[myTeam] || '#fff';
-        headerBadge.style.borderLeft = `3px solid ${color}`;
+        // Transparent badge with team-colored border + text
+        headerBadge.style.background = "transparent";
+        headerBadge.style.border = `1px solid ${color}`;
+        headerBadge.style.color = color;
     }
 }
 
@@ -1810,6 +1816,13 @@ socket.on("mySquad", ({ squad, rules }) => {
     const saveBtn = document.getElementById("saveXIBtn");
     const placeholder = document.getElementById("xiPlaceholder");
     const cardWrapper = document.getElementById("xiCardWrapper");
+    const xiButtonRow = document.getElementById("xiButtonRow");
+
+    // Keep the status box pinned BELOW the sticky button row.
+    // (Uses CSS var so it works on all devices/font sizes.)
+    if (xiButtonRow) {
+        document.documentElement.style.setProperty('--xiButtonRowHeight', `${xiButtonRow.offsetHeight}px`);
+    }
 
     // Safety Check
     if(!container || !squad) return;
@@ -1825,6 +1838,7 @@ socket.on("mySquad", ({ squad, rules }) => {
 
         // Show DQ Message
         if(statusDiv) {
+            statusDiv.classList.remove("hidden");
             statusDiv.innerHTML = `
                 <div style="text-align:center; padding:30px; background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:12px; margin-top:20px;">
                     <h2 style="color:#ef4444; margin:0 0 10px 0; font-size:1.8rem;">❌ DISQUALIFIED</h2>
@@ -1851,7 +1865,7 @@ socket.on("mySquad", ({ squad, rules }) => {
     
     // Reset UI visibility
     container.innerHTML = "";
-    if(statusDiv) statusDiv.innerHTML = ""; 
+    if(statusDiv) { statusDiv.innerHTML = ""; statusDiv.classList.add("hidden"); }
     if(submitBtn) {
         submitBtn.classList.remove("hidden");
         submitBtn.disabled = true; // Disabled until 11 selected
@@ -1930,7 +1944,7 @@ function togglePlayerXI(p, btnElement, roleKey) {
     if(saveBtn) saveBtn.classList.add('hidden'); // Hide save until submitted
     // Hide previous status message
     const statusDiv = document.getElementById("xiStatus");
-    if(statusDiv) statusDiv.innerHTML = "";
+    if(statusDiv) { statusDiv.innerHTML = ""; statusDiv.classList.add("hidden"); }
     updateXIPreview();
 }
 // --- 5. SUBMIT LOGIC (FIXED) ---
@@ -2091,7 +2105,7 @@ window.resetXISelection = function() {
         if(saveBtn) saveBtn.classList.add('hidden');
         
         // 4. Clear Status & Unhide List
-        if(statusDiv) statusDiv.innerHTML = "";
+        if(statusDiv) { statusDiv.innerHTML = ""; statusDiv.classList.add("hidden"); }
         if(listDiv) listDiv.classList.remove("hidden"); // Show players again
 
         // 5. Reset Card View
@@ -2117,8 +2131,14 @@ socket.on("submitResult", (res) => {
     const btn = document.getElementById("submitXIBtn");
     const status = document.getElementById("xiStatus");
     const listDiv = document.getElementById("mySquadList");
+    const xiButtonRow = document.getElementById("xiButtonRow");
+
+    if (xiButtonRow) {
+        document.documentElement.style.setProperty('--xiButtonRowHeight', `${xiButtonRow.offsetHeight}px`);
+    }
 
     if(status) {
+        status.classList.remove("hidden");
         status.innerHTML = `
         <div class="status-box" style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             
@@ -2135,18 +2155,18 @@ socket.on("submitResult", (res) => {
                     ? `<button onclick="editTeam()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444; padding:8px 20px;">✏️ Edit</button>` 
                     : ''
                 }
-                <button onclick="showScreen('leaderboard')" class="primary-btn" style="padding:8px 20px;">🏆 Leaderboard</button>
+                <button onclick="showScreen('leaderboard')" class="primary-btn xi-leaderboard-btn">🏆 Leaderboard</button>
             </div>
         </div>`;
     }
+
+    // 🔴 HIDE THE PLAYER LIST AFTER SUBMIT (Approved or Disqualified)
+    if(listDiv) listDiv.classList.add("hidden");
 
     if (!res.disqualified) {
         if(btn) btn.classList.add("hidden");
         document.getElementById("saveXIBtn").classList.remove("hidden");
         
-        // 🔴 HIDE THE PLAYER LIST ON SUCCESS
-        if(listDiv) listDiv.classList.add("hidden");
-
         socket.emit("getAuctionState"); 
     }
 });
@@ -2165,7 +2185,7 @@ window.editTeam = function() {
         btn.style.background = ""; 
     }
 
-    if (statusBox) statusBox.innerHTML = "";
+    if (statusBox) { statusBox.innerHTML = ""; statusBox.classList.add("hidden"); }
     if (saveBtn) saveBtn.classList.add('hidden');
     
     // 🔴 SHOW LIST AGAIN
@@ -2207,15 +2227,23 @@ function renderPopupContent(mode) {
     const d = currentPopupData;
     const fullSquad = allSquads[d.team] || []; 
     const safePurse = Number(d.purse || teamPurse[d.team] || 0);
+    const footer = document.getElementById("popupDownloadFooter");
 
     container.innerHTML = "";
 
     if (mode === 'XI') {
-        const hasValidXI = d.xi && (
-            (d.xi.WK && d.xi.WK.length > 0) || 
-            (d.xi.BAT && d.xi.BAT.length > 0) || 
-            (d.xi.BOWL && d.xi.BOWL.length > 0)
+        const hasValidXI = !!d.xi && (
+            (Array.isArray(d.xi) && d.xi.length > 0) ||
+            (!Array.isArray(d.xi) && (
+                (d.xi.WK && d.xi.WK.length > 0) ||
+                (d.xi.BAT && d.xi.BAT.length > 0) ||
+                (d.xi.ALL && d.xi.ALL.length > 0) ||
+                (d.xi.BOWL && d.xi.BOWL.length > 0)
+            ))
         );
+
+        // 📸 Only visible for Playing XI (and only if XI exists)
+        if (footer) footer.classList.toggle("hidden", !hasValidXI);
 
         if (hasValidXI) {
              // 🔴 USE generateFantasyCardHTML (The image generator from Submit page)
@@ -2231,6 +2259,8 @@ function renderPopupContent(mode) {
         }
     } else {
         // Full Squad View
+        // 📸 Hide download bar for FULL squad (more space + no capture)
+        if (footer) footer.classList.add("hidden");
         container.innerHTML = generateFullSquadHTML(d.team, fullSquad, safePurse, "Manager", true);
     }
 }
@@ -2248,6 +2278,7 @@ window.downloadPopupCard = function() {
     if (document.getElementById('btnShowXI').classList.contains('active')) {
          // Download Playing XI (Capture the div)
          const el = document.getElementById('squadCaptureArea').firstElementChild;
+         if (!el || el.id === 'squadCaptureArea') return;
          html2canvas(el, { backgroundColor: "#020617", scale: 3 }).then(c => {
              const a = document.createElement('a');
              a.download = `${currentPopupData.team}_XI.png`;
@@ -2255,8 +2286,8 @@ window.downloadPopupCard = function() {
              a.click();
          });
     } else {
-        // Download Full Squad (Use the generator function)
-        downloadSquadImage(currentPopupData.team);
+        // Full Squad download hidden by UI (no-op)
+        return;
     }
 };
 window.downloadLeaderboardPNG = function() {
@@ -2286,7 +2317,12 @@ socket.on("leaderboard", (board) => {
                 statusHtml = `<span class="lb-status-icon lb-cross">❌</span>`;
             } 
             // Check if XI exists and has players (valid submission)
-            else if (t.xi && (t.xi.BAT?.length > 0 || t.xi.WK?.length > 0)) {
+            else if (
+                t.xi && (
+                    (Array.isArray(t.xi) && t.xi.length > 0) ||
+                    (!Array.isArray(t.xi) && (t.xi.BAT?.length > 0 || t.xi.WK?.length > 0))
+                )
+            ) {
                 statusHtml = `<span class="lb-status-icon lb-tick">✅</span>`;
             }
 
@@ -2318,8 +2354,10 @@ function openSquadView(teamName) {
     const overlay = document.getElementById("squadViewOverlay");
     
     // 2. Logic: If they have an XI submitted, show XI tab first. Else Full Squad.
-    // We check if 'xi' object exists and has keys
-    const hasXI = data.xi && (Object.keys(data.xi).length > 0);
+    const hasXI = !!data.xi && (
+        (Array.isArray(data.xi) && data.xi.length > 0) ||
+        (!Array.isArray(data.xi) && Object.keys(data.xi).length > 0)
+    );
     const initialMode = hasXI ? 'XI' : 'FULL';
     
     switchPopupView(initialMode);
@@ -2980,6 +3018,12 @@ window.resetXISelection = function() {
              btn.disabled = false;
              btn.innerText = "Submit XI (0/11)";
         }
+
+        // Clear Status + show list again
+        const statusDiv = document.getElementById("xiStatus");
+        const listDiv = document.getElementById("mySquadList");
+        if(statusDiv) { statusDiv.innerHTML = ""; statusDiv.classList.add("hidden"); }
+        if(listDiv) listDiv.classList.remove("hidden");
         
         // Hide Card/Save
         document.getElementById('xiCardWrapper').classList.add('hidden');
@@ -3003,24 +3047,3 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
