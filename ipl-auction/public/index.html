@@ -214,19 +214,21 @@
     </div>
 
     <div class="top-right">
-        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden" style="background:var(--success); color:#000;">➕</button>
+        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden" style="background:var(--success); color:#000;">✚JoinTeam</button>
         
-        <button onclick="showRules()" class="header-icon-btn" title="Rules">📜</button>
-
+        <button onclick="showRules()" class="header-icon-btn" title="Rules">🗓</button>
+        <button id="toggleMuteBtn" class="header-icon-btn" onclick="toggleMute()" title="Toggle Sound">
+            <div class="sound-wave"></div>
+        </button>
         <span id="adminControls" class="admin-group hidden" style="display:flex; gap:5px;">
-            <button id="startBtn" class="header-icon-btn primary" title="Start">▶</button>
+            <button id="startBtn" class="header-icon-btn primary" title="Start">▶ Start</button>
             <button id="togglePauseBtn" class="header-icon-btn" title="Pause">⏸</button>
             <button id="skipBtn" class="header-icon-btn" title="Skip">⏭</button>
-            <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">⏩</button>
-            <button onclick="admin('end')" class="header-icon-btn danger" title="End Game">⏹</button>
+            <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">▶|</button>
+            <button onclick="admin('end')" class="header-icon-btn danger" title="End Game">⊘</button>
         </span>
 
-        <button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">🏃</button>
+        <button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">🏳</button>
     </div>
     
     <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:10px; top:50px;">
@@ -408,7 +410,7 @@
             <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
                 <span class="brand">  AUCTION SUMMARY</span>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="exitToHome()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">[🏠]</button>
+                    <button onclick="exitToHome()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">🏠︎</button>
                 </div>
             </div>
         </header>
@@ -625,6 +627,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
