@@ -392,7 +392,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* ================= CENTER CARDS ================= */
 
 #auctionCard, #teamSelectionMain {
-  width: 100%; max-width: 500px;
+  width: 100%; max-width: 530px;
   overflow: hidden;
   border: 1px solid var(--border);
   box-shadow: 0 0 50px rgba(0,0,0,0.5);
@@ -404,9 +404,13 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 350px;
-    padding: 20px;
+    height: 177px;
+    min-height: 177px;
+    max-height: 177px;
+    padding: 12px;
     text-align: center;
+    overflow-y: auto;
+    flex-shrink: 0;
 }
 
 /* --- Compact Header Row (3-Column) --- */
@@ -833,7 +837,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 #commandCenter {
     width: 100%;
-    max-width: 500px;
+    max-width: 530px;
     margin-top: 15px;
     display: flex;
     flex-direction: column;
@@ -938,7 +942,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .feed-input-wrapper {
     display: flex;
     align-items: center;
-    padding: 10px;
+    padding: 6px;
     gap: 8px;
     border-top: 1px solid rgba(255,255,255,0.1);
     background: rgba(30, 41, 59, 0.4);
@@ -1534,7 +1538,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 #chat {
     flex: 1;
     overflow-y: auto;
-    padding: 10px;
+    padding: 4px 6px;
     display: flex;
     flex-direction: column;
     gap: 2px; /* Very tight gap between messages */
@@ -1546,7 +1550,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     display: flex;
     align-items: baseline; /* Aligns text perfectly */
     width: 100%;
-    padding: 6px 10px;
+    padding: 4px 6px;
     background: rgba(30, 41, 59, 0.4); /* Subtle dark background */
     border-radius: 4px;
     border-left: 3px solid var(--msg-color); /* Team Color Bar */
@@ -1607,7 +1611,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 /* 3. INPUT AREA */
 .feed-input-wrapper {
-    padding: 10px;
+    padding: 6px;
     background: rgba(0,0,0,0.4);
     display: flex; gap: 8px;
     border-top: 1px solid rgba(255,255,255,0.1);
@@ -2983,16 +2987,19 @@ body {
 /* Right Status Box (Timer & Team - SAME WIDTH) */
 .ac-status-box {
     flex-shrink: 0;
-    width: 50px !important; /* Fixed Width for Alignment */
+    /* Trim the left "empty strip" by making the wrapper
+       exactly match the timer/badge width. */
+    width: 40px !important;
+    min-width: 0 !important;
     display: flex; flex-direction: column;
+    align-items: stretch;
     flex: none !important; /* Disable flex scaling */
-
     gap: 6px;
 }
 
 /* Timer */
 .ac-timer-box {
-    width: 50% !important; /* Fill the 75px */
+    width: 40px !important;
     text-align: center;
     font-family: monospace; font-size: 1.5rem; font-weight: 700;
     color: #f43f5e; background: rgba(0,0,0,0.3);
@@ -3002,7 +3009,7 @@ body {
 
 /* Team Badge (Below Timer) */
 .ac-leader-badge {
-    width: 50% !important; /* Fill the 75px */
+    width: 40px !important;
     text-align: center;
     font-size: 0.75rem; font-weight: 700; 
     color: #fff; background: #22c55e; 
@@ -3093,78 +3100,75 @@ body {
 
 
 /* ================================================= */
-/* 💎 PREMIUM SOLD / UNSOLD OVERLAY (Full Cover)     */
+/* 💎 PREMIUM SOLD / UNSOLD OVERLAY (Full-card, hazy/blur) */
 /* ================================================= */
 
-/* 1. The Container (Covers 100% of the card) */
+/* 1. Full-card overlay – covers entire #auctionCard, hazy blurred background */
 .ac-result-overlay {
     position: absolute;
-    inset: 0; /* Top:0, Left:0, Right:0, Bottom:0 */
+    inset: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 23, 42, 0.85); /* Dark Navy Fade */
-    backdrop-filter: blur(12px); /* High Blur for Premium Feel */
-    z-index: 100; /* Highest Layer */
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 100;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    border-radius: 16px; /* Match Card Radius */
+    border-radius: inherit;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.35s ease;
 }
 
-/* Show State */
 .ac-result-overlay.active {
     opacity: 1;
     pointer-events: all;
 }
 
-/* 2. The Stamp Animation */
-.premium-stamp {
-    border: 6px solid currentColor; /* Takes text color */
-    padding: 15px 40px;
-    border-radius: 12px;
+/* 2. New full-card premium animation (replaces stamp) */
+.premium-fullcard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    transform: rotate(-15deg) scale(2); /* Start Big & Rotated */
-    opacity: 0;
-    animation: stampSlam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    background: rgba(0, 0, 0, 0.4); /* Dark bg for contrast */
-    box-shadow: 0 0 30px currentColor; /* Glowing edge */
+    width: 100%;
+    padding: 24px 20px;
+    animation: fullcardReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Inner Text */
-.premium-stamp h2 {
-    margin: 0;
+.premium-fullcard .pf-title {
     font-family: 'Exo 2', sans-serif;
     font-weight: 900;
-    font-size: 3.5rem;
-    line-height: 1;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    line-height: 1.1;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    -webkit-text-stroke: 1px rgba(0,0,0,0.5); /* Crisp edge */
+    letter-spacing: 0.08em;
+    margin: 0;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.4);
 }
 
-.premium-stamp div {
+.premium-fullcard .pf-detail {
     font-family: 'Inter', sans-serif;
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 2.5vw, 1.35rem);
     font-weight: 700;
-    color: #fff;
-    margin-top: 5px;
-    letter-spacing: 1px;
-    text-shadow: none;
+    letter-spacing: 0.12em;
+    margin-top: 8px;
+    color: rgba(255,255,255,0.95);
+    text-shadow: 0 1px 10px rgba(0,0,0,0.3);
 }
 
-/* 3. The Animation Keyframes */
-@keyframes stampSlam {
+@keyframes fullcardReveal {
     0% {
-        transform: rotate(-15deg) scale(3);
         opacity: 0;
+        transform: scale(0.92);
     }
     100% {
-        transform: rotate(-15deg) scale(1);
         opacity: 1;
+        transform: scale(1);
     }
 }
 /* ================================================= */
@@ -3342,7 +3346,7 @@ body {
 .scroll-view, #feedChat { 
     flex: 1; 
     overflow-y: auto; 
-    padding: 10px;
+    padding: 6px;
     -webkit-overflow-scrolling: touch; 
 }
 #ccExpandBtn { display: none !important; }
@@ -3827,20 +3831,21 @@ body {
     flex-shrink: 0 !important;
 }
 
-/* 🚑 FINAL TRANSPARENCY FIX (Overrides All Previous) */
+/* 🚑 FINAL TRANSPARENCY FIX – auction card transparent, borders kept for definition */
 #auctionCard {
-    background: rgba(15, 23, 42, 0.2) !important; /* 80% transparent dark blue */
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: none !important;
 }
 
 .ac-top-row,
 .ac-bot-row {
-    background: transparent !important; /* Force transparent */
-    backdrop-filter: blur(8px) !important; /* Add blur to rows for consistency */
-    -webkit-backdrop-filter: blur(8px) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; /* Subtle divider */
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Media Query Fix for Mobile (Ensures No Override) */
@@ -3849,9 +3854,11 @@ body {
     .ac-top-row,
     .ac-bot-row {
         background: transparent !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
+    #auctionCard { border: 1px solid rgba(255, 255, 255, 0.15) !important; }
+    .ac-top-row, .ac-bot-row { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
 }
 /* 🚑 HEADER BUTTON SIZE FIX */
 .header-icon-btn {
@@ -3882,31 +3889,17 @@ body {
         height: 22px !important;
     }
 }
-/* 🚑 INVISIBLE LINE/GAP FIX (Adjusted for Closer Spacing) */
+/* 🚑 INVISIBLE LINE/GAP FIX (Keep status-box, timer, leader-badge as original – no overrides) */
 .ac-info-box {
-    padding-right: 5px !important; /* Reduced gap: Moves line closer to timer with minimal space */
-    overflow: hidden !important; /* Prevent name overflow */
+    padding-right: 5px !important;
+    overflow: hidden !important;
 }
 
 .ac-name-text {
-    white-space: nowrap !important; /* Keep on one line */
+    white-space: nowrap !important;
     overflow: hidden !important;
-    text-overflow: ellipsis !important; /* ... for very long names */
-    max-width: 100% !important; /* Fill available space */
-}
-
-.ac-status-box {
-    width: 60px !important; /* Keep width fixed to maintain timer position */
-}
-
-/* Mobile: Adjust for smaller screens (Keep minimal space) */
-@media (max-width: 500px) {
-    .ac-info-box {
-        padding-right: 4px !important; /* Even closer on tiny screens, but still a little space */
-    }
-    .ac-status-box {
-        width: 55px !important; /* Slight adjustment if needed, but keeps timer in place */
-    }
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
 }
 
 
@@ -3955,15 +3948,18 @@ body {
         max-height: 300px !important;
     }
 }
-/* 🚑 TEAM SELECTION TILE SIZE MATCH (Same as Auction Tile) */
+/* 🚑 TEAM SELECTION TILE SIZE MATCH (Same as Auction Tile: 530×177px) */
 #teamSelectionMain {
-    min-height: 160px !important; /* Match auction tile's typical height (top 95px + bot 80px - padding) */
-    height: auto !important; /* Allow dynamic growth */
-    padding: 20px !important; /* Match auction padding */
-    border-radius: 16px !important; /* Match auction radius */
-    background: rgba(15, 23, 42, 0.4) !important; /* Match transparency */
+    height: 177px !important;
+    min-height: 177px !important;
+    max-height: 177px !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+    background: rgba(15, 23, 42, 0.4) !important;
     backdrop-filter: blur(12px) !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important; /* Match shadow */
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
 }
 
 /* Small Buttons in Team Selection Grid */
@@ -3986,19 +3982,29 @@ body {
 }
 /* 🚑 DISQUALIFIED MESSAGE POSITION FIX (Below Buttons, Same Length) */
 #xiStatus {
-    margin-top: 20px !important; /* Place below submit/reset buttons */
+    /* Keep status BELOW the sticky button row (never behind it) */
+    position: sticky !important;
+    top: calc(var(--xiStickyTop, 10px) + var(--xiButtonRowHeight, 70px) + var(--xiStickyGap, 12px)) !important;
+    z-index: 49 !important; /* below #xiButtonRow */
+
+    /* Reset legacy "fixed overlay" styling applied elsewhere */
+    bottom: auto !important;
+    right: auto !important;
+    left: auto !important;
+    pointer-events: auto !important;
+
     width: 100% !important; /* Same full length as button row */
-    max-width: 100% !important; /* Prevent overflow */
-    text-align: center !important; /* Center content */
-    position: relative !important; /* Not absolute/overlay */
-    z-index: 1 !important; /* Below buttons (buttons have higher z-index if needed) */
-    padding: 15px !important; /* Internal spacing */
-    border-radius: 12px !important;
-    background: rgba(15, 23, 42, 0.85) !important; /* Semi-transparent bg, not full overlay */
+    max-width: 100% !important;
+    text-align: center !important;
+
+    /* The inner status-box already has padding/bg */
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
 }
 
 /* Button Row: Ensure above status */
-div[style*="position: sticky; top: 10px;"] { /* Targets the button container */
+#xiButtonRow {
     z-index: 50 !important; /* High z-index to stay on top */
     background: rgba(15, 23, 42, 0.9) !important; /* Match bg */
 }
@@ -4006,8 +4012,20 @@ div[style*="position: sticky; top: 10px;"] { /* Targets the button container */
 /* Mobile: Adjust margin */
 @media (max-width: 500px) {
     #xiStatus {
-        margin-top: 15px !important;
+        top: calc(var(--xiStickyTop, 10px) + var(--xiButtonRowHeight, 70px) + 10px) !important;
     }
+}
+
+/* Status actions */
+#xiStatus .xi-leaderboard-btn {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #0b1220;
+    border: 1px solid rgba(0,0,0,0.2);
+    font-weight: 900;
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
+}
+#xiStatus .xi-leaderboard-btn:active {
+    transform: translateY(1px);
 }
 
 
@@ -4015,17 +4033,17 @@ div[style*="position: sticky; top: 10px;"] { /* Targets the button container */
 /* 🚑 FINAL FIXES (Paste at bottom of style.css)     */
 /* ================================================= */
 
-/* 1. Force Team Selection Tile to match Auction Card Height */
+/* 1. Force Team Selection Tile to match Auction Card (530×177px) */
 #teamSelectionMain {
-    min-height: 170px !important; /* Matches Auction Tile (Top 95px + Bot 80px) */
-    height: auto !important;
-    padding: 15px !important;
+    height: 177px !important;
+    min-height: 177px !important;
+    max-height: 177px !important;
+    padding: 12px !important;
     border-radius: 16px !important;
-    background: rgba(15, 23, 42, 0.4) !important; /* Glass effect */
+    background: rgba(15, 23, 42, 0.4) !important;
     backdrop-filter: blur(12px) !important;
     box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
-    /* Ensure it doesn't push Command Center down too far */
-    flex-grow: 0 !important; 
+    flex-grow: 0 !important;
     flex-shrink: 0 !important;
 }
 
@@ -4047,18 +4065,16 @@ div[style*="position: sticky; top: 10px;"] { /* Targets the button container */
 /* 🚑 FINAL LAYOUT & UI FIXES                        */
 /* ================================================= */
 
-/* 1. Fix Team Selection Tile Size (Match Auction Tile) */
-/* This ensures the Command Center (CC) has equal space in both phases */
+/* 1. Fix Team Selection Tile Size (Match Auction Tile: 530×177px) */
 #teamSelectionMain {
-    min-height: 170px !important; /* Fixed height matching auction card */
-    height: auto !important;
-    padding: 20px !important;
+    height: 177px !important;
+    min-height: 177px !important;
+    max-height: 177px !important;
+    padding: 12px !important;
     border-radius: 16px !important;
-    flex-grow: 0 !important; /* Stop it from expanding */
+    flex-grow: 0 !important;
     flex-shrink: 0 !important;
     margin-bottom: 0 !important;
-    
-    /* Ensure glass look matches */
     background: rgba(15, 23, 42, 0.4) !important;
     backdrop-filter: blur(12px) !important;
     box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
@@ -4088,16 +4104,16 @@ div[style*="position: sticky; top: 10px;"] { /* Targets the button container */
 /* 🚑 FINAL ALIGNMENT & COMPACTING FIXES             */
 /* ================================================= */
 
-/* 1. Compact Team Selection Tile (Matches Auction Tile Size) */
+/* 1. Compact Team Selection Tile (Matches Auction Tile: 530×177px) */
 #teamSelectionMain {
-    min-height: auto !important; /* Allow it to shrink */
-    height: auto !important;
-    padding: 15px !important;
+    height: 177px !important;
+    min-height: 177px !important;
+    max-height: 177px !important;
+    padding: 12px !important;
     border-radius: 12px !important;
-    margin-bottom: 5px !important; /* Small gap before CC */
-    flex-grow: 0 !important; 
+    margin-bottom: 5px !important;
+    flex-grow: 0 !important;
     flex-shrink: 0 !important;
-    
     background: rgba(15, 23, 42, 0.6) !important;
     backdrop-filter: blur(12px) !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
@@ -4136,7 +4152,59 @@ div[style*="position: sticky; top: 10px;"] { /* Targets the button container */
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* ================================================= */
+/* ✅ RESTORE WATERMARK LOGOS + HEADER POLISH         */
+/* ================================================= */
 
+/* 1) Restore faded logos on Playing XI cards */
+.fantasy-card::before {
+    opacity: 0.14 !important;
+    width: 260px !important;
+    height: 260px !important;
+    filter: none !important; /* Keep logo looking like the real team logo */
+}
 
+/* 2) Restore/normalize watermark on Full Squad cards */
+.prem-watermark {
+    opacity: 0.10 !important;
+    filter: none !important;
+    transform: translate(-50%, -50%) rotate(-12deg) scale(1.05) !important;
+}
 
+/* 3) On PC, keep admin controls on the far right */
+@media (min-width: 1100px) {
+    .top-right {
+        overflow-x: visible !important;
+        justify-content: flex-end !important;
+    }
+    #adminControls {
+        margin-left: auto !important;
+    }
+}
 
+/* 4) Header icon buttons: nicer interactive borders */
+.header-icon-btn {
+    background: rgba(255,255,255,0.02) !important;
+    border: 1px solid rgba(255,255,255,0.18) !important;
+    transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.header-icon-btn:hover {
+    background: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.55) !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.14);
+}
+.header-icon-btn:active {
+    transform: translateY(1px);
+}
+.header-icon-btn.warning { border-color: rgba(245,158,11,0.85) !important; }
+.header-icon-btn.danger { border-color: rgba(239,68,68,0.9) !important; }
+.header-icon-btn.is-paused {
+    border-color: rgba(74,222,128,0.9) !important;
+    color: #4ade80 !important;
+}
+
+/* 5) Team badge: transparent with team-colored border/text */
+#headerTeamBadge {
+    background: transparent !important;
+    border: 1px solid currentColor !important;
+}
