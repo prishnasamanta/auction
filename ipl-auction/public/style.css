@@ -4438,12 +4438,48 @@ body {
     border-bottom: none !important;
     flex: 1 !important; /* Force it to fill all remaining vertical space */
 }
+/* ================================================= */
+/* 📱 MOBILE FULL-WIDTH FIX (Paste at Very Bottom)   */
+/* ================================================= */
 
-/* 7. DISABLE MOBILE SHRINK/ZOOM */
-/* This overrides the rule that was making it tiny on small phones */
-@media (max-width: 380px) {
-    .fantasy-card, .premium-squad-card {
-        zoom: 1 !important; /* Reset zoom to normal */
+@media (max-width: 768px) {
+    /* 1. Force the main container to touch screen edges */
+    .auction-wrapper {
+        padding: 0 !important;       /* Remove the 10px side gap */
+        width: 100vw !important;     /* Force full viewport width */
+        max-width: 100vw !important; /* Override any desktop limits */
+        margin: 0 !important;
+    }
+
+    /* 2. Stretch the Top Card (Auction Tile) */
+    .auction-center {
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    #auctionCard {
+        width: 100% !important;
+        border-radius: 0 !important; /* Square corners since it touches edges */
+        border-left: none !important;
+        border-right: none !important;
+        box-shadow: none !important; /* Remove shadow to save space */
+    }
+
+    /* 3. Stretch the Bottom Panel (Command Center/Feed) */
+    #commandCenter {
+        width: 100% !important;
+        border-radius: 0 !important; /* Square corners */
+        border-left: none !important;
+        border-right: none !important;
+        margin: 0 !important;
+    }
+    
+    /* 4. Ensure Header touches edges */
+    .topbar {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        width: 100% !important;
     }
 }
 
