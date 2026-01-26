@@ -703,21 +703,19 @@ function renderEmbeddedTeams(teams) {
     
     // --- 1. RENDER TEAM BUTTONS (Standard View) ---
     if(!myTeam) {
-        // If game started, allow spectator mode
+        // If game started, allow spectator mode (full width button)
         if(gameStarted) {
              const specBtn = document.createElement("div");
-             specBtn.innerHTML = `<button class="secondary-btn" style="width:100%; margin-bottom:6px; padding:8px; font-size:0.85rem; border-style:dashed;" onclick="setGamePhase('AUCTION')">👀 Watch as Spectator</button>`;
+             specBtn.innerHTML = `<button class="secondary-btn" style="width:100%; padding:8px; font-size:0.85rem; border-style:dashed;" onclick="setGamePhase('AUCTION')">👀 Watch as Spectator</button>`;
              box.appendChild(specBtn);
         }
 
         if(!teams || teams.length === 0) {
-            box.innerHTML += `<div style="text-align:center; color:#94a3b8; padding:10px; font-size:0.85rem;">All teams taken!</div>`;
+            box.innerHTML += `<div style="text-align:center; color:#94a3b8; padding:10px; font-size:0.85rem; grid-column:1/-1;">All teams taken!</div>`;
             return;
         }
 
-        const grid = document.createElement("div");
-        grid.className = "team-list";
-        
+        // Create buttons directly in grid (no wrapper div)
         teams.sort().forEach(team => {
             const btn = document.createElement("button");
             btn.innerText = team;
@@ -752,9 +750,8 @@ function renderEmbeddedTeams(teams) {
                 
                 updateHeaderNotice();
             };
-            grid.appendChild(btn);
+            box.appendChild(btn);
         });
-        box.appendChild(grid);
     }
 }
 
@@ -833,15 +830,21 @@ function updatePauseIcon(isPaused) {
     const btn = document.getElementById("togglePauseBtn");
     if(!btn) return;
     
-    // Simple Text Swap: Less CPU usage
+    // Visual state changes: icon + appearance
     if(isPaused) {
-        btn.innerText = "▶"; // Play
+        btn.innerHTML = "▶"; // Play icon
         btn.title = "Resume";
         btn.classList.add("is-paused");
+        // Visual feedback: green border/glow when paused
+        btn.style.borderColor = "rgba(74,222,128,0.9)";
+        btn.style.color = "#4ade80";
     } else {
-        btn.innerText = "⏸"; // Pause (Vertical bars)
+        btn.innerHTML = "⏸"; // Pause icon (two vertical bars)
         btn.title = "Pause";
         btn.classList.remove("is-paused");
+        // Reset to default
+        btn.style.borderColor = "";
+        btn.style.color = "";
     }
 }
 
@@ -965,7 +968,13 @@ function updatePlayerCard(player, bid) {
 }
 
 socket.on("timer", t => {
-    document.getElementById("timer").innerText = "" + t;
+    const timerEl = document.getElementById("timer");
+    if(timerEl) {
+        timerEl.innerText = "" + t;
+        // Update snake border progress (0-100% for 10 seconds)
+        const progress = ((10 - t) / 10) * 100;
+        timerEl.style.setProperty('--timer-progress', `${progress}%`);
+    }
     if(auctionLive && !auctionPaused && t <= 3 && t > 0 && t !== lastTickSecond) {
         lastTickSecond = t;
         safePlay(soundTick);
@@ -989,15 +998,34 @@ socket.on("bidUpdate", data => {
     document.getElementById('bidderName').innerText = data.team;
     badge.style.backgroundColor = TEAM_COLORS[data.team] || "#22c55e";
 
-    // 🔴 CONDITIONAL BLINK LOGIC
+    // 🔴 CONDITIONAL BLINK LOGIC (Team Color Border Flash)
     if (data.team === myTeam) {
         const card = document.getElementById("auctionCard");
-        card.classList.remove("pulse-green"); // Reset
+        const teamColor = TEAM_COLORS[myTeam] || "#4ade80";
+        
+        // Convert hex to rgba for shadow
+        const hex = teamColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        const shadowColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
+        
+        // Remove any existing pulse classes
+        card.classList.remove("pulse-green", "pulse-team");
+        
+        // Set custom team color for pulse
+        card.style.setProperty('--pulse-color', teamColor);
+        card.style.setProperty('--pulse-shadow', shadowColor);
+        
         void card.offsetWidth; // Force Reflow
-        card.classList.add("pulse-green"); // Add
+        card.classList.add("pulse-team"); // Add team-colored pulse
         
         // Remove after animation so it can trigger again
-        setTimeout(() => card.classList.remove("pulse-green"), 500);
+        setTimeout(() => {
+            card.classList.remove("pulse-team");
+            card.style.removeProperty('--pulse-color');
+            card.style.removeProperty('--pulse-shadow');
+        }, 500);
     }
 
     updateBidButton({ bid: data.bid, player: currentPlayer });
@@ -1079,6 +1107,35 @@ function showResultStamp(title, detail, color, isUnsold) {
 /* ================================================= */
 /* =========== 5. LOGS & CHAT (IMPROVED) =========== */
 /* ================================================= */
+// Chat message tracking
+let chatLogCount = 0; // Track number of log messages in chat
+
+// Helper: Clean chat to maintain limits (max 5 logs, max 25 total)
+function cleanChatMessages() {
+    const chat = document.getElementById("chat");
+    if(!chat) return;
+    
+    const messages = Array.from(chat.children);
+    const logs = messages.filter(m => m.classList.contains('log-message'));
+    const chats = messages.filter(m => !m.classList.contains('log-message'));
+    
+    // Remove excess logs (keep only latest 5)
+    while(logs.length > 5) {
+        const oldestLog = logs.shift();
+        if(oldestLog && oldestLog.parentNode) oldestLog.parentNode.removeChild(oldestLog);
+    }
+    
+    // Remove excess total messages (keep max 25 total)
+    const allMessages = Array.from(chat.children);
+    while(allMessages.length > 25) {
+        const oldest = allMessages.shift();
+        if(oldest && oldest.parentNode) {
+            oldest.parentNode.removeChild(oldest);
+            if(oldest.classList.contains('log-message')) chatLogCount--;
+        }
+    }
+}
+
 // 1. CHAT UPDATE (Newest at Bottom)
 socket.on("chatUpdate", d => {
     const chat = document.getElementById("chat");
@@ -1105,32 +1162,37 @@ socket.on("chatUpdate", d => {
 
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
-
-
-    // Limit history to 60 messages (slightly more since they are compact)
-    if(chat.children.length > 20) chat.removeChild(chat.firstChild);
+    
+    // Clean to maintain limits
+    cleanChatMessages();
 });
 
-// 2. LOG UPDATE (Newest at TOP - Fixed)
-// --- UPDATED LOGIC: Latest at Bottom, Max 3 Items ---
+// 2. LOG UPDATE (Merged into Chat, Max 5 logs)
 socket.on("logUpdate", msg => {
-    const log = document.getElementById("log");
-    if(!log) return;
+    const chat = document.getElementById("chat");
+    if(!chat) return;
+    
     const div = document.createElement("div");
-    div.className = "log-item";
-  
-    // Simple Timestamp + Message
+    div.className = "chat-msg log-message"; // Special class for log messages
+    chatLogCount++;
+    
+    // Simple Timestamp + Message (styled like log)
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    div.innerHTML = `<span style="color:var(--gold); margin-right:5px;">${time}</span> ${msg}`;
-  
-    // 1. APPEND (Add to bottom)
-    log.appendChild(div);
-    // 2. SCROLL TO BOTTOM (Show latest)
-    log.scrollTop = log.scrollHeight;
-    // 3. LIMIT TO 3 ITEMS
-    while (log.children.length > 3) {
-        log.removeChild(log.firstChild); // Remove oldest from top
-    }
+    div.innerHTML = `
+        <div class="chat-meta" style="color:#fbbf24; opacity:0.8;">${time}</div>
+        <div class="chat-text" style="color:#94a3b8;">${msg}</div>
+    `;
+    
+    // Style log messages differently (no team color border)
+    div.style.borderLeftColor = "rgba(251,191,36,0.3)";
+    div.style.background = "rgba(0,0,0,0.2)";
+    
+    // Append to chat (not separate log)
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    
+    // Clean to maintain limits (max 5 logs, max 25 total)
+    cleanChatMessages();
 });
 // 3. SEND FUNCTION
 window.sendChat = function() {
@@ -1180,12 +1242,14 @@ function renderSquadTabs() {
   
     if (!selectedSquadTeam && myTeam) selectedSquadTeam = myTeam;
     if (!selectedSquadTeam && teams.length > 0) selectedSquadTeam = teams[0];
-    container.innerHTML = teams.map(t =>
-        `<button onclick="viewEmbeddedSquad('${t}')"
-         class="h-team-btn ${t === selectedSquadTeam ? 'active' : ''}">
+    container.innerHTML = teams.map(t => {
+        const teamColor = TEAM_COLORS[t] || '#facc15';
+        return `<button onclick="viewEmbeddedSquad('${t}')"
+         class="h-team-btn ${t === selectedSquadTeam ? 'active' : ''}"
+         style="${t === selectedSquadTeam ? `--team-color: ${teamColor};` : ''}">
          ${t}
-         </button>`
-    ).join("");
+         </button>`;
+    }).join("");
     if(selectedSquadTeam) viewEmbeddedSquad(selectedSquadTeam);
 }
 /* =========================================
@@ -1246,9 +1310,11 @@ window.viewEmbeddedSquad = function(team) {
             </div>
         `).join('');
     };
-    // 4. INJECT HTML (Dashboard View + Hidden Professional Card)
+    // 4. INJECT HTML (Dashboard View with faded logo watermark)
+    const logoUrl = `/logos/${team}.png`;
     box.innerHTML = `
-        <div id="squad-display-container">
+        <div id="squad-display-container" style="position:relative; --team-logo: url('${logoUrl}');">
+            <div class="squad-watermark"></div>
             <div class="squad-header-compact">
                 <h2 style="color:${teamColor}; margin:0;">${team}</h2>
                 <div style="display:flex; justify-content:space-between; margin-top:5px; color:#aaa; font-size:0.9rem;">
@@ -1258,7 +1324,7 @@ window.viewEmbeddedSquad = function(team) {
                 <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;">
                     <span style="color:#ccc;">𐀪 : ${squad.length} | <strong>OS: ${foreignCount}</strong></span>
                     <button onclick="downloadSquadImage()" style="cursor:pointer; background:#222; border:1px solid #444; color:#facc15; padding:4px 10px; border-radius:4px;">
-                        <i class="fas fa-download"></i> [⇩]
+                        [⇩]
                     </button>
                 </div>
             </div>
@@ -1285,26 +1351,28 @@ window.viewEmbeddedSquad = function(team) {
     });
 };
 window.downloadSquadImage = function() {
-    const element = document.getElementById("squad-card-capture");
+    const container = document.getElementById("squad-display-container");
+    if(!container) {
+        alert("Squad view not available");
+        return;
+    }
+    
     const teamName = selectedSquadTeam || "Squad";
-    html2canvas(element, {
-        width: 1200,
-        height: 1200,
-        windowWidth: 1200,
-        windowHeight: 1200,
-        scrollX: 0,
-        scrollY: 0,
-        scale: 2, // High Quality Export
+    html2canvas(container, {
+        backgroundColor: "#1e1e1e",
+        scale: 2,
         useCORS: true,
-        backgroundColor: "#111111", // Matches the dark theme base
-        letterRendering: 1
+        logging: false
     }).then(canvas => {
         const link = document.createElement('a');
-        link.download = `${teamName}_Official_Card.png`;
+        link.download = `${teamName}_Squad.png`;
         link.href = canvas.toDataURL("image/png");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }).catch(err => {
+        console.error("Download failed:", err);
+        alert("Failed to download squad image");
     });
 };
 // ==========================================
