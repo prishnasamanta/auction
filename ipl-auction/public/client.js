@@ -184,28 +184,34 @@ window.onload = async () => {
                 return;
             }
             // SCENARIO B: AUCTION ENDED (Show Summary Directly)
-            if (!result.active) {
-                console.log("📜 Loading Archived Room Data...");
-               
-                // 1. Populate Global Variables
-                allSquads = result.data.squads || {};
-                teamPurse = result.data.purses || {};
-                teamOwners = result.data.owners || {};
-                activeRules = result.data.rules || {};
-                roomCode = urlCode;
-                // 2. Setup UI
-                document.getElementById("landing").classList.add("hidden");
-                document.getElementById("auth").classList.add("hidden");
-                document.getElementById("auctionUI").classList.add("hidden");
-               
-                // 3. Render Summary
-                document.getElementById("postAuctionSummary").classList.remove("hidden");
-                renderPostAuctionSummary();
-               
-                // 4. Update URL
-                updateURL('summary');
-                return; // Stop here, don't connect socket
-            }
+           // --- UPDATED: window.onload (Force Leaderboard Data Load for Archived Rooms) ---
+// Inside window.onload, in SCENARIO B: AUCTION ENDED
+if (!result.active) {
+    console.log("📜 Loading Archived Room Data...");
+    
+    // 1. Populate Global Variables
+    allSquads = result.data.squads || {};
+    teamPurse = result.data.purses || {};
+    teamOwners = result.data.owners || {};
+    activeRules = result.data.rules || {};
+    roomCode = urlCode;
+    
+    // 🔴 FIX: Force Leaderboard Data Load
+    socket.emit("getAuctionState"); // This will trigger socket.on("leaderboard") with archived data
+    
+    // 2. Setup UI
+    document.getElementById("landing").classList.add("hidden");
+    document.getElementById("auth").classList.add("hidden");
+    document.getElementById("auctionUI").classList.add("hidden");
+    
+    // 3. Render Summary
+    document.getElementById("postAuctionSummary").classList.remove("hidden");
+    renderPostAuctionSummary();
+    
+    // 4. Update URL
+    updateURL('summary');
+    return; // Stop here, don't connect socket
+}
             // SCENARIO C: AUCTION LIVE (Proceed to Login)
             console.log("Room Active, proceeding to login...");
             document.getElementById("landing").classList.add("hidden");
@@ -2006,15 +2012,17 @@ function generateFantasyCardHTML(teamName, xiData, rating, count, isPreview = fa
     </div>`;
 }
 // Update the preview on the page
+// --- UPDATED: updateXIPreview (Use Fantasy Card for Matching Image) ---
 function updateXIPreview() {
     const count = countTotalXI();
     const container = document.getElementById('xiCardWrapper'); // Wrapper div in HTML
-  
+    
     if(container) {
+        // 🔴 FIX: Use generateFantasyCardHTML to match the popup's "same image"
         container.innerHTML = generateFantasyCardHTML(myTeam || "MY TEAM", selectedXI, null, count, true);
         container.classList.remove('hidden');
     }
-    // UI State
+    // UI State (rest remains the same)
     const placeholder = document.getElementById('xiPlaceholder');
     const btn = document.getElementById('submitXIBtn');
     const saveBtn = document.getElementById('saveXIBtn');
@@ -2033,7 +2041,7 @@ function updateXIPreview() {
         btn.style.background = count === 11 ? "var(--success)" : "";
         btn.style.color = count === 11 ? "#000" : "#fff";
     }
-  
+    
     updateStatsBar();
 }
 function updateStatsBar() {
@@ -2965,6 +2973,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
