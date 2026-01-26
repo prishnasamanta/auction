@@ -4010,3 +4010,36 @@ div[style*="position: sticky; top: 10px;"] { /* Targets the button container */
     }
 }
 
+
+/* ================================================= */
+/* 🚑 FINAL FIXES (Paste at bottom of style.css)     */
+/* ================================================= */
+
+/* 1. Force Team Selection Tile to match Auction Card Height */
+#teamSelectionMain {
+    min-height: 170px !important; /* Matches Auction Tile (Top 95px + Bot 80px) */
+    height: auto !important;
+    padding: 15px !important;
+    border-radius: 16px !important;
+    background: rgba(15, 23, 42, 0.4) !important; /* Glass effect */
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
+    /* Ensure it doesn't push Command Center down too far */
+    flex-grow: 0 !important; 
+    flex-shrink: 0 !important;
+}
+
+/* 2. Leaderboard Status Icons */
+.lb-status-icon {
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: inline-block;
+}
+.lb-tick { color: #4ade80; } /* Green Tick */
+.lb-cross { color: #ef4444; } /* Red Cross */
+.lb-dash { color: #64748b; opacity: 0.5; } /* Grey Dash */
+
+/* 3. Ensure Playing XI List Hides Cleanly */
+#mySquadList.hidden {
+    display: none !important;
+}
