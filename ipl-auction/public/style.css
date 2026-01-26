@@ -4084,6 +4084,59 @@ div[style*="position: sticky; top: 10px;"] { /* Targets the button container */
     align-items: center;
     justify-content: center;
 }
+/* ================================================= */
+/* 🚑 FINAL ALIGNMENT & COMPACTING FIXES             */
+/* ================================================= */
+
+/* 1. Compact Team Selection Tile (Matches Auction Tile Size) */
+#teamSelectionMain {
+    min-height: auto !important; /* Allow it to shrink */
+    height: auto !important;
+    padding: 15px !important;
+    border-radius: 12px !important;
+    margin-bottom: 5px !important; /* Small gap before CC */
+    flex-grow: 0 !important; 
+    flex-shrink: 0 !important;
+    
+    background: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+}
+
+/* Ensure inner list grid is compact */
+#embeddedTeamList .team-list {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important; /* 4 cols on mobile */
+    gap: 6px !important;
+    padding: 5px 0 !important;
+}
+#embeddedTeamList .team-btn {
+    padding: 8px 2px !important;
+    font-size: 0.8rem !important;
+}
+
+/* 2. Leaderboard Status Icons */
+.lb-icon { 
+    font-weight: 900; 
+    font-size: 1.1rem; 
+    display: inline-block; 
+    width: 24px; 
+    text-align: center;
+}
+.lb-tick { color: #4ade80; } /* Green Check */
+.lb-cross { color: #ef4444; } /* Red Cross */
+.lb-dash { color: #64748b; opacity: 0.3; font-weight: normal; }
+
+/* 3. Status Box Styling (Qualified/Disqualified) */
+.status-box {
+    animation: slideDown 0.3s ease-out;
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
 
 
 
