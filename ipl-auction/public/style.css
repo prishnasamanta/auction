@@ -264,14 +264,20 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 /* Icon Buttons */
 .header-icon-btn {
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.18);
     border-radius: 6px;
-    width: 36px; height: 34px; /* Fixed square-ish size */
-    display: flex; align-items: center; justify-content: center;
+    width: 24px !important; 
+    height: 24px !important;
+    min-width: 24px !important;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
     cursor: pointer;
-    transition: 0.2s;
+    transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     flex-shrink: 0;
+    padding: 0;
+    font-size: 0.9rem;
 }
 .header-icon-btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
 .header-icon-btn.primary { background: var(--primary); border: none; }
@@ -786,15 +792,19 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 /* 1. The Button */
 .count-pill-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
     color: var(--text-main);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    line-height: 1;
+    min-width: 40px;
+    height: 24px;
     cursor: pointer;
     font-family: var(--font-body);
     transition: background 0.2s;
@@ -1555,6 +1565,9 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .chat-msg.log-message {
     opacity: 0.85;
     font-style: italic;
+    padding: 3px 6px !important; /* Reduced padding */
+    font-size: 0.85rem !important; /* Smaller font */
+    min-height: auto !important;
 }
 /* --- PREMIUM COMPACT CHAT FEED --- */
 
@@ -1571,9 +1584,9 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* Base Message Row */
 .chat-msg {
     display: flex;
-    align-items: baseline; /* Aligns text perfectly */
+    align-items: center; /* Changed from baseline to center for better alignment */
     width: 100%;
-    padding: 4px 6px;
+    padding: 6px 8px; /* Slightly increased for better spacing */
     background: rgba(30, 41, 59, 0.4); /* Subtle dark background */
     border-radius: 4px;
     border-left: 3px solid var(--msg-color); /* Team Color Bar */
@@ -1596,19 +1609,41 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-left-width: 4px; /* Slightly thicker border */
 }
 
-/* Metadata (Time & Name) */
+/* Metadata (Team name on top, Player name on bottom) */
 .chat-meta {
     flex-shrink: 0;
-    margin-right: 8px;
+    margin-right: 10px;
     font-family: 'Exo 2', sans-serif;
-    font-size: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    min-width: 60px;
+}
+
+.chat-meta-top {
+    font-size: 0.8rem;
     font-weight: 700;
-    white-space: nowrap;
     color: var(--msg-color);
     letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    line-height: 1.2;
+}
+
+.chat-meta-bottom {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    opacity: 0.8;
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+/* Compact log message meta */
+.chat-meta.log-meta {
+    font-size: 0.7rem;
+    font-weight: 600;
+    opacity: 0.8;
+    min-width: auto;
 }
 
 /* The actual text message */
@@ -1617,6 +1652,13 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     word-break: break-word;
     font-weight: 400;
     opacity: 0.9;
+    flex: 1;
+}
+
+/* Compact log message text */
+.chat-text.log-text {
+    font-size: 0.85rem;
+    opacity: 0.85;
 }
 
 /* Timestamp styling */
@@ -2711,95 +2753,9 @@ body {
     100% { border-color: rgba(255,255,255,0.15); box-shadow: none; }
 }
 
-/* 4. PREMIUM SOLD ANIMATION (Stamp Overlay) */
-.ac-result-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.85); /* Slightly transparent dark */
-    backdrop-filter: blur(8px);
-    z-index: 100;
-    display: flex; justify-content: center; align-items: center;
-    border-radius: 16px;
-    opacity: 0; pointer-events: none; /* Hidden state */
-    transition: opacity 0.2s;
-}
-.ac-result-overlay.active { opacity: 1; pointer-events: all; }
+/* Removed duplicate .ac-result-overlay - final definition at line 3140 */
 
-.premium-stamp {
-    border: 5px solid #fff;
-    padding: 10px 30px;
-    text-transform: uppercase;
-    font-family: 'Exo 2', sans-serif;
-    font-weight: 900;
-    font-size: 3rem;
-    transform: rotate(-15deg) scale(3); /* Start Big */
-    opacity: 0;
-    animation: stampCrash 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    text-align: center;
-}
-.premium-stamp div { font-size: 1rem; font-weight: 700; letter-spacing: 2px; margin-top: 5px; color: #fff; text-shadow:none; }
-
-@keyframes stampCrash {
-    to { transform: rotate(-15deg) scale(1); opacity: 1; }
-}
-
-/* 5. COMMAND CENTER & FOOTER FIX */
-#commandCenter {
-    flex: 1; /* Fills remaining height */
-    width: 100%; 
-    display: flex; flex-direction: column;
-    min-height: 0; /* Crucial for internal scroll */
-    margin-bottom: 0; /* Touch bottom */
-    border-bottom-left-radius: 0; border-bottom-right-radius: 0;
-}
-
-/* Ensure Internal Scroll Works */
-.scroll-view {
-    flex: 1;
-    overflow-y: auto; /* ENABLE SCROLL */
-    padding: 10px;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Hide the arrow button */
-#ccExpandBtn { display: none !important; }
-
-/* 6. HEADER TWEAKS */
-.header-badge {
-    padding: 4px 10px; /* More padding */
-    border: 1px solid rgba(255,255,255,0.2); /* Visible border */
-}
-/* ================================================= */
-/* ⚡ FINAL LAYOUT FIX (Mobile + PC + Logic)         */
-/* ================================================= */
-
-/* 1. LOCK SCREEN (Prevent full page scroll) */
-body {
-    position: fixed;
-    width: 100%; height: 100%;
-    overflow: hidden;
-}
-
-/* 2. WRAPPER (Flex Column to fill space) */
-.auction-wrapper {
-    height: calc(100vh - 50px); /* Fill remaining height (Header is ~50px) */
-    display: flex;
-    flex-direction: column;
-    padding: 10px;
-    gap: 10px;
-    overflow: hidden; /* Stop wrapper scroll */
-    max-width: 600px; /* Constrain width for better PC view */
-    margin: 0 auto; /* Center horizontally on PC */
-    width: 100%;
-}
-
-/* 3. AUCTION CENTER (The Card Container) */
-.auction-center {
-    flex-shrink: 0; /* Never shrink this, it has fixed content */
-    width: 100%;
-}
+/* Removed duplicate commandCenter/auction-wrapper rules - final definitions at lines 4618-4710 */
 
 /* 4. AUCTION CARD (The Tile) */
 #auctionCard {
@@ -2930,32 +2886,7 @@ body {
     100% { border-color: rgba(255,255,255,0.15); box-shadow: none; }
 }
 
-/* 🔴 NEW PREMIUM SOLD STAMP */
-.ac-result-overlay {
-    position: absolute; inset: 0; 
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(8px);
-    z-index: 100;
-    display: flex; justify-content: center; align-items: center;
-    border-radius: 16px 16px 0 0; /* Match top row */
-    pointer-events: none; opacity: 0;
-    transition: opacity 0.2s;
-}
-.ac-result-overlay.active { opacity: 1; pointer-events: auto; }
-
-.premium-stamp {
-    border: 4px solid currentColor;
-    padding: 8px 20px;
-    font-family: 'Exo 2', sans-serif;
-    font-weight: 900; font-size: 2.5rem;
-    text-transform: uppercase;
-    transform: rotate(-12deg) scale(2);
-    animation: stampSlam 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    background: rgba(0,0,0,0.3);
-    box-shadow: 0 0 15px currentColor;
-    text-align: center;
-}
-@keyframes stampSlam { to { transform: rotate(-12deg) scale(1); } }
+/* Removed duplicate .ac-result-overlay - final definition at line 3140 */
 
 /* 6. FIXED FOOTER */
 .app-footer-fixed {
@@ -2970,47 +2901,7 @@ body {
     /* Safe Area for iPhones without home button */
 }
 /* ================================================= */
-/* ⚡ FINAL STACKED LAYOUT (Mobile & PC Center)      */
-/* ================================================= */
-
-/* 1. LOCK SCREEN */
-body {
-    position: fixed;
-    width: 100%; height: 100%;
-    overflow: hidden;
-}
-
-/* 2. MAIN WRAPPER (Vertical Stack Always) */
-/* This ensures Auction Card is ALWAYS above Command Center */
-.auction-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 55px); /* Full height minus header */
-    width: 100%;
-max-width: 100% !important; /* Remove the 550px limit */
-  margin: 0 ; /* Center horizontally on PC */
-    padding: 10px;
-    gap: 15px;
-    overflow: hidden;
-    position: relative;
-}
-
-/* 3. AUCTION CARD (Top Item) */
-.auction-center {
-    flex-shrink: 0; /* Never shrink */
-    width: 100%;
-    z-index: 5; /* Keep above if overlap occurs */
-}
-
-#auctionCard {
-    width: 100%;
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 16px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    display: flex; flex-direction: column;
-}
+/* Removed duplicate body/auction-wrapper/auctionCard rules - final definitions at lines 4618-4710 */
 
 /* --- Top Row: Name vs Status --- */
 .ac-top-row {
@@ -3181,8 +3072,93 @@ max-width: 100% !important; /* Remove the 550px limit */
 
 /* Admin Group Width */
 .admin-group {
-    display: flex; gap: 5px;
-    flex-shrink: 0; /* Prevent squishing */
+    display: flex; 
+    gap: 5px !important;
+    flex-shrink: 0 !important; /* Prevent squishing */
+}
+
+/* Pause button visual (no emoji, just CSS animation) */
+#togglePauseBtn {
+    position: relative;
+    font-size: 0 !important; /* Hide emoji text */
+}
+
+/* Default state: Two vertical bars (pause icon) */
+#togglePauseBtn:not(.is-paused)::before,
+#togglePauseBtn:not(.is-paused)::after {
+    content: '';
+    position: absolute;
+    width: 3px;
+    height: 10px;
+    background: currentColor;
+    border-radius: 1px;
+}
+
+#togglePauseBtn:not(.is-paused)::before {
+    left: calc(50% - 4px);
+}
+
+#togglePauseBtn:not(.is-paused)::after {
+    right: calc(50% - 4px);
+}
+
+/* Paused state: Play triangle (single shape) */
+#togglePauseBtn.is-paused {
+    border-color: rgba(74,222,128,0.9) !important;
+    color: #4ade80 !important;
+    animation: pausePulse 1.5s ease-in-out infinite;
+}
+
+#togglePauseBtn.is-paused::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 8px solid currentColor;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    left: calc(50% - 3px);
+}
+
+#togglePauseBtn.is-paused::after {
+    display: none;
+}
+
+@keyframes pausePulse {
+    0%, 100% { 
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4);
+        border-color: rgba(74,222,128,0.9);
+    }
+    50% { 
+        box-shadow: 0 0 0 4px rgba(74, 222, 128, 0);
+        border-color: rgba(74,222,128,1);
+    }
+}
+
+/* Pause badge in playerMeta */
+.pause-badge {
+    display: inline-block;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 8px;
+    letter-spacing: 0.5px;
+    animation: pauseBadgePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pauseBadgePulse {
+    0%, 100% { 
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% { 
+        opacity: 0.9;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0);
+    }
 }
 
 
@@ -3892,75 +3868,19 @@ body {
     background: transparent !important; 
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
-/* 🚑 EMERGENCY CSS FIXES (Paste at the very bottom of style.css) */
-
-/* 1. Fix Black Tile - Force Glass Effect */
-#auctionCard {
-    background: rgba(15, 23, 42, 0.4) !important; /* Semi-transparent */
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
-}
-
-/* Ensure inner rows are transparent so the blur shows through */
-.ac-top-row, .ac-bot-row {
-    background: transparent !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-/* 2. Fix Header Scrolling */
-.top-right {
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    display: flex !important;
-    gap: 5px !important;
-    scrollbar-width: none; /* Firefox */
-}
-.top-right::-webkit-scrollbar { display: none; } /* Chrome */
-
-/* Prevent button squishing */
-.header-icon-btn, .admin-group {
-    flex-shrink: 0 !important;
-}
-
-/* 🚑 FINAL TRANSPARENCY FIX – auction card transparent, borders kept for definition */
-#auctionCard {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    box-shadow: none !important;
-}
-
-.ac-top-row,
-.ac-bot-row {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Media Query Fix for Mobile (Ensures No Override) */
-@media (max-width: 900px) {
-    #auctionCard,
-    .ac-top-row,
-    .ac-bot-row {
-        background: transparent !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-    }
-    #auctionCard { border: 1px solid rgba(255, 255, 255, 0.15) !important; }
-    .ac-top-row, .ac-bot-row { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
-}
+/* Removed duplicate #auctionCard rules - final definition at line 4723 */
 /* 🚑 HEADER BUTTON SIZE FIX */
+/* Header icon buttons - consistent 24px size for single row */
 .header-icon-btn {
-    width: 24px !important; /* Smaller square */
+    width: 24px !important;
     height: 24px !important;
     min-width: 24px !important;
-    font-size: 0.9rem !important; /* Adjust icon size inside */
-    padding: 0 !important; /* No extra space */
-    border-radius: 6px !important; /* Keep rounded */
+    font-size: 0.9rem !important;
+    padding: 0 !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .header-badge {
@@ -3997,36 +3917,7 @@ body {
 
 
 
-/* 🚑 FIX STATUS DISPLAY (Make Inline Below Buttons) */
-#xiStatus {
-    position: relative !important; /* Remove any absolute/fixed positioning */
-    z-index: 1 !important; /* Low z-index to not block buttons */
-    margin-top: 20px !important; /* Space after button row */
-    width: 100% !important; /* Full width */
-    pointer-events: auto !important; /* Ensure clicks pass through */
-    background: transparent !important; /* No overlay bg */
-    border: none !important; /* No borders that might overlap */
-    padding: 0 !important; /* Reset padding */
-}
-
-/* Ensure inner buttons are clickable */
-#xiStatus button {
-    pointer-events: auto !important; /* Force clickable */
-    cursor: pointer !important;
-}
-
-/* Button Row: Ensure it's above status and not blocked */
-#playingXI .primary-btn, #playingXI .secondary-btn {
-    position: relative !important;
-    z-index: 10 !important; /* Higher than status */
-}
-
-/* Mobile Fix: No overflow issues */
-@media (max-width: 500px) {
-    #xiStatus {
-        margin-top: 15px !important;
-    }
-}
+/* Removed duplicate #xiStatus rules - final definition at line 4045 */
 /* 🚑 ADD SCROLLING TO FULL SQUAD VIEW (Popup/Embedded) */
 .prem-body {
     max-height: 400px !important; /* Limit height to enable scroll if content overflows */
@@ -4041,38 +3932,7 @@ body {
         max-height: 300px !important;
     }
 }
-/* 🚑 TEAM SELECTION TILE SIZE MATCH (Same as Auction Tile: 530×177px) */
-#teamSelectionMain {
-    height: 177px !important;
-    min-height: 177px !important;
-    max-height: 177px !important;
-    padding: 12px !important;
-    border-radius: 16px !important;
-    background: rgba(15, 23, 42, 0.4) !important;
-    backdrop-filter: blur(12px) !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-}
-
-/* Small Buttons in Team Selection Grid */
-.team-list {
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important; /* Smaller columns */
-    gap: 8px !important; /* Tighter spacing */
-}
-
-.team-btn {
-    padding: 8px 5px !important; /* Smaller padding */
-    font-size: 0.85rem !important; /* Smaller text */
-    letter-spacing: 0.5px !important;
-}
-
-/* Mobile: Adjust for fit */
-@media (max-width: 500px) {
-    .team-list {
-        grid-template-columns: repeat(3, 1fr) !important; /* 3 per row on small screens */
-    }
-}
+/* Removed duplicate - final definition at line 4734 */
 /* 🚑 DISQUALIFIED MESSAGE POSITION FIX (Below Buttons, Same Length) */
 #xiStatus {
     /* Keep status BELOW the sticky button row (never behind it) */
@@ -4122,95 +3982,7 @@ body {
 }
 
 
-/* ================================================= */
-/* 🚑 FINAL FIXES (Paste at bottom of style.css)     */
-/* ================================================= */
-
-/* 1. Force Team Selection Tile to match Auction Card (530×177px) */
-#teamSelectionMain {
-    height: 177px !important;
-    min-height: 177px !important;
-    max-height: 177px !important;
-    padding: 12px !important;
-    border-radius: 16px !important;
-    background: rgba(15, 23, 42, 0.4) !important;
-    backdrop-filter: blur(12px) !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-}
-
-/* 2. Leaderboard Status Icons */
-.lb-status-icon {
-    font-size: 1.2rem;
-    font-weight: bold;
-    display: inline-block;
-}
-.lb-tick { color: #4ade80; } /* Green Tick */
-.lb-cross { color: #ef4444; } /* Red Cross */
-.lb-dash { color: #64748b; opacity: 0.5; } /* Grey Dash */
-
-/* 3. Ensure Playing XI List Hides Cleanly */
-#mySquadList.hidden {
-    display: none !important;
-}
-/* ================================================= */
-/* 🚑 FINAL LAYOUT & UI FIXES                        */
-/* ================================================= */
-
-/* 1. Fix Team Selection Tile Size (Match Auction Tile: 530×177px) */
-#teamSelectionMain {
-    height: 177px !important;
-    min-height: 177px !important;
-    max-height: 177px !important;
-    padding: 12px !important;
-    border-radius: 16px !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    margin-bottom: 0 !important;
-    background: rgba(15, 23, 42, 0.4) !important;
-    backdrop-filter: blur(12px) !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
-}
-
-/* 2. Leaderboard Icons */
-.lb-icon { font-weight: bold; font-size: 1.1rem; display: inline-block; width: 20px; text-align: center; }
-.lb-tick { color: #4ade80; } /* Green Check */
-.lb-cross { color: #ef4444; } /* Red Cross */
-.lb-dash { color: #64748b; opacity: 0.5; }
-
-/* 3. Smooth Transitions for List Hiding */
-#mySquadList {
-    transition: opacity 0.3s ease;
-}
-#mySquadList.hidden {
-    display: none !important;
-}
-
-/* 4. Fix Reset Button Alignment */
-#xiButtonRow button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-/* ================================================= */
-/* 🚑 FINAL ALIGNMENT & COMPACTING FIXES             */
-/* ================================================= */
-
-/* 1. Compact Team Selection Tile (Matches Auction Tile: 530×177px) */
-#teamSelectionMain {
-    height: 177px !important;
-    min-height: 177px !important;
-    max-height: 177px !important;
-    padding: 12px !important;
-    border-radius: 12px !important;
-    margin-bottom: 5px !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    background: rgba(15, 23, 42, 0.6) !important;
-    backdrop-filter: blur(12px) !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
-}
+/* Removed duplicate teamSelectionMain definitions - final definition at line 4734 */
 
 /* Team Selection Grid: 4 columns, 3 rows layout */
 #embeddedTeamList {
@@ -4366,181 +4138,6 @@ body {
 #headerTeamBadge {
     background: transparent !important;
     border: 1px solid currentColor !important;
-}
-/* ================================================= */
-/* 🚀 FINAL FULL-SCREEN & PADDING FIX                */
-/* ================================================= */
-
-/* 1. FORCE FULL WIDTH (Stop shrinking) */
-body {
-    width: 100vw !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-/* 2. EXPAND WRAPPER TO EDGES */
-.auction-wrapper {
-    /* Remove the 550px limit that squashes the UI */
-    max-width: 100% !important; 
-    width: 100% !important;
-    margin: 0 !important;
-    
-    /* Remove side padding that creates the "gaps" on the sides */
-    padding: 0 !important; 
-    
-    /* Ensure height fits exactly between header and bottom */
-    height: calc(100dvh - 45px) !important; 
-    border-radius: 0 !important;
-}
-
-/* 3. FIX HEADER PADDING */
-.topbar {
-    /* Reduce padding significantly */
-    padding: 0 5px !important; 
-    height: 45px !important;
-}
-
-/* 4. FIX FOOTER PADDING */
-.app-footer {
-    /* Reduce vertical padding */
-    padding: 5px 0 !important; 
-    /* Minimal safe area for iPhone home bar */
-    padding-bottom: env(safe-area-inset-bottom, 5px) !important;
-}
-
-/* 5. STRETCH AUCTION CARD (Top Tile) */
-.auction-center {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important; /* Remove gap around card */
-}
-
-#auctionCard {
-    width: 100% !important;
-    /* Remove side borders since it touches edge now */
-    border-left: none !important; 
-    border-right: none !important;
-    border-top: none !important;
-    /* Only round the bottom corners for style */
-    border-radius: 0 0 16px 16px !important; 
-}
-
-/* 6. STRETCH COMMAND CENTER (Bottom Tile) */
-#commandCenter {
-    width: 100% !important;
-    margin: 0 !important;
-    /* Only round the top corners */
-    border-radius: 16px 16px 0 0 !important; 
-    border-left: none !important;
-    border-right: none !important;
-    border-bottom: none !important;
-    flex: 1 !important; /* Force it to fill all remaining vertical space */
-}
-/* Disable Side Padding for Full-Width */
-
-/* 1. Main UI - Remove left/right padding */
-#auctionUI {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-/* 2. Auction Wrapper - Full width, no padding/margin limits */
-.auction-wrapper {
-  padding: 0 !important; /* Removes all padding, including sides */
-  max-width: 100% !important; /* Full screen */
-  width: 100% !important;
-  margin: 0 !important; /* No centering */
-}
-
-/* 3. Header - Minimal or no side padding */
-.topbar {
-  padding-left: 0 !important; /* Optional small padding if needed, else 0 */
-  padding-right: 0 !important;
-}
-
-/* 4. Footer - No side padding needed (already vertical-only) */
-.app-footer, .app-footer-fixed {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-/* 5. Auction Center/Card - No side padding */
-.auction-center {
-  padding: 0 !important;
-}
-#auctionCard {
-  border-left: none !important; /* Optional: remove side borders for true edge-to-edge */
-  border-right: none !important;
-}
-
-/* Mobile-Specific Override (to ensure no shrinkage) */
-@media (max-width: 900px) {
-  .auction-wrapper {
-    padding: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-  }
-  #auctionUI {
-    padding: 0 !important;
-  }
-  .auction-center {
-    padding: 0 !important;
-  }
-}
-
-/* Disable Side Padding for Full-Width with Minimal Adjustments */
-
-/* 1. Main UI - Minimal side padding for borders */
-#auctionUI {
-  padding-left: 5px !important;
-  padding-right: 5px !important;
-}
-
-/* 2. Auction Wrapper - Near full width, minimal padding */
-.auction-wrapper {
-  padding: 5px !important; /* Minimal all-around, shows borders */
-  max-width: 100% !important;
-  width: 100% !important;
-  margin: 0 !important;
-}
-
-/* 5. Auction Center/Card - Minimal padding between header and tile */
-.auction-center {
-  padding: 5px !important; /* Minimal side/top/bottom */
-  margin-top: 5px !important; /* Space between header and tile */
-}
-#auctionCard {
-  border-left: 1px solid rgba(255, 255, 255, 0.15) !important; /* Restore side borders */
-  border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
-  border-radius: 16px !important; /* Full round for visibility */
-}
-
-/* 6. Command Center - Ensure borders visible */
-#commandCenter {
-  border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 16px !important; /* Full round */
-}
-
-/* Mobile-Specific Override */
-@media (max-width: 900px) {
-  .auction-wrapper {
-    padding: 5px !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-  }
-  #auctionUI {
-    padding-left: 5px !important;
-    padding-right: 5px !important;
-  }
-  .auction-center {
-    padding: 5px !important;
-    margin-top: 5px !important;
-  }
 }
 /* ================================================= */
 /* 💎 PROFESSIONAL CUSTOM POPUP (Replacement)        */
@@ -4831,22 +4428,12 @@ body {
 /* 11. Fix spacing: Match spacing between auction card and CC with team selection and CC */
 /* Both should have the same spacing - use consistent margin-top on command center */
 .auction-wrapper {
-    gap: 0 !important; /* No gap - spacing handled by margin-top on command center */
+    gap: 0 !important; /* No gap - spacing via margin-top */
 }
 
-/* Command center gets consistent margin-top whether after team selection or auction card */
-/* This ensures same spacing in both scenarios */
+/* Command center gets consistent margin-top to match team selection to CC spacing (approximately 10px based on DOM positions) */
 #commandCenter {
-    margin-top: 0 !important; /* Same spacing whether after team selection or auction card */
-}
-
-/* Ensure no conflicting margins on parent containers */
-.auction-center {
-    margin-bottom: 0 !important;
-}
-
-#teamSelectionMain {
-    margin-bottom: 0 !important;
+    margin-top: 10px !important; /* Match the spacing between team selection and CC */
 }
 
 /* 12. Fix headers in postAuctionSummary and leaderboard - prevent button text overlap on mobile */
@@ -4976,6 +4563,66 @@ body {
         font-size: 0.7rem !important;
         min-height: 28px !important;
     }
+}
+
+/* ================================================= */
+/* 🎯 FINAL FIXES: Button Sizes, Pause Badge, Chat  */
+/* ================================================= */
+
+/* Ensure admin group buttons fit in single row */
+.admin-group {
+    gap: 5px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Ensure count-pill-btn matches header-badge style */
+.count-pill-btn {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    height: 24px !important;
+    min-width: 40px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    font-size: 0.75rem !important;
+}
+
+/* Pause badge styling in playerMeta */
+.pause-badge {
+    display: inline-block !important;
+    background: rgba(239, 68, 68, 0.2) !important;
+    border: 1px solid rgba(239, 68, 68, 0.5) !important;
+    color: #ef4444 !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    margin-left: 8px !important;
+    letter-spacing: 0.5px !important;
+    animation: pauseBadgePulse 1.5s ease-in-out infinite !important;
+}
+
+@keyframes pauseBadgePulse {
+    0%, 100% { 
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% { 
+        opacity: 0.9;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0);
+    }
+}
+
+/* Ensure squadTabList selects user's team by default */
+#squadTabList .h-team-btn.active {
+    background: var(--team-color, rgba(99, 102, 241, 0.2)) !important;
+    border-color: var(--team-color, #6366f1) !important;
+    color: #fff !important;
 }
 
 
