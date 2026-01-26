@@ -604,11 +604,28 @@
             document.getElementById('expandBtn').textContent = isCollapsed ? '□' : '−';
         }
     </script>
+<div id="customPopup" class="cp-overlay hidden">
+    <div class="cp-card">
+        <div class="cp-border-gradient"></div>
+        
+        <div class="cp-inner">
+            <div class="cp-icon" id="cpIcon">⚠️</div>
+            <h3 class="cp-title" id="cpTitle">Confirm Action</h3>
+            <p class="cp-msg" id="cpMessage">Are you sure you want to proceed?</p>
+            
+            <div class="cp-actions">
+                <button id="cpBtnCancel" class="cp-btn cp-btn-cancel">CANCEL</button>
+                <button id="cpBtnOk" class="cp-btn cp-btn-ok">CONFIRM</button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
