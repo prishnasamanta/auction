@@ -14,6 +14,8 @@ let activeRules = {};
 let selectedXI = { BAT: [], BOWL: [], WK: [], ALL: [] };
 let lastTickSecond = null;
 let teamOwners = {};
+let isMuted = false;
+
 // --- POPUP WINDOW STATE ---
 let remainingSets = [];
 let viewSetWindow = null;
@@ -72,18 +74,17 @@ window.onpopstate = function(event) {
 /* ================================================= */
 // ✅ FIX: Safe Play Function to prevent crashes
 function safePlay(audioObj) {
-    if (!audioObj) return;
-    // Reset time to start (allows rapid re-play)
+    if (!audioObj || isMuted) return; // 🛑 CHECK MUTE STATE HERE
+    
     audioObj.currentTime = 0;
-  
-    // Attempt to play, catch errors silently if user hasn't interacted yet
     const playPromise = audioObj.play();
     if (playPromise !== undefined) {
         playPromise.catch(error => {
-            console.warn("Audio blocked (User interaction needed):", error);
+            // console.warn("Audio blocked:", error);
         });
     }
 }
+
 /* ================================================= */
 /* 🖱️ EVENT LISTENERS SETUP                          */
 /* ================================================= */
@@ -1748,20 +1749,43 @@ function attachAdminListeners() {
 
     add("startBtn", "start");
     add("togglePauseBtn", "togglePause");
-    add("skipBtn", "skip");
+    add("skipBtn", "skip"); // Standard skip (next player)
     
-    // Skip Set with Confirmation
+    // 🟢 FIX: Custom Popup for SKIP SET
     const skipSetBtn = document.getElementById("skipSetBtn");
     if(skipSetBtn) {
-        skipSetBtn.onclick = () => {
-            if(confirm("⚠️ Skip this entire set?")) socket.emit("adminAction", "skipSet");
+        // Remove any inline onclick from HTML first to avoid double firing
+        skipSetBtn.onclick = async () => {
+            const confirmed = await showConfirm(
+                "This will skip the current set. All remaining players in this set will be marked as UNSOLD.\n\nContinue?", 
+                "SKIP ENTIRE SET?", 
+                "ᯓ➤"
+            );
+            
+            if(confirmed) {
+                socket.emit("adminAction", "skipSet");
+            }
         };
     }
 
-    // End Game
-    const endBtn = document.getElementById("endBtn"); // If you renamed it in HTML, update ID here
-    // In your HTML it is: <button onclick="admin('end')" ...> so it works via inline JS
+    // 🟢 FIX: Custom Popup for END GAME
+    const endBtn = document.getElementById("endBtn"); 
+    if(endBtn) {
+        // Remove inline onclick="admin('end')" from HTML if present
+        endBtn.onclick = async () => {
+            const confirmed = await showConfirm(
+                "This will end the auction permanently and generate final summaries.\n\nAre you sure?", 
+                "END AUCTION?", 
+                "🛑"
+            );
+            
+            if(confirmed) {
+                socket.emit("adminAction", "end");
+            }
+        };
+    }
 }
+
 
 // CALL THIS ON LOAD
 document.addEventListener("DOMContentLoaded", () => {
@@ -3313,6 +3337,20 @@ socket.on("error", msg => {
         showPopup(msg, "ERROR", "⚠️", true);
     }
 });
+window.toggleMute = function() {
+    isMuted = !isMuted;
+    const btn = document.getElementById("toggleMuteBtn");
+    
+    if (isMuted) {
+        btn.classList.add("muted");
+        btn.title = "Unmute";
+    } else {
+        btn.classList.remove("muted");
+        btn.title = "Mute";
+        // Optional: Play a tiny beep to confirm unmute
+        safePlay(soundTick); 
+    }
+};
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
@@ -3328,6 +3366,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
