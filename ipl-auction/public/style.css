@@ -2987,8 +2987,8 @@ body {
     flex-direction: column;
     height: calc(100vh - 55px); /* Full height minus header */
     width: 100%;
-    max-width: 550px; /* Constrain width on PC (Mobile App Look) */
-    margin: 0 auto; /* Center horizontally on PC */
+max-width: 100% !important; /* Remove the 550px limit */
+  margin: 0 ; /* Center horizontally on PC */
     padding: 10px;
     gap: 15px;
     overflow: hidden;
@@ -3390,9 +3390,9 @@ body {
     flex-direction: column; /* Stack Vertically */
     align-items: center;    /* Center Horizontally */
     width: 100%;
-    max-width: 550px;       /* Fixed Width for PC (App Look) */
-    margin: 0 auto;         /* Center on PC Screen */
-    padding: 10px;
+    max-width: 100% !important; /* Remove the 550px limit */    
+    margin: 0; 
+    padding: 0 !important;/* Center on PC Screen */
     gap: 10px;
     overflow: hidden;       /* No Scroll on Wrapper */
     position: relative;
@@ -3400,10 +3400,11 @@ body {
 
 /* 5. AUCTION CARD (Top Item - Fixed Size) */
 .auction-center {
+  padding: 5px !important; /* Minimal padding for the card */
     width: 100%;
     flex-shrink: 0;
-    max-width: 550px; /* Match wrapper max-width */
-    margin: 0 auto;
+  max-width: 100% !important;
+  margin: 0 auto;
 }
 
 #auctionCard {
@@ -3493,7 +3494,7 @@ body {
 /* If you want side-by-side on very large screens */
 @media (min-width: 1200px) {
     /* Keep centering for consistency as requested */
-    .auction-wrapper { max-width: 600px; }
+    .auction-wrapper { max-width: 100% !important; /* Remove the 550px limit */ }
 }
 
 
@@ -4366,3 +4367,4 @@ body {
     background: transparent !important;
     border: 1px solid currentColor !important;
 }
+
