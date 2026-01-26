@@ -3224,7 +3224,6 @@ window.admin = async function(action) {
 };
 
 // 4. Redefine Skip Set Button Logic (must be re-attached)
-const skipSetBtn = document.getElementById("skipSetBtn");
 if(skipSetBtn) {
     skipSetBtn.onclick = async () => {
         const yes = await showConfirm("Skip this entire set? All remaining players will be marked Unsold.", "SKIP SET?", "⏩");
@@ -3233,7 +3232,6 @@ if(skipSetBtn) {
 }
 
 // 5. Redefine Leave Button Logic
-const leaveBtn = document.getElementById("leaveBtn");
 if (leaveBtn) {
     leaveBtn.onclick = async () => {
         const yes = await showConfirm("You will lose your spot immediately.\n\nDo you want to leave?", "LEAVE ROOM?", "🏃");
@@ -3274,4 +3272,5 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
