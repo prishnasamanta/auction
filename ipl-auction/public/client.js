@@ -95,19 +95,24 @@ function setupEventListeners() {
     const usernameInput = document.getElementById("username");
 
     // 1. Enter Arena Button
- if (enterBtn) {
-    enterBtn.onclick = () => {
-        // Hide Landing
-        document.getElementById("landing").classList.add("hidden");
-        // Show Auth
-        document.getElementById("auth").classList.remove("hidden");
-        
-        // 🔴 IMPORTANT: Lock body scrolling again for the app view
-        document.body.style.overflow = "hidden"; 
-        
-        switchAuthTab('join');
-    };
-}
+    if (enterBtn) {
+        enterBtn.onclick = () => {
+            // Hide Landing
+            document.getElementById("landing").classList.add("hidden");
+            // Show Auth
+            document.getElementById("auth").classList.remove("hidden");
+            
+            // 🔴 IMPORTANT: Lock body scrolling again for the app view
+            document.body.style.overflow = "hidden"; 
+            
+            switchAuthTab('join');
+
+            // Update URL to /room when on auth screen without a room yet
+            if (window.location.pathname !== '/room') {
+                window.history.pushState({ page: 'room' }, 'Join Room', '/room');
+            }
+        };
+    }
 
 
     // 2. Create Room Button
@@ -164,6 +169,29 @@ function setupEventListeners() {
 }
 
 window.onload = async () => {
+    // Check if user was on auctionUI screen (from sessionStorage)
+    const savedRoom = sessionStorage.getItem('ipl_room');
+    const savedUser = sessionStorage.getItem('ipl_user');
+    const savedTeam = sessionStorage.getItem('ipl_team');
+    
+    if (savedRoom && savedUser) {
+        roomCode = savedRoom;
+        username = savedUser;
+        if (savedTeam) myTeam = savedTeam;
+        
+        // Check if we're on auctionUI path (not just /room)
+        const path = window.location.pathname;
+        const parts = path.split('/');
+        const isOnAuctionPath = parts[1] === 'room' && parts[2] && parts.length <= 3; // /room/CODE or /room/CODE/xi etc
+        
+        if (isOnAuctionPath) {
+            // User is reconnecting to auctionUI - show popup
+            isReconnecting = true;
+            reconnectionPopupShown = true;
+            showPopup("Reconnecting to your auction room...", "RECONNECTING", "🔄");
+        }
+    }
+    
     // 1. Check URL for Room Code
     const path = window.location.pathname;
     const parts = path.split('/');
@@ -419,6 +447,41 @@ socket.on("roomCreated", code => {
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
 
+    // --- CHECK IF AUCTION ENDED DURING RECONNECTION ---
+    if (isReconnecting && data.auctionEnded) {
+        isReconnecting = false;
+        reconnectionPopupShown = false;
+        toggleCustomPopup(false); // Hide reconnecting popup
+        
+        // Sync data first
+        roomCode = data.roomCode || roomCode;
+        if(data.rules) activeRules = data.rules;
+        if(data.squads) allSquads = data.squads;
+        if(data.teamOwners) teamOwners = data.teamOwners;
+        if(data.purses) teamPurse = data.purses;
+        
+        if (data.yourTeam !== undefined) {
+            myTeam = data.yourTeam;
+            if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
+        }
+        
+        // Route based on player status
+        if (myTeam) {
+            // Player has a team -> Go to XI page
+            showScreen("playingXI");
+            socket.emit("getMySquad");
+            updateURL('xi');
+        } else {
+            // Spectator -> Go to Summary
+            setTimeout(() => {
+                renderPostAuctionSummary();
+                showScreen("postAuctionSummary");
+                updateURL('summary');
+            }, 300);
+        }
+        return;
+    }
+
     // --- 1. SILENT AUTO-REFRESH (Update Data Only) ---
     if (data.updateOnly) {
         if(data.teamOwners) teamOwners = data.teamOwners;
@@ -436,6 +499,13 @@ socket.on("joinedRoom", (data) => {
         
         if(document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
             viewEmbeddedSquad(selectedSquadTeam);
+        }
+        
+        // Hide reconnecting popup if it was shown
+        if (isReconnecting) {
+            isReconnecting = false;
+            reconnectionPopupShown = false;
+            toggleCustomPopup(false);
         }
         return; 
     }
@@ -487,7 +557,15 @@ socket.on("joinedRoom", (data) => {
     // --- 6. SETUP UI ---
     setupAuctionScreen();
     updateAdminButtons(data.auctionStarted);
-if (data.auctionStarted) {
+    
+    // Hide reconnecting popup if it was shown
+    if (isReconnecting) {
+        isReconnecting = false;
+        reconnectionPopupShown = false;
+        toggleCustomPopup(false);
+    }
+    
+    if (data.auctionStarted) {
         socket.emit("getAuctionState");
         
         // Force switch to Auction View immediately
@@ -623,6 +701,8 @@ window.switchCcTab = function(tabName) {
     document.getElementById(`view-${tabName}`).classList.remove('hidden');
     // C. Trigger Data Refresh if needed
     if (tabName === 'squads') {
+        // Always prefer my current team when opening Squads tab
+        if (myTeam) selectedSquadTeam = myTeam;
         if(typeof renderSquadTabs === 'function') renderSquadTabs();
         socket.emit("getSquads");
     }
@@ -683,13 +763,56 @@ socket.on("forceHome", (msg) => {
     window.location.href = "/";
 });
 // --- RECONNECTION & STATE HANDLING ---
+let isReconnecting = false;
+let reconnectionPopupShown = false;
+
 socket.on('connect', () => {
     // If we have session data, try to reconnect user to room
     if (username && roomCode) {
+        // Check if we're on auctionUI screen (manual refresh or long absence)
+        const auctionUI = document.getElementById("auctionUI");
+        const isOnAuctionScreen = auctionUI && !auctionUI.classList.contains("hidden");
+        
+        if (isOnAuctionScreen && !reconnectionPopupShown) {
+            // Show reconnecting popup
+            isReconnecting = true;
+            reconnectionPopupShown = true;
+            showPopup("Reconnecting to your auction room...", "RECONNECTING", "🔄");
+        }
+        
         console.log("🔄 Reconnecting...");
         socket.emit('reconnectUser', { roomId: roomCode, username: username });
-        // Request immediate state update to fix "Waiting..." issue for late joiners
+        // Request immediate state update to check if auction ended
         socket.emit("getAuctionState"); 
+    }
+});
+
+// Show a soft "reconnecting" popup when socket drops
+socket.on('disconnect', () => {
+    if (roomCode) {
+        const auctionUI = document.getElementById("auctionUI");
+        const isOnAuctionScreen = auctionUI && !auctionUI.classList.contains("hidden");
+        if (isOnAuctionScreen) {
+            reconnectionPopupShown = false; // Reset so it shows again on reconnect
+            showPopup("Trying to reconnect to your auction room...", "RECONNECTING", "🔄");
+        }
+    }
+});
+
+// When user returns to the tab/screen, ask server for a fresh snapshot
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && roomCode) {
+        const auctionUI = document.getElementById("auctionUI");
+        const isOnAuctionScreen = auctionUI && !auctionUI.classList.contains("hidden");
+        if (isOnAuctionScreen) {
+            // Show reconnecting popup if coming back after long time
+            if (!reconnectionPopupShown) {
+                isReconnecting = true;
+                reconnectionPopupShown = true;
+                showPopup("Reconnecting to your auction room...", "RECONNECTING", "🔄");
+            }
+            socket.emit("getAuctionState");
+        }
     }
 });
 
@@ -728,6 +851,10 @@ function renderEmbeddedTeams(teams) {
                 myTeam = team;
                 sessionStorage.setItem('ipl_team', team);
                 socket.emit("selectTeam", { team, user: username });
+
+                // Hide late join button once a team is picked from header join
+                const lateJoinBtn = document.getElementById("lateJoinBtn");
+                if (lateJoinBtn) lateJoinBtn.classList.add("hidden");
 
                 // 🟢 FIX: Replace the WHOLE container content to keep size stable (530×177px tile)
                 container.innerHTML = `
@@ -831,13 +958,12 @@ function updatePauseIcon(isPaused) {
     const btn = document.getElementById("togglePauseBtn");
     if(!btn) return;
     
-    // Visual state changes: no emoji, just CSS animation
     if(isPaused) {
-        btn.innerHTML = ""; // Empty - animation shows state
+        btn.textContent = "▶";
         btn.title = "Resume";
         btn.classList.add("is-paused");
     } else {
-        btn.innerHTML = ""; // Empty - default state
+        btn.textContent = "⏸";
         btn.title = "Pause";
         btn.classList.remove("is-paused");
     }
@@ -853,6 +979,36 @@ socket.on("auctionStarted", () => {
     updateAdminButtons(true);
 });
 socket.on("auctionState", (state) => {
+    // Check if we're reconnecting and auction has ended
+    if (isReconnecting && state.ended) {
+        isReconnecting = false;
+        reconnectionPopupShown = false;
+        toggleCustomPopup(false); // Hide reconnecting popup
+        
+        // Route based on player status
+        if (myTeam) {
+            // Player has a team -> Go to XI page
+            showScreen("playingXI");
+            socket.emit("getMySquad");
+            updateURL('xi');
+        } else {
+            // Spectator -> Go to Summary
+            setTimeout(() => {
+                renderPostAuctionSummary();
+                showScreen("postAuctionSummary");
+                updateURL('summary');
+            }, 300);
+        }
+        return; // Don't update UI for ended auction
+    }
+    
+    // If reconnecting and auction is still active, hide popup
+    if (isReconnecting && !state.ended) {
+        isReconnecting = false;
+        reconnectionPopupShown = false;
+        toggleCustomPopup(false);
+    }
+    
     // 1. Sync Globals
     auctionLive = state.live;
     auctionPaused = state.paused;
@@ -1199,8 +1355,7 @@ socket.on("chatUpdate", d => {
 
     div.innerHTML = `
         <div class="chat-meta" style="color:${color}">
-            <div class="chat-meta-top">${d.team}</div>
-            <div class="chat-meta-bottom">${d.user || 'Player'}</div>
+            <span class="chat-meta-inline">${d.team} &bull; ${d.user || 'Player'}</span>
         </div>
         <div class="chat-text" style="color:#eee;">${d.msg}</div>
     `;
@@ -1700,7 +1855,7 @@ function updateAdminButtons(isStarted) {
         // Show "End" button for Host
         if(endBtn) {
             endBtn.classList.remove("hidden");
-            endBtn.style.display = "inline-block"; // Force display
+            endBtn.style.display = ""; // Let CSS handle display
         }
         if (!isStarted) {
             // Pre-Game: Show Start
@@ -1717,7 +1872,7 @@ function updateAdminButtons(isStarted) {
         // STRICTLY HIDE END BUTTON & CONTROLS
         if(endBtn) {
             endBtn.classList.add("hidden");
-            endBtn.style.setProperty("display", "none", "important"); // CSS Override
+            endBtn.style.display = ""; // Let CSS handle display via .hidden class
         }
         if (startBtn) startBtn.classList.add("hidden");
         controls.forEach(b => b.classList.add("hidden"));
@@ -3371,8 +3526,3 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
-
-
-
-
-
