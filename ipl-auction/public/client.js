@@ -3353,7 +3353,6 @@ window.toggleMute = function() {
         // Sound Playing Icon
         if(img) img.src = "https://img.icons8.com/windows/32/ffffff/room-sound.png";
         
-        safePlay(soundTick); 
     }
 };
 
@@ -3372,6 +3371,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
