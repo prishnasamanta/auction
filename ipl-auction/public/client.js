@@ -3340,17 +3340,23 @@ socket.on("error", msg => {
 window.toggleMute = function() {
     isMuted = !isMuted;
     const btn = document.getElementById("toggleMuteBtn");
+    const img = document.getElementById("soundIconImg");
     
     if (isMuted) {
         btn.classList.add("muted");
         btn.title = "Unmute";
+        // 🔴 Updated to your requested icon (White version)
+        if(img) img.src = "https://img.icons8.com/windows/32/ffffff/mute--v1.png";
     } else {
         btn.classList.remove("muted");
         btn.title = "Mute";
-        // Optional: Play a tiny beep to confirm unmute
+        // Sound Playing Icon
+        if(img) img.src = "https://img.icons8.com/windows/32/ffffff/room-sound.png";
+        
         safePlay(soundTick); 
     }
 };
+
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
@@ -3366,6 +3372,7 @@ function refreshGlobalUI() {
     socket.emit("getAuctionState"); // Ensures leaderboard data is requested
 
 }
+
 
 
 
