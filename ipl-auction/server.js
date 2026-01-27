@@ -196,20 +196,10 @@ function createSets(allPlayers) {
         const playersInTag = buckets[tagKey];
         
         // If we have players, chunk them into groups of 8 (so sets aren't too huge)
-        if (playersInTag.length > 0) {
-            // Helper to chunk arrays
-            const chunk = (arr, size) => {
-                const res = [];
-                for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
-                return res;
-            };
-
-            // Create subsets (e.g., Capped Batters 1, Capped Batters 2)
-            const chunks = chunk(playersInTag, 8);
-            chunks.forEach(chunkOfPlayers => {
-                finalSets.push(chunkOfPlayers);
-            });
-        }
+if (playersInTag.length > 0) {
+    // No chunking needed - push the entire array as one set
+    finalSets.push(playersInTag);
+}
     });
 
     return finalSets;
@@ -1024,4 +1014,5 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
