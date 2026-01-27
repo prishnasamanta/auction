@@ -74,71 +74,69 @@ const soundTick = new Audio("/sounds/beep.mp3");
 
 // Updates the browser URL bar without reloading
 
+/* ================================================= */
+/* 🌐 URL ROUTING & NAVIGATION MANAGER (UPDATED)     */
+/* ================================================= */
+
 function updateURL(state) {
+    let newPath = "/";
+    let pageTitle = "IPL Auction Live";
 
-    if (!roomCode) return;
-
-    let newPath = `/room/${roomCode}`;
-
-    let pageTitle = `IPL Auction - ${roomCode}`;
-
-    if (state === 'summary') {
-
-        newPath += '/summary';
-
-        pageTitle = `Summary - ${roomCode}`;
-
-    } else if (state === 'leaderboard') {
-
-        newPath += '/leaderboard';
-
+    // 1. Auth Page (Join/Create)
+    if (state === 'auth') {
+        newPath = "/room";
+        pageTitle = "Join Room - IPL Auction";
+    } 
+    // 2. Room Created/Joined (Auction Room)
+    else if (state === 'auction' && roomCode) {
+        newPath = `/room/${roomCode}`;
+        pageTitle = `Room ${roomCode} - IPL Auction`;
+    } 
+    // 3. Submit XI Page
+    else if (state === 'xi' && roomCode) {
+        newPath = `/room/${roomCode}/xi`;
+        pageTitle = `Submit XI - ${roomCode}`;
+    } 
+    // 4. Leaderboard Page
+    else if (state === 'leaderboard' && roomCode) {
+        newPath = `/room/${roomCode}/leaderboard`;
         pageTitle = `Leaderboard - ${roomCode}`;
-
-    } else if (state === 'xi') {
-
-        newPath += '/xi';
-
-        pageTitle = `Select XI - ${roomCode}`;
-
+    } 
+    // 5. Summary Page (Post Auction)
+    else if (state === 'summary' && roomCode) {
+        newPath = `/room/${roomCode}/summary`;
+        pageTitle = `Summary - ${roomCode}`;
     }
 
-    // Push to history only if it changed
-
+    // Push to history only if it changed to prevent duplicate entries
     if (window.location.pathname !== newPath) {
-
         window.history.pushState({ page: state, room: roomCode }, pageTitle, newPath);
-
         document.title = pageTitle;
-
     }
-
 }
 
 // Handle Browser "Back" Button
-
 window.onpopstate = function(event) {
-
     if (event.state) {
-
+        const page = event.state.page;
         // Route based on history state
-
-        if (event.state.page === 'summary') showScreen('postAuctionSummary', false);
-
-        else if (event.state.page === 'leaderboard') showScreen('leaderboard', false);
-
-        else if (event.state.page === 'xi') showScreen('playingXI', false);
-
-        else showScreen('auctionUI', false);
-
+        if (page === 'summary') showScreen('postAuctionSummary', false);
+        else if (page === 'leaderboard') showScreen('leaderboard', false);
+        else if (page === 'xi') showScreen('playingXI', false);
+        else if (page === 'auction') showScreen('auctionUI', false);
+        else if (page === 'auth') {
+             document.getElementById("landing").classList.add("hidden");
+             document.getElementById("auth").classList.remove("hidden");
+             document.getElementById("auctionUI").classList.add("hidden");
+        }
     } else {
-
-        // Fallback
-
+        // Fallback to landing
         window.location.href = "/";
-
     }
-
 };
+// Handle Browser "Back" Button
+
+
 
 /* ================================================= */
 
@@ -213,6 +211,7 @@ function setupEventListeners() {
         
 
         switchAuthTab('join');
+        updateURL('auth');
 
     };
 
@@ -336,8 +335,8 @@ window.onload = async () => {
 
     const parts = path.split('/');
 
-    const urlCode = (parts[1] === 'room' && parts[2]) ? parts[2].toUpperCase() : null;
-
+ const urlCode = (parts[1] === 'room' && parts[2]) ? parts[2].toUpperCase() : null;
+    const subPage = (parts[1] === 'room' && parts[3]) ? parts[3].toLowerCase() : null;
     // 2. SETUP LISTENERS (Buttons)
 
     setupEventListeners(); // (Move your existing btn onclicks here)
@@ -417,28 +416,41 @@ if (!result.active) {
     document.getElementById("postAuctionSummary").classList.remove("hidden");
 
     renderPostAuctionSummary();
-
+    
     
 
     // 4. Update URL
 
-    updateURL('summary');
-
+if (subPage !== 'leaderboard') { // Keep leaderboard if asked
+                     updateURL('summary');
+                }
     return; // Stop here, don't connect socket
 
 }
+            const sUser = sessionStorage.getItem('ipl_user');
+            const sRoom = sessionStorage.getItem('ipl_room');
+
+            // CASE A: Valid Session -> Reconnect
+            if (sUser && sRoom === urlCode) {
+                // Socket.on('connect') will handle this automatically
+                // Just store the target page to switch *after* reconnect
+                if (subPage) sessionStorage.setItem('target_screen', subPage);
+            } 
+            // CASE B: New User / No Session -> Show Auth with Code pre-filled
+            else {
+                document.getElementById("landing").classList.add("hidden");
+                document.getElementById("auth").classList.remove("hidden");
+                switchAuthTab('join');
+                document.getElementById('code').value = urlCode;
+                // Update URL to match where we are technically (Auth flow)
+                // But keep the room code in URL so it feels like "Joining Room X"
+                updateURL('auth'); // Or keep /room/CODE if you prefer
+            }
 
             // SCENARIO C: AUCTION LIVE (Proceed to Login)
 
-            console.log("Room Active, proceeding to login...");
 
-            document.getElementById("landing").classList.add("hidden");
-
-            document.getElementById("auth").classList.remove("hidden");
-
-            switchAuthTab('join');
-
-            document.getElementById('code').value = urlCode;
+           
 
         } catch (err) {
 
@@ -826,7 +838,7 @@ socket.on("roomCreated", code => {
 
     document.getElementById("rulesScreen").classList.remove("hidden");
 
-    updateBrowserURL(code);
+    updateURL('auction');
 
 });
 
@@ -973,7 +985,7 @@ socket.on("joinedRoom", (data) => {
     // --- 6. SETUP UI ---
 
     setupAuctionScreen();
-
+    updateURL('auction');
     updateAdminButtons(data.auctionStarted);
 
 if (data.auctionStarted) {
@@ -987,7 +999,13 @@ if (data.auctionStarted) {
         setGamePhase("AUCTION"); 
 
     }
-
+const target = sessionStorage.getItem('target_screen');
+    if (target) {
+        sessionStorage.removeItem('target_screen'); // Clear it
+        if (target === 'leaderboard') showScreen('leaderboard');
+        else if (target === 'xi') showScreen('playingXI');
+        else if (target === 'summary') showScreen('postAuctionSummary');
+    }
 });
 
 
@@ -1368,23 +1386,7 @@ socket.on("forceHome", (msg) => {
 
 // --- RECONNECTION & STATE HANDLING ---
 
-socket.on('connect', () => {
 
-    // If we have session data, try to reconnect user to room
-
-    if (username && roomCode) {
-
-        console.log("🔄 Reconnecting...");
-
-        socket.emit('reconnectUser', { roomId: roomCode, username: username });
-
-        // Request immediate state update to fix "Waiting..." issue for late joiners
-
-        socket.emit("getAuctionState"); 
-
-    }
-
-});
 
 
 
@@ -3869,6 +3871,7 @@ socket.on("auctionEnded", () => {
         showScreen("playingXI");
 
         socket.emit("getMySquad");
+        updateURL('xi');
 
     } else {
 
@@ -3879,6 +3882,7 @@ socket.on("auctionEnded", () => {
             renderPostAuctionSummary();
 
             showScreen("postAuctionSummary");
+            updateURL('summary');
 
         }, 500); // Small delay to ensure data arrives
 
@@ -6271,17 +6275,7 @@ document.addEventListener("DOMContentLoaded", () => {
 window.showScreen = function(screenId) {
 
     console.log("🔄 Switching to:", screenId);
-
-    
-
-    // Hide all screens
-
     document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
-
-    
-
-    // Show target
-
     const target = document.getElementById(screenId);
 
     if(target) target.classList.remove("hidden");
@@ -6290,20 +6284,15 @@ window.showScreen = function(screenId) {
 
     // Special logic for specific screens
 
-    if (screenId === 'leaderboard') {
-
-        socket.emit("getAuctionState"); // Refresh Data
-
-        updateURL('leaderboard');
-
-    } else if (screenId === 'playingXI') {
-
-        updateURL('xi');
-
-    } else if (screenId === 'postAuctionSummary') {
-
-        updateURL('summary');
-
+if (id === 'leaderboard') {
+        socket.emit("getAuctionState");
+        updateURL('leaderboard'); // URL: /room/CODE/leaderboard
+    } else if (id === 'playingXI') {
+        updateURL('xi');          // URL: /room/CODE/xi
+    } else if (id === 'postAuctionSummary') {
+        updateURL('summary');     // URL: /room/CODE/summary
+    } else if (id === 'auctionUI') {
+        updateURL('auction');     // URL: /room/CODE
     }
 
 };
@@ -6712,9 +6701,121 @@ window.toggleMute = function() {
 
 };
 
+/* ================================================= */
+/* 🔄 AUTO-RECONNECT & VISIBILITY HANDLER            */
+/* ================================================= */
+/* ================================================= */
+/* ⚡ SMART CONNECTION & REFRESH HANDLER              */
+/* ================================================= */
 
+// 1. Handle Disconnect (Show "Reconnecting" immediately)
+socket.on('disconnect', () => {
+    console.warn("🔌 Socket disconnected");
+    showLoadingPopup("Connection lost. Attempting to reconnect...", "OFFLINE");
+});
 
+// 2. Handle Connect (Hide popup & Sync)
+socket.on('connect', () => {
+    console.log("✅ Connected");
+    
+    // Hide the "Reconnecting" popup if it's open
+    hideLoadingPopup();
 
+    // Session Recovery Logic
+    const sRoom = sessionStorage.getItem('ipl_room');
+    const sUser = sessionStorage.getItem('ipl_user');
+
+    if (sUser && sRoom) {
+        socket.emit('reconnectUser', { roomId: sRoom, username: sUser });
+        
+        // Restore Globals
+        roomCode = sRoom;
+        username = sUser;
+        
+        // Route to correct page based on URL
+        const path = window.location.pathname;
+        if (path.includes('/leaderboard')) showScreen('leaderboard');
+        else if (path.includes('/xi')) { showScreen('playingXI'); socket.emit("getMySquad"); }
+        else if (path.includes('/summary')) showScreen('postAuctionSummary');
+        else showScreen('auctionUI');
+    }
+});
+
+// 3. Handle Tab Switching / Screen On (Auto-Refresh)
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'visible') {
+        console.log("👀 Tab active. Auto-refreshing data...");
+        
+        // If we have a room, show a quick sync popup
+        if (roomCode) {
+            // Show popup
+            showLoadingPopup("Syncing latest auction data...", "REFRESHING");
+            
+            // Trigger Data Fetches
+            socket.emit("getAuctionState");
+            socket.emit("getSquads");
+            if (!document.getElementById("playingXI").classList.contains("hidden")) {
+                socket.emit("getMySquad");
+            }
+            
+            // Hide popup automatically after a short delay (enough for data to arrive)
+            setTimeout(() => {
+                hideLoadingPopup();
+            }, 800); // 0.8s delay for visual feedback
+        }
+        
+        // If socket was dead, force reconnect
+        if (!socket.connected) {
+            socket.connect();
+        }
+    }
+});
+/* ================================================= */
+/* 🔄 RECONNECTING / LOADING POPUP LOGIC             */
+/* ================================================= */
+
+// Helper to show a persistent "Loading/Syncing" state
+window.showLoadingPopup = function(message = "Reconnecting to server...", title = "SYNCING") {
+    const titleEl = document.getElementById('cpTitle');
+    const msgEl = document.getElementById('cpMessage');
+    const iconEl = document.getElementById('cpIcon');
+    const okBtn = document.getElementById('cpBtnOk');
+    const cancelBtn = document.getElementById('cpBtnCancel');
+
+    titleEl.innerText = title;
+    msgEl.innerText = message;
+    
+    // Spinning Icon for loading
+    iconEl.innerText = "🔄"; 
+    iconEl.style.animation = "spin 2s linear infinite"; 
+    
+    // HIDE ALL BUTTONS (User must wait)
+    okBtn.classList.add('hidden');
+    cancelBtn.classList.add('hidden');
+
+    toggleCustomPopup(true);
+};
+
+// Helper to hide and reset state
+window.hideLoadingPopup = function() {
+    toggleCustomPopup(false);
+    
+    // Reset icon animation
+    const iconEl = document.getElementById('cpIcon');
+    iconEl.style.animation = ""; 
+    
+    // Restore OK button for normal popups
+    const okBtn = document.getElementById('cpBtnOk');
+    if(okBtn) okBtn.classList.remove('hidden');
+};
+
+/* Add this CSS rule for the spin animation via JS if not in CSS */
+if (!document.getElementById('dynamic-spin-style')) {
+    const style = document.createElement('style');
+    style.id = 'dynamic-spin-style';
+    style.innerHTML = `@keyframes spin { 100% { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
+}
 
 /* ================= GLOBAL REFRESH LOGIC ================= */
 
