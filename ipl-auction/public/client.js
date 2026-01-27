@@ -586,13 +586,6 @@ if (subPage !== 'leaderboard') { // Keep leaderboard if asked
 
     // Format: /room/CODE/SUBPAGE
 
-    const subPage = (parts[1] === 'room' && parts[3]) ? parts[3].toLowerCase() : null;
-
-    const sRoom = sessionStorage.getItem('ipl_room');
-
-    const sUser = sessionStorage.getItem('ipl_user');
-
-  
 
     // SCENARIO A: Reconnecting (Session Valid)
 
@@ -6722,8 +6715,6 @@ socket.on('connect', () => {
     hideLoadingPopup();
 
     // Session Recovery Logic
-    const sRoom = sessionStorage.getItem('ipl_room');
-    const sUser = sessionStorage.getItem('ipl_user');
 
     if (sUser && sRoom) {
         socket.emit('reconnectUser', { roomId: sRoom, username: sUser });
