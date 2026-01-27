@@ -261,12 +261,12 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 /* Icon Buttons */
 .header-icon-btn {
-    background: rgba(255,255,255,0.02);
+    background: transparent;
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 6px;
-    width: 24px !important; 
-    height: 24px !important;
-    min-width: 24px !important;
+    width: 28px !important; 
+    height: 28px !important;
+    min-width: 28px !important;
     display: flex; 
     align-items: center; 
     justify-content: center;
@@ -276,10 +276,13 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     padding: 0;
     font-size: 0.9rem;
 }
-.header-icon-btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
-.header-icon-btn.primary { background: var(--primary); border: none; }
-.header-icon-btn.warning { border-color: #fca5a5; }
-.header-icon-btn.danger { border-color: #ef4444; }
+.header-icon-btn:hover { 
+    background: rgba(255,255,255,0.04); 
+    border-color: rgba(255,255,255,0.6); 
+}
+.header-icon-btn.primary { border-color: var(--primary); color: var(--primary); }
+.header-icon-btn.warning { border-color: #fbbf24; color:#facc15; }
+.header-icon-btn.danger { border-color: #ef4444; color:#fca5a5; }
 
 /* Scrollable Right Side */
 .custom-scroll-x {
@@ -792,27 +795,26 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
     color: var(--text-main);
-    padding: 4px 8px;
-    border-radius: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
     font-size: 0.75rem;
-    display: flex;
-    flex-direction: column;
+    display: inline-flex;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
     line-height: 1;
-    min-width: 40px;
-    height: 24px;
+    min-width: 55px;
+    height: 26px;
     cursor: pointer;
     font-family: var(--font-body);
     transition: background 0.2s;
     margin-right: 10px;
-    /* --- Mobile Fixes --- */
+    gap: 6px;
     white-space: nowrap; 
     flex-shrink: 0;      
-    min-width: max-content;
 }
 
-.count-pill-btn:hover { background: rgba(255, 255, 255, 0.2); }
+.count-pill-btn:hover { background: rgba(255, 255, 255, 0.12); }
 
 .pulse-dot {
     width: 8px; height: 8px;
@@ -820,6 +822,34 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-radius: 50%;
     box-shadow: 0 0 8px var(--success);
     animation: blink 2s infinite;
+}
+
+/* Label-style header icon buttons (Start, Join Team) */
+.header-icon-btn-label {
+    padding: 0 10px;
+    min-width: 0 !important;
+    width: auto !important;
+    gap: 6px;
+}
+.header-icon-btn-label .icon {
+    font-size: 0.85rem;
+}
+.header-icon-btn-label .label {
+    font-size: 0.78rem;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .header-icon-btn-label {
+        padding: 0;
+        width: 28px !important;
+        min-width: 28px !important;
+        justify-content: center;
+    }
+    .header-icon-btn-label .label {
+        display: none;
+    }
 }
 
 /* 2. The Dropdown Container */
@@ -924,8 +954,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* Active Tab: Bright with subtle glow */
 .cc-tab-btn.active {
     color: #fff;
-    background: rgba(99, 102, 241, 0.2);
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 15px rgba(148, 163, 184, 0.18);
 }
 .cc-tab-btn.active::after {
     content: '';
@@ -935,6 +964,18 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     height: 2px;
     background: #6366f1;
     border-radius: 2px;
+    opacity: 0.8;
+}
+
+/* Per-tab active colors */
+.cc-tab-btn[data-tab="sets"].active {
+    background: rgba(250, 204, 21, 0.18);
+}
+.cc-tab-btn[data-tab="feed"].active {
+    background: rgba(96, 165, 250, 0.15);
+}
+.cc-tab-btn[data-tab="squads"].active {
+    background: rgba(34, 197, 94, 0.18);
 }
 
 /* 2. CONTENT AREA */
@@ -1606,33 +1647,23 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-left-width: 4px; /* Slightly thicker border */
 }
 
-/* Metadata (Team name on top, Player name on bottom) */
+/* Metadata: team + player in a single line */
 .chat-meta {
     flex-shrink: 0;
     margin-right: 10px;
     font-family: 'Exo 2', sans-serif;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
+    align-items: center;
+    justify-content: flex-start;
     min-width: 60px;
 }
 
-.chat-meta-top {
+.chat-meta-inline {
     font-size: 0.8rem;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--msg-color);
-    letter-spacing: 0.5px;
-    line-height: 1.2;
-}
-
-.chat-meta-bottom {
-    font-size: 0.7rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.6);
-    opacity: 0.8;
-    line-height: 1.2;
-    margin-top: 2px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
 }
 
 /* Compact log message meta */
@@ -2638,13 +2669,13 @@ body {
 /* 2. AUCTION CARD (Compact & Adjusted) */
 #auctionCard {
     width: 100%;
-    background: #0f172a;
+    background: transparent;
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 16px;
     flex-shrink: 0; /* Don't shrink */
     display: flex; flex-direction: column;
     position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: none;
     transition: all 0.2s;
 }
 
@@ -2654,7 +2685,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 15px; /* Reduced Uniform Padding */
-    background: radial-gradient(circle at center, #1e293b, #0f172a);
+    background: transparent;
     border-bottom: 1px solid rgba(255,255,255,0.05);
     height: 85px;
     position: relative;
@@ -2698,7 +2729,7 @@ body {
     display: flex; 
     align-items: center;
     height: 75px;
-    background: rgba(30, 41, 59, 0.4);
+    background: transparent;
     padding: 8px 12px; /* Tighter outer padding */
 }
 
@@ -3319,17 +3350,14 @@ body {
     gap: 8px; 
     padding-left: 10px;
     flex-shrink: 0; /* Prevents shrinking */
-    background: #0f172a; /* Covers scrolling items */
-    z-index: 2;
     height: 100%;
-    box-shadow: 5px 0 10px rgba(0,0,0,0.5); /* Shadow to separate from scroll */
 }
 
 /* RIGHT SIDE: Scrollable */
 .top-right {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     flex: 1; /* Takes remaining space */
     overflow-x: auto; /* Enables Horizontal Scroll */
     padding: 0 10px;
@@ -3340,9 +3368,9 @@ body {
 
 /* Smaller Header Buttons */
 .header-icon-btn {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
     font-size: 0.9rem !important;
     border-radius: 6px;
     padding: 0;
@@ -3845,19 +3873,19 @@ body {
 }
 
 /* 🛑 PREVENT BUTTON SQUISHING */
-/* This is critical. It forces every button to keep its full size. */
+/* Keep icon-only buttons fixed, allow label variants to grow */
 .header-icon-btn, 
 .admin-group, 
 .admin-group button {
     flex-shrink: 0 !important;
 }
-/* 💎 FORCE TRANSPARENCY & BACKGROUND FIX */
+/* 💎 AUCTION CARD: Transparent so background animation is visible */
 #auctionCard {
-    background: rgba(15, 23, 42, 0.2) !important; /* 20% Opacity Dark Blue */
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: none !important;
 }
 
 /* Ensure inner rows don't have solid backgrounds */
@@ -3867,7 +3895,7 @@ body {
 }
 /* Removed duplicate #auctionCard rules - final definition at line 4723 */
 /* 🚑 HEADER BUTTON SIZE FIX */
-/* Header icon buttons - consistent 24px size for single row */
+/* Icon-only header buttons - compact; label buttons override below */
 .header-icon-btn {
     width: 24px !important;
     height: 24px !important;
@@ -3879,6 +3907,11 @@ body {
     align-items: center !important;
     justify-content: center !important;
 }
+.header-icon-btn.header-icon-btn-label {
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 0 10px !important;
+}
 
 .header-badge {
     height: 24px !important; /* Match button height */
@@ -3889,7 +3922,23 @@ body {
 
 /* Admin Group: Ensure buttons don't squash */
 .admin-group {
-    gap: 4px !important; /* Tighter spacing */
+    gap: 4px !important; /* Tighter spacing between admin buttons */
+}
+
+/* Hidden buttons in admin group should not take any space */
+.admin-group .hidden {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Cancel flex gap between mute button and first admin button */
+.top-right #adminControls {
+    margin-left: -4px;
 }
 
 /* Mobile: Even smaller if needed */
@@ -4105,14 +4154,11 @@ body {
         overflow-x: visible !important;
         justify-content: flex-end !important;
     }
-    #adminControls {
-        margin-left: auto !important;
-    }
 }
 
 /* 4) Header icon buttons: nicer interactive borders */
 .header-icon-btn {
-    background: rgba(255,255,255,0.02) !important;
+    background: transparent !important;
     border: 1px solid rgba(255,255,255,0.18) !important;
     transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
@@ -4124,11 +4170,27 @@ body {
 .header-icon-btn:active {
     transform: translateY(1px);
 }
-.header-icon-btn.warning { border-color: rgba(245,158,11,0.85) !important; }
-.header-icon-btn.danger { border-color: rgba(239,68,68,0.9) !important; }
+.header-icon-btn.warning { border-color: #3b82f6 !important; color:#60a5fa !important; }
+.header-icon-btn.danger { border-color: #ef4444 !important; color:#fca5a5 !important; }
 .header-icon-btn.is-paused {
-    border-color: rgba(74,222,128,0.9) !important;
+    border-color: #22c55e !important;
     color: #4ade80 !important;
+}
+
+/* Pause / Resume button specific colors */
+#togglePauseBtn {
+    border-color: #ef4444 !important;
+    color: #fca5a5 !important;
+}
+
+/* Skip player button: blue, Skip set: violet */
+#skipBtn {
+    border-color: #3b82f6 !important;
+    color: #60a5fa !important;
+}
+#skipSetBtn {
+    border-color: #8b5cf6 !important;
+    color: #a855f7 !important;
 }
 
 /* 5) Team badge: transparent with team-colored border/text */
@@ -4313,15 +4375,15 @@ body {
     align-self: center !important; /* Center within flex container */
 }
 
-/* 2. Auction Card: Match Team Selection Main styling exactly */
+/* 2. Auction Card: transparent with only border so background animation shows */
 #auctionCard {
     width: 100% !important;
     max-width: 530px !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 16px !important;
-    background: rgba(15, 23, 42, 0.4) !important;
-    backdrop-filter: blur(12px) !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
 }
 
 /* 3. Team Selection Main: Ensure consistent styling */
@@ -4573,21 +4635,36 @@ body {
     align-items: center !important;
 }
 
+/* Hidden buttons in admin group should not take any space */
+.admin-group .hidden {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 /* Ensure count-pill-btn matches header-badge style */
 .count-pill-btn {
     background: rgba(255,255,255,0.05) !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
-    border-radius: 6px !important;
-    padding: 4px 8px !important;
-    height: 24px !important;
+    border-radius: 999px !important;
+    padding: 4px 10px !important;
+    height: 26px !important;
     min-width: 55px !important;
-    gap: 8px !important;
-    display: flex !important;
-    flex-direction: column !important;
+    gap: 6px !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
     line-height: 1 !important;
     font-size: 0.75rem !important;
+}
+
+#liveUserCount {
+    color: #4ade80;
 }
 
 /* Pause badge styling in playerMeta */
@@ -4767,7 +4844,6 @@ body {
     border-color: #ef4444 !important;
     background: rgba(239, 68, 68, 0.1) !important;
 }
-
 
 
 
