@@ -1,6 +1,3 @@
-/* ================================================= */
-/* ================= ROOT & THEME ================== */
-/* ================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Inter:wght@400;600&display=swap');
 
@@ -4770,6 +4767,7 @@ body {
     border-color: #ef4444 !important;
     background: rgba(239, 68, 68, 0.1) !important;
 }
+
 
 
 
