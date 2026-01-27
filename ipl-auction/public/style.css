@@ -4772,7 +4772,6 @@ body {
 
 /* 1. Reset Header Buttons to have SOLID backgrounds */
 .header-icon-btn {
-    background: rgba(30, 41, 59, 1) !important; /* Solid Dark Slate */
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     color: #fff !important;
     border-radius: 6px !important;
@@ -4788,38 +4787,42 @@ body {
 }
 
 .header-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
     border-color: #fff !important;
     transform: translateY(-1px) !important;
 }
 
 /* 2. Specific Colors for Admin Buttons */
 #startBtn {
-    background: #22c55e !important; /* Green */
+      background: transparent !important; /* Keep sound btn subtle */
+
     border-color: #16a34a !important;
     color: #000 !important;
 }
 
 #togglePauseBtn {
-    background: #eab308 !important; /* Yellow */
+      background: transparent !important; /* Keep sound btn subtle */
+
     border-color: #ca8a04 !important;
     color: #000 !important;
 }
 
 #skipBtn {
-    background: #3b82f6 !important; /* Blue */
+      background: transparent !important; /* Keep sound btn subtle */
+
     border-color: #2563eb !important;
     color: #fff !important;
 }
 
 #skipSetBtn {
-    background: #6366f1 !important; /* Indigo */
+      background: transparent !important; /* Keep sound btn subtle */
+
     border-color: #4f46e5 !important;
     color: #fff !important;
 }
 
 #endBtn {
-    background: #ef4444 !important; /* Red */
+      background: transparent !important; /* Keep sound btn subtle */
+
     border-color: #dc2626 !important;
     color: #fff !important;
 }
@@ -4844,6 +4847,7 @@ body {
     border-color: #ef4444 !important;
     background: rgba(239, 68, 68, 0.1) !important;
 }
+
 
 
 
