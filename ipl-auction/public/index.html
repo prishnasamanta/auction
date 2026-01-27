@@ -15,124 +15,325 @@
 
 <body>
 <canvas id="bg-canvas"></canvas>
-<section id="landing" class="screen landing-scrollable" style="background: transparent !important; position: relative; z-index: 10;">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    /* Scope variables to this specific wrapper if needed, or keep global */
+    :root {
+        --bg-dark: #020617;
+        --primary: #6366f1;
+        --primary-glow: rgba(99, 102, 241, 0.4);
+        --gold: #fbbf24;
+        --accent: #ec4899;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --glass-bg: rgba(15, 23, 42, 0.6);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Basic Resets for this section */
+    .ipl-auction-wrapper {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        overflow-x: hidden;
+        line-height: 1.6;
+        width: 100%;
+        position: relative;
+    }
+
+    .ipl-auction-wrapper * {
+        box-sizing: border-box;
+    }
+
+    /* Ambient Background Glows */
+    .ipl-auction-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -10%; left: -10%;
+        width: 600px; height: 600px;
+        background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+        z-index: 0; filter: blur(80px); opacity: 0.5;
+        pointer-events: none;
+    }
+
+    /* Typography */
+    .brand-font, h1, h2, h3 { font-family: 'Exo 2', sans-serif; }
+    a { text-decoration: none; color: inherit; }
+
+    /* Utility Classes */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+    .text-gradient {
+        background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Animations */
+    .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s ease-out; }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+
+    /* Navigation */
+    .navbar {
+        position: sticky; top: 0; width: 100%; z-index: 1000;
+        transition: 0.3s; padding: 15px 0;
+        background: rgba(2, 6, 23, 0.85);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--glass-border);
+    }
+    .nav-content { display: flex; justify-content: space-between; align-items: center; }
+    .nav-brand { font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+    .nav-links { display: flex; gap: 30px; }
+    .nav-link { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); transition: var(--transition); position: relative; }
+    .nav-link:hover { color: var(--primary); }
+    .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+
+    /* Hero Section */
+    .hero {
+        min-height: 90vh; display: flex; align-items: center; justify-content: center;
+        text-align: center; padding: 80px 20px; position: relative;
+    }
+    .badge-pill {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4);
+        color: #818cf8; padding: 8px 20px; border-radius: 30px;
+        font-size: 0.85rem; font-weight: 700; margin-bottom: 30px;
+    }
+    .pulse-dot {
+        width: 8px; height: 8px; background-color: #4ade80; border-radius: 50%;
+        box-shadow: 0 0 10px #4ade80; animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
+    .hero-title {
+        font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 900; line-height: 1.1; margin-bottom: 25px;
+        text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .hero-subtitle { font-size: 1.1rem; color: var(--text-muted); max-width: 650px; margin: 0 auto 40px; }
     
-    <nav class="landing-nav" style="position: sticky; top: 0; z-index: 100; background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 15px 5%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
-            <div class="nav-brand" style="font-family: 'Exo 2', sans-serif; font-weight: 800; font-size: 1.4rem; color: #fff; letter-spacing: 1px;">
-                ⚡ IPL <span style="color:var(--gold)">AUCTION</span>
+    /* Buttons */
+    .hero-actions { display: flex; gap: 20px; justify-content: center; margin-bottom: 60px; flex-wrap: wrap; }
+    .btn { padding: 16px 40px; font-size: 1rem; border-radius: 12px; cursor: pointer; transition: transform 0.2s; border: none; font-weight: 600; }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); }
+    .btn-primary:hover { transform: translateY(-3px); background: #5558e6; }
+    .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; backdrop-filter: blur(4px); }
+    .btn-secondary:hover { transform: translateY(-3px); background: rgba(255,255,255,0.1); }
+
+    /* Stats */
+    .hero-stats {
+        display: flex; gap: 40px; padding: 20px 40px; border-radius: 16px;
+        background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .stat-item { text-align: center; }
+    .stat-num { font-size: 1.8rem; color: #fff; display: block; font-family: 'Exo 2', sans-serif; }
+    .stat-label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Features Grid */
+    .section-padding { padding: 100px 20px; }
+    .section-title { text-align: center; font-size: 2.5rem; margin-bottom: 60px; color: #fff; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; }
+    .feature-card {
+        padding: 30px; border-radius: 16px; background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255,255,255,0.05); transition: var(--transition);
+    }
+    .feature-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .feature-icon {
+        font-size: 2rem; margin-bottom: 20px; background: rgba(255,255,255,0.05);
+        width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;
+        color: var(--primary); transition: 0.3s;
+    }
+    .feature-card:hover .feature-icon { background: var(--primary); color: #fff; }
+
+    /* How To Play */
+    .step-row {
+        display: flex; align-items: center; padding: 25px; border-radius: 12px;
+        background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(255,255,255,0.05);
+        margin-bottom: 20px; transition: var(--transition);
+    }
+    .step-row:hover { transform: scale(1.02); background: rgba(30, 41, 59, 0.5); }
+    .step-num { font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.05); margin-right: 25px; font-family: 'Exo 2', sans-serif; }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+        .nav-links {
+            position: fixed; top: 0; right: -100%; height: 100vh; width: 75%;
+            background: rgba(2, 6, 23, 0.98); flex-direction: column;
+            justify-content: center; align-items: center; transition: 0.3s;
+        }
+        .nav-links.active { right: 0; }
+        .menu-toggle { display: block; z-index: 1001; }
+        .hero-stats { flex-direction: column; gap: 20px; width: 100%; }
+        .step-row { flex-direction: column; text-align: center; }
+        .step-num { margin-right: 0; margin-bottom: 10px; font-size: 2.5rem; }
+    }
+</style>
+
+<div class="ipl-auction-wrapper">
+    
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="nav-brand">
+                <i class="fa-solid fa-gavel" style="color: var(--gold);"></i>
+                <span>IPL <span style="color:var(--gold)">AUCTION</span></span>
             </div>
-            <div class="nav-links" style="display: flex; gap: 30px;">
-                <a href="#how-to" style="color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.3s;">How to Play</a>
-                <a href="#features" style="color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.3s;">Features</a>
-                <a href="#faq" style="color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.3s;">FAQ</a>
+            <div class="menu-toggle" id="mobile-menu-btn"><i class="fa-solid fa-bars"></i></div>
+            <div class="nav-links" id="nav-links-list">
+                <a href="#how-to" class="nav-link">How to Play</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#faq" class="nav-link">Community</a>
             </div>
         </div>
     </nav>
 
-    <div class="hero-container" style="min-height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; max-width: 1000px; margin: 0 auto;">
-        
-        <div class="new-badge pulse-anim" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; padding: 8px 20px; border-radius: 30px; font-size: 0.85rem; font-weight: 700; margin-bottom: 30px; backdrop-filter: blur(4px);">
-            <span style="margin-right: 8px;">●</span> ONLINE MULTIPLAYER LIVE
-        </div>
+    <section id="landing" class="hero">
+        <div class="container reveal active">
+            <div class="badge-pill">
+                <span class="pulse-dot"></span> <span style="margin-left:8px">ONLINE MULTIPLAYER LIVE</span>
+            </div>
 
-        <h1 class="hero-title" style="font-family: 'Exo 2', sans-serif; font-size: clamp(3rem, 6vw, 5rem); font-weight: 900; line-height: 1.1; margin: 0 0 25px; color: #fff; text-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            THE ULTIMATE <br>
-            <span class="text-gradient" style="background: linear-gradient(135deg, #fff 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CRICKET AUCTION</span>
-        </h1>
-        
-        <p class="hero-subtitle" style="font-size: 1.1rem; color: #94a3b8; max-width: 650px; margin: 0 auto 40px; line-height: 1.7;">
-            Experience the intensity of the bidding war. Host private rooms, manage dynamic purses, and build your dream squad in real-time with friends.
-        </p>
+            <h1 class="hero-title">
+                THE ULTIMATE <br>
+                <span class="text-gradient">CRICKET AUCTION</span>
+            </h1>
+            
+            <p class="hero-subtitle">
+                Experience the intensity of the bidding war. Host private rooms, manage dynamic purses, and build your dream squad in real-time with friends.
+            </p>
 
-        <div class="hero-actions" style="display: flex; gap: 20px; justify-content: center; margin-bottom: 60px;">
-            <button id="enterBtn" class="primary-btn hero-btn" style="padding: 16px 40px; font-size: 1rem; border-radius: 12px; box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); transition: transform 0.2s;">
-                ENTER ARENA 🚀
-            </button>
-            <button onclick="document.getElementById('how-to').scrollIntoView({behavior: 'smooth'})" class="secondary-btn" style="padding: 16px 35px; font-size: 1rem; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; backdrop-filter: blur(4px);">
-                VIEW RULES
-            </button>
-        </div>
+            <div class="hero-actions">
+                <button id="enterBtn" class="btn btn-primary">ENTER ARENA 🚀</button>
+                <button onclick="document.getElementById('how-to').scrollIntoView({behavior: 'smooth'})" class="btn btn-secondary">VIEW RULES</button>
+            </div>
 
-        <div class="hero-stats glass" style="display: flex; gap: 40px; padding: 20px 40px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(30, 41, 59, 0.3);">
-            <div class="stat-item" style="text-align: center;">
-                <b style="font-size: 1.8rem; color: #fff; display: block; font-family: 'Exo 2', sans-serif;">600+</b>
-                <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Players</span>
-            </div>
-            <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
-            <div class="stat-item" style="text-align: center;">
-                <b style="font-size: 1.8rem; color: #fff; display: block; font-family: 'Exo 2', sans-serif;">10</b>
-                <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Teams</span>
-            </div>
-            <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
-            <div class="stat-item" style="text-align: center;">
-                <b style="font-size: 1.8rem; color: #4ade80; display: block; font-family: 'Exo 2', sans-serif;">0ms</b>
-                <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Latency</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="features" class="section-container" style="max-width: 1100px; margin: 0 auto; padding: 100px 20px;">
-        <h2 class="section-title reveal" style="text-align: center; font-size: 2.5rem; font-family: 'Exo 2', sans-serif; margin-bottom: 60px; color: #fff;">PRO FEATURES</h2>
-        
-        <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px;">
-            <div class="feature-card glass reveal" style="padding: 30px; border-radius: 16px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s;">
-                <div style="font-size: 2.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">⚡</div>
-                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Real-Time Sockets</h3>
-                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6;">Instant bid updates synchronized across all devices. No refreshing required.</p>
-            </div>
-            <div class="feature-card glass reveal" style="padding: 30px; border-radius: 16px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s;">
-                <div style="font-size: 2.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">💰</div>
-                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Smart Purse</h3>
-                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6;">Automated budget validation. The system prevents overspending and tracks remaining funds.</p>
-            </div>
-            <div class="feature-card glass reveal" style="padding: 30px; border-radius: 16px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s;">
-                <div style="font-size: 2.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">🏆</div>
-                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Live Leaderboard</h3>
-                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6;">Track squad composition, foreign player quotas, and RTM status in real-time.</p>
-            </div>
-            <div class="feature-card glass reveal" style="padding: 30px; border-radius: 16px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s;">
-                <div style="font-size: 2.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">🎨</div>
-                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Pro UI Design</h3>
-                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6;">A completely immersive dark-mode interface designed for long auction sessions.</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="how-to" class="section-container" style="max-width: 900px; margin: 0 auto; padding: 50px 20px;">
-        <h2 class="section-title reveal" style="text-align: center; font-size: 2.5rem; font-family: 'Exo 2', sans-serif; margin-bottom: 50px; color: #fff;">HOW IT WORKS</h2>
-        
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div class="step-row reveal glass" style="display: flex; align-items: center; padding: 25px; border-radius: 12px; background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.05); margin-right: 25px; font-family: 'Exo 2', sans-serif;">01</div>
-                <div>
-                    <h3 style="color: var(--gold); margin: 0 0 5px 0;">Create or Join</h3>
-                    <p style="color: #ccc; margin: 0; font-size: 0.95rem;">Host a private room and get a unique 5-letter code to share with friends.</p>
+            <div class="hero-stats glass reveal">
+                <div class="stat-item">
+                    <b class="stat-num">600+</b>
+                    <span class="stat-label">Players</span>
                 </div>
-            </div>
-            <div class="step-row reveal glass" style="display: flex; align-items: center; padding: 25px; border-radius: 12px; background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.05); margin-right: 25px; font-family: 'Exo 2', sans-serif;">02</div>
-                <div>
-                    <h3 style="color: var(--primary); margin: 0 0 5px 0;">Pick Your Team</h3>
-                    <p style="color: #ccc; margin: 0; font-size: 0.95rem;">Select your franchise (CSK, MI, RCB, etc.). First come, first served logic applies.</p>
+                <div style="width: 1px; background: rgba(255,255,255,0.1);" class="desktop-only"></div>
+                <div class="stat-item">
+                    <b class="stat-num">10</b>
+                    <span class="stat-label">Teams</span>
                 </div>
-            </div>
-            <div class="step-row reveal glass" style="display: flex; align-items: center; padding: 25px; border-radius: 12px; background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.05); margin-right: 25px; font-family: 'Exo 2', sans-serif;">03</div>
-                <div>
-                    <h3 style="color: var(--accent); margin: 0 0 5px 0;">War Room</h3>
-                    <p style="color: #ccc; margin: 0; font-size: 0.95rem;">Use the live bidding interface. The host controls the flow, you control the cash.</p>
+                <div style="width: 1px; background: rgba(255,255,255,0.1);" class="desktop-only"></div>
+                <div class="stat-item">
+                    <b class="stat-num" style="color: #4ade80;">0ms</b>
+                    <span class="stat-label">Latency</span>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <footer class="landing-footer" style="margin-top: 100px; padding: 40px 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(2, 6, 23, 0.8);">
+    <section id="features" class="section-padding">
+        <div class="container">
+            <h2 class="section-title reveal">PRO FEATURES</h2>
+            <div class="features-grid">
+                <div class="feature-card reveal">
+                    <div class="feature-icon"><i class="fa-solid fa-bolt"></i></div>
+                    <h3 style="color: #fff; margin-bottom: 10px;">Real-Time Sockets</h3>
+                    <p style="color: #94a3b8;">Instant bid updates synchronized across all devices. No refreshing required.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+                    <h3 style="color: #fff; margin-bottom: 10px;">Smart Purse</h3>
+                    <p style="color: #94a3b8;">Automated budget validation prevents overspending and tracks remaining funds.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"><i class="fa-solid fa-trophy"></i></div>
+                    <h3 style="color: #fff; margin-bottom: 10px;">Live Leaderboard</h3>
+                    <p style="color: #94a3b8;">Track squad composition, foreign player quotas, and RTM status in real-time.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"><i class="fa-solid fa-palette"></i></div>
+                    <h3 style="color: #fff; margin-bottom: 10px;">Pro UI Design</h3>
+                    <p style="color: #94a3b8;">A completely immersive dark-mode interface designed for long auction sessions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-to" class="section-padding">
+        <div class="container" style="max-width: 900px;">
+            <h2 class="section-title reveal">HOW IT WORKS</h2>
+            <div style="display: flex; flex-direction: column;">
+                <div class="step-row reveal">
+                    <div class="step-num">01</div>
+                    <div>
+                        <h3 style="color: var(--gold); margin: 0 0 5px 0;">Create or Join</h3>
+                        <p style="color: #ccc; margin: 0;">Host a private room and get a unique 5-letter code to share with friends.</p>
+                    </div>
+                </div>
+                <div class="step-row reveal">
+                    <div class="step-num">02</div>
+                    <div>
+                        <h3 style="color: var(--primary); margin: 0 0 5px 0;">Pick Your Team</h3>
+                        <p style="color: #ccc; margin: 0;">Select your franchise (CSK, MI, RCB). First come, first served logic applies.</p>
+                    </div>
+                </div>
+                <div class="step-row reveal">
+                    <div class="step-num">03</div>
+                    <div>
+                        <h3 style="color: var(--accent); margin: 0 0 5px 0;">War Room</h3>
+                        <p style="color: #ccc; margin: 0;">Use the live bidding interface. The host controls the flow, you control the cash.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer style="border-top: 1px solid rgba(255,255,255,0.05); background: rgba(2, 6, 23, 0.8); padding: 40px 20px; text-align: center;">
         <div style="font-family: 'Exo 2', sans-serif; font-weight: 800; font-size: 1.5rem; color: #fff; margin-bottom: 20px;">IPL AUCTION SIM</div>
         <div style="color: #64748b; font-size: 0.85rem;">© 2025 Auction Dashboard. Built for Cricket Fans.</div>
     </footer>
 
-</section>
+</div>
+
+<script>
+    // Reveal on Scroll Animation
+    const reveals = document.querySelectorAll(".reveal");
+    const revealOnScroll = () => {
+        const windowHeight = window.innerHeight;
+        reveals.forEach((reveal) => {
+            const elementTop = reveal.getBoundingClientRect().top;
+            if (elementTop < windowHeight - 100) reveal.classList.add("active");
+        });
+    };
+    window.addEventListener("scroll", revealOnScroll);
+    revealOnScroll(); // Trigger once on load
+
+    // Mobile Menu Toggle
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const navList = document.getElementById('nav-links-list');
+    
+    menuBtn.addEventListener('click', () => {
+        navList.classList.toggle('active');
+        const icon = menuBtn.querySelector('i');
+        icon.classList.toggle('fa-bars');
+        icon.classList.toggle('fa-xmark');
+    });
+
+    // Close mobile menu on link click
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            navList.classList.remove('active');
+            menuBtn.querySelector('i').classList.add('fa-bars');
+            menuBtn.querySelector('i').classList.remove('fa-xmark');
+        });
+    });
+</script>
+
 
 
 <section id="auth" class="screen hidden">
@@ -637,6 +838,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
