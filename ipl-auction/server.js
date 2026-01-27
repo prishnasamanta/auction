@@ -154,61 +154,85 @@ function getTeamOwners(room) {
     return owners;
 }
 
+/* ================= HELPERS FOR SETS ================= */
+
 function createSets(allPlayers) {
-    // 1. Sort everyone by rating high to low
-    const sorted = [...allPlayers].sort((a, b) => b.rating - a.rating);
-
-    // 2. Extract MARQUEE Set
-    const marquee = sorted.slice(0, 10);
-    const remaining = sorted.slice(10);
-
-    // 3. Group remaining by Role
-    const bats = remaining.filter(p => p.role === "BAT");
-    const alls = remaining.filter(p => p.role === "ALL");
-    const wks = remaining.filter(p => p.role === "WK");
-    const pace = remaining.filter(p => p.role === "PACE");
-    const spin = remaining.filter(p => p.role === "SPIN");
-
-    const sets = [];
-    sets.push({ name: "M1: Marquee Players", players: marquee });
-
-    // Helper to chunk arrays
-    const chunk = (arr, size) => {
-        const res = [];
-        for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
-        return res;
+    // 1. Initialize Containers for each Tag
+    const buckets = {
+        "M": [],     // Marquee
+        "BAT1": [],  // Capped Bat
+        "WK1": [],   // Capped WK
+        "ALL1": [],  // Capped All
+        "BOWL1": [], // Capped Bowl
+        "BAT2": [],  // Uncapped Bat
+        "WK2": [],   // Uncapped WK
+        "ALL2": [],  // Uncapped All
+        "BOWL2": []  // Uncapped Bowl
     };
 
-    const batSets = chunk(bats, 8);
-    const allSets = chunk(alls, 8);
-    const wkSets = chunk(wks, 7);
-    const paceSets = chunk(pace, 7);
-    const spinSets = chunk(spin, 7);
+    // 2. Sort everyone by rating first (so they are ordered within sets)
+    const sortedPlayers = [...allPlayers].sort((a, b) => b.rating - a.rating);
 
-    // 4. Interleave Sets
-    const maxLen = Math.max(batSets.length, allSets.length, wkSets.length, paceSets.length, spinSets.length);
+    // 3. Distribute players into buckets based on their TAG
+    sortedPlayers.forEach(p => {
+        // If player has a tag and that bucket exists, push them there
+        if (p.tag && buckets[p.tag]) {
+            buckets[p.tag].push(p);
+        } else {
+            // FALLBACK: If you forgot to tag a player in players.js
+            // We guess based on role so they don't disappear
+            if(p.rating >= 9.5) buckets["M"].push(p);
+            else if(p.rating < 7.5) buckets["BAT2"].push(p); // Assume uncapped if low rating
+            else buckets["BAT1"].push(p); // Assume capped otherwise
+        }
+    });
 
-    for(let i=0; i<maxLen; i++) {
-        if(batSets[i]) sets.push({ name: `BA${i+1}: Batters`, players: batSets[i] });
-        if(allSets[i]) sets.push({ name: `AL${i+1}: All-Rounders`, players: allSets[i] });
-        if(wkSets[i]) sets.push({ name: `WK${i+1}: Wicket Keepers`, players: wkSets[i] });
-        if(paceSets[i]) sets.push({ name: `FA${i+1}: Fast Bowlers`, players: paceSets[i] });
-        if(spinSets[i]) sets.push({ name: `SP${i+1}: Spinners`, players: spinSets[i] });
-    }
+    // 4. Define the Exact Set Order you requested
+    const setOrder = ["M", "BAT1", "WK1", "ALL1", "BOWL1", "BAT2", "WK2", "BOWL2", "ALL2"];
+    
+    const finalSets = [];
 
-    return sets.map(s => s.players);
+    setOrder.forEach(tagKey => {
+        const playersInTag = buckets[tagKey];
+        
+        // If we have players, chunk them into groups of 8 (so sets aren't too huge)
+        if (playersInTag.length > 0) {
+            // Helper to chunk arrays
+            const chunk = (arr, size) => {
+                const res = [];
+                for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
+                return res;
+            };
+
+            // Create subsets (e.g., Capped Batters 1, Capped Batters 2)
+            const chunks = chunk(playersInTag, 8);
+            chunks.forEach(chunkOfPlayers => {
+                finalSets.push(chunkOfPlayers);
+            });
+        }
+    });
+
+    return finalSets;
 }
 
 function getSetName(set) {
     if (!set || set.length === 0) return "Empty Set";
-    const r = set[0].role;
-    if(set.some(p => p.rating >= 9.4)) return "Marquee Set";
-    if(r === "BAT") return "Batters Set";
-    if(r === "ALL") return "All-Rounders Set";
-    if(r === "WK") return "Wicket Keepers Set";
-    if(r === "PACE") return "Fast Bowlers Set";
-    if(r === "SPIN") return "Spinners Set";
-    return "Mixed Set";
+    
+    // Look at the tag of the first player to determine the Set Name
+    const tag = set[0].tag;
+
+    switch(tag) {
+        case "M": return "🏆 Marquee Set";
+        case "BAT1": return "🏏 Capped Batters";
+        case "WK1": return "🧤 Capped Wicket Keepers";
+        case "ALL1": return "⚡ Capped All-Rounders";
+        case "BOWL1": return "🥎 Capped Bowlers";
+        case "BAT2": return "🏏 Uncapped Batters";
+        case "WK2": return "🧤 Uncapped Wicket Keepers";
+        case "ALL2": return "⚡ Uncapped All-Rounders";
+        case "BOWL2": return "🥎 Uncapped Bowlers";
+        default: return "Mixed Set"; // Fallback
+    }
 }
 
 function broadcastSets(r, roomCode) {
@@ -1000,3 +1024,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
