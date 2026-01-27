@@ -4692,5 +4692,84 @@ body {
 }
 
 
+/* ================================================= */
+/* 🎨 FIXED BUTTON COLORS & SOUND ICON               */
+/* ================================================= */
+
+/* 1. Reset Header Buttons to have SOLID backgrounds */
+.header-icon-btn {
+    background: rgba(30, 41, 59, 1) !important; /* Solid Dark Slate */
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
+    transition: all 0.2s ease !important;
+}
+
+.header-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: #fff !important;
+    transform: translateY(-1px) !important;
+}
+
+/* 2. Specific Colors for Admin Buttons */
+#startBtn {
+    background: #22c55e !important; /* Green */
+    border-color: #16a34a !important;
+    color: #000 !important;
+}
+
+#togglePauseBtn {
+    background: #eab308 !important; /* Yellow */
+    border-color: #ca8a04 !important;
+    color: #000 !important;
+}
+
+#skipBtn {
+    background: #3b82f6 !important; /* Blue */
+    border-color: #2563eb !important;
+    color: #fff !important;
+}
+
+#skipSetBtn {
+    background: #6366f1 !important; /* Indigo */
+    border-color: #4f46e5 !important;
+    color: #fff !important;
+}
+
+#endBtn {
+    background: #ef4444 !important; /* Red */
+    border-color: #dc2626 !important;
+    color: #fff !important;
+}
+
+/* 3. Sound Button Styling */
+#toggleMuteBtn {
+    background: transparent !important; /* Keep sound btn subtle */
+    border: 1px solid rgba(255,255,255,0.3) !important;
+}
+
+#toggleMuteBtn img {
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+    transition: transform 0.2s;
+}
+
+#toggleMuteBtn:active img {
+    transform: scale(0.9);
+}
+
+/* Muted State (Red Border) */
+#toggleMuteBtn.muted {
+    border-color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+
 
 
