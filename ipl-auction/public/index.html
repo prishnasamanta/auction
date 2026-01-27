@@ -217,9 +217,10 @@
         <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden" style="background:var(--success); color:#000;">✚JoinTeam</button>
         
         <button onclick="showRules()" class="header-icon-btn" title="Rules">🗓</button>
-        <button id="toggleMuteBtn" class="header-icon-btn" onclick="toggleMute()" title="Toggle Sound">
-            <div class="sound-wave"></div>
-        </button>
+       <button id="toggleMuteBtn" class="header-icon-btn" onclick="toggleMute()" title="Toggle Sound">
+    <img id="soundIconImg" width="24" height="24" src="https://img.icons8.com/windows/32/ffffff/room-sound.png" alt="sound"/>
+</button>
+
         <span id="adminControls" class="admin-group hidden" style="display:flex; gap:5px;">
             <button id="startBtn" class="header-icon-btn primary" title="Start">▶ Start</button>
             <button id="togglePauseBtn" class="header-icon-btn" title="Pause">⏸</button>
@@ -228,7 +229,14 @@
             <button onclick="admin('end')" class="header-icon-btn danger" title="End Game">⊘</button>
         </span>
 
-        <button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">🏳</button>
+<button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">
+    <img
+        src="https://img.icons8.com/material-outlined/24/emergency-exit.png"
+        alt="Leave"
+        width="24"
+        height="24"
+    />
+</button>
     </div>
     
     <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:10px; top:50px;">
@@ -627,6 +635,7 @@
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
