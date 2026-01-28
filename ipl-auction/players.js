@@ -5,11 +5,11 @@ module.exports = [
 /* ============================================================ */
 
 /* --- Indian Wicket Keepers --- */
-{name:"KL Rahul", role:"WK", rating:9.3, foreign:false, tag:"WK1"},
+{name:"KL Rahul", role:"WK", rating:9.3, foreign:false, tag:"M"},
 {name:"Sanju Samson", role:"WK", rating:9.1, foreign:false, tag:"WK1"},
-{name:"MS Dhoni", role:"WK", rating:8.9, foreign:false, tag:"WK1"},
-{name:"Rishabh Pant", role:"WK", rating:8.9, foreign:false, tag:"WK1"},
-{name:"Ishan Kishan", role:"WK", rating:8.9, foreign:false, tag:"WK1"},
+{name:"MS Dhoni", role:"WK", rating:8.9, foreign:false, tag:"M"},
+{name:"Rishabh Pant", role:"WK", rating:8.9, foreign:false, tag:"M"},
+{name:"Ishan Kishan", role:"WK", rating:9.1, foreign:false, tag:"WK1"},
 {name:"Prabhsimran Singh", role:"WK", rating:8.7, foreign:false, tag:"WK2"},
 {name:"Wriddhiman Saha", role:"WK", rating:8.2, foreign:false, tag:"WK1"},
 {name:"Jitesh Sharma", role:"WK", rating:8.2, foreign:false, tag:"WK2"},
@@ -32,9 +32,9 @@ module.exports = [
 
 /* --- Overseas Wicket Keepers --- */
 {name:"Jos Buttler", role:"WK", rating:9.9, foreign:true, tag:"M"},
-{name:"Nicholas Pooran", role:"WK", rating:9.7, foreign:true, tag:"WK1"},
-{name:"Heinrich Klaasen", role:"WK", rating:9.5, foreign:true, tag:"WK1"},
-{name:"Phil Salt", role:"WK", rating:9.5, foreign:true, tag:"WK1"},
+{name:"Nicholas Pooran", role:"WK", rating:9.7, foreign:true, tag:"M"},
+{name:"Heinrich Klaasen", role:"WK", rating:9.5, foreign:true, tag:"M"},
+{name:"Phil Salt", role:"WK", rating:9.5, foreign:true, tag:"M"},
 {name:"Quinton de Kock", role:"WK", rating:9.1, foreign:true, tag:"WK1"},
 {name:"Josh Inglis", role:"WK", rating:9.0, foreign:true, tag:"WK1"},
 {name:"Ryan Rickelton", role:"WK", rating:8.9, foreign:true, tag:"WK1"},
@@ -57,12 +57,12 @@ module.exports = [
 
 /* --- Indian Batsmen --- */
 {name:"Virat Kohli", role:"BAT", rating:10.0, foreign:false, tag:"M"},
-{name:"Suryakumar Yadav", role:"BAT", rating:9.7, foreign:false, tag:"BAT1"},
-{name:"Shreyas Iyer", role:"BAT", rating:9.6, foreign:false, tag:"BAT1"},
-{name:"Rohit Sharma", role:"BAT", rating:9.5, foreign:false, tag:"BAT1"},
-{name:"Shubman Gill", role:"BAT", rating:9.2, foreign:false, tag:"BAT1"},
+{name:"Suryakumar Yadav", role:"BAT", rating:9.7, foreign:false, tag:"M"},
+{name:"Shreyas Iyer", role:"BAT", rating:9.6, foreign:false, tag:"M"},
+{name:"Rohit Sharma", role:"BAT", rating:9.5, foreign:false, tag:"M"},
+{name:"Shubman Gill", role:"BAT", rating:9.2, foreign:false, tag:"M"},
 {name:"Yashasvi Jaiswal", role:"BAT", rating:9.2, foreign:false, tag:"BAT1"},
-{name:"Tilak Varma", role:"BAT", rating:9.1, foreign:false, tag:"BAT1"},
+{name:"Tilak Varma", role:"BAT", rating:9.1, foreign:false, tag:"M"},
 {name:"Sai Sudharsan", role:"BAT", rating:9.0, foreign:false, tag:"BAT2"},
 {name:"Rajat Patidar", role:"BAT", rating:8.9, foreign:false, tag:"BAT1"},
 {name:"Shashank Singh", role:"BAT", rating:8.9, foreign:false, tag:"BAT2"},
@@ -100,6 +100,31 @@ module.exports = [
 {name:"Swastik Chhikara", role:"BAT", rating:6.8, foreign:false, tag:"BAT2"},
 {name:"Musheer Khan", role:"BAT", rating:6.7, foreign:false, tag:"BAT2"},
 
+/* --- Overseas Batsmen --- */
+{name:"Travis Head", role:"BAT", rating:9.8, foreign:true, tag:"M"},
+{name:"Aiden Markram", role:"BAT", rating:9.0, foreign:true, tag:"M"},
+{name:"Tim David", role:"BAT", rating:8.8, foreign:true, tag:"BAT1"},
+{name:"Dewald Brevis", role:"BAT", rating:8.7, foreign:true, tag:"BAT1"},
+{name:"Faf du Plessis", role:"BAT", rating:8.6, foreign:true, tag:"M"},
+{name:"Sherfane Rutherford", role:"BAT", rating:8.6, foreign:true, tag:"BAT1"},
+{name:"Pathum Nissanka", role:"BAT", rating:8.4, foreign:true, tag:"BAT1"},
+{name:"Kusal Perera", role:"BAT", rating:8.4, foreign:true, tag:"BAT1"},
+{name:"David Miller", role:"BAT", rating:8.3, foreign:true, tag:"BAT1"},
+{name:"Kane Williamson", role:"BAT", rating:8.3, foreign:true, tag:"M"},
+{name:"Glenn Phillips", role:"BAT", rating:8.3, foreign:true, tag:"BAT1"},
+{name:"Shimron Hetmyer", role:"BAT", rating:8.2, foreign:true, tag:"BAT1"},
+{name:"Jake Fraser-McGurk", role:"BAT", rating:8.0, foreign:true, tag:"BAT1"},
+{name:"Steve Smith", role:"BAT", rating:8.0, foreign:true, tag:"M"},
+{name:"Rovman Powell", role:"BAT", rating:7.9, foreign:true, tag:"BAT1"},
+{name:"Jason Roy", role:"BAT", rating:7.8, foreign:true, tag:"BAT1"},
+{name:"Harry Brook", role:"BAT", rating:7.7, foreign:true, tag:"BAT1"},
+{name:"Charith Asalanka", role:"BAT", rating:7.6, foreign:true, tag:"BAT1"},
+{name:"Matthew Short", role:"BAT", rating:7.6, foreign:true, tag:"BAT1"},
+{name:"Alex Hales", role:"BAT", rating:7.5, foreign:true, tag:"BAT1"},
+{name:"Najibullah Zadran", role:"BAT", rating:7.5, foreign:true, tag:"BAT1"},
+{name:"Saim Ayub", role:"BAT", rating:7.4, foreign:true, tag:"BAT1"},
+
+
 /* ============================================================ */
 /* ALL ROUNDERS                          */
 /* ============================================================ */
@@ -107,8 +132,8 @@ module.exports = [
 /* --- Indian All Rounders --- */
 {name:"Hardik Pandya", role:"ALL", rating:9.9, foreign:false, tag:"M"},
 {name:"Abhishek Sharma", role:"ALL", rating:9.5, foreign:false, tag:"ALL1"},
-{name:"Ravindra Jadeja", role:"ALL", rating:9.4, foreign:false, tag:"ALL1"},
-{name:"Axar Patel", role:"ALL", rating:9.2, foreign:false, tag:"ALL1"},
+{name:"Ravindra Jadeja", role:"ALL", rating:9.4, foreign:false, tag:"M"},
+{name:"Axar Patel", role:"ALL", rating:9.2, foreign:false, tag:"M"},
 {name:"Riyan Parag", role:"ALL", rating:9.1, foreign:false, tag:"ALL2"},
 {name:"Krunal Pandya", role:"ALL", rating:8.9, foreign:false, tag:"ALL1"},
 {name:"Nitish Kumar Reddy", role:"ALL", rating:8.5, foreign:false, tag:"ALL2"},
@@ -123,15 +148,37 @@ module.exports = [
 {name:"Swapnil Singh", role:"ALL", rating:7.3, foreign:false, tag:"ALL2"},
 {name:"Ripal Patel", role:"ALL", rating:6.9, foreign:false, tag:"ALL2"},
 {name:"Shams Mulani", role:"ALL", rating:6.8, foreign:false, tag:"ALL2"},
+/* --- Overseas All Rounders --- */
+{name:"Sunil Narine", role:"ALL", rating:9.6, foreign:true, tag:"M"},
+{name:"Mitchell Marsh", role:"ALL", rating:9.3, foreign:true, tag:"M"},
+{name:"Sam Curran", role:"ALL", rating:9.0, foreign:true, tag:"ALL1"},
+{name:"Andre Russell", role:"ALL", rating:8.9, foreign:true, tag:"ALL1"},
+{name:"Marcus Stoinis", role:"ALL", rating:8.9, foreign:true, tag:"ALL1"},
+{name:"Will Jacks", role:"ALL", rating:8.9, foreign:true, tag:"ALL1"},
+{name:"Cameron Green", role:"ALL", rating:8.8, foreign:true, tag:"M"},
+{name:"Marco Jansen", role:"ALL", rating:9.0, foreign:true, tag:"M"},
+{name:"Romario Shepherd", role:"ALL", rating:8.7, foreign:true, tag:"ALL1"},
+{name:"Mitchell Santner", role:"ALL", rating:8.6, foreign:true, tag:"ALL1"},
+{name:"Rachin Ravindra", role:"ALL", rating:8.5, foreign:true, tag:"ALL1"},
+{name:"Ben Stokes", role:"ALL", rating:8.4, foreign:true, tag:"M"},
+{name:"Azmatullah Omarzai", role:"ALL", rating:8.4, foreign:true, tag:"ALL1"},
+{name:"Mohammad Nabi", role:"ALL", rating:8.4, foreign:true, tag:"ALL1"},
+{name:"Liam Livingstone", role:"ALL", rating:8.2, foreign:true, tag:"ALL1"},
+{name:"Glenn Maxwell", role:"ALL", rating:8.1, foreign:true, tag:"M"},
+{name:"Daryl Mitchell", role:"ALL", rating:8.0, foreign:true, tag:"ALL1"},
+{name:"Jason Holder", role:"ALL", rating:7.9, foreign:true, tag:"ALL1"},
+{name:"Chris Woakes", role:"ALL", rating:7.8, foreign:true, tag:"ALL1"},
+{name:"Daniel Sams", role:"ALL", rating:7.4, foreign:true, tag:"ALL1"},
+{name:"Kyle Mayers", role:"ALL", rating:7.3, foreign:true, tag:"ALL1"},
 
 /* ============================================================ */
 /* PACE BOWLERS                          */
 /* ============================================================ */
 
 {name:"Jasprit Bumrah", role:"PACE", rating:10.0, foreign:false, tag:"M"},
-{name:"Arshdeep Singh", role:"PACE", rating:9.6, foreign:false, tag:"BOWL1"},
+{name:"Arshdeep Singh", role:"PACE", rating:9.6, foreign:false, tag:"M"},
 {name:"Harshal Patel", role:"PACE", rating:9.5, foreign:false, tag:"BOWL1"},
-{name:"Mohammed Siraj", role:"PACE", rating:9.0, foreign:false, tag:"BOWL1"},
+{name:"Mohammed Siraj", role:"PACE", rating:9.0, foreign:false, tag:"M"},
 {name:"Bhuvaneshwar Kumar", role:"PACE", rating:9.0, foreign:false, tag:"BOWL1"},
 {name:"Prasidh Krishna", role:"PACE", rating:9.0, foreign:false, tag:"BOWL1"},
 {name:"Mohammed Shami", role:"PACE", rating:8.9, foreign:false, tag:"BOWL1"},
@@ -167,18 +214,57 @@ module.exports = [
 {name:"Chetan Sakariya", role:"PACE", rating:7.0, foreign:false, tag:"BOWL1"},
 {name:"Arjun Tendulkar", role:"PACE", rating:6.0, foreign:false, tag:"BOWL2"},
 
+/* --- Overseas Pace Bowlers --- */
+{name:"Josh Hazlewood", role:"PACE", rating:9.8, foreign:true, tag:"M"},
+{name:"Trent Boult", role:"PACE", rating:9.6, foreign:true, tag:"M"},
+{name:"Mitchell Starc", role:"PACE", rating:9.4, foreign:true, tag:"M"},
+{name:"Pat Cummins", role:"PACE", rating:9.4, foreign:true, tag:"M"},
+{name:"Kagiso Rabada", role:"PACE", rating:9.2, foreign:true, tag:"BOWL1"},
+{name:"Matheesha Pathirana", role:"PACE", rating:9.0, foreign:true, tag:"BOWL1"},
+{name:"Mustafizur Rahman", role:"PACE", rating:8.8, foreign:true, tag:"BOWL1"},
+{name:"Anrich Nortje", role:"PACE", rating:8.7, foreign:true, tag:"BOWL1"},
+{name:"Lockie Ferguson", role:"PACE", rating:8.7, foreign:true, tag:"BOWL1"},
+{name:"Naveen-ul-Haq", role:"PACE", rating:8.7, foreign:true, tag:"BOWL1"},
+{name:"Gerald Coetzee", role:"PACE", rating:8.6, foreign:true, tag:"BOWL1"},
+{name:"Nandre Burger", role:"PACE", rating:8.4, foreign:true, tag:"BOWL1"},
+{name:"Jason Behrendorff", role:"PACE", rating:8.3, foreign:true, tag:"BOWL1"},
+{name:"Nathan Ellis", role:"PACE", rating:8.3, foreign:true, tag:"BOWL1"},
+{name:"Matt Henry", role:"PACE", rating:8.2, foreign:true, tag:"BOWL1"},
+{name:"Lungi Ngidi", role:"PACE", rating:8.1, foreign:true, tag:"BOWL1"},
+{name:"Nuwan Thushara", role:"PACE", rating:8.0, foreign:true, tag:"BOWL1"},
+{name:"Josh Little", role:"PACE", rating:8.0, foreign:true, tag:"BOWL1"},
+{name:"Gus Atkinson", role:"PACE", rating:8.0, foreign:true, tag:"BOWL1"},
+{name:"Mark Wood", role:"PACE", rating:7.9, foreign:true, tag:"M"},
+{name:"Dilshan Madushanka", role:"PACE", rating:7.9, foreign:true, tag:"BOWL1"},
+{name:"Jhye Richardson", role:"PACE", rating:7.9, foreign:true, tag:"BOWL1"},
+{name:"Reece Topley", role:"PACE", rating:7.8, foreign:true, tag:"BOWL1"},
+{name:"Fazalhaq Farooqi", role:"PACE", rating:7.7, foreign:true, tag:"BOWL1"},
+{name:"Alzarri Joseph", role:"PACE", rating:7.6, foreign:true, tag:"BOWL1"},
+{name:"Spencer Johnson", role:"PACE", rating:7.6, foreign:true, tag:"BOWL1"},
+{name:"Dushmantha Chameera", role:"PACE", rating:7.5, foreign:true, tag:"BOWL1"},
+{name:"Wayne Parnell", role:"PACE", rating:7.4, foreign:true, tag:"BOWL1"},
+{name:"Luke Wood", role:"PACE", rating:7.3, foreign:true, tag:"BOWL1"},
+{name:"Obed McCoy", role:"PACE", rating:7.2, foreign:true, tag:"BOWL1"},
+{name:"Tom Curran", role:"PACE", rating:7.2, foreign:true, tag:"BOWL1"},
+{name:"Richard Gleeson", role:"PACE", rating:7.0, foreign:true, tag:"BOWL1"},
+{name:"B Muzarabani", role:"PACE", rating:6.9, foreign:true, tag:"BOWL1"},
+{name:"Shamar Joseph", role:"PACE", rating:6.9, foreign:true, tag:"BOWL1"},
+{name:"Kwena Maphaka", role:"PACE", rating:6.8, foreign:true, tag:"BOWL1"},
+{name:"Lizaad Williams", role:"PACE", rating:6.8, foreign:true, tag:"BOWL1"},
+
+
 /* ============================================================ */
 /* SPIN BOWLERS                          */
 /* ============================================================ */
 
 /* --- Indian Spin Bowlers --- */
-{name:"Varun Chakravarthy", role:"SPIN", rating:9.6, foreign:false, tag:"BOWL1"},
-{name:"Kuldeep Yadav", role:"SPIN", rating:9.5, foreign:false, tag:"BOWL1"},
-{name:"Yuzvendra Chahal", role:"SPIN", rating:9.4, foreign:false, tag:"BOWL1"},
-{name:"Ravi Bishnoi", role:"SPIN", rating:8.8, foreign:false, tag:"BOWL1"},
-{name:"R Sai Kishore", role:"SPIN", rating:8.6, foreign:false, tag:"BOWL2"},
-{name:"Suyash Sharma", role:"SPIN", rating:8.4, foreign:false, tag:"BOWL2"},
-{name:"Digvesh Rathi", role:"SPIN", rating:8.3, foreign:false, tag:"BOWL2"},
+{name:"Varun Chakravarthy", role:"SPIN", rating:9.7, foreign:false, tag:"M"},
+{name:"Kuldeep Yadav", role:"SPIN", rating:9.6, foreign:false, tag:"BOWL1"},
+{name:"Yuzvendra Chahal", role:"SPIN", rating:9.5, foreign:false, tag:"M"},
+{name:"Ravi Bishnoi", role:"SPIN", rating:8.9, foreign:false, tag:"BOWL1"},
+{name:"R Sai Kishore", role:"SPIN", rating:8.8, foreign:false, tag:"BOWL2"},
+{name:"Suyash Sharma", role:"SPIN", rating:8.5, foreign:false, tag:"BOWL2"},
+{name:"Digvesh Rathi", role:"SPIN", rating:8.4, foreign:false, tag:"BOWL2"},
 {name:"Rahul Chahar", role:"SPIN", rating:8.2, foreign:false, tag:"BOWL1"},
 {name:"Mayank Markande", role:"SPIN", rating:7.9, foreign:false, tag:"BOWL1"},
 {name:"Vignesh Puthur", role:"SPIN", rating:7.9, foreign:false, tag:"BOWL2"},
@@ -191,7 +277,7 @@ module.exports = [
 
 /* --- Overseas Spin Bowlers --- */
 {name:"Rashid Khan", role:"SPIN", rating:9.7, foreign:true, tag:"M"},
-{name:"Noor Ahmad", role:"SPIN", rating:9.2, foreign:true, tag:"BOWL1"},
+{name:"Noor Ahmad", role:"SPIN", rating:9.3, foreign:true, tag:"BOWL1"},
 {name:"Adam Zampa", role:"SPIN", rating:8.9, foreign:true, tag:"BOWL1"},
 {name:"Maheesh Theekshana", role:"SPIN", rating:8.6, foreign:true, tag:"BOWL1"},
 {name:"Wanindu Hasaranga", role:"SPIN", rating:8.6, foreign:true, tag:"BOWL1"},
@@ -205,3 +291,4 @@ module.exports = [
 {name:"Vijayakanth Viyaskanth", role:"SPIN", rating:7.1, foreign:true, tag:"BOWL2"}
 
 ];
+
