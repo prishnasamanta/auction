@@ -2,23 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require('path');
-// Default player pool (IPL 2026)
 const PLAYERS = require("./players"); // Ensure players.js exists
-
-// Optional legends/custom datasets (fallback to PLAYERS if missing)
-let LEGENDS_PLAYERS = PLAYERS;
-let CUSTOM_PLAYERS = PLAYERS;
-
-try {
-    LEGENDS_PLAYERS = require("./legends");
-} catch (e) {
-    console.log("legends.js not found, using default PLAYERS for legends pool");
-}
-try {
-    CUSTOM_PLAYERS = require("./custom");
-} catch (e) {
-    console.log("custom.js not found, using default PLAYERS for custom pool");
-}
 
 const app = express();
 const server = http.createServer(app);
@@ -129,6 +113,29 @@ app.get('/api/room/:code', async (req, res) => {
             rules: room.rules
         }
     });
+});
+
+// API: Expose player pools to the client (for custom builder / legends)
+app.get('/api/players/:setId?', (req, res) => {
+    const setId = (req.params.setId || "ipl2026").toLowerCase();
+    
+    let pool = PLAYERS;
+    try {
+        if (setId === "legends") {
+            // Optional legends.js file; fallback handled by catch
+            // eslint-disable-next-line global-require, import/no-dynamic-require
+            pool = require("./legends");
+        } else if (setId === "custom") {
+            // Optional custom.js file; if missing, use main players list
+            // eslint-disable-next-line global-require, import/no-dynamic-require
+            pool = require("./custom");
+        }
+    } catch (e) {
+        console.warn("API /api/players fallback to default PLAYERS:", e.message);
+        pool = PLAYERS;
+    }
+
+    res.json({ players: pool });
 });
 
 /* ================= CONSTANTS & HELPERS ================= */
@@ -301,8 +308,24 @@ io.on("connection", socket => {
     });
 
     // 2. CREATE ROOM
-    socket.on("createRoom", ({ user, isPublic }) => {
+    socket.on("createRoom", ({ user, isPublic, datasetId }) => {
         const code = generateRoomCode();
+        
+        // Choose player pool based on selected dataset (default -> PLAYERS)
+        let playerPool = PLAYERS;
+        try {
+            if (datasetId === "legends") {
+                // Optional legends.js file (same shape as players.js); fallback if missing
+                // eslint-disable-next-line global-require, import/no-dynamic-require
+                playerPool = require("./legends");
+            } else if (datasetId === "custom") {
+                // For custom sets, start with full pool; host can override via saveCustomSet
+                playerPool = PLAYERS;
+            }
+        } catch (e) {
+            console.warn("Dataset file not found, falling back to default PLAYERS:", e.message);
+            playerPool = PLAYERS;
+        }
         
         rooms[code] = {
             admin: socket.id,
@@ -312,13 +335,14 @@ io.on("connection", socket => {
             availableTeams: [...AVAILABLE_TEAMS_LIST],
             squads: {},
             purse: {},
-            // Default set: will be overwritten once host locks rules with chosen pool
-            sets: createSets([...PLAYERS]),
+            sets: createSets([...playerPool]),
             currentSetIndex: 0,
             playingXI: {},
             rulesLocked: false,
             auctionStarted: false,
             auctionEnded: false,
+            datasetId: datasetId || "ipl2026",
+            customPlayers: null,
             chat: [], 
             logs: [], 
             rules: { ...DEFAULT_RULES },
@@ -505,8 +529,7 @@ socket.on("getAuctionState", () => {
         }
     });
 
-    // 4. JOIN ROOM
-    // 4. JOIN ROOM
+    // 4. JOIN ROOM (with identity verification for same-name joins)
     socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
@@ -517,119 +540,52 @@ socket.on("getAuctionState", () => {
 
         const existingSocketId = Object.keys(room.users).find(id => room.users[id].name === user);
         
-        // --- A. HANDLE EXISTING USER ---
-        if (existingSocketId) {
-            const oldUserRecord = room.users[existingSocketId];
+        // If a user with this name already exists, trigger identity check flow
+ if (existingSocketId) {
+    const oldSocketId = existingSocketId;
+    
+    // Generate Code
+    const code = Math.floor(100 + Math.random() * 900).toString();
 
-            // 🟢 SUB-CASE 1: User is AWAY/DISCONNECTED -> IMMEDIATE TAKEOVER (No Verification)
-            if (oldUserRecord.isAway || !oldUserRecord.connected) {
-                
-                // 1. Cancel the "Kick" timer immediately
-                const timerKey = `${roomCode}_${user}`;
-                if (disconnectTimers[timerKey]) {
-                    clearTimeout(disconnectTimers[timerKey]);
-                    delete disconnectTimers[timerKey];
-                }
+    // 1. Send Code to OLD Device (To Display)
+    io.to(oldSocketId).emit("identityShowCode", {
+        code,
+        name: user,
+        device: "New Device"
+    });
 
-                // 2. Transfer Data to New Socket
-                delete room.users[existingSocketId]; // Delete old entry
-                
-                room.users[socket.id] = {
-                    ...oldUserRecord, // Keep team, purse, admin status
-                    id: socket.id,    // Update Socket ID
-                    connected: true,
-                    isAway: false,    // Reset Status
-                    disconnectTime: null,
-                    isKicked: false
-                };
+    // 2. Ask NEW Device for Input
+    socket.emit("identityInputRequired", { 
+        roomCode, 
+        name: user 
+    });
 
-                // 3. Transfer Admin Rights (if applicable)
-                if (room.admin === existingSocketId) {
-                    room.admin = socket.id;
-                }
+    // Store challenge
+    const challengeKey = `${roomCode}:${user}`;
+    if (!global.identityChallenges) global.identityChallenges = {};
+    
+    global.identityChallenges[challengeKey] = {
+        code,
+        roomCode,
+        name: user,
+        oldSocketId,
+        newSocketId: socket.id, // Store New Socket ID
+        createdAt: Date.now()
+    };
 
-                // 4. Setup Socket Properties
-                socket.join(roomCode);
-                socket.room = roomCode;
-                socket.user = user;
-                socket.team = room.users[socket.id].team;
-                if (room.adminUser === user) socket.isAdmin = true;
-
-                // 5. Emit Success to New Device
-                socket.emit("joinedRoom", { 
-                    rules: room.rules,
-                    squads: room.squads,
-                    purses: room.purse,
-                    roomCode: roomCode,
-                    isHost: (room.adminUser === user),
-                    auctionStarted: room.auctionStarted,
-                    availableTeams: room.availableTeams,
-                    auctionEnded: room.auctionEnded,
-                    userCount: Object.keys(room.users).length,
-                    history: { chat: room.chat, logs: room.logs }, 
-                    teamOwners: getTeamOwners(room),
-                    yourTeam: socket.team || null,
-                    leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : []
-                });
-
-                // Update "You Selected" UI immediately
-                if (socket.team) {
-                     socket.emit("teamPicked", { team: socket.team, remaining: room.availableTeams });
-                }
-
-                // 6. Notify Room
-                broadcastUserList(room, roomCode);
-                broadcastSets(room, roomCode);
-                sendLog(room, roomCode, `♻️ ${user} reconnected.`);
-                
-                return; // STOP HERE (Success)
-            }
-
-            // 🟠 SUB-CASE 2: User is ONLINE -> VERIFICATION CHALLENGE
-            // (This code only runs if the old user is currently active)
-            const oldSocketId = existingSocketId;
-            const code = Math.floor(100 + Math.random() * 900).toString();
-
-            // Tell Old Device to show the code
-            io.to(oldSocketId).emit("identityShowCode", {
-                code,
-                name: user,
-                device: "New Device"
-            });
-
-            // Tell New Device to show Input Field
-            socket.emit("identityInputRequired", { 
-                roomCode, 
-                name: user 
-            });
-
-            // Store challenge in global memory
-            const challengeKey = `${roomCode}:${user}`;
-            if (!global.identityChallenges) global.identityChallenges = {};
-            
-            global.identityChallenges[challengeKey] = {
-                code,
-                roomCode,
-                name: user,
-                oldSocketId,
-                newSocketId: socket.id,
-                createdAt: Date.now()
-            };
-
-            // Auto-expire challenge after 30 seconds
-            setTimeout(() => {
-                const ch = global.identityChallenges[challengeKey];
-                if (ch && ch.newSocketId === socket.id) {
-                    delete global.identityChallenges[challengeKey];
-                    io.to(socket.id).emit("identityFailed", { reason: "timeout" });
-                }
-            }, 30000);
-
-            return; // STOP HERE (Waiting for verification)
+    // Auto-expire
+    setTimeout(() => {
+        const ch = global.identityChallenges[challengeKey];
+        if (ch && ch.newSocketId === socket.id) {
+            delete global.identityChallenges[challengeKey];
+            io.to(socket.id).emit("identityFailed", { reason: "timeout" });
         }
+    }, 30000); // Give them 30 seconds
 
-        // --- B. NEW USER JOIN (No existing ID) ---
-        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true, isAway: false };
+    return; 
+}
+        // Normal first-time join
+        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
 
         socket.join(roomCode);
         socket.room = roomCode;
@@ -647,7 +603,7 @@ socket.on("getAuctionState", () => {
             userCount: Object.keys(room.users).length,
             history: { chat: room.chat, logs: room.logs }, 
             teamOwners: getTeamOwners(room),
-            yourTeam: null,
+            yourTeam: socket.team || null,
             leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : []
         });
 
@@ -685,29 +641,109 @@ socket.on("getAuctionState", () => {
         broadcastUserList(rooms[socket.room], socket.room);
     });
 
+    // 5a. IDENTITY CHALLENGE RESPONSE (old device typing the 3‑digit code)
+ socket.on("verifyIdentityCode", ({ roomCode, name, code }) => {
+    const challengeKey = `${roomCode}:${name}`;
+    if (!global.identityChallenges) return;
+    const ch = global.identityChallenges[challengeKey];
+    if (!ch) return;
+
+    // 🛑 CRITICAL CHANGE: Only accept response from NEW SOCKET
+    if (socket.id !== ch.newSocketId) return;
+
+    // Check code
+    const validCode = ch.code === String(code).trim();
+    
+    if (!validCode) {
+        socket.emit("identityFailed", { reason: "invalid" });
+        return;
+    }
+
+    // --- SUCCESS: TRANSFER ACCOUNT ---
+    const room = rooms[roomCode];
+    if (!room) return;
+
+    const userRecord = Object.values(room.users).find(u => u.name === name);
+    const oldSocketId = ch.oldSocketId;
+    const newSocketId = ch.newSocketId;
+
+    // Kick/Notify Old Device
+    io.to(oldSocketId).emit("forceHome", "Logged in on another device.");
+    // Remove old socket data
+    delete room.users[oldSocketId];
+
+    // Setup New Socket Data
+    room.users[newSocketId] = {
+        ...userRecord,
+        id: newSocketId,
+        connected: true,
+        isAway: false,
+        isKicked: false
+    };
+
+    // Transfer Admin if necessary
+    if (room.admin === oldSocketId) {
+        room.admin = newSocketId;
+    }
+
+    // Join New Socket to Room
+    socket.join(roomCode);
+    socket.room = roomCode;
+    socket.user = name;
+    socket.team = room.users[newSocketId].team;
+    if (room.adminUser === name) socket.isAdmin = true;
+
+    // Send Join Data to New Device
+    socket.emit("joinedRoom", {
+        rules: room.rules,
+        squads: room.squads,
+        purses: room.purse,
+        roomCode,
+        isHost: (room.adminUser === name),
+        auctionStarted: room.auctionStarted,
+        availableTeams: room.availableTeams,
+        auctionEnded: room.auctionEnded,
+        userCount: Object.keys(room.users).length,
+        teamOwners: getTeamOwners(room),
+        yourTeam: socket.team,
+        history: { chat: room.chat, logs: room.logs },
+        leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : []
+    });
+
+    // Cleanup
+    delete global.identityChallenges[challengeKey];
+    
+    // Close the popup on Old Device (if still open)
+    io.to(oldSocketId).emit("identityDismiss"); 
+});
+
+    // 5b. SAVE CUSTOM PLAYER SET (Host only, before auction starts)
+    socket.on("saveCustomSet", (players) => {
+        const room = rooms[socket.room];
+        if (!room || !socket.isAdmin) return;
+        if (room.auctionStarted || room.auctionEnded) return;
+        if (!Array.isArray(players) || players.length === 0) return;
+
+        room.customPlayers = players;
+        room.datasetId = "custom";
+        room.sets = createSets(players);
+        room.currentSetIndex = 0;
+
+        // Re-broadcast updated sets to all users
+        broadcastSets(room, socket.room);
+        sendLog(room, socket.room, `🛠️ Host loaded a custom player pool (${players.length} players).`);
+    });
+
     // 6. SET RULES
     socket.on("setRules", rules => {
         const room = rooms[socket.room];
         if(!room || !socket.isAdmin) return;
         if(room.auctionStarted) return;
 
-        // Determine which dataset host selected (default: ipl2026)
-        const datasetId = rules.dataset || "ipl2026";
-        let pool = PLAYERS;
-        if (datasetId === "legends") pool = LEGENDS_PLAYERS;
-        if (datasetId === "custom") pool = CUSTOM_PLAYERS;
-
-        // Update rules (including dataset id for reference)
-        room.rules = { ...room.rules, ...rules, dataset: datasetId };
-
-        // Reset purses
+        room.rules = { ...room.rules, ...rules };
         Object.keys(room.purse).forEach(t => {
             room.purse[t] = room.rules.purse;
         });
-
-        // Rebuild sets from chosen pool (fresh auction pool)
-        room.sets = createSets([...pool]);
-
         room.rulesLocked = true;
         io.to(socket.room).emit("rulesUpdated", { rules: room.rules, teams: room.availableTeams });
     });
@@ -1127,10 +1163,9 @@ function endAuction(r, room) {
     saveToCloud();
 }
 
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3500; 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
-
 
 
