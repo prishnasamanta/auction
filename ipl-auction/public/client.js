@@ -131,8 +131,10 @@ function setupEventListeners() {
             username = uName;
             sessionStorage.setItem('ipl_user', username);
             
-            // Emit creation event
-            socket.emit("createRoom", { user: username, isPublic: isPublic });
+            // Emit creation event with selected dataset
+            const datasetIdInput = document.getElementById('selectedSetId');
+            const datasetId = datasetIdInput ? datasetIdInput.value : "ipl2026";
+            socket.emit("createRoom", { user: username, isPublic: isPublic, datasetId });
         };
     }
 
@@ -444,6 +446,14 @@ socket.on("roomCreated", code => {
     setupAuctionScreen();
     document.getElementById("rulesScreen").classList.remove("hidden");
     updateBrowserURL(code);
+    
+    // If host prepared a custom player pool before creating the room,
+    // send it now so the server can generate sets from that subset.
+    const datasetInput = document.getElementById("selectedSetId");
+    const activeDataset = datasetInput ? datasetInput.value : "ipl2026";
+    if (activeDataset === "custom" && Array.isArray(window.__customSelectedPlayers) && window.__customSelectedPlayers.length > 0) {
+        socket.emit("saveCustomSet", window.__customSelectedPlayers);
+    }
 });
 /* ================= ROOM STATE LOGIC ================= */
 /* ================= ROOM STATE LOGIC (FIXED) ================= */
@@ -774,6 +784,108 @@ socket.on("forceHome", (msg) => {
     sessionStorage.clear();
     window.location.href = "/";
 });
+
+// ================= IDENTITY VERIFICATION (SAME NAME JOIN) =================
+socket.on("identityChallenge", ({ code, name, roomCode, expiresIn }) => {
+    const overlay = document.getElementById("identityVerifyOverlay");
+    const nameEl = document.getElementById("verifyName");
+    const btnYes = document.getElementById("btnVerifyYes");
+    const btnNo = document.getElementById("btnVerifyNo");
+
+    if (!overlay || !btnYes || !btnNo) return;
+
+    if (nameEl) nameEl.textContent = name;
+    overlay.classList.remove("hidden");
+
+    // Replace previous handlers
+    const yesClone = btnYes.cloneNode(true);
+    const noClone = btnNo.cloneNode(true);
+    btnYes.parentNode.replaceChild(yesClone, btnYes);
+    btnNo.parentNode.replaceChild(noClone, btnNo);
+
+    let dismissed = false;
+    const hideOverlay = () => {
+        if (dismissed) return;
+        dismissed = true;
+        overlay.classList.add("hidden");
+    };
+
+    yesClone.onclick = () => {
+        const entered = prompt(`Type this 3‑digit code to confirm: ${code}`);
+        if (!entered) return;
+        socket.emit("identityResponse", { roomCode, name, code: entered });
+        hideOverlay();
+    };
+
+    noClone.onclick = () => {
+        hideOverlay();
+    };
+
+    // Auto-hide after the provided expiry (10s)
+    setTimeout(hideOverlay, (expiresIn || 10) * 1000);
+});
+
+// New device: waiting / failure handling
+socket.on("identityPending", ({ roomCode, name }) => {
+    showPopup(`Another device is already using the name "${name}".\n\nWaiting for confirmation on that device...`, "VERIFYING IDENTITY", "🔐");
+});
+// 1. OLD DEVICE: Shows the Code
+socket.on("identityShowCode", ({ code, name }) => {
+    // Re-use your existing overlay or creating a custom simple one
+    showPopup(
+        `A new device is trying to join as "${name}".\n\nYour Verification Code is:\n\n👉 ${code} 👈\n\nEnter this on the new device.`, 
+        "SECURITY ALERT", 
+        "🛡️"
+    );
+});
+
+// 2. NEW DEVICE: Asks for Input
+socket.on("identityInputRequired", ({ roomCode, name }) => {
+    // Hide any previous loading popups
+    toggleCustomPopup(false);
+
+    // Create a custom input prompt
+    const overlay = document.getElementById("identityVerifyOverlay");
+    overlay.classList.remove("hidden");
+    
+    overlay.innerHTML = `
+        <div class="glass rules-card" style="max-width: 400px; padding: 25px; text-align: center;">
+            <h2 style="color: #facc15; margin-bottom:10px;">🔐 Verification</h2>
+            <p style="color:#ccc; font-size:0.9rem;">
+                Check your other device for the 3-digit code.
+            </p>
+            
+            <input type="number" id="verifyInput" placeholder="000" 
+                   style="font-size:2rem; text-align:center; letter-spacing:5px; margin:20px 0; background:rgba(0,0,0,0.5); border-color:#facc15;">
+            
+            <button id="btnSubmitCode" class="primary-btn" style="width:100%;">VERIFY & JOIN</button>
+        </div>
+    `;
+
+    document.getElementById("btnSubmitCode").onclick = () => {
+        const code = document.getElementById("verifyInput").value;
+        if(code.length > 0) {
+            socket.emit("verifyIdentityCode", { roomCode, name, code });
+            overlay.innerHTML = `<div style="color:white;">Verifying...</div>`; // Show loading state
+        }
+    };
+});
+
+// 3. Close overlay instruction for Old Device
+socket.on("identityDismiss", () => {
+    toggleCustomPopup(false);
+});
+
+socket.on("identityFailed", ({ reason }) => {
+    toggleCustomPopup(false);
+    let msg = "Identity verification failed.";
+    if (reason === "timeout") msg = "Identity verification timed out. Please try again.";
+    if (reason === "invalid") msg = "Incorrect code. You cannot join with this name.";
+    showPopup(msg, "ACCESS DENIED", "❌", true);
+    // Send this new tab back to the landing page
+    sessionStorage.removeItem("ipl_room");
+    window.location.href = "/";
+});
 // --- RECONNECTION & STATE HANDLING ---
 let isReconnecting = false;
 let reconnectionPopupShown = false;
@@ -905,14 +1017,8 @@ socket.on("teamPicked", ({ team, user, remaining }) => {
         // Team was freed (user left/kicked)
         socket.emit("getAuctionState");
     }
-    // 2. Logic for ME (identify by username as well as stored myTeam)
-    if (myTeam === team || (!myTeam && user === username)) {
-        // If we didn't know our team yet but server says this username owns it,
-        // sync it locally so Join Team button disappears and state is consistent.
-        if (!myTeam && team) {
-            myTeam = team;
-            sessionStorage.setItem('ipl_team', team);
-        }
+    // 2. Logic for ME
+    if(myTeam === team) {
         if(gameStarted) {
             document.getElementById("teamSelectionMain").classList.add("hidden");
             setGamePhase("AUCTION");
@@ -940,8 +1046,6 @@ socket.on("adminPromoted", () => {
 const saveRulesBtn = document.getElementById("saveRules");
 if(saveRulesBtn) {
     saveRulesBtn.onclick = () => {
-        const dsInput = document.getElementById("selectedSetId");
-        const dataset = dsInput ? (dsInput.value || "ipl2026") : "ipl2026";
         socket.emit("setRules", {
             maxPlayers: Number(document.getElementById("maxPlayers").value),
             maxForeign: Number(document.getElementById("maxForeign").value),
@@ -951,8 +1055,7 @@ if(saveRulesBtn) {
             minBowl: Number(document.getElementById("minBowl").value),
             minSpin: Number(document.getElementById("minSpin").value),
             minWK: Number(document.getElementById("minWK").value),
-            maxForeignXI: Number(document.getElementById("maxForeignXI").value),
-            dataset
+            maxForeignXI: Number(document.getElementById("maxForeignXI").value)
         });
     };
 }
@@ -1331,6 +1434,10 @@ function showResultStamp(title, detail, color, isUnsold) {
 /* ================================================= */
 // Chat / feed tracking
 let chatLogCount = 0; // Track number of log messages in chat
+
+// Custom dataset builder (in-memory selection before room is created)
+let customAllPlayers = [];
+let customSelectedIndexes = new Set();
 
 // Persist current chat HTML to sessionStorage so feed survives full refresh
 function saveChatToSession() {
@@ -2620,12 +2727,156 @@ function renderPopupContent(mode) {
     }
 }
 // --- 4. DATASET SELECTION HELPER ---
+// --- 4. DATASET SELECTION HELPER ---
 window.selectDataset = function(id, el) {
-    document.getElementById('selectedSetId').value = id;
+    const hidden = document.getElementById('selectedSetId');
+    if (hidden) hidden.value = id;
+
     // Visually update selection
     document.querySelectorAll('.dataset-card').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
+
+    // If host chooses CUSTOM, open the builder overlay
+    if (id === "custom") {
+        if (typeof openCustomBuilder === "function") {
+            openCustomBuilder();
+        }
+    }
+};
+
+// ================= CUSTOM BUILDER LOGIC =================
+// Open overlay and load players (from custom.js if present, else players.js pool)
+window.openCustomBuilder = async function() {
+    const overlay = document.getElementById("customBuilderOverlay");
+    const listBox = document.getElementById("customPlayerList");
+    const countEl = document.getElementById("customCount");
+
+    if (!overlay || !listBox) return;
+
+    overlay.classList.remove("hidden");
+    listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Loading Database...</div>';
+    if (countEl) countEl.textContent = "0";
+    customSelectedIndexes.clear();
+
+    try {
+        // Try dedicated custom pool first, then fallback to default players
+        let res = await fetch("/api/players/custom");
+        if (!res.ok) {
+            res = await fetch("/api/players");
+        }
+        const json = await res.json();
+        customAllPlayers = json.players || [];
+        renderCustomPlayerList();
+    } catch (e) {
+        console.warn("Failed to load custom players", e);
+        listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#f87171;">Failed to load players.</div>';
+    }
+};
+
+window.closeCustomBuilder = function() {
+    const overlay = document.getElementById("customBuilderOverlay");
+    if (overlay) overlay.classList.add("hidden");
+};
+
+function renderCustomPlayerList() {
+    const listBox = document.getElementById("customPlayerList");
+    const searchInput = document.getElementById("customSearch");
+    const roleFilter = document.getElementById("customRoleFilter");
+    const useRatingsToggle = document.getElementById("useRatingsToggle");
+
+    if (!listBox) return;
+
+    const term = (searchInput?.value || "").trim().toLowerCase();
+    const role = roleFilter?.value || "ALL";
+
+    const rows = customAllPlayers
+        .map((p, idx) => ({ p, idx }))
+        .filter(({ p }) => {
+            if (role !== "ALL" && p.role !== role) return false;
+            const country = p.country || (p.foreign ? "Overseas" : "India");
+            const haystack = `${p.name} ${country}`.toLowerCase();
+            if (!term) return true;
+            return haystack.includes(term);
+        });
+
+    if (rows.length === 0) {
+        listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">No players match your filters.</div>';
+        return;
+    }
+
+    const showRatings = !useRatingsToggle || useRatingsToggle.checked;
+
+    listBox.innerHTML = rows.map(({ p, idx }) => {
+        const selected = customSelectedIndexes.has(idx);
+        const country = p.country || (p.foreign ? "Overseas" : "India");
+        const ratingText = showRatings ? `<span style="color:#facc15; font-size:0.8rem;">⭐ ${p.rating?.toFixed ? p.rating.toFixed(1) : p.rating || "-"}</span>` : "";
+        return `
+            <div class="custom-player-row ${selected ? "selected" : ""}" data-idx="${idx}" style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-bottom:1px solid rgba(148,163,184,0.2); gap:8px;">
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:0.9rem; color:#e5e7eb; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div>
+                    <div style="font-size:0.75rem; color:#9ca3af;">${p.role} • ${country}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    ${ratingText}
+                    <button type="button"
+                        class="secondary-btn"
+                        style="width:32px; height:32px; padding:0; font-size:1rem; border-color:${selected ? "#22c55e" : "#4b5563"}; color:${selected ? "#22c55e" : "#e5e7eb"}; background:#020617;"
+                        onclick="toggleCustomSelect(${idx})">
+                        ${selected ? "✓" : "+"}
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join("");
 }
+
+window.toggleCustomSelect = function(idx) {
+    if (customSelectedIndexes.has(idx)) {
+        customSelectedIndexes.delete(idx);
+    } else {
+        customSelectedIndexes.add(idx);
+    }
+
+    const countEl = document.getElementById("customCount");
+    if (countEl) countEl.textContent = String(customSelectedIndexes.size);
+
+    // Re-render to refresh button state / highlighting
+    renderCustomPlayerList();
+};
+
+window.filterCustomList = function() {
+    renderCustomPlayerList();
+};
+
+window.toggleRatingVisibility = function() {
+    renderCustomPlayerList();
+};
+
+// Persist current selection for use after room is created
+window.saveCustomSet = async function() {
+    if (customSelectedIndexes.size === 0) {
+        showPopup("Please select at least one player for your custom set.", "NO PLAYERS SELECTED", "⚠️", true);
+        return;
+    }
+
+    const confirmed = await showConfirm(
+        "Are you sure you want to lock this custom player pool for your auction?\n\nYou cannot change it after starting the auction.",
+        "LOCK CUSTOM SET?",
+        "✅"
+    );
+    if (!confirmed) return;
+
+    // Build selected player list
+    const selected = [];
+    customAllPlayers.forEach((p, idx) => {
+        if (customSelectedIndexes.has(idx)) selected.push(p);
+    });
+
+    // Store globally so we can send to server once room is created
+    window.__customSelectedPlayers = selected;
+
+    closeCustomBuilder();
+};
 // --- FIX: LEADERBOARD DOWNLOAD BUTTON ---
 window.downloadPopupCard = function() {
     if (!currentPopupData || !currentPopupData.team) return;
