@@ -1,5 +1,4 @@
 const socket = io();
-// --- GAME STATE ---
 let username = "";
 let roomCode = "";
 let myTeam = null;
