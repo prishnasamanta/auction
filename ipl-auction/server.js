@@ -2,7 +2,23 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require('path');
+// Default player pool (IPL 2026)
 const PLAYERS = require("./players"); // Ensure players.js exists
+
+// Optional legends/custom datasets (fallback to PLAYERS if missing)
+let LEGENDS_PLAYERS = PLAYERS;
+let CUSTOM_PLAYERS = PLAYERS;
+
+try {
+    LEGENDS_PLAYERS = require("./legends");
+} catch (e) {
+    console.log("legends.js not found, using default PLAYERS for legends pool");
+}
+try {
+    CUSTOM_PLAYERS = require("./custom");
+} catch (e) {
+    console.log("custom.js not found, using default PLAYERS for custom pool");
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -296,6 +312,7 @@ io.on("connection", socket => {
             availableTeams: [...AVAILABLE_TEAMS_LIST],
             squads: {},
             purse: {},
+            // Default set: will be overwritten once host locks rules with chosen pool
             sets: createSets([...PLAYERS]),
             currentSetIndex: 0,
             playingXI: {},
@@ -587,10 +604,23 @@ socket.on("getAuctionState", () => {
         if(!room || !socket.isAdmin) return;
         if(room.auctionStarted) return;
 
-        room.rules = { ...room.rules, ...rules };
+        // Determine which dataset host selected (default: ipl2026)
+        const datasetId = rules.dataset || "ipl2026";
+        let pool = PLAYERS;
+        if (datasetId === "legends") pool = LEGENDS_PLAYERS;
+        if (datasetId === "custom") pool = CUSTOM_PLAYERS;
+
+        // Update rules (including dataset id for reference)
+        room.rules = { ...room.rules, ...rules, dataset: datasetId };
+
+        // Reset purses
         Object.keys(room.purse).forEach(t => {
             room.purse[t] = room.rules.purse;
         });
+
+        // Rebuild sets from chosen pool (fresh auction pool)
+        room.sets = createSets([...pool]);
+
         room.rulesLocked = true;
         io.to(socket.room).emit("rulesUpdated", { rules: room.rules, teams: room.availableTeams });
     });
