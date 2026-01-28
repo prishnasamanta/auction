@@ -450,13 +450,16 @@ socket.on("roomCreated", code => {
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
 
+    // 🟢 FIX: Force close the Identity Overlay immediately upon success
+    const idOverlay = document.getElementById("identityVerifyOverlay");
+    if (idOverlay) idOverlay.classList.add("hidden");
+
     // --- CHECK IF AUCTION ENDED DURING RECONNECTION ---
     if (isReconnecting && data.auctionEnded) {
         isReconnecting = false;
         reconnectionPopupShown = false;
-        toggleCustomPopup(false); // Hide reconnecting popup
+        toggleCustomPopup(false);
         
-        // Sync data first
         roomCode = data.roomCode || roomCode;
         if(data.rules) activeRules = data.rules;
         if(data.squads) allSquads = data.squads;
@@ -468,14 +471,11 @@ socket.on("joinedRoom", (data) => {
             if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
         }
         
-        // Route based on player status
         if (myTeam) {
-            // Player has a team -> Go to XI page
             showScreen("playingXI");
             socket.emit("getMySquad");
             updateURL('xi');
         } else {
-            // Spectator -> Go to Summary
             setTimeout(() => {
                 renderPostAuctionSummary();
                 showScreen("postAuctionSummary");
@@ -504,19 +504,12 @@ socket.on("joinedRoom", (data) => {
             viewEmbeddedSquad(selectedSquadTeam);
         }
         
-        // Hide reconnecting popup if it was shown
         if (isReconnecting) {
             isReconnecting = false;
             reconnectionPopupShown = false;
             toggleCustomPopup(false);
         }
         return; 
-    }
-
-    // --- 2a. Visual "connecting" popup for fresh joins/rejoins ---
-    // Shows a short "connecting" state before we fully paint the auction UI.
-    if (!data.updateOnly) {
-        showPopup("Connecting to your auction room...", "CONNECTING", "🔄");
     }
 
     // --- 2. SETUP SESSION ---
@@ -542,53 +535,38 @@ socket.on("joinedRoom", (data) => {
         }
     }
 
-    // --- 4. RENDER TEAMS (buttons) ---
-    // 🔴 This draws the buttons when you first join or refresh
+    // --- 4. RENDER TEAMS ---
     renderEmbeddedTeams(data.availableTeams || []);
     
-    // --- 5. DETERMINE SCREEN PHASE & TEAM CARD ---
+    // --- 5. DETERMINE SCREEN PHASE ---
     if (myTeam) {
-        // I already have a team
         updateHeaderNotice();
-
         if (!gameStarted) {
-            // Pre-game: show the same compact "YOU SELECTED" tile
-            // that we use right after clicking a team button.
             const container = document.getElementById("teamSelectionMain");
             if (container) {
                 const teamColor = TEAM_COLORS[myTeam] || "#fff";
-                const hostLine = isHost
-                    ? "You are the Host. Press ▶ in header to start."
-                    : "Waiting for Host to start auction...";
+                const hostLine = isHost ? "You are the Host. Press ▶ in header to start." : "Waiting for Host to start auction...";
 
                 container.innerHTML = `
                     <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; animation: popIn 0.3s ease;">
                         <h2 style="color:var(--primary); margin:0 0 2px 0; font-size:0.85rem;">YOU SELECTED</h2>
                         <h1 style="font-size:2rem; margin:0; line-height:1; color:${teamColor}; text-shadow:0 0 12px rgba(0,0,0,0.5);">${myTeam}</h1>
                         <p style="color:#4ade80; font-weight:bold; margin:2px 0 0 0; font-size:0.75rem;">✅ OWNER CONFIRMED</p>
-
                         <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px; width:100%; margin-top:8px;">
                             <div style="color:#64748b; font-size:0.65rem; font-weight:700; letter-spacing:1px; margin-bottom:2px;">ROOM CODE</div>
                             <div onclick="copyRoomCode()" style="font-family:monospace; font-size:1.1rem; font-weight:700; color:#fff; cursor:pointer; letter-spacing:2px;">
                                 ${roomCode} <span style="font-size:0.85rem; opacity:0.5;">📋</span>
                             </div>
                         </div>
-
-                        <div style="margin-top:6px; color:#94a3b8; font-size:0.7rem; font-style:italic;">
-                            ${hostLine}
-                        </div>
+                        <div style="margin-top:6px; color:#94a3b8; font-size:0.7rem; font-style:italic;">${hostLine}</div>
                     </div>
                 `;
             }
-
-            // Stay in TEAM_SELECT phase visually until host starts
             setGamePhase("TEAM_SELECT");
         } else {
-            // Auction already live
             setGamePhase("AUCTION");
         }
     } else {
-        // I don't have a team -> Show selection screen
         setGamePhase("TEAM_SELECT");
     }
 
@@ -596,17 +574,13 @@ socket.on("joinedRoom", (data) => {
     setupAuctionScreen();
     updateAdminButtons(data.auctionStarted);
     
-    // Hide any connecting / reconnecting popup once UI is ready
-    if (isReconnecting || !data.updateOnly) {
-        isReconnecting = false;
-        reconnectionPopupShown = false;
-        toggleCustomPopup(false);
-    }
+    // Hide standard connecting popup if it was showing
+    isReconnecting = false;
+    reconnectionPopupShown = false;
+    toggleCustomPopup(false);
     
     if (data.auctionStarted) {
         socket.emit("getAuctionState");
-        
-        // Force switch to Auction View immediately
         setGamePhase("AUCTION"); 
     }
 });
