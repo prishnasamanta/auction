@@ -179,6 +179,9 @@ window.onload = async () => {
         username = savedUser;
         if (savedTeam) myTeam = savedTeam;
         
+        // Try to restore previous feed/chat for this room
+        restoreChatFromSession();
+        
         // Check if we're on auctionUI path (not just /room)
         const path = window.location.pathname;
         const parts = path.split('/');
@@ -510,6 +513,12 @@ socket.on("joinedRoom", (data) => {
         return; 
     }
 
+    // --- 2a. Visual "connecting" popup for fresh joins/rejoins ---
+    // Shows a short "connecting" state before we fully paint the auction UI.
+    if (!data.updateOnly) {
+        showPopup("Connecting to your auction room...", "CONNECTING", "🔄");
+    }
+
     // --- 2. SETUP SESSION ---
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
@@ -533,21 +542,50 @@ socket.on("joinedRoom", (data) => {
         }
     }
 
-    // --- 4. RENDER TEAMS (THIS WAS MISSING) ---
-    // 🔴 THIS LINE IS CRITICAL: It draws the buttons when you first join
+    // --- 4. RENDER TEAMS (buttons) ---
+    // 🔴 This draws the buttons when you first join or refresh
     renderEmbeddedTeams(data.availableTeams || []);
-
-    // --- 5. DETERMINE SCREEN PHASE ---
+    
+    // --- 5. DETERMINE SCREEN PHASE & TEAM CARD ---
     if (myTeam) {
         // I already have a team
-        setGamePhase("AUCTION");
         updateHeaderNotice();
-        
-        // If pre-game, show "Waiting for Host"
-        if(!gameStarted) {
-            document.getElementById("embeddedTeamList").classList.add("hidden");
-            document.getElementById("waitingForHostMsg").classList.remove("hidden");
-            setGamePhase("TEAM_SELECT"); 
+
+        if (!gameStarted) {
+            // Pre-game: show the same compact "YOU SELECTED" tile
+            // that we use right after clicking a team button.
+            const container = document.getElementById("teamSelectionMain");
+            if (container) {
+                const teamColor = TEAM_COLORS[myTeam] || "#fff";
+                const hostLine = isHost
+                    ? "You are the Host. Press ▶ in header to start."
+                    : "Waiting for Host to start auction...";
+
+                container.innerHTML = `
+                    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; animation: popIn 0.3s ease;">
+                        <h2 style="color:var(--primary); margin:0 0 2px 0; font-size:0.85rem;">YOU SELECTED</h2>
+                        <h1 style="font-size:2rem; margin:0; line-height:1; color:${teamColor}; text-shadow:0 0 12px rgba(0,0,0,0.5);">${myTeam}</h1>
+                        <p style="color:#4ade80; font-weight:bold; margin:2px 0 0 0; font-size:0.75rem;">✅ OWNER CONFIRMED</p>
+
+                        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px; width:100%; margin-top:8px;">
+                            <div style="color:#64748b; font-size:0.65rem; font-weight:700; letter-spacing:1px; margin-bottom:2px;">ROOM CODE</div>
+                            <div onclick="copyRoomCode()" style="font-family:monospace; font-size:1.1rem; font-weight:700; color:#fff; cursor:pointer; letter-spacing:2px;">
+                                ${roomCode} <span style="font-size:0.85rem; opacity:0.5;">📋</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:6px; color:#94a3b8; font-size:0.7rem; font-style:italic;">
+                            ${hostLine}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Stay in TEAM_SELECT phase visually until host starts
+            setGamePhase("TEAM_SELECT");
+        } else {
+            // Auction already live
+            setGamePhase("AUCTION");
         }
     } else {
         // I don't have a team -> Show selection screen
@@ -558,8 +596,8 @@ socket.on("joinedRoom", (data) => {
     setupAuctionScreen();
     updateAdminButtons(data.auctionStarted);
     
-    // Hide reconnecting popup if it was shown
-    if (isReconnecting) {
+    // Hide any connecting / reconnecting popup once UI is ready
+    if (isReconnecting || !data.updateOnly) {
         isReconnecting = false;
         reconnectionPopupShown = false;
         toggleCustomPopup(false);
@@ -893,8 +931,14 @@ socket.on("teamPicked", ({ team, user, remaining }) => {
         // Team was freed (user left/kicked)
         socket.emit("getAuctionState");
     }
-    // 2. Logic for ME
-    if(myTeam === team) {
+    // 2. Logic for ME (identify by username as well as stored myTeam)
+    if (myTeam === team || (!myTeam && user === username)) {
+        // If we didn't know our team yet but server says this username owns it,
+        // sync it locally so Join Team button disappears and state is consistent.
+        if (!myTeam && team) {
+            myTeam = team;
+            sessionStorage.setItem('ipl_team', team);
+        }
         if(gameStarted) {
             document.getElementById("teamSelectionMain").classList.add("hidden");
             setGamePhase("AUCTION");
@@ -922,6 +966,8 @@ socket.on("adminPromoted", () => {
 const saveRulesBtn = document.getElementById("saveRules");
 if(saveRulesBtn) {
     saveRulesBtn.onclick = () => {
+        const dsInput = document.getElementById("selectedSetId");
+        const dataset = dsInput ? (dsInput.value || "ipl2026") : "ipl2026";
         socket.emit("setRules", {
             maxPlayers: Number(document.getElementById("maxPlayers").value),
             maxForeign: Number(document.getElementById("maxForeign").value),
@@ -931,7 +977,8 @@ if(saveRulesBtn) {
             minBowl: Number(document.getElementById("minBowl").value),
             minSpin: Number(document.getElementById("minSpin").value),
             minWK: Number(document.getElementById("minWK").value),
-            maxForeignXI: Number(document.getElementById("maxForeignXI").value)
+            maxForeignXI: Number(document.getElementById("maxForeignXI").value),
+            dataset
         });
     };
 }
@@ -1308,8 +1355,35 @@ function showResultStamp(title, detail, color, isUnsold) {
 /* ================================================= */
 /* =========== 5. LOGS & CHAT (IMPROVED) =========== */
 /* ================================================= */
-// Chat message tracking
+// Chat / feed tracking
 let chatLogCount = 0; // Track number of log messages in chat
+
+// Persist current chat HTML to sessionStorage so feed survives full refresh
+function saveChatToSession() {
+    try {
+        const chat = document.getElementById("chat");
+        if (!chat || !roomCode) return;
+        const key = `ipl_chat_${roomCode}`;
+        sessionStorage.setItem(key, chat.innerHTML);
+    } catch (e) {
+        console.warn("saveChatToSession failed", e);
+    }
+}
+
+// Restore chat HTML from sessionStorage (called on load / reconnect)
+function restoreChatFromSession() {
+    try {
+        const chat = document.getElementById("chat");
+        if (!chat || !roomCode) return;
+        const key = `ipl_chat_${roomCode}`;
+        const html = sessionStorage.getItem(key);
+        if (html) {
+            chat.innerHTML = html;
+        }
+    } catch (e) {
+        console.warn("restoreChatFromSession failed", e);
+    }
+}
 
 // Helper: Clean chat to maintain limits (max 5 logs, max 25 total)
 function cleanChatMessages() {
@@ -1368,6 +1442,8 @@ socket.on("chatUpdate", d => {
     
     // Clean to maintain limits
     cleanChatMessages();
+    // Persist feed so it survives full page refresh
+    saveChatToSession();
 });
 
 // 2. LOG UPDATE (Merged into Chat, Max 5 logs)
@@ -1396,6 +1472,8 @@ socket.on("logUpdate", msg => {
     
     // Clean to maintain limits (max 5 logs, max 25 total)
     cleanChatMessages();
+    // Persist feed so it survives full page refresh
+    saveChatToSession();
 });
 // 3. SEND FUNCTION
 window.sendChat = function() {
