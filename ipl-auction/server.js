@@ -506,6 +506,7 @@ socket.on("getAuctionState", () => {
     });
 
     // 4. JOIN ROOM
+    // 4. JOIN ROOM
     socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
@@ -516,31 +517,119 @@ socket.on("getAuctionState", () => {
 
         const existingSocketId = Object.keys(room.users).find(id => room.users[id].name === user);
         
+        // --- A. HANDLE EXISTING USER ---
         if (existingSocketId) {
-            const timerKey = `${roomCode}_${user}`;
-            if (disconnectTimers[timerKey]) {
-                clearTimeout(disconnectTimers[timerKey]);
-                delete disconnectTimers[timerKey];
+            const oldUserRecord = room.users[existingSocketId];
+
+            // 🟢 SUB-CASE 1: User is AWAY/DISCONNECTED -> IMMEDIATE TAKEOVER (No Verification)
+            if (oldUserRecord.isAway || !oldUserRecord.connected) {
+                
+                // 1. Cancel the "Kick" timer immediately
+                const timerKey = `${roomCode}_${user}`;
+                if (disconnectTimers[timerKey]) {
+                    clearTimeout(disconnectTimers[timerKey]);
+                    delete disconnectTimers[timerKey];
+                }
+
+                // 2. Transfer Data to New Socket
+                delete room.users[existingSocketId]; // Delete old entry
+                
+                room.users[socket.id] = {
+                    ...oldUserRecord, // Keep team, purse, admin status
+                    id: socket.id,    // Update Socket ID
+                    connected: true,
+                    isAway: false,    // Reset Status
+                    disconnectTime: null,
+                    isKicked: false
+                };
+
+                // 3. Transfer Admin Rights (if applicable)
+                if (room.admin === existingSocketId) {
+                    room.admin = socket.id;
+                }
+
+                // 4. Setup Socket Properties
+                socket.join(roomCode);
+                socket.room = roomCode;
+                socket.user = user;
+                socket.team = room.users[socket.id].team;
+                if (room.adminUser === user) socket.isAdmin = true;
+
+                // 5. Emit Success to New Device
+                socket.emit("joinedRoom", { 
+                    rules: room.rules,
+                    squads: room.squads,
+                    purses: room.purse,
+                    roomCode: roomCode,
+                    isHost: (room.adminUser === user),
+                    auctionStarted: room.auctionStarted,
+                    availableTeams: room.availableTeams,
+                    auctionEnded: room.auctionEnded,
+                    userCount: Object.keys(room.users).length,
+                    history: { chat: room.chat, logs: room.logs }, 
+                    teamOwners: getTeamOwners(room),
+                    yourTeam: socket.team || null,
+                    leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : []
+                });
+
+                // Update "You Selected" UI immediately
+                if (socket.team) {
+                     socket.emit("teamPicked", { team: socket.team, remaining: room.availableTeams });
+                }
+
+                // 6. Notify Room
+                broadcastUserList(room, roomCode);
+                broadcastSets(room, roomCode);
+                sendLog(room, roomCode, `♻️ ${user} reconnected.`);
+                
+                return; // STOP HERE (Success)
             }
-            const userData = room.users[existingSocketId];
-            delete room.users[existingSocketId];
-            room.users[socket.id] = userData;
+
+            // 🟠 SUB-CASE 2: User is ONLINE -> VERIFICATION CHALLENGE
+            // (This code only runs if the old user is currently active)
+            const oldSocketId = existingSocketId;
+            const code = Math.floor(100 + Math.random() * 900).toString();
+
+            // Tell Old Device to show the code
+            io.to(oldSocketId).emit("identityShowCode", {
+                code,
+                name: user,
+                device: "New Device"
+            });
+
+            // Tell New Device to show Input Field
+            socket.emit("identityInputRequired", { 
+                roomCode, 
+                name: user 
+            });
+
+            // Store challenge in global memory
+            const challengeKey = `${roomCode}:${user}`;
+            if (!global.identityChallenges) global.identityChallenges = {};
             
-            userData.id = socket.id;
-            userData.connected = true;
-            userData.isAway = false;
-            userData.disconnectTime = null;
-            userData.isKicked = false;
+            global.identityChallenges[challengeKey] = {
+                code,
+                roomCode,
+                name: user,
+                oldSocketId,
+                newSocketId: socket.id,
+                createdAt: Date.now()
+            };
 
-            if (room.admin === existingSocketId) {
-                room.admin = socket.id;
-            }
+            // Auto-expire challenge after 30 seconds
+            setTimeout(() => {
+                const ch = global.identityChallenges[challengeKey];
+                if (ch && ch.newSocketId === socket.id) {
+                    delete global.identityChallenges[challengeKey];
+                    io.to(socket.id).emit("identityFailed", { reason: "timeout" });
+                }
+            }, 30000);
 
-            socket.team = userData.team;
-            if(room.adminUser === user) socket.isAdmin = true;
-        } else {
-            room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
+            return; // STOP HERE (Waiting for verification)
         }
+
+        // --- B. NEW USER JOIN (No existing ID) ---
+        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true, isAway: false };
 
         socket.join(roomCode);
         socket.room = roomCode;
@@ -557,12 +646,10 @@ socket.on("getAuctionState", () => {
             auctionEnded: false,
             userCount: Object.keys(room.users).length,
             history: { chat: room.chat, logs: room.logs }, 
-            teamOwners: getTeamOwners(room)
+            teamOwners: getTeamOwners(room),
+            yourTeam: null,
+            leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : []
         });
-
-        if (socket.team) {
-             socket.emit("teamPicked", { team: socket.team, remaining: room.availableTeams });
-        }
 
         broadcastUserList(room, roomCode);
         broadcastSets(room, roomCode);
@@ -1044,5 +1131,6 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
