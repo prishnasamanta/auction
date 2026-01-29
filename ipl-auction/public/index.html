@@ -11,1062 +11,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="/style.css">
+
+    <!-- Tailwind for new React landing (preflight disabled to avoid global resets) -->
+    <script>
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = { corePlugins: { preflight: false } };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body>
-
-    <link rel="icon" type="image/png" href="/logo.png?v=2">
-    <link rel="shortcut icon" type="image/png" href="/logo.png?v=2">
-    <link rel="apple-touch-icon" href="/logo.png?v=2">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        /* Reset and Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: transparent; /* Transparent background for the entire page */
-            color: #f1f5f9;
-            line-height: 1.5;
-            overflow-x: hidden;
-        }
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-        button {
-            cursor: pointer;
-            border: none;
-            outline: none;
-        }
-
-        /* Utilities */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-        .text-gradient {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            color: #fff;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-        }
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-        }
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.05);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
-        }
-        .glass {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 1rem;
-            transition: all 0.3s ease;
-        }
-        .glass:hover {
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
-        }
-
-        /* Infinite Tape */
-        .infinite-tape {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
-            overflow: hidden;
-            z-index: 101;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-        }
-        .tape-content {
-            display: inline-block;
-            animation: scroll-left 20s linear infinite;
-            padding-left: 100%; /* Start from right */
-        }
-        @keyframes scroll-left {
-            0% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(-100%);
-            }
-        }
-
-        /* Navigation */
-        .landing-nav {
-            position: sticky;
-            top: 40px; /* Below the tape */
-            z-index: 100;
-            background: rgba(2, 6, 23, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            padding: 1rem 0;
-            transition: background 0.3s ease, transform 0.3s ease;
-        }
-        .landing-nav.scrolled {
-            background: rgba(2, 6, 23, 0.95);
-            transform: translateY(-5px);
-        }
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .nav-brand {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #fff;
-            transition: transform 0.3s ease;
-        }
-        .nav-brand:hover {
-            transform: scale(1.05);
-        }
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-        }
-        .nav-link {
-            font-size: 1rem;
-            font-weight: 500;
-            color: #cbd5e1;
-            position: relative;
-            transition: color 0.3s, transform 0.3s;
-        }
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: #6366f1;
-            transition: width 0.3s ease;
-        }
-        .nav-link:hover {
-            color: #fff;
-            transform: translateY(-2px);
-        }
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        /* Hero Section */
-        .hero-container {
-            min-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 2rem 1rem;
-            position: relative;
-            margin-top: 40px; /* Offset for tape */
-        }
-        .hero-tile {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 2rem;
-            padding: 3rem 2rem;
-            max-width: 800px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .hero-tile:hover {
-            transform: scale(1.02);
-            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.2);
-        }
-        .new-badge {
-            background: rgba(99, 102, 241, 0.15);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            color: #818cf8;
-            padding: 0.5rem 1.25rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            animation: pulse 2s infinite;
-            transition: transform 0.3s ease;
-        }
-        .new-badge:hover {
-            transform: scale(1.05);
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .hero-title {
-            font-size: clamp(2.5rem, 8vw, 4rem);
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 1.25rem;
-            max-width: 800px;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 1s ease forwards;
-        }
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .hero-subtitle {
-            font-size: 1.125rem;
-            color: #94a3b8;
-            max-width: 600px;
-            margin: 0 auto 2rem;
-            line-height: 1.6;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 1s ease 0.3s forwards;
-        }
-        .hero-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin-bottom: 3rem;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 1s ease 0.6s forwards;
-        }
-        .wicket-container {
-            position: absolute;
-            top: 20%;
-            left: 10%;
-            opacity: 0.2;
-            pointer-events: none;
-            width: 80px;
-            height: 80px;
-        }
-        @media (max-width: 768px) {
-            .wicket-container {
-                top: 10%;
-                left: 5%;
-                width: 50px;
-                height: 50px;
-            }
-        }
-        .ball {
-            animation: ballHit 2s ease-in-out infinite;
-        }
-        @keyframes ballHit {
-            0% {
-                transform: translateX(-80px);
-            }
-            70% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(0);
-            }
-        }
-        .wicket {
-            transition: transform 0.3s ease;
-        }
-        .wicket-container:hover .wicket {
-            transform: rotate(5deg);
-        }
-        .hammer-container {
-            position: absolute;
-            top: 20%;
-            right: 10%;
-            opacity: 0.2;
-            pointer-events: none;
-            width: 80px;
-            height: 80px;
-        }
-        @media (max-width: 768px) {
-            .hammer-container {
-                top: 10%;
-                right: 5%;
-                width: 50px;
-                height: 50px;
-            }
-        }
-        .hammer {
-            display: inline-block;
-            animation: hammerSwing 1.5s ease-in-out infinite alternate;
-            transform-origin: center bottom;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.3s ease;
-        }
-        .hammer-container:hover .hammer {
-            transform: scale(1.1);
-        }
-        @keyframes hammerSwing {
-            0% {
-                transform: rotate(-20deg);
-            }
-            100% {
-                transform: rotate(20deg);
-            }
-        }
-
-        /* Features Section */
-        #features {
-            padding: 5rem 1rem;
-        }
-        .section-title {
-            text-align: center;
-            font-size: 2.25rem;
-            font-weight: 700;
-            margin-bottom: 3rem;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s ease;
-        }
-        .section-title.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-        .feature-card {
-            padding: 1.5rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s ease;
-        }
-        .feature-card.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .feature-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
-        }
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            background: rgba(255,255,255,0.05);
-            width: 3.75rem;
-            height: 3.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.75rem;
-            transition: background 0.3s, transform 0.3s;
-        }
-        .feature-card:hover .feature-icon {
-            background: rgba(99, 102, 241, 0.1);
-            transform: rotate(5deg);
-        }
-        .feature-title {
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
-            transition: color 0.3s;
-        }
-        .feature-card:hover .feature-title {
-            color: #6366f1;
-        }
-        .feature-desc {
-            font-size: 0.95rem;
-            color: #94a3b8;
-            line-height: 1.6;
-        }
-
-        /* Player Pools Section */
-        #player-pools {
-            padding: 5rem 1rem;
-            background: rgba(30, 41, 59, 0.2);
-        }
-        .pools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-        .pool-card {
-            padding: 1.5rem;
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s ease;
-        }
-        .pool-card.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .pool-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
-        }
-        .pool-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            transition: transform 0.3s;
-        }
-        .pool-card:hover .pool-icon {
-            transform: scale(1.1);
-        }
-        .pool-title {
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
-            transition: color 0.3s;
-        }
-        .pool-card:hover .pool-title {
-            color: #6366f1;
-        }
-        .pool-desc {
-            font-size: 0.95rem;
-            color: #94a3b8;
-        }
-
-        /* Player Cards Section */
-        #player-cards {
-            padding: 5rem 1rem;
-        }
-        .cards-scroller {
-            overflow: hidden;
-            width: 100%;
-            position: relative;
-            height: 200px; /* Smaller height for smaller cards */
-        }
-        .cards-track {
-            display: flex;
-            animation: scroll-right-to-left 20s linear infinite;
-            white-space: nowrap;
-        }
-        @keyframes scroll-right-to-left {
-            0% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-        .player-card {
-            flex: 0 0 auto;
-            width: 200px; /* Smaller width */
-            height: 180px; /* Smaller height */
-            margin-right: 1rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(30, 41, 59, 0.6);
-            border-radius: 1rem;
-            padding: 1rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .player-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-        }
-        .player-name {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-            transition: color 0.3s;
-        }
-        .player-card:hover .player-name {
-            color: #6366f1;
-        }
-        .player-role {
-            font-size: 0.875rem;
-            color: #94a3b8;
-            margin-bottom: 0.75rem;
-        }
-        .player-stats {
-            display: flex;
-            gap: 0.75rem;
-            font-size: 0.75rem;
-        }
-        .stat {
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-        .player-card:hover .stat {
-            transform: translateY(-3px);
-        }
-        .stat-num {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-        .stat-label {
-            font-size: 0.625rem;
-            color: #94a3b8;
-        }
-
-        /* How It Works Section */
-        #how-to {
-            padding: 5rem 1rem;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .steps-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-        }
-        .step-row {
-            display: flex;
-            align-items: center;
-            padding: 1.5rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s ease;
-        }
-        .step-row.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .step-row:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
-        }
-        .step-number {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: rgba(255,255,255,0.05);
-            margin-right: 1.5rem;
-            transition: color 0.3s;
-        }
-        .step-row:hover .step-number {
-            color: rgba(255,255,255,0.1);
-        }
-        .step-title {
-            font-size: 1.125rem;
-            margin-bottom: 0.25rem;
-            transition: color 0.3s;
-        }
-        .step-row:hover .step-title {
-            color: #6366f1;
-        }
-        .step-desc {
-            font-size: 0.95rem;
-            color: #ccc;
-        }
-
-        /* FAQ Section */
-        #faq {
-            padding: 5rem 1rem;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(99, 102, 241, 0.1) 100%);
-            border-radius: 2rem;
-            margin: 2rem auto;
-            max-width: 900px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease;
-        }
-        #faq:hover {
-            transform: scale(1.01);
-        }
-        .faq-item {
-            margin-bottom: 1.5rem;
-            padding: 1.5rem;
-            background: rgba(255,255,255,0.05);
-            border-radius: 1rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s ease;
-        }
-        .faq-item.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .faq-item:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
-            background: rgba(255,255,255,0.1);
-        }
-        .faq-question {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            transition: color 0.3s;
-        }
-        .faq-item:hover .faq-question {
-            color: #6366f1;
-        }
-        .faq-answer {
-            font-size: 0.95rem;
-            color: #94a3b8;
-            line-height: 1.6;
-        }
-
-        /* Bottom CTA */
-        .bottom-cta {
-            text-align: center;
-            padding: 3rem 1rem;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            color: #fff;
-            border-radius: 2rem;
-            margin: 2rem auto;
-            max-width: 900px;
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-            transition: transform 0.3s ease;
-        }
-        .bottom-cta:hover {
-            transform: scale(1.02);
-        }
-        .bottom-cta button {
-            margin-top: 1rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        /* Footer */
-        .app-footer {
-            padding: 2rem 1rem;
-            text-align: center;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            background: rgba(2, 6, 23, 0.8);
-            backdrop-filter: blur(12px);
-            transition: background 0.3s ease;
-        }
-        .app-footer:hover {
-            background: rgba(2, 6, 23, 0.95);
-        }
-        .footer-content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-            font-size: 0.875rem;
-            color: #94a3b8;
-        }
-        .separator {
-            color: rgba(255,255,255,0.2);
-        }
-        .footer-link {
-            color: #cbd5e1;
-            transition: color 0.3s, transform 0.3s;
-        }
-        .footer-link:hover {
-            color: #fff;
-            transform: translateY(-2px);
-        }
-        .social-links {
-            display: flex;
-            gap: 1rem;
-        }
-        .social-links a {
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-        .social-links a:hover {
-            transform: scale(1.2);
-            opacity: 0.8;
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            .nav-links {
-                gap: 1rem;
-            }
-            .nav-link {
-                font-size: 0.875rem;
-            }
-            .hero-actions {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            .features-grid, .pools-grid {
-                grid-template-columns: 1fr;
-            }
-            .steps-container {
-                gap: 1rem;
-            }
-            .cards-scroller {
-                height: 150px;
-            }
-            .player-card {
-                width: 150px;
-                height: 135px;
-                padding: 0.75rem;
-            }
-            .player-name {
-                font-size: 1rem;
-            }
-            .player-role {
-                font-size: 0.75rem;
-            }
-            .player-stats {
-                gap: 0.5rem;
-                font-size: 0.625rem;
-            }
-            .stat-num {
-                font-size: 0.875rem;
-            }
-            .stat-label {
-                font-size: 0.5rem;
-            }
-            .footer-content {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            .hero-tile {
-                padding: 2rem 1rem;
-                border-radius: 1.5rem;
-            }
-            #faq, .bottom-cta {
-                border-radius: 1.5rem;
-            }
-        }
-
-        /* Canvas Background (assuming you have JS for it) */
-        #bg-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-        }
-    </style>
-
-    <canvas id="bg-canvas"></canvas>
-    <div class="infinite-tape">
-        <div class="tape-content">LIVE AUCTION SIMULATOR WITH MULTIPLE POOLS... LIVE AUCTION SIMULATOR WITH MULTIPLE POOLS... LIVE AUCTION SIMULATOR WITH MULTIPLE POOLS...</div>
-    </div>
-    <section id="landing" style="position: relative; z-index: 10;">
-        <nav class="landing-nav">
-            <div class="container nav-content">
-                <div class="nav-brand">⚡ IPL <span class="text-gradient">AUCTION</span></div>
-                <div class="nav-links">
-                    <a href="#how-to" class="nav-link">How to Play</a>
-                    <a href="#features" class="nav-link">Features</a>
-                    <a href="#player-pools" class="nav-link">Player Pools</a>
-                    <a href="#player-cards" class="nav-link">Player Cards</a>
-                    <a href="#faq" class="nav-link">FAQ</a>
-                </div>
-            </div>
-        </nav>
-        <div class="hero-container container">
-            <div class="wicket-container">
-                <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <g class="wickets">
-                        <line x1="30" y1="20" x2="30" y2="60" stroke="#fff" stroke-width="4"/>
-                        <line x1="40" y1="20" x2="40" y2="60" stroke="#fff" stroke-width="4"/>
-                        <line x1="50" y1="20" x2="50" y2="60" stroke="#fff" stroke-width="4"/>
-                    </g>
-                    <circle class="ball" cx="40" cy="40" r="8" fill="#fff"/>
-                </svg>
-            </div>
-            <div class="hammer-container">
-                <svg class="hammer" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 5L12 11" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10.5 12.5L3 20" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M21 2L4 19" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M21 2L19 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M4 19L2 21" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div class="hero-tile">
-                <div class="new-badge">
-                    <span>●</span> ONLINE MULTIPLAYER LIVE
-                </div>
-                <h1 class="hero-title">
-                    THE ULTIMATE <br>
-                    <span class="text-gradient">CRICKET AUCTION</span>
-                </h1>
-                <p class="hero-subtitle">
-                    Experience the intensity of the bidding war. Host private rooms, manage dynamic purses, and build your dream squad in real-time with friends.
-                </p>
-                <div class="hero-actions">
-                    <button id="enterBtn" class="btn btn-primary">ENTER ARENA 🚀</button>
-                    <button onclick="document.getElementById('how-to').scrollIntoView({behavior: 'smooth'})" class="btn btn-secondary">VIEW RULES</button>
-                </div>
-            </div>
-            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
-                <button class="btn btn-primary">Explore Features</button>
-                <button class="btn btn-secondary">Learn More</button>
-            </div>
-        </div>
-        <div id="features" class="container">
-            <h2 class="section-title">PRO FEATURES</h2>
-            <div class="features-grid">
-                <div class="feature-card glass">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">Real-Time Sockets</h3>
-                    <p class="feature-desc">Instant bid updates synchronized across all devices. No refreshing required.</p>
-                </div>
-                <div class="feature-card glass">
-                    <div class="feature-icon">💰</div>
-                    <h3 class="feature-title">Smart Purse</h3>
-                    <p class="feature-desc">Automated budget validation. The system prevents overspending and tracks remaining funds.</p>
-                </div>
-                <div class="feature-card glass">
-                    <div class="feature-icon">🏆</div>
-                    <h3 class="feature-title">Live Leaderboard</h3>
-                    <p class="feature-desc">Track squad composition, foreign player quotas, and RTM status in real-time.</p>
-                </div>
-                <div class="feature-card glass">
-                    <div class="feature-icon">🎨</div>
-                    <h3 class="feature-title">Pro UI Design</h3>
-                    <p class="feature-desc">A completely immersive dark-mode interface designed for long auction sessions.</p>
-                </div>
-            </div>
-        </div>
-        <div id="player-pools" class="container">
-            <h2 class="section-title">AVAILABLE PLAYER POOLS</h2>
-            <div class="pools-grid">
-                <div class="pool-card glass">
-                    <div class="pool-icon">🏆</div>
-                    <h3 class="pool-title">IPL 2026</h3>
-                    <p class="pool-desc">Standard IPL player pool for the 2026 season.</p>
-                </div>
-                <div class="pool-card glass">
-                    <div class="pool-icon">🔥</div>
-                    <h3 class="pool-title">LEGENDS</h3>
-                    <p class="pool-desc">All-time cricket legends from history.</p>
-                </div>
-                <div class="pool-card glass">
-                    <div class="pool-icon">⚔️</div>
-                    <h3 class="pool-title">MIXED</h3>
-                    <p class="pool-desc">Great icons from various eras combined.</p>
-                </div>
-                <div class="pool-card glass">
-                    <div class="pool-icon">🛠️</div>
-                    <h3 class="pool-title">CUSTOM</h3>
-                    <p class="pool-desc">Build your own player pool.</p>
-                </div>
-            </div>
-        </div>
-        <div id="player-cards" class="container">
-            <h2 class="section-title">VIEW PLAYER CARDS</h2>
-            <p style="text-align: center; color: #94a3b8; margin-bottom: 2rem;">Preview dynamic player cards that update in real-time during auctions.</p>
-            <div class="cards-scroller glass">
-                <div class="cards-track">
-                    <div class="player-card">
-                        <h3 class="player-name">Virat Kohli</h3>
-                        <p class="player-role">Batsman</p>
-                        <div class="player-stats">
-                            <div class="stat">
-                                <div class="stat-num">102</div>
-                                <div class="stat-label">Matches</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">8000+</div>
-                                <div class="stat-label">Runs</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">50</div>
-                                <div class="stat-label">Average</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="player-card">
-                        <h3 class="player-name">Jasprit Bumrah</h3>
-                        <p class="player-role">Bowler</p>
-                        <div class="player-stats">
-                            <div class="stat">
-                                <div class="stat-num">80</div>
-                                <div class="stat-label">Matches</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">150+</div>
-                                <div class="stat-label">Wickets</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">20</div>
-                                <div class="stat-label">Economy</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="player-card">
-                        <h3 class="player-name">MS Dhoni</h3>
-                        <p class="player-role">Wicket-Keeper</p>
-                        <div class="player-stats">
-                            <div class="stat">
-                                <div class="stat-num">200+</div>
-                                <div class="stat-label">Matches</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">5000+</div>
-                                <div class="stat-label">Runs</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">100+</div>
-                                <div class="stat-label">Stumpings</div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Duplicate cards for seamless infinite scroll -->
-                    <div class="player-card">
-                        <h3 class="player-name">Virat Kohli</h3>
-                        <p class="player-role">Batsman</p>
-                        <div class="player-stats">
-                            <div class="stat">
-                                <div class="stat-num">102</div>
-                                <div class="stat-label">Matches</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">8000+</div>
-                                <div class="stat-label">Runs</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">50</div>
-                                <div class="stat-label">Average</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="player-card">
-                        <h3 class="player-name">Jasprit Bumrah</h3>
-                        <p class="player-role">Bowler</p>
-                        <div class="player-stats">
-                            <div class="stat">
-                                <div class="stat-num">80</div>
-                                <div class="stat-label">Matches</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">150+</div>
-                                <div class="stat-label">Wickets</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">20</div>
-                                <div class="stat-label">Economy</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="player-card">
-                        <h3 class="player-name">MS Dhoni</h3>
-                        <p class="player-role">Wicket-Keeper</p>
-                        <div class="player-stats">
-                            <div class="stat">
-                                <div class="stat-num">200+</div>
-                                <div class="stat-label">Matches</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">5000+</div>
-                                <div class="stat-label">Runs</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-num">100+</div>
-                                <div class="stat-label">Stumpings</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="how-to" class="container">
-            <h2 class="section-title">HOW IT WORKS</h2>
-            <div class="steps-container">
-                <div class="step-row glass">
-                    <div class="step-number">01</div>
-                    <div>
-                        <h3 class="step-title" style="color: #fbbf24;">Create or Join</h3>
-                        <p class="step-desc">Host a private room and get a unique 5-letter code to share with friends.</p>
-                    </div>
-                </div>
-                <div class="step-row glass">
-                    <div class="step-number">02</div>
-                    <div>
-                        <h3 class="step-title" style="color: #6366f1;">Pick Your Team</h3>
-                        <p class="step-desc">Select your franchise (CSK, MI, RCB, etc.). First come, first served logic applies.</p>
-                    </div>
-                </div>
-                <div class="step-row glass">
-                    <div class="step-number">03</div>
-                    <div>
-                        <h3 class="step-title" style="color: #ec4899;">War Room</h3>
-                        <p class="step-desc">Use the live bidding interface. The host controls the flow, you control the cash.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="faq" class="container">
-            <h2 class="section-title">FAQ</h2>
-            <div class="faq-item glass">
-                <h3 class="faq-question">What is IPL Auction?</h3>
-                <p class="faq-answer">It's a live multiplayer cricket auction simulator where you can bid on players with friends.</p>
-            </div>
-            <div class="faq-item glass">
-                <h3 class="faq-question">How do I create a room?</h3>
-                <p class="faq-answer">Click 'ENTER ARENA' and choose 'CREATE ROOM' to host a private auction.</p>
-            </div>
-            <div class="faq-item glass">
-                <h3 class="faq-question">Can I play with custom players?</h3>
-                <p class="faq-answer">Yes, select the 'CUSTOM' player pool to build your own set.</p>
-            </div>
-            <!-- Add more FAQ items as needed -->
-        </div>
-        <div class="bottom-cta">
-            <h2 style="font-size: 2rem; margin-bottom: 1rem;">Ready to Bid?</h2>
-            <button onclick="document.getElementById('auth').classList.remove('hidden'); document.getElementById('landing').classList.add('hidden');" class="btn btn-primary">START PLAYING NOW</button>
-        </div>
-        <footer class="app-footer">
-            <div class="footer-content container">
-                <span>Made with <span style="color:#e11d48;">❤️</span> by <b>PRS</b></span>
-                <span class="separator">•</span>
-                <a href="https://docs.google.com/document/d/1Fz7SsuT23zZvWAuQE7LFTJ0QsZ-sZa6hliIG9fKVNXE/edit?tab=t.0" target="_blank" class="footer-link">Support for ☕</a>
-                <span class="separator">•</span>
-                <div class="social-links">
-                    <a href="https://discord.gg/gpACU3Gdg" target="_blank">
-                        <img width="20" height="20" src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="discord"/>
-                    </a>
-                    <a href="https://whatsapp.com/channel/0029Vb7Z5EABKfi1oKCpTB3j" target="_blank">
-                        <img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp--v1.png" alt="whatsapp"/>
-                    </a>
-                </div>
-            </div>
-        </footer>
-    </section>
-    <!-- Other sections like #auth, #auctionUI, etc., remain unchanged as the request is for the landing page -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/client.js"></script>
-    <!-- Simple JS for reveal on scroll -->
-    <script>
-        // Reveal on scroll
-        const revealElements = document.querySelectorAll('.section-title, .feature-card, .pool-card, .step-row, .faq-item');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, { threshold: 0.1 });
-
-        revealElements.forEach(el => observer.observe(el));
-
-        // Nav scrolled class
-        window.addEventListener('scroll', () => {
-            const nav = document.querySelector('.landing-nav');
-            nav.classList.toggle('scrolled', window.scrollY > 50);
-        });
-    </script>
+<canvas id="bg-canvas"></canvas>
+<section id="landing" class="screen landing-scrollable" style="background: transparent !important; position: relative; z-index: 10;">
+    <div id="landing-root"></div>
+</section>
 
 
 <section id="auth" class="screen hidden">
@@ -1114,11 +72,6 @@
                             <div class="ds-icon">🔥</div>
                             <div class="ds-title">LEGENDS</div>
                             <div class="ds-sub">All-Time</div>
-                        </div>
-                        <div class="dataset-card" onclick="selectDataset('mixed', this)">
-                            <div class="ds-icon">⚔️</div>
-                            <div class="ds-title">MIXED</div>
-                            <div class="ds-sub">Great Icon</div>
                         </div>
                         <div class="dataset-card" onclick="selectDataset('custom', this)">
                             <div class="ds-icon">🛠️</div>
@@ -1200,7 +153,7 @@
             
             <div id="teamSelectionMain" class="glass" style="width: 100%; max-width: 530px;">
                 <h2 style="color:var(--primary); margin:0 0 4px 0; font-size:1rem;">CHOOSE YOUR TEAM</h2>
-             <!---<p style="color:#aaa; font-size:0.8rem; margin:0 0 10px 0;">Select a team to participate.</p>-->   
+                <p style="color:#aaa; font-size:0.8rem; margin:0 0 10px 0;">Select a team to participate.</p>
                 <div id="embeddedTeamList" class="team-list"></div>
                 <div id="waitingForHostMsg" class="hidden" style="margin-top:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
                     <h3 style="margin:0 0 2px 0; font-size:0.95rem; color:#22c55e;">✅ Team Selected</h3>
@@ -1241,7 +194,7 @@
 
         <div id="commandCenter" class="glass">
             
-          <div class="cc-tabs">
+            <div class="cc-tabs">
                 <button class="cc-tab-btn" data-tab="sets" onclick="switchCcTab('sets')">📦 SETS</button>
                 <button class="cc-tab-btn active" data-tab="feed" onclick="switchCcTab('feed')">💬 FEED</button>
                 <button class="cc-tab-btn" data-tab="squads" onclick="switchCcTab('squads')">👥 SQUADS</button>
@@ -1295,7 +248,7 @@
 
         <div id="xiPlaceholder" class="xi-placeholder">
             <div style="font-size:3rem; margin-bottom:10px;">🏏</div>
-            Select players below to get XI card
+            Select players below...
         </div>
 
         <div id="xiButtonRow" style="display: flex; gap: 10px; position: sticky; top: 10px; z-index: 50; background:rgba(15,23,42,0.95); padding:10px 0; border-radius: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -1449,6 +402,7 @@
         <div class="glass rules-card" style="max-width: 400px; padding: 20px; text-align: center;">
             <h2 style="color: #fca5a5; border: none;">⚠️ Identity Check</h2>
             <p>A new device is trying to join as <b id="verifyName" style="color: #fff;"></b>.</p>
+            <p>Is this you trying to switch devices?</p>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button id="btnVerifyYes" class="primary-btn" style="width: 100%;">Yes, Switch Device</button>
                 <button id="btnVerifyNo" class="secondary-btn" style="width: 100%; border-color: #ef4444; color: #ef4444;">No, Block Them</button>
@@ -1581,32 +535,414 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/client.js"></script>
+
+    <!-- React landing page bundle (mounted into #landing-root) -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel" data-presets="react">
+      const { useEffect, useState } = React;
+
+      function LandingPage() {
+        const [scrolled, setScrolled] = useState(false);
+
+        useEffect(() => {
+          const handleScroll = () => {
+            setScrolled(window.scrollY > 50);
+          };
+          window.addEventListener('scroll', handleScroll);
+          return () => window.removeEventListener('scroll', handleScroll);
+        }, []);
+
+        return (
+          <div className="min-h-screen bg-transparent text-slate-100 font-sans selection:bg-indigo-500/30">
+            {/* Infinite Tape */}
+            <div className="fixed top-0 left-0 w-full h-10 bg-gradient-to-r from-indigo-600 to-purple-600 z-50 flex items-center overflow-hidden">
+              <div className="infinite-tape-content whitespace-nowrap flex gap-8 font-bold text-sm tracking-wider pl-full">
+                <span>LIVE AUCTION SIMULATOR WITH MULTIPLE POOLS</span>
+                <span>•</span>
+                <span>REAL-TIME MULTIPLAYER</span>
+                <span>•</span>
+                <span>BUILD YOUR DREAM TEAM</span>
+                <span>•</span>
+                <span>LIVE AUCTION SIMULATOR WITH MULTIPLE POOLS</span>
+                <span>•</span>
+                <span>REAL-TIME MULTIPLAYER</span>
+                <span>•</span>
+                <span>BUILD YOUR DREAM TEAM</span>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <nav
+              className={
+                "fixed top-10 w-full z-40 transition-all duration-300 " +
+                (scrolled
+                  ? "bg-[#020617]/95 backdrop-blur-md shadow-lg py-3"
+                  : "bg-transparent py-5")
+              }
+            >
+              <div className="max-w-7xl mx-auto px-4 md:px-6 flex justify-between items-center">
+                <div className="text-2xl font-black tracking-tighter hover:scale-105 transition-transform cursor-pointer">
+                  ⚡ IPL <span className="text-gradient">AUCTION</span>
+                </div>
+                <div className="hidden md:flex gap-8 font-medium text-slate-400">
+                  {["How to Play", "Features", "Player Pools", "FAQ"].map((item) => (
+                    <a
+                      key={item}
+                      href={
+                        "#" +
+                        item
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")
+                      }
+                      className="hover:text-white hover:text-indigo-400 transition-colors relative group"
+                    >
+                      {item}
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </nav>
+
+            {/* Hero Section */}
+            <section className="relative pt-32 pb-20 px-4 min-h-screen flex flex-col justify-center items-center overflow-hidden">
+              {/* Background Effects */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/20 rounded-full blur-3xl opacity-30 pointer-events-none"></div>
+
+              {/* Hero Tile */}
+              <div className="relative z-20 glass p-8 md:p-12 max-w-4xl w-full text-center mt-8 md:mt-0 lp-hero-tile">
+                {/* Wicket + Hammer animations (inside tile) */}
+                <div className="lp-hero-anim-wrap" aria-hidden="true">
+                  {/* Wicket Animation (Left) */}
+                  <div className="lp-hero-anim-item">
+                    <svg viewBox="0 0 200 200" className="lp-hero-anim-svg">
+                      <circle cx="20" cy="180" r="12" fill="#fff" className="lp-ball" />
+                      <g className="lp-stump-group">
+                        <rect x="85" y="60" width="8" height="100" rx="2" fill="#e2e8f0" />
+                        <rect x="105" y="60" width="8" height="100" rx="2" fill="#e2e8f0" />
+                        <rect x="125" y="60" width="8" height="100" rx="2" fill="#e2e8f0" />
+                        <rect x="88" y="54" width="20" height="6" rx="2" fill="#cbd5e1" className="lp-bail-left" />
+                        <rect x="112" y="54" width="20" height="6" rx="2" fill="#cbd5e1" className="lp-bail-right" />
+                      </g>
+                    </svg>
+                  </div>
+
+                  {/* Hammer Animation (Right) */}
+                  <div className="lp-hero-anim-item">
+                    <svg viewBox="0 0 200 200" className="lp-hero-anim-svg">
+                      <g className="lp-hammer-group">
+                        <rect x="80" y="40" width="80" height="50" rx="8" fill="#a855f7" />
+                        <rect x="110" y="90" width="20" height="80" rx="4" fill="#7e22ce" />
+                        <path d="M85 45 H155 L150 55 H90 Z" fill="rgba(255,255,255,0.3)" />
+                      </g>
+                      <ellipse cx="120" cy="170" rx="40" ry="10" fill="#475569" opacity="0.5" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-bold mb-8">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                  ONLINE MULTIPLAYER LIVE
+                </div>
+
+                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight mb-6">
+                  THE ULTIMATE <br />
+                  <span className="text-gradient">CRICKET AUCTION</span>
+                </h1>
+
+                <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                  Experience the intensity of the bidding war. Host private rooms, manage dynamic purses, and build your dream squad in real-time with friends.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <button
+                    id="enterBtn"
+                    className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-1 transition-all flex items-center gap-2"
+                  >
+                    <span>⚡</span> ENTER ARENA
+                  </button>
+                  <button
+                    className="px-8 py-4 bg-transparent border border-white/10 rounded-xl font-bold text-white hover:bg-white/5 hover:-translate-y-1 transition-all"
+                    onClick={() => {
+                      const el = document.getElementById("how-to-play");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    VIEW RULES
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-16 flex gap-4 text-slate-500 animate-bounce relative z-20">
+                <span className="text-2xl">⌄</span>
+              </div>
+            </section>
+
+            {/* Features Section */}
+            <section id="features" className="py-24 px-4 relative">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="text-3xl md:text-5xl font-bold text-center mb-16">
+                  <span className="text-gradient">PRO FEATURES</span>
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    {
+                      icon: "🖥️",
+                      title: "Real-Time Sockets",
+                      desc: "Instant bid updates synchronized across all devices. No refreshing required.",
+                    },
+                    {
+                      icon: "💰",
+                      title: "Smart Purse",
+                      desc: "Automated budget validation. The system prevents overspending and tracks remaining funds.",
+                    },
+                    {
+                      icon: "📊",
+                      title: "Live Leaderboard",
+                      desc: "Track squad composition, foreign player quotas, and RTM status in real-time.",
+                    },
+                    {
+                      icon: "🎨",
+                      title: "Pro UI Design",
+                      desc: "A completely immersive dark-mode interface designed for long auction sessions.",
+                    },
+                  ].map((feature, i) => (
+                    <div key={i} className="glass p-8 hover:-translate-y-2 transition-transform group">
+                      <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:bg-indigo-500/20 group-hover:rotate-6 transition-all text-indigo-400 text-2xl">
+                        <span>{feature.icon}</span>
+                      </div>
+                      <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                      <p className="text-slate-400 leading-relaxed text-sm">{feature.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Player Pools */}
+            <section id="player-pools" className="py-24 px-4 bg-slate-900/30">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="text-3xl md:text-5xl font-bold text-center mb-16">
+                  AVAILABLE <span className="text-indigo-400">PLAYER POOLS</span>
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { icon: "🏆", title: "IPL 2026", desc: "Standard IPL player pool for the 2026 season." },
+                    { icon: "⚡", title: "LEGENDS", desc: "All-time cricket legends from history." },
+                    { icon: "👥", title: "MIXED", desc: "Great icons from various eras combined." },
+                    { icon: "🛠️", title: "CUSTOM", desc: "Build your own player pool." },
+                  ].map((pool, i) => (
+                    <div key={i} className="glass p-8 text-center hover:bg-white/5 transition-colors cursor-pointer group">
+                      <div className="mb-6 transform group-hover:scale-110 transition-transform inline-block text-4xl">
+                        {pool.icon}
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-400 transition-colors">{pool.title}</h3>
+                      <p className="text-slate-400 text-sm">{pool.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Player Cards Scroller */}
+            <section id="player-cards" className="py-24 overflow-hidden">
+              <h2 className="text-3xl md:text-5xl font-bold text-center mb-4">
+                PLAYER <span className="text-purple-400">CARDS</span>
+              </h2>
+              <p className="text-center text-slate-400 mb-12">Preview dynamic player cards that update in real-time</p>
+
+              <div className="relative w-full">
+                <div className="lp-cards-track px-4">
+                  {[...Array(2)].map((_, setIndex) => (
+                    <React.Fragment key={setIndex}>
+                      {[
+                        { name: "Virat Kohli", role: "Batsman", stats: { Matches: 102, Runs: "8000+", Avg: 50 } },
+                        { name: "Jasprit Bumrah", role: "Bowler", stats: { Matches: 80, Wickets: "150+", Econ: 6.5 } },
+                        { name: "MS Dhoni", role: "Wk-Keeper", stats: { Matches: 200, Runs: "5000+", Stumps: 100 } },
+                        { name: "Rohit Sharma", role: "Batsman", stats: { Matches: 190, Runs: "7000+", SR: 130 } },
+                        { name: "Rashid Khan", role: "Bowler", stats: { Matches: 90, Wickets: "120+", Econ: 6.2 } },
+                        { name: "Ben Stokes", role: "All-Rounder", stats: { Matches: 85, Runs: "3000+", Wickets: 70 } },
+                      ].map((player, i) => (
+                        <div
+                          key={`${setIndex}-${i}`}
+                          className="w-64 h-80 glass p-6 flex flex-col items-center justify-between shrink-0 hover:scale-105 transition-transform hover:shadow-[0_0_30px_rgba(99,102,241,0.3)] group"
+                        >
+                          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 mb-4 flex items-center justify-center text-3xl font-bold shadow-lg">
+                            {player.name.charAt(0)}
+                          </div>
+                          <div className="text-center">
+                            <h3 className="text-xl font-bold group-hover:text-indigo-300 transition-colors">{player.name}</h3>
+                            <p className="text-indigo-400 text-sm font-medium uppercase tracking-wider">{player.role}</p>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 w-full mt-4 pt-4 border-t border-white/10">
+                            {Object.entries(player.stats).map(([label, val]) => (
+                              <div key={label} className="text-center">
+                                <div className="font-bold text-slate-200">{val}</div>
+                                <div className="text-[10px] text-slate-500 uppercase">{label}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* How It Works */}
+            <section id="how-to-play" className="py-24 px-4 bg-slate-900/30">
+              <div className="max-w-4xl mx-auto">
+                <h2 className="text-3xl md:text-5xl font-bold text-center mb-16">
+                  HOW IT <span className="text-gradient">WORKS</span>
+                </h2>
+
+                <div className="space-y-6">
+                  {[
+                    {
+                      id: "01",
+                      title: "Create or Join",
+                      desc: "Host a private room and get a unique 5-letter code to share with friends.",
+                      color: "text-amber-400",
+                    },
+                    {
+                      id: "02",
+                      title: "Pick Your Team",
+                      desc: "Select your franchise (CSK, MI, RCB, etc.). First come, first served logic applies.",
+                      color: "text-indigo-400",
+                    },
+                    {
+                      id: "03",
+                      title: "War Room",
+                      desc: "Use the live bidding interface. The host controls the flow, you control the cash.",
+                      color: "text-pink-400",
+                    },
+                  ].map((step) => (
+                    <div key={step.id} className="glass p-8 flex items-center gap-8 hover:translate-x-2 transition-transform">
+                      <div className="text-6xl font-black text-white/5">{step.id}</div>
+                      <div>
+                        <h3 className={"text-2xl font-bold mb-2 " + step.color}>{step.title}</h3>
+                        <p className="text-slate-400">{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* FAQ */}
+            <section id="faq" className="py-24 px-4">
+              <div className="max-w-3xl mx-auto">
+                <h2 className="text-3xl md:text-5xl font-bold text-center mb-16">FAQ</h2>
+                <div className="space-y-4">
+                  {[
+                    {
+                      q: "What is IPL Auction?",
+                      a: "It's a live multiplayer cricket auction simulator where you can bid on players with friends.",
+                    },
+                    {
+                      q: "How do I create a room?",
+                      a: "Click 'ENTER ARENA' and choose 'CREATE ROOM' to host a private auction.",
+                    },
+                    {
+                      q: "Can I play with custom players?",
+                      a: "Yes, select the 'CUSTOM' player pool to build your own set.",
+                    },
+                  ].map((faq, i) => (
+                    <div key={i} className="glass p-6">
+                      <h3 className="font-bold text-lg mb-2 text-indigo-300">{faq.q}</h3>
+                      <p className="text-slate-400">{faq.a}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+          </div>
+        );
+      }
+
+      // Expose to global scope for mounting
+      window.LandingPage = LandingPage;
+
+    </script>
+
+    <!-- Mount React component after Babel transformation -->
+    <script>
+      function mountLandingPage() {
+        const rootEl = document.getElementById("landing-root");
+        if (!rootEl) {
+          console.log("Waiting for landing-root...");
+          setTimeout(mountLandingPage, 100);
+          return;
+        }
+        if (!window.React || !window.ReactDOM) {
+          console.log("Waiting for React/ReactDOM...");
+          setTimeout(mountLandingPage, 100);
+          return;
+        }
+        if (typeof window.LandingPage === 'undefined') {
+          console.log("Waiting for LandingPage component...");
+          setTimeout(mountLandingPage, 100);
+          return;
+        }
+        
+        try {
+          const LandingPage = window.LandingPage;
+          console.log("Mounting React landing page...");
+          if (window.ReactDOM.createRoot) {
+            const root = ReactDOM.createRoot(rootEl);
+            root.render(React.createElement(LandingPage));
+          } else {
+            ReactDOM.render(React.createElement(LandingPage), rootEl);
+          }
+          console.log("React landing page mounted successfully!");
+
+          // Re-bind ENTER ARENA click after React renders the button.
+          // (client.js may run before #enterBtn exists, so it won't attach.)
+          setTimeout(() => {
+            const enterBtn = document.getElementById("enterBtn");
+            if (!enterBtn) return;
+
+            enterBtn.onclick = () => {
+              const landing = document.getElementById("landing");
+              const auth = document.getElementById("auth");
+              if (landing) landing.classList.add("hidden");
+              if (auth) auth.classList.remove("hidden");
+
+              // match existing behavior in client.js
+              document.body.style.overflow = "hidden";
+              if (typeof switchAuthTab === "function") switchAuthTab("join");
+
+              // keep URL behavior consistent
+              try {
+                if (window.location.pathname !== "/room") {
+                  window.history.pushState({ page: "room" }, "Join Room", "/room");
+                }
+              } catch (_) {}
+            };
+          }, 50);
+        } catch (error) {
+          console.error("Error mounting React app:", error);
+        }
+      }
+
+      // Wait a bit for Babel to finish transforming, then start mounting attempts
+      setTimeout(function() {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', mountLandingPage);
+        } else {
+          mountLandingPage();
+        }
+        window.addEventListener('load', mountLandingPage);
+      }, 100);
+    </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
