@@ -26,7 +26,11 @@ const disconnectTimers = {};
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- DEEP LINK HANDLER ---
-// This ensures that refreshing /room/ABCD loads the page instead of 404
+// Refreshing /room/ABCD loads the SPA, plain /room redirects back to main landing
+app.get('/room', (req, res) => {
+    res.redirect('/');
+});
+
 app.get('/room/:roomCode*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -315,15 +319,27 @@ io.on("connection", socket => {
         let playerPool = PLAYERS;
         try {
             if (datasetId === "legends") {
-                // Optional legends.js file (same shape as players.js); fallback if missing
-                // eslint-disable-next-line global-require, import/no-dynamic-require
-                playerPool = require("./legends");
+                // Optional legends.js file (same shape as players.js)
+                // Try project root first, then public/ as a fallback
+                let legendsPool;
+                try {
+                    // eslint-disable-next-line global-require, import/no-dynamic-require
+                    legendsPool = require("./legends");
+                } catch (e1) {
+                    try {
+                        // eslint-disable-next-line global-require, import/no-dynamic-require
+                        legendsPool = require("./public/legends");
+                    } catch (e2) {
+                        console.warn("legends.js not found in root or public/, using default players instead.");
+                    }
+                }
+                playerPool = legendsPool || PLAYERS;
             } else if (datasetId === "custom") {
                 // For custom sets, start with full pool; host can override via saveCustomSet
                 playerPool = PLAYERS;
             }
         } catch (e) {
-            console.warn("Dataset file not found, falling back to default PLAYERS:", e.message);
+            console.warn("Dataset file error, falling back to default PLAYERS:", e.message);
             playerPool = PLAYERS;
         }
         
