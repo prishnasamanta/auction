@@ -316,32 +316,42 @@ io.on("connection", socket => {
         const code = generateRoomCode();
         
         // Choose player pool based on selected dataset (default -> PLAYERS)
-        let playerPool = PLAYERS;
+ const path = require('path');
+const fs = require('fs');
+
+let playerPool = PLAYERS;
+
+if (datasetId === "legends") {
+    const rootPath = path.join(process.cwd(), "legends.js");
+    const publicPath = path.join(process.cwd(), "public", "legends.js");
+    
+    let selectedPath = null;
+
+    // Check if files exist physically before requiring
+    if (fs.existsSync(rootPath)) {
+        selectedPath = rootPath;
+    } else if (fs.existsSync(publicPath)) {
+        selectedPath = publicPath;
+    }
+
+    if (selectedPath) {
         try {
-            if (datasetId === "legends") {
-                // Optional legends.js file (same shape as players.js)
-                // Try project root first, then public/ as a fallback
-                let legendsPool;
-                try {
-                    // eslint-disable-next-line global-require, import/no-dynamic-require
-                    legendsPool = require("./legends");
-                } catch (e1) {
-                    try {
-                        // eslint-disable-next-line global-require, import/no-dynamic-require
-                        legendsPool = require("./public/legends");
-                    } catch (e2) {
-                        console.warn("legends.js not found in root or public/, using default players instead.");
-                    }
-                }
-                playerPool = legendsPool || PLAYERS;
-            } else if (datasetId === "custom") {
-                // For custom sets, start with full pool; host can override via saveCustomSet
-                playerPool = PLAYERS;
-            }
-        } catch (e) {
-            console.warn("Dataset file error, falling back to default PLAYERS:", e.message);
+            // require(selectedPath) might need .default if legends.js uses 'export default'
+            const imported = require(selectedPath);
+            playerPool = imported.default || imported; 
+            console.log(`Successfully loaded legends from: ${selectedPath}`);
+        } catch (err) {
+            console.error("Error parsing legends.js:", err.message);
             playerPool = PLAYERS;
         }
+    } else {
+        console.warn("legends.js not found in root or public/, falling back to default.");
+        playerPool = PLAYERS;
+    }
+} else if (datasetId === "custom") {
+    playerPool = PLAYERS;
+}
+
         
         rooms[code] = {
             admin: socket.id,
@@ -1183,5 +1193,6 @@ const PORT = process.env.PORT || 3500;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
