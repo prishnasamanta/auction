@@ -5365,3 +5365,64 @@ body {
     
     .timeline-item { flex-direction: row; }
 }
+/* New Landing Page Essentials */
+.infinite-tape {
+    position: fixed;
+    top: 0; left: 0; width: 100%;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: #fff; font-weight: 600; height: 40px;
+    display: flex; align-items: center; white-space: nowrap;
+    overflow: hidden; z-index: 101;
+}
+.tape-content {
+    display: inline-block;
+    animation: scroll-left 20s linear infinite;
+    padding-left: 100%;
+}
+@keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+.landing-nav {
+    position: sticky; top: 40px; /* Below tape */
+    z-index: 100; background: rgba(2, 6, 23, 0.8);
+    backdrop-filter: blur(12px); padding: 1rem 0;
+}
+.landing-nav.scrolled { background: rgba(2, 6, 23, 0.95); }
+
+.hero-tile {
+    background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 2rem;
+    padding: 3rem 2rem; max-width: 800px;
+}
+
+/* Animations for scroll reveal */
+.section-title, .feature-card, .pool-card, .step-row, .faq-item {
+    opacity: 0; transform: translateY(20px); transition: all 0.5s ease;
+}
+.visible { opacity: 1 !important; transform: translateY(0) !important; }
+
+/* Player Card Scroller */
+.cards-scroller { overflow: hidden; width: 100%; position: relative; height: 200px; }
+.cards-track { display: flex; animation: scroll-right-to-left 20s linear infinite; }
+@keyframes scroll-right-to-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+/* Updated from .player-card to .players-card */
+.players-card {
+    flex: 0 0 auto; 
+    width: 200px; 
+    height: 180px; 
+    margin-right: 1rem;
+    background: rgba(30, 41, 59, 0.6); 
+    border-radius: 1rem; 
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s ease;
+}
+
+.players-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+
