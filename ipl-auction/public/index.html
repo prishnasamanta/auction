@@ -15,133 +15,65 @@
 
 <body>
 <canvas id="bg-canvas"></canvas>
-<section id="landing" class="screen landing-scrollable" style="background: transparent !important; position: relative; z-index: 10;">
-    
-    <nav class="landing-nav" style="position: sticky; top: 0; z-index: 100; background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 15px 5%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
-            <div class="nav-brand" style="font-family: 'Exo 2', sans-serif; font-weight: 800; font-size: 1.4rem; color: #fff; letter-spacing: 1px;">
-                ⚡ IPL <span style="color:var(--gold)">AUCTION</span>
-            </div>
-            <div class="nav-links" style="display: flex; gap: 30px;">
-                <a href="#how-to" style="color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.3s;">How to Play</a>
-                <a href="#features" style="color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.3s;">Features</a>
-                <a href="#faq" style="color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.3s;">FAQ</a>
+<div class="infinite-tape">
+    <div class="tape-content">LIVE AUCTION SIMULATOR WITH MULTIPLE POOLS... LIVE AUCTION SIMULATOR WITH MULTIPLE POOLS...</div>
+</div>
+
+<section id="landing" class="screen landing-scrollable">
+    <nav class="landing-nav">
+        <div class="container nav-content">
+            <div class="nav-brand">⚡ IPL <span class="text-gradient">AUCTION</span></div>
+            <div class="nav-links">
+                <a href="#how-to" class="nav-link">How to Play</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#player-pools" class="nav-link">Pools</a>
+                <a href="#faq" class="nav-link">FAQ</a>
             </div>
         </div>
     </nav>
 
-    <div class="hero-container" style="min-height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; max-width: 1000px; margin: 0 auto;">
-        
-        <div class="new-badge pulse-anim" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; padding: 8px 20px; border-radius: 30px; font-size: 0.85rem; font-weight: 700; margin-bottom: 30px; backdrop-filter: blur(4px);">
-            <span style="margin-right: 8px;">●</span> ONLINE MULTIPLAYER LIVE
-        </div>
-
-        <h1 class="hero-title" style="font-family: 'Exo 2', sans-serif; font-size: clamp(3rem, 6vw, 5rem); font-weight: 900; line-height: 1.1; margin: 0 0 25px; color: #fff; text-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            THE ULTIMATE <br>
-            <span class="text-gradient" style="background: linear-gradient(135deg, #fff 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CRICKET AUCTION</span>
-        </h1>
-        
-        <p class="hero-subtitle" style="font-size: 1.1rem; color: #94a3b8; max-width: 650px; margin: 0 auto 40px; line-height: 1.7;">
-            Experience the intensity of the bidding war. Host private rooms, manage dynamic purses, and build your dream squad in real-time with friends.
-        </p>
-
-        <div class="hero-actions" style="display: flex; gap: 20px; justify-content: center; margin-bottom: 60px;">
-            <button id="enterBtn" class="primary-btn hero-btn" style="padding: 16px 40px; font-size: 1rem; border-radius: 12px; box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); transition: transform 0.2s;">
-                ENTER ARENA 🚀
-            </button>
-            <button onclick="document.getElementById('how-to').scrollIntoView({behavior: 'smooth'})" class="secondary-btn" style="padding: 16px 35px; font-size: 1rem; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; backdrop-filter: blur(4px);">
-                VIEW RULES
-            </button>
-        </div>
-
-        <div class="hero-stats glass" style="display: flex; gap: 40px; padding: 20px 40px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(30, 41, 59, 0.3);">
-            <div class="stat-item" style="text-align: center;">
-                <b style="font-size: 1.8rem; color: #fff; display: block; font-family: 'Exo 2', sans-serif;">600+</b>
-                <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Players</span>
-            </div>
-            <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
-            <div class="stat-item" style="text-align: center;">
-                <b style="font-size: 1.8rem; color: #fff; display: block; font-family: 'Exo 2', sans-serif;">10</b>
-                <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Teams</span>
-            </div>
-            <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
-            <div class="stat-item" style="text-align: center;">
-                <b style="font-size: 1.8rem; color: #4ade80; display: block; font-family: 'Exo 2', sans-serif;">0ms</b>
-                <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Latency</span>
+    <div class="hero-container container">
+        <div class="hero-tile">
+            <div class="new-badge"><span>●</span> ONLINE MULTIPLAYER LIVE</div>
+            <h1 class="hero-title"> THE ULTIMATE <br> <span class="text-gradient">CRICKET AUCTION</span> </h1>
+            <p class="hero-subtitle"> Experience the intensity of the bidding war. Host private rooms and build your dream squad in real-time. </p>
+            <div class="hero-actions">
+                <button id="enterBtn" class="btn btn-primary">ENTER ARENA 🚀</button>
+                <button onclick="document.getElementById('how-to').scrollIntoView({behavior: 'smooth'})" class="btn btn-secondary">VIEW RULES</button>
             </div>
         </div>
     </div>
 
-    <div id="features" class="section-container" style="max-width: 1100px; margin: 0 auto; padding: 100px 20px;">
-        <h2 class="section-title reveal" style="text-align: center; font-size: 2.5rem; font-family: 'Exo 2', sans-serif; margin-bottom: 60px; color: #fff;">PRO FEATURES</h2>
-        
-        <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px;">
-            <div class="feature-card glass reveal" style="padding: 30px; border-radius: 16px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s;">
-                <div style="font-size: 2.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">⚡</div>
-                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Real-Time Sockets</h3>
-                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6;">Instant bid updates synchronized across all devices. No refreshing required.</p>
+    <div id="features" class="container">
+        <h2 class="section-title">PRO FEATURES</h2>
+        <div class="features-grid">
+            <div class="feature-card glass">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-Time Sockets</h3>
+                <p>Instant bid updates synchronized across all devices.</p>
             </div>
-            <div class="feature-card glass reveal" style="padding: 30px; border-radius: 16px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s;">
-                <div style="font-size: 2.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">💰</div>
-                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Smart Purse</h3>
-                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6;">Automated budget validation. The system prevents overspending and tracks remaining funds.</p>
             </div>
-            <div class="feature-card glass reveal" style="padding: 30px; border-radius: 16px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s;">
-                <div style="font-size: 2.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">🏆</div>
-                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Live Leaderboard</h3>
-                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6;">Track squad composition, foreign player quotas, and RTM status in real-time.</p>
-            </div>
-            <div class="feature-card glass reveal" style="padding: 30px; border-radius: 16px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s;">
-                <div style="font-size: 2.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">🎨</div>
-                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Pro UI Design</h3>
-                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6;">A completely immersive dark-mode interface designed for long auction sessions.</p>
-            </div>
-        </div>
     </div>
 
-    <div id="how-to" class="section-container" style="max-width: 900px; margin: 0 auto; padding: 50px 20px;">
-        <h2 class="section-title reveal" style="text-align: center; font-size: 2.5rem; font-family: 'Exo 2', sans-serif; margin-bottom: 50px; color: #fff;">HOW IT WORKS</h2>
-        
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div class="step-row reveal glass" style="display: flex; align-items: center; padding: 25px; border-radius: 12px; background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.05); margin-right: 25px; font-family: 'Exo 2', sans-serif;">01</div>
-                <div>
-                    <h3 style="color: var(--gold); margin: 0 0 5px 0;">Create or Join</h3>
-                    <p style="color: #ccc; margin: 0; font-size: 0.95rem;">Host a private room and get a unique 5-letter code to share with friends.</p>
-                </div>
-            </div>
-            <div class="step-row reveal glass" style="display: flex; align-items: center; padding: 25px; border-radius: 12px; background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.05); margin-right: 25px; font-family: 'Exo 2', sans-serif;">02</div>
-                <div>
-                    <h3 style="color: var(--primary); margin: 0 0 5px 0;">Pick Your Team</h3>
-                    <p style="color: #ccc; margin: 0; font-size: 0.95rem;">Select your franchise (CSK, MI, RCB, etc.). First come, first served logic applies.</p>
-                </div>
-            </div>
-            <div class="step-row reveal glass" style="display: flex; align-items: center; padding: 25px; border-radius: 12px; background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.05); margin-right: 25px; font-family: 'Exo 2', sans-serif;">03</div>
-                <div>
-                    <h3 style="color: var(--accent); margin: 0 0 5px 0;">War Room</h3>
-                    <p style="color: #ccc; margin: 0; font-size: 0.95rem;">Use the live bidding interface. The host controls the flow, you control the cash.</p>
-                </div>
-            </div>
+  <div id="player-cards" class="container">
+    <h2 class="section-title">PLAYER CARDS</h2>
+    <div class="cards-scroller glass">
+        <div class="cards-track">
+            <div class="players-card"><h3>Virat Kohli</h3><p>Batsman</p></div>
+            <div class="players-card"><h3>MS Dhoni</h3><p>Wicket-Keeper</p></div>
+            <div class="players-card"><h3>J. Bumrah</h3><p>Bowler</p></div>
+            <div class="players-card"><h3>Virat Kohli</h3><p>Batsman</p></div>
+            <div class="players-card"><h3>MS Dhoni</h3><p>Wicket-Keeper</p></div>
+            <div class="players-card"><h3>J. Bumrah</h3><p>Bowler</p></div>
         </div>
     </div>
-     <footer class="app-footer">
-        <div class="footer-content">
-            <span>Made with <span style="color:#e11d48;">❤️</span> by <b>PRS</b></span>
-            <span class="separator">•</span>
-            <a href="https://docs.google.com/document/d/1Fz7SsuT23zZvWAuQE7LFTJ0QsZ-sZa6hliIG9fKVNXE/edit?tab=t.0" target="_blank" class="footer-link">Support for ☕</a>
-            <span class="separator">•</span>
-            <div class="social-links">
-                <a href="https://discord.gg/gpACU3Gdg" target="_blank">
-                    <img width="20" height="20" src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="discord"/>
-                </a>
-                <a href="https://whatsapp.com/channel/0029Vb7Z5EABKfi1oKCpTB3j" target="_blank">
-                    <img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp--v1.png" alt="whatsapp"/>
-                </a>
-            </div>
-        </div>
-    </footer>
+</div>
+
+
+    <div class="bottom-cta">
+        <h2>Ready to Bid?</h2>
+        <button onclick="showAuth()" class="btn btn-primary">START PLAYING NOW</button>
+    </div>
 </section>
 
 
@@ -654,11 +586,38 @@
             </div>
         </div>
     </footer>
+<script>
+    // 1. Reveal elements on scroll
+    const revealElements = document.querySelectorAll('.section-title, .feature-card, .pool-card, .step-row, .faq-item');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    revealElements.forEach(el => observer.observe(el));
+
+    // 2. Change Nav Background on scroll
+    window.addEventListener('scroll', () => {
+        const nav = document.querySelector('.landing-nav');
+        if(nav) nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // 3. Simple function to show Auth screen
+    function showAuth() {
+        document.getElementById('landing').classList.add('hidden');
+        document.getElementById('auth').classList.remove('hidden');
+        window.scrollTo(0,0);
+    }
+</script>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/client.js"></script>
 </body>
 </html>
+
 
 
 
