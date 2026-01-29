@@ -70,6 +70,150 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+/* Infinite Tape Animation */
+@keyframes infinite-tape {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.infinite-tape-content {
+  animation: infinite-tape 30s linear infinite;
+  display: flex;
+  gap: 2rem;
+}
+
+.infinite-tape-content:hover {
+  animation-play-state: paused;
+}
+
+/* ================= React Landing Animations ================= */
+@keyframes lp-pulse-glow {
+  0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 rgba(99,102,241,0.0); }
+  50% { box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 45px rgba(99,102,241,0.25); }
+}
+
+.lp-hero-tile {
+  animation: lp-pulse-glow 4s ease-in-out infinite;
+}
+
+/* Wicket & Hammer wrapper */
+.lp-hero-anim-wrap{
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 18px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.65;
+  transition: opacity 300ms ease;
+}
+.lp-hero-anim-wrap:hover { opacity: 1; }
+.lp-hero-anim-item{ width: 96px; height: 96px; }
+@media (min-width: 768px){
+  .lp-hero-anim-item{ width: 140px; height: 140px; }
+}
+.lp-hero-anim-svg{ width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(255,255,255,0.25)); }
+
+@keyframes lp-ball-hit {
+  0%   { transform: translate(0px, 0px); opacity: 0.0; }
+  15%  { opacity: 1; }
+  45%  { transform: translate(120px, -100px); }
+  70%  { transform: translate(150px, -110px); opacity: 1; }
+  100% { transform: translate(150px, -110px); opacity: 0.0; }
+}
+
+@keyframes lp-stump-shake {
+  0%, 35%, 100% { transform: rotate(0deg); }
+  40% { transform: rotate(-6deg); }
+  50% { transform: rotate(6deg); }
+  60% { transform: rotate(-3deg); }
+  70% { transform: rotate(2deg); }
+}
+
+@keyframes lp-bail-left-fly {
+  0%, 38% { transform: translate(0,0) rotate(0deg); opacity: 1; }
+  55% { transform: translate(-18px,-14px) rotate(-25deg); opacity: 1; }
+  100% { transform: translate(-26px,-26px) rotate(-55deg); opacity: 0; }
+}
+
+@keyframes lp-bail-right-fly {
+  0%, 38% { transform: translate(0,0) rotate(0deg); opacity: 1; }
+  55% { transform: translate(18px,-14px) rotate(25deg); opacity: 1; }
+  100% { transform: translate(26px,-26px) rotate(55deg); opacity: 0; }
+}
+
+.lp-ball { transform-box: fill-box; transform-origin: center; animation: lp-ball-hit 3s infinite ease-in-out; }
+.lp-stump-group { transform-box: fill-box; transform-origin: bottom center; animation: lp-stump-shake 3s infinite; }
+.lp-bail-left { transform-box: fill-box; transform-origin: right bottom; animation: lp-bail-left-fly 3s infinite; }
+.lp-bail-right { transform-box: fill-box; transform-origin: left bottom; animation: lp-bail-right-fly 3s infinite; }
+
+@keyframes lp-hammer-smash {
+  0%, 100% { transform: rotate(-18deg) translateY(0); }
+  45% { transform: rotate(-18deg) translateY(0); }
+  55% { transform: rotate(10deg) translateY(14px); }
+  65% { transform: rotate(-12deg) translateY(0); }
+}
+
+.lp-hammer-group {
+  transform-origin: 60% 80%;
+  animation: lp-hammer-smash 2.5s infinite ease-in-out;
+}
+
+/* Player cards marquee */
+@keyframes lp-cards-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.lp-cards-track{
+  display: flex;
+  gap: 24px;
+  width: max-content;
+  animation: lp-cards-scroll 34s linear infinite;
+}
+.lp-cards-track:hover { animation-play-state: paused; }
+
+/* ================= MOBILE LANDING TWEAKS ================= */
+@media (max-width: 640px) {
+  /* Hide ribbon on very small screens to avoid overlap */
+  .lp-tape {
+    display: none;
+  }
+
+  /* Make hero tile more compact and easier to read */
+  .lp-hero-tile {
+    padding: 20px 16px;
+    margin-top: 1.5rem;
+  }
+
+  .lp-hero-tile h1 {
+    font-size: 2.4rem;
+    line-height: 1.1;
+  }
+
+  .lp-hero-tile p {
+    font-size: 0.95rem;
+  }
+
+  /* Scale down or hide heavy SVG animations on phones */
+  .lp-hero-anim-wrap {
+    opacity: 0.5;
+  }
+
+  .lp-hero-anim-item {
+    width: 80px;
+    height: 80px;
+  }
+
+  /* Slightly slower cards marquee on mobile for readability */
+  .lp-cards-track {
+    animation-duration: 42s;
+  }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
@@ -115,6 +259,28 @@ input {
   width: 100%;
   font-size: 1rem;
   transition: 0.3s;
+}
+
+/* Auth form field sizing - keep old look but less compressed */
+#auth #username {
+  max-width: 448px;
+  height: 44px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+#auth #code {
+  max-width: 356px;
+  height: 44px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+#auth #joinBtn {
+  height: 44px;
+  line-height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
 
@@ -5365,64 +5531,3 @@ body {
     
     .timeline-item { flex-direction: row; }
 }
-/* New Landing Page Essentials */
-.infinite-tape {
-    position: fixed;
-    top: 0; left: 0; width: 100%;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    color: #fff; font-weight: 600; height: 40px;
-    display: flex; align-items: center; white-space: nowrap;
-    overflow: hidden; z-index: 101;
-}
-.tape-content {
-    display: inline-block;
-    animation: scroll-left 20s linear infinite;
-    padding-left: 100%;
-}
-@keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-
-.landing-nav {
-    position: sticky; top: 40px; /* Below tape */
-    z-index: 100; background: rgba(2, 6, 23, 0.8);
-    backdrop-filter: blur(12px); padding: 1rem 0;
-}
-.landing-nav.scrolled { background: rgba(2, 6, 23, 0.95); }
-
-.hero-tile {
-    background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.08); border-radius: 2rem;
-    padding: 3rem 2rem; max-width: 800px;
-}
-
-/* Animations for scroll reveal */
-.section-title, .feature-card, .pool-card, .step-row, .faq-item {
-    opacity: 0; transform: translateY(20px); transition: all 0.5s ease;
-}
-.visible { opacity: 1 !important; transform: translateY(0) !important; }
-
-/* Player Card Scroller */
-.cards-scroller { overflow: hidden; width: 100%; position: relative; height: 200px; }
-.cards-track { display: flex; animation: scroll-right-to-left 20s linear infinite; }
-@keyframes scroll-right-to-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-/* Updated from .player-card to .players-card */
-.players-card {
-    flex: 0 0 auto; 
-    width: 200px; 
-    height: 180px; 
-    margin-right: 1rem;
-    background: rgba(30, 41, 59, 0.6); 
-    border-radius: 1rem; 
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.3s ease;
-}
-
-.players-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-}
-
-
