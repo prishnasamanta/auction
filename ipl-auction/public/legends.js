@@ -1,5 +1,4 @@
-module.exports = [
-
+const legends = [
 /* ============================================================ */
 /* WICKET KEEPERS (RETIRED)                                     */
 /* ============================================================ */
@@ -168,3 +167,5 @@ module.exports = [
 
 
 ];
+
+module.exports = legends; // This is the crucial line!
