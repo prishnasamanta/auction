@@ -564,17 +564,19 @@
             {/* Infinite Tape */}
             <div className="fixed top-0 left-0 w-full h-10 bg-gradient-to-r from-indigo-600 to-purple-600 z-50 flex items-center overflow-hidden lp-tape">
               <div className="infinite-tape-content whitespace-nowrap flex gap-8 font-bold text-sm tracking-wider pl-full">
-                <span>LIVE AUCTION SIMULATOR WITH MULTIPLE POOLS</span>
+                <span>LIVE AUCTION SIMULATOR WITH MULTIPLE PLAYER POOLS</span>
                 <span>•</span>
                 <span>REAL-TIME MULTIPLAYER</span>
                 <span>•</span>
                 <span>BUILD YOUR DREAM TEAM</span>
                 <span>•</span>
-                <span>LIVE AUCTION SIMULATOR WITH MULTIPLE POOLS</span>
+                <span>GET EVERY PLAYER CARDS</span>
                 <span>•</span>
-                <span>REAL-TIME MULTIPLAYER</span>
+                <span>GET YOUR PLAYING 11 CARD</span>
                 <span>•</span>
-                <span>BUILD YOUR DREAM TEAM</span>
+                <span>SEE THE LEADEERBOARD</span>
+                  <span>•</span>
+                <span>LET'S BID!</span>
               </div>
             </div>
 
@@ -649,7 +651,7 @@
 
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-bold mb-8">
                   <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                  ONLINE MULTIPLAYER LIVE
+                  VERSION 1.0
                 </div>
 
                 <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight mb-6">
@@ -657,9 +659,6 @@
                   <span className="text-gradient">CRICKET AUCTION</span>
                 </h1>
 
-                <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                  Experience the intensity of the bidding war. Host private rooms, manage dynamic purses, and build your dream squad in real-time with friends.
-                </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <button
@@ -866,22 +865,29 @@
                 </div>
               </div>
             </section>
-            <footer className="fixed bottom-0 left-0 w-full z-50">
-  <div className="max-w-7xl mx-auto px-4 flex flex-row justify-center items-center gap-4">
-    <span>Made with <span style={{ color: '#e11d48' }}>❤️</span> by <b>PRS</b></span>
-    <span className="separator">•</span>
-    <a href="https://docs.google.com/document/d/1Fz7SsuT23zZvWAuQE7LFTJ0QsZ-sZa6hliIG9fKVNXE/edit?tab=t.0" target="_blank" className="footer-link">Support for ☕</a>
-    <span className="separator">•</span>
-    <div className="social-links">
-      <a href="https://discord.gg/gpACU3Gdg" target="_blank">
-        <img width="20" height="20" src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="discord"/>
-      </a>
-      <a href="https://whatsapp.com/channel/0029Vb7Z5EABKfi1oKCpTB3j" target="_blank">
-        <img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp--v1.png" alt="whatsapp"/>
-      </a>
-    </div>
-  </div>
-</footer> 
+       <footer className="app-footer" style={{ 
+  position: 'fixed', 
+  bottom: 0, 
+  left: 0, 
+  width: '100%', 
+  zIndex: 100 
+}}>
+  <div className="footer-content">
+    <span>Made with <span style={{ color: '#e11d48' }}>❤️</span> by <b>PRS</b></span>
+    <span className="separator">•</span>
+    <a href="https://docs.google.com/document/d/1Fz7SsuT23zZvWAuQE7LFTJ0QsZ-sZa6hliIG9fKVNXE/edit?tab=t.0" target="_blank" className="footer-link">Support for ☕</a>
+    <span className="separator">•</span>
+    <div className="social-links">
+      <a href="https://discord.gg/gpACU3Gdg" target="_blank">
+        <img width="20" height="20" src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="discord"/>
+      </a>
+      <a href="https://whatsapp.com/channel/0029Vb7Z5EABKfi1oKCpTB3j" target="_blank">
+        <img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp--v1.png" alt="whatsapp"/>
+      </a>
+    </div>
+  </div>
+</footer>
+
 
           </div>
         );
@@ -964,6 +970,7 @@
     </script>
 </body>
 </html>
+
 
 
 
