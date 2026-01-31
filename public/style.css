@@ -3761,36 +3761,121 @@ body {
 
 /* --- REDESIGNED HEADER --- */
 .topbar {
-    height: 45px; /* Smaller height */
+    height: 44px;
+    min-height: 44px;
     display: flex;
-    align-items: center;
+    align-items: stretch;
     background: #0f172a; /* Solid background for header */
     border-bottom: 1px solid rgba(255,255,255,0.1);
     padding: 0;
     z-index: 2000;
 }
 
-/* LEFT SIDE: Fixed (No Scroll) */
-.top-left {
-    display: flex; 
-    align-items: center; 
-    gap: 8px; 
-    padding-left: 10px;
-    flex-shrink: 0; /* Prevents shrinking */
-    height: 100%;
+/* Single header row (auction): 3 parts – left (fixed), middle (flex), right (fixed + invisible scroll) */
+#auctionUI .topbar {
+    min-height: 44px;
+    height: 44px;
 }
-
-/* RIGHT SIDE: Buttons in one row, no scroll on mobile */
-.top-right {
+.topbar-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex: 1;
+    min-width: 0;
+    padding: 0 8px;
+    height: 100%;
+    min-height: 44px;
+    background: rgba(15, 23, 42, 0.6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: visible;
+}
+.topbar-left,
+.topbar-middle,
+.topbar-right {
+    height: 100%;
+    min-height: 44px;
+    align-self: stretch;
+}
+/* Left: right edge touches count-pill border – no extra space after it */
+.topbar-left {
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-shrink: 0;
+    min-width: max-content;
+    width: max-content;
+    padding-right: 0;
+    margin-right: 0;
+}
+.topbar-left .header-badge,
+.topbar-left .count-pill-btn { flex-shrink: 0; }
+.topbar-left .count-pill-btn { margin-right: 0; }
+/* Middle: use available space; never shrink below visible buttons (rules + mute = 2 icons) */
+.topbar-middle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     flex: 1;
+    min-width: 72px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 1;
+}
+.topbar-middle::-webkit-scrollbar { display: none; }
+.topbar-middle .header-icon-btn,
+.topbar-middle .header-icon-btn-label { flex-shrink: 0; }
+/* When lateJoinBtn is hidden, rulesBtn and toggleMuteBtn use the space (no reserved gap) */
+.topbar-middle .header-icon-btn.hidden,
+.topbar-middle .header-icon-btn-label.hidden {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
+/* Right shrinks to give space to middle first; when content doesn't fit, invisible scroll */
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 1;
+    max-width: 50%;
     min-width: 0;
-    padding: 0 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+.topbar-right::-webkit-scrollbar { display: none; }
+.topbar-right .admin-group,
+.topbar-right .header-icon-btn {
+    flex-shrink: 0;
+}
+.topbar-right .admin-group {
+    gap: 8px !important;
+}
+/* When admin controls (host) are hidden, right bar uses only leave-btn space – middle gets the rest, like lateJoin */
+.topbar-right .admin-group.hidden {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+/* Legacy: kept for other screens that may use top-left/top-right */
+.top-left, .top-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     height: 100%;
-    overflow: visible;
-    justify-content: flex-end;
 }
 
 /* Smaller Header Buttons */
@@ -3810,55 +3895,51 @@ body {
     height: 28px;
 }
 
-/* Mobile: header one row – top-left first, top-right after; prevent overlap; minimal scroll */
+/* Mobile: same layout, compact badges */
 @media (max-width: 600px) {
     #auctionUI .topbar {
         display: flex;
-        flex-direction: row;
-        justify-content: space-between;
         align-items: center;
         overflow: hidden;
     }
-    #auctionUI .topbar .top-left {
-        order: 1;
-        flex: 0 0 auto;
-        min-width: 0;
-        max-width: 40%;
-        gap: 4px;
-        padding-left: 6px;
-        overflow: hidden;
-        z-index: 1;
+    #auctionUI .topbar .topbar-row {
+        padding: 0 4px;
     }
-    #auctionUI .topbar .top-left .header-badge,
-    #auctionUI .topbar .count-pill-btn {
+    #auctionUI .topbar .topbar-left .header-badge,
+    #auctionUI .topbar .topbar-left .count-pill-btn {
         font-size: 0.6rem;
         padding: 2px 4px;
         min-width: 0;
-        max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    #auctionUI .topbar .top-right {
-        order: 2;
-        flex: 1 1 auto;
-        min-width: 0;
-        gap: 4px;
-        padding: 0 6px;
-        justify-content: flex-end;
+    #auctionUI .topbar .topbar-left {
+        flex-shrink: 0;
+        min-width: max-content;
+        width: max-content;
         overflow-x: auto;
         overflow-y: hidden;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
-        z-index: 2;
     }
-    #auctionUI .topbar .top-right::-webkit-scrollbar {
-        display: none;
+    #auctionUI .topbar .topbar-left::-webkit-scrollbar { display: none; }
+    #auctionUI .topbar .topbar-right {
+        max-width: 45%;
+    }
+    #auctionUI .topbar .topbar-middle {
+        min-width: 72px;
     }
     #auctionUI .topbar .header-icon-btn,
     #auctionUI .topbar .header-icon-btn-label,
     #auctionUI .topbar .admin-group {
         flex-shrink: 0 !important;
+    }
+    #auctionUI .topbar .admin-group {
+        gap: 8px !important;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0 !important;
     }
     #auctionUI .topbar .header-icon-btn {
         width: 24px !important;
@@ -4186,12 +4267,11 @@ body {
 /* 🔧 HEADER & TRANSPARENCY FIXES                    */
 /* ================================================= */
 
-/* 1. Header Buttons (Equal Size & Scroll) */
+/* 1. Header Buttons (Equal Size); row does not scroll – only .topbar-right scrolls when needed */
 .top-right {
-    overflow-x: auto; /* Enable scroll if too many buttons */
-    white-space: nowrap; 
-    padding-right: 5px;
-    scrollbar-width: none; /* Hide scrollbar */
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -4513,8 +4593,9 @@ body {
 }
 
 /* Cancel flex gap between mute button and first admin button */
-.top-right #adminControls {
-    margin-left: -4px;
+.top-right #adminControls,
+.topbar-right #adminControls {
+    margin-left: 0;
 }
 
 /* Mobile: Even smaller if needed */
@@ -4995,13 +5076,9 @@ body {
     margin: 0 !important;
 }
 
-.top-left {
-    padding-left: 5px !important;
-}
-
-.top-right {
-    padding-right: 5px !important;
-}
+.top-left { padding-left: 5px !important; }
+.top-right { padding-right: 5px !important; }
+.topbar-row { padding: 0 5px !important; }
 
 /* 6. Remove footer padding - fill screen completely and touch section */
 .app-footer {
@@ -5441,7 +5518,8 @@ body {
 }
 
 /* Rules button (book icon) and label buttons – same interactive look */
-.top-right .header-icon-btn:has(img) {
+.top-right .header-icon-btn:has(img),
+.topbar-row .header-icon-btn:has(img) {
     background: rgba(255, 255, 255, 0.05) !important;
     border-color: rgba(255, 255, 255, 0.25) !important;
 }
