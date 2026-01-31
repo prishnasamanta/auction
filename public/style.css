@@ -1701,9 +1701,11 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     padding: 25px 20px;
 }
 
-/* 4. PLAYER IMAGE (Circle with Glow) */
+/* 4. PLAYER IMAGE (Circle with Glow) – fixed circle from first paint (no oval flash on mobile) */
 .pc-img-box {
     width: 160px; height: 160px;
+    min-width: 160px; min-height: 160px;
+    aspect-ratio: 1;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
     border: 3px solid rgba(255,255,255,0.15);
@@ -1885,10 +1887,13 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-radius: 16px;
 }
 
-/* Adjust internal elements for the compact size */
+/* Adjust internal elements for the compact size – fixed circle (no oval on load) */
 .pc-card.compact .pc-img-box {
-    width: 140px; /* Smaller image */
+    width: 140px;
     height: 140px;
+    min-width: 140px;
+    min-height: 140px;
+    aspect-ratio: 1;
     margin-top: 15px;
     border-width: 3px;
 }
@@ -3859,6 +3864,7 @@ body {
 }
 .topbar-right .admin-group {
     gap: 8px !important;
+    padding-left: 6px;
 }
 /* When admin controls (host) are hidden, right bar uses only leave-btn space – middle gets the rest, like lateJoin */
 .topbar-right .admin-group.hidden {
