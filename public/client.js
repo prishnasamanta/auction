@@ -4358,8 +4358,6 @@ window.toggleMute = function() {
         if (mutedEl) mutedEl.classList.add("hidden");
     }
 };
-
-
 /* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
     // 1. Refresh Squad View if active
