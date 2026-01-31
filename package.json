@@ -1,0 +1,19 @@
+{
+  "name": "ipl-auction-app",
+  "version": "1.0.0",
+  "description": "IPL Auction Simulator",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build:landing": "npm run build --prefix client",
+    "dev:landing": "npm run dev --prefix client"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "mongoose": "^7.5.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

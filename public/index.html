@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>IPL Live Auction</title>
+    <link rel="icon" type="image/png" href="/logo.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="/logo.png?v=2">
+    <link rel="apple-touch-icon" href="/logo.png?v=2">
+
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="/style.css">
+    <!-- Vite-built React landing (no CDN Tailwind/React/Babel = less lag during bidding) -->
+    <link rel="stylesheet" href="/assets/landing.css">
+</head>
+
+<body>
+<canvas id="bg-canvas"></canvas>
+<section id="landing" class="screen landing-scrollable" style="background: transparent !important; position: relative; z-index: 10;">
+    <div id="landing-root"></div>
+</section>
+
+
+<section id="auth" class="screen hidden">
+    <div class="auth-wrapper">
+        <div class="glass auth-card" style="max-width: 500px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+            
+            <div class="auth-tabs" style="display:flex; border-bottom:1px solid rgba(255,255,255,0.1);">
+                <button onclick="switchAuthTab('join')" class="auth-tab-btn active" id="tabJoin" style="flex:1;">JOIN ROOM</button>
+                <button onclick="switchAuthTab('create')" class="auth-tab-btn" id="tabCreate" style="flex:1;">CREATE ROOM</button>
+            </div>
+
+            <div style="padding: 25px;">
+                <input id="username" placeholder="Enter Display Name" style="margin-bottom: 20px; background:rgba(0,0,0,0.3); border-color:rgba(255,255,255,0.1);">
+
+                <div id="joinSection">
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <input id="code" placeholder="ROOM CODE" style="text-transform: uppercase; letter-spacing: 2px; font-family:monospace; font-weight:700; text-align:center;">
+                        <button id="joinBtn" class="primary-btn" style="padding:0 30px;">GO</button>
+                    </div>
+                    
+                    <div class="divider" style="margin: 15px 0; font-size:0.7rem; letter-spacing:1px;">PUBLIC ROOMS</div>
+                    <div id="publicRoomList" class="room-list-box custom-scroll">
+                        <div style="color:#aaa; font-size:0.9rem; text-align:center; padding:10px;">Fetching rooms...</div>
+                    </div>
+                </div>
+
+                <div id="createSection" class="hidden">
+                    <div style="margin-bottom: 20px; background:rgba(255,255,255,0.03); padding:10px; border-radius:8px;">
+                        <label class="toggle-switch" style="width:100%; justify-content:space-between;">
+                            <span class="label-text" style="font-size:0.9rem;">Public Room</span>
+                            <input type="checkbox" id="isPublicRoom" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 10px; font-weight:700; letter-spacing:1px;">SELECT PLAYER POOL</label>
+                    
+                    <div class="dataset-scroll-container">
+                        <div class="dataset-card active" onclick="selectDataset('ipl2026', this)">
+                            <div class="ds-icon">🏆</div>
+                            <div class="ds-title">IPL 2026</div>
+                            <div class="ds-sub">Standard</div>
+                        </div>
+                        <div class="dataset-card" onclick="selectDataset('legends', this)">
+                            <div class="ds-icon">🔥</div>
+                            <div class="ds-title">LEGENDS</div>
+                            <div class="ds-sub">All-Time</div>
+                        </div>
+                        <div class="dataset-card" onclick="selectDataset('mixed', this)">
+                            <div class="ds-icon">⚔️</div>
+                            <div class="ds-title">MIXED</div>
+                            <div class="ds-sub">Great Icon</div>
+                        </div>
+                        <div class="dataset-card" onclick="selectDataset('custom', this)">
+                            <div class="ds-icon">🛠️</div>
+                            <div class="ds-title">CUSTOM</div>
+                            <div class="ds-sub">Builder</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="selectedSetId" value="ipl2026">
+
+                    <button id="createBtn" class="primary-btn" style="width:100%; margin-top:25px; box-shadow:0 4px 15px rgba(99, 102, 241, 0.3);">CREATE ROOM</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="auctionUI" class="screen hidden">
+
+<header class="topbar">
+    <div class="top-left">
+        <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" style="border:1px solid var(--primary); color:var(--primary);">
+            <span id="roomCodeText" style="font-family:monospace; font-weight:700;">---</span>
+        </div>
+
+        <div id="headerTeamBadge" class="header-badge hidden" style="background:var(--gold); color:#000; font-weight:600; border:none;">
+            <span id="headerTeamName">---</span>
+        </div>
+
+        <button onclick="toggleUserList()" class="count-pill-btn">
+            <span class="pulse-dot"></span>
+            <span id="liveUserCount">0</span>
+        </button>
+    </div>
+
+    <div class="top-right">
+        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden header-icon-btn-label">
+            <span class="icon">✚</span>
+            <span class="label">Join Team</span>
+        </button>
+        
+<button onclick="showRules()" class="header-icon-btn" title="Rules">
+    <img width="24" height="24" src="https://img.icons8.com/material-outlined/24/ffffff/important-book.png" alt="rules"/>
+</button>
+       <button id="toggleMuteBtn" class="header-icon-btn" onclick="toggleMute()" title="Toggle Sound">
+    <img id="soundIconImg" width="24" height="24" src="https://img.icons8.com/windows/32/ffffff/room-sound.png" alt="sound"/>
+</button>
+
+        <span id="adminControls" class="admin-group hidden">
+            <button id="startBtn" class="header-icon-btn primary header-icon-btn-label" title="Start">
+                <span class="icon">▶</span>
+                <span class="label">Start</span>
+            </button>
+            <button id="togglePauseBtn" class="header-icon-btn" title="Pause">⏸</button>
+            <button id="skipBtn" class="header-icon-btn" title="Skip">⏭</button>
+            <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">▶|</button>
+            <button id="endBtn" onclick="admin('end')" class="header-icon-btn danger" title="End Game">⊘</button>
+        </span>
+
+<button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">
+    <img
+        src="https://img.icons8.com/material-outlined/24/emergency-exit.png"
+        alt="Leave"
+        width="24"
+        height="24"
+    />
+</button>
+    </div>
+    
+    <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:10px; top:50px;">
+        <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem;">ACTIVE USERS</h4>
+        <div id="userListContent"></div>
+    </div>
+</header>
+
+
+    <div class="auction-wrapper">
+        
+        <div class="auction-center">
+            
+            <div id="teamSelectionMain" class="glass" style="width: 100%; max-width: 530px;">
+                <h2 style="color:var(--primary); margin:0 0 4px 0; font-size:1rem;">CHOOSE YOUR TEAM</h2>
+                <p style="color:#aaa; font-size:0.8rem; margin:0 0 10px 0;">Select a team to participate.</p>
+                <div id="embeddedTeamList" class="team-list"></div>
+                <div id="waitingForHostMsg" class="hidden" style="margin-top:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                    <h3 style="margin:0 0 2px 0; font-size:0.95rem; color:#22c55e;">✅ Team Selected</h3>
+                    <p style="color:#aaa; font-size:0.8rem; margin:0;">Waiting for Host to start...</p>
+                </div>
+            </div>
+
+            <div class="auction glass hidden" id="auctionCard">
+                <div id="resultOverlay" class="ac-result-overlay hidden"></div>
+                <div id="rtmOverlay" class="ac-result-overlay hidden">
+                    <div class="premium-fullcard">
+                        <div class="pf-title" style="color:var(--gold);">Issuing RTM</div>
+                        <div class="pf-detail">Right to Match in progress</div>
+                    </div>
+                </div>
+
+                <div class="ac-top-row">
+                    <div class="ac-info-box">
+                        <div id="playerName" class="ac-name-text">WAITING...</div>
+                        <div id="playerMeta" class="ac-role-text">---</div>
+                    </div>
+
+                    <div class="ac-status-box">
+                        <div id="timer" class="ac-timer-box">10</div>
+                        <div id="currentBidder" class="ac-leader-badge hidden">
+                            <span id="bidderName">---</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ac-bot-row">
+                    <div class="ac-price-box">
+                        <span class="lbl">CURRENT BID</span>
+                        <div id="bid" class="val">₹0.00 Cr</div>
+                    </div>
+
+                    <button id="bidBtn" class="ac-main-bid-btn">
+                        <span style="font-size:1.5rem; font-weight:800;">BID</span>
+                        <span id="btnIncText" style="font-size:0.75rem; font-family:monospace; opacity:0.8;"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="commandCenter" class="glass">
+            
+            <div class="cc-tabs">
+                <button class="cc-tab-btn" data-tab="sets" onclick="switchCcTab('sets')">📦 SETS</button>
+                <button class="cc-tab-btn active" data-tab="feed" onclick="switchCcTab('feed')">💬 FEED</button>
+                <button class="cc-tab-btn" data-tab="squads" onclick="switchCcTab('squads')">👥 SQUADS</button>
+            </div>
+
+            <div id="ccContent" class="cc-content">
+                
+                <div id="view-sets" class="cc-view hidden">
+                    <div id="panel-sets" class="scroll-view">
+                        <div style="padding:10px; color:#aaa; text-align:center;">Loading Sets...</div>
+                    </div>
+                </div>
+
+                <div id="view-feed" class="cc-view">
+                    <div id="feedChat">
+                        <div id="chat">
+                            <div class="chat-msg log-message" style="border-left-color:rgba(251,191,36,0.3); background:rgba(0,0,0,0.2);">
+                                <div class="chat-text" style="color:#94a3b8;">Waiting for auction...</div>
+                            </div>
+                        </div>
+                        <div class="feed-input-wrapper">
+                            <input type="text" id="msg" placeholder="Chat..." autocomplete="off">
+                            <button class="primary-btn" onclick="sendChat()">➤</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-squads" class="cc-view hidden">
+                    <div id="squadTabList" class="horizontal-tabs"></div>
+                    <div id="embeddedSquadView" class="scroll-view">
+                        <div style="padding:10px; color:#aaa; text-align:center;">Select a team</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+    </div> 
+</section>
+
+<section id="playingXI" class="screen hidden">
+    <div style="max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh;">
+        
+        <div style="text-align:center; margin-bottom: 10px;">
+            <h2 style="margin:0; color:var(--gold); font-size:1.5rem;">🧢 SELECT PLAYING XI</h2>
+        </div>
+
+        <div id="xiStatsBar" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 15px;"></div>
+
+        <div id="xiCardWrapper" class="hidden" style="margin-bottom: 20px;"></div>
+
+        <div id="xiPlaceholder" class="xi-placeholder">
+            <div style="font-size:3rem; margin-bottom:10px;">🏏</div>
+            Select players below...
+        </div>
+
+        <div id="xiButtonRow" style="display: flex; gap: 10px; position: sticky; top: 10px; z-index: 50; background:rgba(15,23,42,0.95); padding:10px 0; border-radius: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <button id="submitXIBtn" onclick="submitXI()" class="primary-btn" style="flex: 2; box-shadow:0 4px 10px rgba(0,0,0,0.5);">
+                Submit XI (0/11)
+            </button>
+            
+            <button onclick="resetXISelection()" class="secondary-btn" title="Reset Selection" style="width:50px; border-color:#ef4444; color:#ef4444; background:#1e293b; font-size: 1.2rem;">
+                ↻
+            </button>
+            
+            <button id="saveXIBtn" onclick="downloadSheetPNG()" class="secondary-btn hidden" style="flex: 1; color:var(--gold); border-color:var(--gold); background:#1e293b;">
+                📸 Save
+            </button>
+        </div>
+
+        <div id="xiStatus" class="hidden" style="margin-top: 20px; margin-bottom: 25px; position: relative; z-index: 1; min-height: 20px;"></div>
+
+        <div id="mySquadList"></div>
+    </div>
+</section>
+
+    <section id="leaderboard" class="screen hidden">
+        <header class="topbar glass" style="justify-content: center; position: relative;">
+            <button onclick="goBackFromLeaderboard()" class="secondary-btn" style="position: absolute; left: 15px; border:none; font-size:1rem;">
+                [←]
+            </button>
+            <span class="brand" style="font-size: 1.2rem;">🏆 TOURNAMENT STANDINGS</span>
+        </header>
+
+        <div class="lb-container">
+            <div class="lb-scroll-wrapper custom-scroll">
+                <table class="lb-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Rank</th>
+                            <th style="text-align: left;">Team</th>
+                            <th>Rating</th>
+                            <th>Purse</th>
+                            <th>Status</th>
+                            <th style="width: 60px;">View</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="postAuctionSummary" class="screen hidden">
+        <header class="topbar glass">
+            <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                <span class="brand">  AUCTION SUMMARY</span>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="exitToHome()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">🏠︎</button>
+                </div>
+            </div>
+        </header>
+
+        <div style="max-width: 900px; margin: 0 auto; padding: 20px; padding-top: 80px;">
+            <div style="text-align:center; margin-bottom:20px; color:#aaa; font-size:0.9rem;">
+                The auction has ended. Tap a team to view their full squad.
+            </div>
+            <div id="summaryList" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+    </section>
+
+    <div id="squadViewOverlay" class="rules-overlay hidden">
+    <div class="glass rules-card">
+        <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:space-between; background:#0f172a;">
+            <div style="display:flex; gap:5px;">
+                <button id="btnShowXI" onclick="switchPopupView('XI')" class="tab-btn active" style="font-size:0.8rem; padding:6px 12px;">Playing XI</button>
+                <button id="btnShowFull" onclick="switchPopupView('FULL')" class="tab-btn" style="font-size:0.8rem; padding:6px 12px;">Full Squad</button>
+            </div>
+            <button onclick="document.getElementById('squadViewOverlay').classList.add('hidden')" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+
+        <div id="squadCaptureArea"></div>
+
+        <div id="popupDownloadFooter" style="padding:15px; border-top:1px solid rgba(255,255,255,0.1); background:#0f172a;">
+            <button id="downloadPopupCard" onclick="downloadPopupCard()" class="primary-btn" style="width:100%;">📸 Download Card</button>
+        </div>
+    </div>
+</div>
+
+
+    <div id="rulesScreen" class="rules-overlay hidden">
+        <div class="overlay-card">
+            <h2>⚙️ Tournament Setup</h2>
+            <div class="rules-scroll-area">
+                <div class="rules-section">
+                    <h4>💰 General Settings</h4>
+                    <div class="rule-row"><label>Total Purse (Cr)</label><input id="purse" type="number" value="120"></div>
+                    <div class="rule-row"><label>Max Squad Size</label><input id="maxPlayers" type="number" value="18"></div>
+                    <div class="rule-row"><label>Max Foreign (Squad)</label><input id="maxForeign" type="number" value="6"></div>
+                    <div class="rule-row rule-row-rtm">
+                        <label>RTM?</label>
+                        <label class="toggle-switch" style="display:inline-flex; align-items:center; gap:8px;">
+                            <input type="checkbox" id="rtmEnabled" unchecked>
+                            <span class="slider"></span>
+                            <span class="label-text" style="font-size:0.9rem;">No</span>
+                        </label>
+                    </div>
+                    <div class="rule-row" id="rtmCountRow" style="display:none;">
+                        <label>RTMs per team</label>
+                        <input id="rtmPerTeam" type="number" value="2" min="1" max="10">
+                    </div>
+                </div>
+                <div class="rules-section">
+                    <h4>🧢 Playing XI Requirements</h4>
+                    <div class="rule-row"><label>Min Batsmen</label><input id="minBat" type="number" value="3"></div>
+                    <div class="rule-row"><label>Min Bowlers</label><input id="minBowl" type="number" value="3"></div>
+                    <div class="rule-row"><label>Min Wicket Keepers</label><input id="minWK" type="number" value="1"></div>
+                    <div class="rule-row"><label>Min All-Rounders</label><input id="minAll" type="number" value="1"></div>
+                    <div class="rule-row"><label>Min Spinners</label><input id="minSpin" type="number" value="1"></div>
+                    <div class="rule-row"><label>Max Foreign (Playing XI)</label><input id="maxForeignXI" type="number" value="4"></div>
+                </div>
+            </div>
+            <div class="rules-footer">
+                <button id="saveRules" class="primary-btn" style="width:100%;">🔒 Lock Rules & Start</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewRulesOverlay" class="rules-overlay hidden" onclick="closeRules(event)">
+        <div class="glass rules-card" style="max-width: 400px; width: 90%; padding: 0;">
+            <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; color:var(--gold);">📜 Tournament Rules</h3>
+                <button onclick="document.getElementById('viewRulesOverlay').classList.add('hidden')" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div class="rule-box" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                        <div style="font-size:0.8rem; color:#aaa;">💰 Total Purse</div>
+                        <div style="font-size:1.2rem; font-weight:bold;">₹<span id="pop_viewPurse">---</span> Cr</div>
+                    </div>
+                    <div class="rule-box" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                        <div style="font-size:0.8rem; color:#aaa;">👥 Max Squad Size</div>
+                        <div style="font-size:1.2rem; font-weight:bold;"><span id="pop_viewSquadSize">---</span></div>
+                    </div>
+                    <div class="rule-box" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                        <div style="font-size:0.8rem; color:#aaa;">✈️ Max Foreign</div>
+                        <div style="font-size:1.2rem; font-weight:bold;"><span id="pop_viewForeign">---</span></div>
+                    </div>
+                </div>
+                <h4 style="margin: 0 0 10px 0; color:var(--primary); font-size:0.9rem; text-transform:uppercase;">Playing XI Requirements</h4>
+                <ul style="list-style:none; padding:0; margin:0; font-size:0.9rem; color:#ccc; line-height: 1.6;">
+                    <li>🏏 Min Batsmen: <span id="pop_viewBat" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>🥎 Min Bowlers: <span id="pop_viewBowl" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>🥎 Spinners: <span id="pop_viewSpin" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>🧤 Min WKs: <span id="pop_viewWK" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>🌟 Min All-Rounders: <span id="pop_viewAR" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>✈︎ Max Foreign XI: <span id="pop_viewForeignXI" style="color:#fff; font-weight:bold;">-</span></li>
+                </ul>
+            </div>
+            <div style="padding: 15px; text-align:center; border-top: 1px solid rgba(255,255,255,0.1);">
+                <button onclick="document.getElementById('viewRulesOverlay').classList.add('hidden')" class="secondary-btn" style="width:100%;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="identityVerifyOverlay" class="rules-overlay hidden">
+        <div class="glass rules-card" style="max-width: 400px; padding: 20px; text-align: center;">
+            <h2 style="color: #fca5a5; border: none;">⚠️ Identity Check</h2>
+            <p>A new device is trying to join as <b id="verifyName" style="color: #fff;"></b>.</p>
+            <p>Is this you trying to switch devices?</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button id="btnVerifyYes" class="primary-btn" style="width: 100%;">Yes, Switch Device</button>
+                <button id="btnVerifyNo" class="secondary-btn" style="width: 100%; border-color: #ef4444; color: #ef4444;">No, Block Them</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rtmOfferOverlay" class="rules-overlay hidden">
+        <div class="glass rules-card" style="max-width: 380px; padding: 24px; text-align: center;">
+            <h3 style="margin:0 0 8px 0; color:var(--gold);">🔄 Right to Match</h3>
+            <p id="rtmOfferPlayer" style="margin:0 0 16px 0; font-size:1.1rem; color:#f8fafc;"></p>
+            <p style="margin:0 0 16px 0; font-size:0.9rem; color:#94a3b8;">Use RTM?</p>
+            <div id="rtmOfferYesNo" style="display:flex; gap:12px; justify-content:center; margin-bottom:16px;">
+                <button id="rtmOfferYes" class="primary-btn">Yes</button>
+                <button id="rtmOfferNo" class="secondary-btn">No</button>
+            </div>
+            <div id="rtmOfferAmountRow" style="display:none;">
+                <label style="display:block; margin-bottom:8px; color:#94a3b8;">Amount (Cr) — more than sold price</label>
+                <input id="rtmOfferAmount" type="number" min="0" step="0.05" placeholder="0.00" style="width:100%; padding:10px; background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:8px; color:#fff; font-size:1rem; margin-bottom:8px;">
+                <div id="rtmOfferTimer" style="font-size:0.9rem; color:var(--gold); margin-bottom:12px;">10s</div>
+                <button id="rtmOfferSubmit" class="primary-btn" style="width:100%;">Submit RTM</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rtmBuyerChoiceOverlay" class="rules-overlay hidden">
+        <div class="glass rules-card" style="max-width: 380px; padding: 24px; text-align: center;">
+            <h3 style="margin:0 0 8px 0; color:var(--gold);">🔄 RTM Match</h3>
+            <p id="rtmBuyerChoiceText" style="margin:0 0 16px 0; font-size:1rem; color:#f8fafc;"></p>
+            <div style="display:flex; gap:12px; justify-content:center;">
+                <button id="rtmBuyerYes" class="primary-btn">Yes, keep at this price</button>
+                <button id="rtmBuyerNo" class="secondary-btn">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customBuilderOverlay" class="rules-overlay hidden">
+        <div class="glass rules-card" style="max-width: 600px; height: 85vh; display:flex; flex-direction:column;">
+            <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; background:#0f172a;">
+                <div>
+                    <h3 style="margin:0; color:var(--gold);">🛠️ Build Custom Set</h3>
+                    <div style="font-size:0.75rem; color:#94a3b8;">Select players & edit ratings</div>
+                </div>
+                <button onclick="closeCustomBuilder()" style="background:none; border:none; color:#fff; font-size:1.5rem;">&times;</button>
+            </div>
+
+            <div style="padding:15px; background:rgba(0,0,0,0.2);">
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <input id="customSearch" type="text" placeholder="Search Name..." onkeyup="filterCustomList()" style="flex:2; padding:8px; background:rgba(255,255,255,0.05); border:1px solid #334155;">
+                    <select id="customRoleFilter" onchange="filterCustomList()" style="flex:1; background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:0 5px;">
+                        <option value="ALL">All Roles</option>
+                        <option value="BAT">Batters</option>
+                        <option value="BOWL">Bowlers</option>
+                        <option value="ALL">All-Rounders</option>
+                        <option value="WK">Wicket Keepers</option>
+                    </select>
+                </div>
+                <label class="toggle-switch" style="padding: 5px 10px; background:transparent; border:none;">
+                    <input type="checkbox" id="useRatingsToggle" checked onchange="toggleRatingVisibility()">
+                    <span class="slider" style="width:34px; height:18px;"></span>
+                    <span class="label-text" style="font-size:0.8rem;">Enable Player Ratings</span>
+                </label>
+            </div>
+
+            <div id="customPlayerList" class="custom-scroll" style="flex:1; overflow-y:auto; padding:10px;">
+                <div style="text-align:center; padding:20px; color:#666;">Loading Database...</div>
+            </div>
+
+            <div style="padding:15px; border-top:1px solid rgba(255,255,255,0.1); background:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:0.9rem;">Selected: <b id="customCount" style="color:var(--success);">0</b></div>
+                <button onclick="saveCustomSet()" class="primary-btn" style="padding:8px 20px;">✅ Confirm Set</button>
+            </div>
+        </div>
+    </div>
+
+    <section id="godPanel" class="screen hidden" style="background:#000; position:fixed; inset:0; z-index:9999;">
+        <div class="glass" style="max-width:600px; margin:20px auto; padding:20px; height:90vh; display:flex; flex-direction:column; border:1px solid #ef4444;">
+            <div style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; color:#ef4444; font-size:1.2rem;">GOD MODE</h2>
+                <button onclick="window.location.reload()" class="secondary-btn" style="padding:5px 10px; font-size:0.8rem;">Exit</button>
+            </div>
+            <div id="godLogin">
+                <p style="color:#aaa; font-size:0.9rem;">Enter the Room Code you want to manipulate:</p>
+                <div style="display:flex; gap:10px;">
+                    <input id="godTargetInput" placeholder="Room Code" style="text-transform:uppercase;">
+                    <button onclick="connectGodMode()" class="primary-btn" style="background:#ef4444;">ACCESS</button>
+                </div>
+            </div>
+            <div id="godContent" class="hidden" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+                <div class="god-header" style="display:flex; justify-content:space-between; color:#666; font-size:0.75rem; padding-bottom:5px;">
+                    <span>PLAYER</span> <span>ASSIGN TO</span>
+                </div>
+                <div id="godPlayerList" style="flex:1; overflow-y:auto; padding-right:5px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Command Center Tabs
+        function switchCcTab(tabName) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`view-${tabName}`).classList.add('active');
+        }
+        function switchFeedMode(mode) {
+            document.querySelectorAll('.sub-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.feed-mode-container').forEach(container => container.classList.remove('active'));
+            document.getElementById(`mode-${mode}`).classList.add('active');
+        }
+        let isMaximized = false;
+        let isCollapsed = false;
+        function toggleMaximize() {
+            const cmdCenter = document.getElementById('commandCenter');
+            isMaximized = !isMaximized;
+            cmdCenter.classList.toggle('maximized', isMaximized);
+        }
+        function toggleCcExpand() {
+            const cmdCenter = document.getElementById('commandCenter');
+            isCollapsed = !isCollapsed;
+            cmdCenter.classList.toggle('collapsed', isCollapsed);
+            document.getElementById('expandBtn').textContent = isCollapsed ? '□' : '−';
+        }
+    </script>
+<div id="customPopup" class="cp-overlay hidden">
+    <div class="cp-card">
+        <div class="cp-border-gradient"></div>
+        
+        <div class="cp-inner">
+            <div class="cp-icon" id="cpIcon">⚠️</div>
+            <h3 class="cp-title" id="cpTitle">Confirm Action</h3>
+            <p class="cp-msg" id="cpMessage">Are you sure you want to proceed?</p>
+            
+            <div class="cp-actions">
+                <button id="cpBtnCancel" class="cp-btn cp-btn-cancel">CANCEL</button>
+                <button id="cpBtnOk" class="cp-btn cp-btn-ok">CONFIRM</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <footer class="app-footer">
+        <div class="footer-content">
+            <span>Made with <span style="color:#e11d48;">❤️</span> by <b>PRS</b></span>
+            <span class="separator">•</span>
+            <a href="https://docs.google.com/document/d/1Fz7SsuT23zZvWAuQE7LFTJ0QsZ-sZa6hliIG9fKVNXE/edit?tab=t.0" target="_blank" class="footer-link">Support for ☕</a>
+            <span class="separator">•</span>
+            <div class="social-links">
+                <a href="https://discord.gg/gpACU3Gdg" target="_blank">
+                    <img width="20" height="20" src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="discord"/>
+                </a>
+                <a href="https://whatsapp.com/channel/0029Vb7Z5EABKfi1oKCpTB3j" target="_blank">
+                    <img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp--v1.png" alt="whatsapp"/>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/client.js"></script>
+    <script type="module" src="/assets/landing.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
