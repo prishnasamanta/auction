@@ -425,30 +425,41 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 #headerTeamName { font-size: 0.9rem; text-transform: uppercase; color: #fff; }
 
-/* Icon Buttons */
+/* Icon Buttons – interactive, professional look (size unchanged) */
 .header-icon-btn {
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 6px;
-    width: 28px !important; 
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    width: 28px !important;
     height: 28px !important;
     min-width: 28px !important;
-    display: flex; 
-    align-items: center; 
+    display: flex;
+    align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
     flex-shrink: 0;
     padding: 0;
     font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
-.header-icon-btn:hover { 
-    background: rgba(255,255,255,0.04); 
-    border-color: rgba(255,255,255,0.6); 
+.header-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transform: scale(1.05);
+}
+.header-icon-btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 .header-icon-btn.primary { border-color: var(--primary); color: var(--primary); }
-.header-icon-btn.warning { border-color: #fbbf24; color:#facc15; }
-.header-icon-btn.danger { border-color: #ef4444; color:#fca5a5; }
+.header-icon-btn.primary:hover { background: rgba(99, 102, 241, 0.15); }
+.header-icon-btn.warning { border-color: #fbbf24; color: #facc15; }
+.header-icon-btn.warning:hover { background: rgba(251, 191, 36, 0.12); }
+.header-icon-btn.danger { border-color: #ef4444; color: #fca5a5; }
+.header-icon-btn.danger:hover { background: rgba(239, 68, 68, 0.12); }
 
 /* Scrollable Right Side */
 .custom-scroll-x {
@@ -502,42 +513,72 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 .ac-timer-box {
-    font-family: monospace; font-size: 1.2rem;
-    color: #f43f5e; background: rgba(0,0,0,0.3);
-    padding: 2px 8px; border-radius: 4px;
-    border: 2px solid rgba(255,255,255,0.1);
+    font-family: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--timer-color, #22c55e);
+    background: rgba(15, 23, 42, 0.95);
+    padding: 0;
+    width: 40px;
+    height: 32px;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 32px;
+    max-height: 32px;
+    text-align: center;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
     position: relative;
-    --timer-progress: 0%;
+    overflow: hidden;
+    flex-shrink: 0;
+    --timer-progress: 0;
+    --timer-color: #22c55e;
+    transition: color 0.2s ease;
 }
+.ac-timer-box.two-digit { font-size: 0.85rem; }
 
-/* Snake-like clock border animation (clockwise from top, 10 seconds) */
+/* Track: full ring, visible border on both sides of snake */
+.ac-timer-box::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 6px;
+    padding: 2px;
+    background: conic-gradient(from 0deg, rgba(255,255,255,0.2) 0deg, rgba(255,255,255,0.2) 360deg);
+    -webkit-mask: linear-gradient(#fff, #fff) padding-box, linear-gradient(#fff, #fff) content-box;
+    mask: linear-gradient(#fff, #fff) padding-box, linear-gradient(#fff, #fff) content-box;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 0;
+    pointer-events: none;
+}
+/* Snake: inner border, clockwise from top (0deg), visible border via track */
 .ac-timer-box::before {
     content: '';
     position: absolute;
-    inset: -2px;
-    border-radius: 4px;
+    inset: 2px;
+    border-radius: 6px;
+    padding: 2px;
     background: conic-gradient(
-        from -90deg,
-        #22c55e 0deg calc(var(--timer-progress, 0%) * 3.6deg),
-        #f59e0b calc(var(--timer-progress, 0%) * 3.6deg) calc(var(--timer-progress, 0%) * 3.6deg + 90deg),
-        #ef4444 calc(var(--timer-progress, 0%) * 3.6deg + 90deg) calc(var(--timer-progress, 0%) * 3.6deg + 180deg),
-        transparent calc(var(--timer-progress, 0%) * 3.6deg + 180deg) 360deg
+        from 0deg,
+        var(--timer-color, #22c55e) 0deg calc(var(--timer-progress, 0) * 3.6deg),
+        transparent calc(var(--timer-progress, 0) * 3.6deg) 360deg
     );
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff, #fff) padding-box, linear-gradient(#fff, #fff) content-box;
+    mask: linear-gradient(#fff, #fff) padding-box, linear-gradient(#fff, #fff) content-box;
     -webkit-mask-composite: xor;
     mask-composite: exclude;
-    padding: 2px;
-    z-index: -1;
-    transition: background 0.1s linear;
+    z-index: 1;
+    pointer-events: none;
 }
-
-/* Override any conflicting timer box styles */
 .ac-timer-box {
-    border: 2px solid rgba(255,255,255,0.1) !important;
+    border: none !important;
     position: relative !important;
 }
+.ac-timer-box > * { position: relative; z-index: 2; }
 
 .ac-leader-badge {
     background: #fff; color: #000;
@@ -1120,47 +1161,49 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 .cc-tab-btn {
     flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: transparent;
     border: none;
     color: #94a3b8;
-    padding: 10px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    padding: 10px 12px;
+    min-width: 52px;
     cursor: pointer;
     border-radius: 8px;
     transition: all 0.2s ease;
     position: relative;
 }
+.cc-tab-btn .cc-tab-icon {
+    display: block;
+    flex-shrink: 0;
+}
 
-.cc-tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
-
-/* Active Tab: Bright with subtle glow */
+/* Sets: green | Feed: blue | Squads: yellow – hover/active show color */
+.cc-tab-btn[data-tab="sets"] { --tab-color: #22c55e; }
+.cc-tab-btn[data-tab="feed"] { --tab-color: #3b82f6; }
+.cc-tab-btn[data-tab="squads"] { --tab-color: #eab308; }
+.cc-tab-btn[data-tab="sets"]:hover { color: #fff; background: rgba(34, 197, 94, 0.25); }
+.cc-tab-btn[data-tab="feed"]:hover { color: #fff; background: rgba(59, 130, 246, 0.25); }
+.cc-tab-btn[data-tab="squads"]:hover { color: #fff; background: rgba(234, 179, 8, 0.25); }
 .cc-tab-btn.active {
     color: #fff;
-    box-shadow: 0 0 15px rgba(148, 163, 184, 0.18);
+    box-shadow: 0 0 12px rgba(148, 163, 184, 0.25);
 }
+.cc-tab-btn[data-tab="sets"].active { background: rgba(34, 197, 94, 0.35); box-shadow: 0 0 12px rgba(34, 197, 94, 0.4); }
+.cc-tab-btn[data-tab="feed"].active { background: rgba(59, 130, 246, 0.35); box-shadow: 0 0 12px rgba(59, 130, 246, 0.4); }
+.cc-tab-btn[data-tab="squads"].active { background: rgba(234, 179, 8, 0.35); box-shadow: 0 0 12px rgba(234, 179, 8, 0.4); }
 .cc-tab-btn.active::after {
     content: '';
     position: absolute;
-    bottom: -5px; 
-    left: 20%; right: 20%;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
     height: 2px;
-    background: #6366f1;
+    background: var(--tab-color, #6366f1);
     border-radius: 2px;
-    opacity: 0.8;
-}
-
-/* Per-tab active colors */
-.cc-tab-btn[data-tab="sets"].active {
-    background: rgba(250, 204, 21, 0.18);
-}
-.cc-tab-btn[data-tab="feed"].active {
-    background: rgba(96, 165, 250, 0.15);
-}
-.cc-tab-btn[data-tab="squads"].active {
-    background: rgba(34, 197, 94, 0.18);
+    opacity: 0.9;
 }
 
 /* 2. CONTENT AREA */
@@ -1336,6 +1379,15 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-radius:4px; 
     font-size:0.7rem; 
     margin-right: 5px;
+}
+
+.set-pteam-badge {
+    background: rgba(255,255,255,0.08);
+    color: #94a3b8;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
 }
 
 .sp-rating { 
@@ -1752,6 +1804,27 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     font-size: 1.2rem;
     padding: 6px 20px;
     margin-bottom: 15px;
+}
+
+/* Price tag below stat row: positioned under .pc-stat-row with padding and clearer look */
+.pc-price-tag.pc-price-tag-below {
+    position: relative !important;
+    bottom: auto !important;
+    margin-top: 14px;
+    margin-bottom: 16px;
+    padding: 10px 20px;
+    display: block;
+    width: 100%;
+    max-width: 160px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.15rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* --- Fix for Live Squad Scrolling --- */
@@ -2903,10 +2976,10 @@ body {
     width: 70px; 
 }
 .ac-timer-box {
-    font-family: monospace; font-size: 1.4rem; font-weight: 700;
-    color: #f43f5e; background: rgba(0,0,0,0.3);
-    padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);
-    text-align: center; width: 100%;
+    font-family: monospace; font-size: 1.2rem; font-weight: 700;
+    color: var(--timer-color, #22c55e); background: rgba(15,23,42,0.95);
+    padding: 5px 12px; border-radius: 8px; border: none;
+    text-align: center;
 }
 
 /* Bottom Row: Price vs Button */
@@ -3020,10 +3093,10 @@ body {
     width: 75px; 
 }
 .ac-timer-box {
-    font-family: monospace; font-size: 1.4rem; font-weight: 700;
-    color: #f43f5e; background: rgba(0,0,0,0.3);
-    padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);
-    text-align: center; width: 100%;
+    font-family: monospace; font-size: 1.2rem; font-weight: 700;
+    color: var(--timer-color, #22c55e); background: rgba(15,23,42,0.95);
+    padding: 5px 12px; border-radius: 8px; border: none;
+    text-align: center;
 }
 
 /* --- Bottom Row: Price vs Button --- */
@@ -3150,52 +3223,45 @@ body {
     margin-top: 5px; letter-spacing: 1px;
 }
 
-/* Right Status Box (Timer & Team - SAME WIDTH) */
+/* Right Status Box (Timer + bidder badge) – fixed width, no size change */
 .ac-status-box {
     flex-shrink: 0;
-    /* Trim the left "empty strip" by making the wrapper
-       exactly match the timer/badge width. */
     width: 40px !important;
-    min-width: 0 !important;
-    display: flex; flex-direction: column;
-    align-items: stretch;
-    flex: none !important; /* Disable flex scaling */
+    min-width: 40px !important;
+    max-width: 40px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: none !important;
     gap: 6px;
 }
 
-/* Timer */
+/* Timer – fixed 40×32px, inner snake from top, visible track */
 .ac-timer-box {
     width: 40px !important;
-    text-align: center;
-    font-family: monospace; font-size: 1.5rem; font-weight: 700;
-    color: #f43f5e; background: rgba(0,0,0,0.3);
-    padding: 2px 0; border-radius: 4px; 
-    border: 2px solid rgba(255,255,255,0.1) !important;
-    position: relative !important;
-    --timer-progress: 0% !important;
+    height: 32px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    border: none !important;
+    flex-shrink: 0 !important;
 }
-
-/* Snake border for this timer too */
 .ac-timer-box::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: 4px;
+    border-radius: 6px !important;
+    inset: 2px !important;
+    padding: 2px !important;
     background: conic-gradient(
-        from -90deg,
-        #22c55e 0deg calc(var(--timer-progress, 0%) * 3.6deg),
-        #f59e0b calc(var(--timer-progress, 0%) * 3.6deg) calc(var(--timer-progress, 0%) * 3.6deg + 90deg),
-        #ef4444 calc(var(--timer-progress, 0%) * 3.6deg + 90deg) calc(var(--timer-progress, 0%) * 3.6deg + 180deg),
-        transparent calc(var(--timer-progress, 0%) * 3.6deg + 180deg) 360deg
-    );
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    padding: 2px;
-    z-index: -1;
-    transition: background 0.1s linear;
+        from 0deg,
+        var(--timer-color, #22c55e) 0deg calc(var(--timer-progress, 0) * 3.6deg),
+        transparent calc(var(--timer-progress, 0) * 3.6deg) 360deg
+    ) !important;
+    -webkit-mask: linear-gradient(#fff, #fff) padding-box, linear-gradient(#fff, #fff) content-box !important;
+    mask: linear-gradient(#fff, #fff) padding-box, linear-gradient(#fff, #fff) content-box !important;
+    -webkit-mask-composite: xor !important;
+    mask-composite: exclude !important;
 }
 
 /* Team Badge (Below Timer) */
@@ -3290,10 +3356,14 @@ body {
     flex-shrink: 0 !important; /* Prevent squishing */
 }
 
-/* Pause button visual (no emoji, just CSS animation) */
+/* Pause button – interactive, same size */
 #togglePauseBtn {
     position: relative;
-    font-size: 0 !important; /* Hide emoji text */
+    font-size: 0 !important;
+    color: rgba(255, 255, 255, 0.95);
+}
+#togglePauseBtn:hover {
+    color: #fff;
 }
 
 /* Default state: Two vertical bars (pause icon) */
@@ -3315,10 +3385,11 @@ body {
     right: calc(50% - 4px);
 }
 
-/* Paused state: Play triangle (single shape) */
+/* Paused state: Play triangle */
 #togglePauseBtn.is-paused {
-    border-color: rgba(74,222,128,0.9) !important;
+    border-color: rgba(74, 222, 128, 0.9) !important;
     color: #4ade80 !important;
+    background: rgba(74, 222, 128, 0.08) !important;
     animation: pausePulse 1.5s ease-in-out infinite;
 }
 
@@ -3338,11 +3409,11 @@ body {
 }
 
 @keyframes pausePulse {
-    0%, 100% { 
+    0%, 100% {
         box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4);
-        border-color: rgba(74,222,128,0.9);
+        border-color: rgba(74, 222, 128, 0.9);
     }
-    50% { 
+    50% {
         box-shadow: 0 0 0 4px rgba(74, 222, 128, 0);
         border-color: rgba(74,222,128,1);
     }
@@ -4960,11 +5031,11 @@ body {
 /* 🎨 FIXED BUTTON COLORS & SOUND ICON               */
 /* ================================================= */
 
-/* 1. Reset Header Buttons to have SOLID backgrounds */
+/* 1. Header icon buttons – interactive, size unchanged (26px) */
 .header-icon-btn {
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
     color: #fff !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     width: 26px !important;
     height: 26px !important;
     min-width: 26px !important;
@@ -4972,70 +5043,158 @@ body {
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
-    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease !important;
+    background: rgba(255, 255, 255, 0.06) !important;
 }
 
 .header-icon-btn:hover {
-    border-color: #fff !important;
-    transform: translateY(-1px) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+    transform: scale(1.06) !important;
+}
+
+.header-icon-btn:active {
+    transform: scale(0.95) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
 }
 
 /* 2. Specific Colors for Admin Buttons */
 #startBtn {
-      background: transparent !important; /* Keep sound btn subtle */
-
-    border-color: #16a34a !important;
-    color: #000 !important;
+    background: rgba(22, 163, 74, 0.1) !important;
+    border-color: rgba(22, 163, 74, 0.7) !important;
+    color: #22c55e !important;
+}
+#startBtn:hover {
+    background: rgba(22, 163, 74, 0.2) !important;
+    border-color: #22c55e !important;
 }
 
 #togglePauseBtn {
-      background: transparent !important; /* Keep sound btn subtle */
-
-    border-color: #ca8a04 !important;
-    color: #000 !important;
+    background: rgba(202, 138, 4, 0.08) !important;
+    border-color: rgba(202, 138, 4, 0.6) !important;
+    color: #facc15 !important;
+}
+#togglePauseBtn:hover {
+    background: rgba(202, 138, 4, 0.15) !important;
+    border-color: #facc15 !important;
 }
 
 #skipBtn {
-      background: transparent !important; /* Keep sound btn subtle */
-
-    border-color: #2563eb !important;
-    color: #fff !important;
+    background: rgba(37, 99, 235, 0.1) !important;
+    border-color: rgba(37, 99, 235, 0.6) !important;
+    color: #60a5fa !important;
+}
+#skipBtn:hover {
+    background: rgba(37, 99, 235, 0.2) !important;
+    border-color: #60a5fa !important;
+}
+#skipBtn svg,
+#skipSetBtn svg {
+    display: block;
+    margin: auto;
 }
 
 #skipSetBtn {
-      background: transparent !important; /* Keep sound btn subtle */
-
-    border-color: #4f46e5 !important;
-    color: #fff !important;
+    background: rgba(79, 70, 229, 0.1) !important;
+    border-color: rgba(79, 70, 229, 0.6) !important;
+    color: #818cf8 !important;
+}
+#skipSetBtn:hover {
+    background: rgba(79, 70, 229, 0.2) !important;
+    border-color: #818cf8 !important;
 }
 
 #endBtn {
-      background: transparent !important; /* Keep sound btn subtle */
-
-    border-color: #dc2626 !important;
-    color: #fff !important;
+    background: rgba(220, 38, 38, 0.1) !important;
+    border-color: rgba(220, 38, 38, 0.6) !important;
+    color: #fca5a5 !important;
+}
+#endBtn:hover {
+    background: rgba(220, 38, 38, 0.2) !important;
+    border-color: #fca5a5 !important;
 }
 
-/* 3. Sound Button Styling */
+#leaveBtn {
+    background: rgba(239, 68, 68, 0.08) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    color: #fca5a5 !important;
+}
+#leaveBtn:hover {
+    background: rgba(239, 68, 68, 0.18) !important;
+    border-color: #fca5a5 !important;
+}
+
+/* Rules button (book icon) and label buttons – same interactive look */
+.top-right .header-icon-btn:has(img) {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+.top-right .header-icon-btn:has(img):hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+}
+.top-right .header-icon-btn:has(img) img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+.top-right .header-icon-btn:has(img):hover img {
+    transform: scale(1.05);
+}
+
+#lateJoinBtn.header-icon-btn-label,
+.header-icon-btn.header-icon-btn-label {
+    min-width: auto !important;
+    padding: 0 10px !important;
+    border-radius: 8px !important;
+}
+#lateJoinBtn:hover,
+.header-icon-btn-label:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Sound button – interactive, same size */
 #toggleMuteBtn {
-    background: transparent !important; /* Keep sound btn subtle */
-    border: 1px solid rgba(255,255,255,0.3) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+#toggleMuteBtn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+#toggleMuteBtn:active {
+    transform: scale(0.96);
 }
 
 #toggleMuteBtn img {
-    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
-    transition: transform 0.2s;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+#toggleMuteBtn:hover img {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
 }
 
 #toggleMuteBtn:active img {
-    transform: scale(0.9);
+    transform: scale(0.92);
 }
 
-/* Muted State (Red Border) */
+/* Muted state */
 #toggleMuteBtn.muted {
-    border-color: #ef4444 !important;
-    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: rgba(239, 68, 68, 0.7) !important;
+    background: rgba(239, 68, 68, 0.12) !important;
+}
+#toggleMuteBtn.muted img {
+    filter: brightness(0.9) sepia(0.3);
 }
 
 
