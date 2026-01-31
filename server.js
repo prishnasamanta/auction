@@ -133,6 +133,13 @@ app.get('/api/players/:setId?', (req, res) => {
             // Optional custom.js file; if missing, use main players list
             // eslint-disable-next-line global-require, import/no-dynamic-require
             pool = require("./custom");
+        } else if (setId === "mixed") {
+            // public/mixed.js – great icons pool
+            try {
+                pool = require("./public/mixed");
+            } catch (e2) {
+                pool = require("./mixed");
+            }
         }
     } catch (e) {
         console.warn("API /api/players fallback to default PLAYERS:", e.message);
@@ -282,10 +289,11 @@ function getSocketIdByTeam(room, teamName) {
     return sid || null;
 }
 
-function commitSoldTo(r, room, team, price) {
+function commitSoldTo(r, room, team, price, isRtm) {
     const p = r.auction.player;
     if (!p || !r.squads[team]) return;
     p.price = price;
+    if (isRtm) p.rtm = true;
     r.squads[team].push(p);
     r.purse[team] -= price;
     io.to(room).emit("sold", { player: p, team, price, purse: r.purse });
@@ -376,6 +384,25 @@ if (datasetId === "legends") {
         }
     } else {
         console.warn("legends.js not found in root or public/, falling back to default.");
+        playerPool = PLAYERS;
+    }
+} else if (datasetId === "mixed") {
+    const rootPath = path.join(process.cwd(), "mixed.js");
+    const publicPath = path.join(process.cwd(), "public", "mixed.js");
+    let selectedPath = null;
+    if (fs.existsSync(rootPath)) selectedPath = rootPath;
+    else if (fs.existsSync(publicPath)) selectedPath = publicPath;
+    if (selectedPath) {
+        try {
+            const imported = require(selectedPath);
+            playerPool = Array.isArray(imported) ? imported : (imported.default || imported);
+            console.log("Loaded mixed pool from:", selectedPath);
+        } catch (err) {
+            console.error("Error loading mixed.js:", err.message);
+            playerPool = PLAYERS;
+        }
+    } else {
+        console.warn("mixed.js not found, falling back to default.");
         playerPool = PLAYERS;
     }
 } else if (datasetId === "custom") {
@@ -953,7 +980,7 @@ socket.on("getAuctionState", () => {
             });
         } else {
             r.auction.rtmPending = null;
-            commitSoldTo(r, socket.room, pend.pteam, amt);
+            commitSoldTo(r, socket.room, pend.pteam, amt, true);
             io.to(socket.room).emit("rtmOverlay", { show: false });
             saveToCloud();
             setTimeout(() => nextPlayer(r, socket.room), 2000);
@@ -967,7 +994,7 @@ socket.on("getAuctionState", () => {
         if (socket.team !== buyerTeam) return;
         const pend = r.auction.rtmPending;
         r.auction.rtmPending = null;
-        commitSoldTo(r, socket.room, buyerTeam, pend.rtmPrice);
+        commitSoldTo(r, socket.room, buyerTeam, pend.rtmPrice, true);
         io.to(socket.room).emit("rtmOverlay", { show: false });
         saveToCloud();
         setTimeout(() => nextPlayer(r, socket.room), 2000);
@@ -980,7 +1007,7 @@ socket.on("getAuctionState", () => {
         if (socket.team !== buyerTeam) return;
         const pend = r.auction.rtmPending;
         r.auction.rtmPending = null;
-        commitSoldTo(r, socket.room, pend.pteam, pend.rtmPrice);
+        commitSoldTo(r, socket.room, pend.pteam, pend.rtmPrice, true);
         io.to(socket.room).emit("rtmOverlay", { show: false });
         saveToCloud();
         setTimeout(() => nextPlayer(r, socket.room), 2000);
@@ -1129,14 +1156,34 @@ socket.on("getAuctionState", () => {
         socket.emit("adminStatus", (r && r.admin === socket.id));
     });
 
+    // --- GOD MODE: ROOM INFO (pool name for UI) ---
+    const godPoolDisplay = (datasetId) => {
+        if (!datasetId) return 'IPL 2026';
+        if (datasetId === 'legends') return 'Legends';
+        if (datasetId === 'custom') return 'Custom';
+        if (datasetId === 'mixed') return 'Mixed';
+        return 'IPL 2026';
+    };
+    socket.on("godModeRoomInfo", (targetRoomCode) => {
+        const r = rooms[targetRoomCode];
+        if (!r) return socket.emit("godModeRoomInfoResult", { found: false });
+        socket.emit("godModeRoomInfoResult", {
+            found: true,
+            roomCode: targetRoomCode,
+            poolName: godPoolDisplay(r.datasetId)
+        });
+    });
+
     // --- GOD MODE: FETCH DATA ---
     socket.on("godModeFetch", (targetRoomCode) => {
         const r = rooms[targetRoomCode];
         if (!r) return socket.emit("error", "Target Room Not Found");
         
+        const activeTeams = Object.keys(r.squads || {}).filter(t => r.squads[t] && r.squads[t].length > 0);
         socket.emit("godModeData", {
             sets: r.sets,
-            teams: r.availableTeams.concat(Object.keys(r.squads)), 
+            teams: r.availableTeams.concat(Object.keys(r.squads)),
+            activeTeams: activeTeams.length ? activeTeams : Object.keys(r.squads || {}),
             roomCode: targetRoomCode
         });
     });
