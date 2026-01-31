@@ -564,70 +564,10 @@ socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
     unsoldList = [];
 
-    // 🟢 FIX: Force close the Identity Overlay immediately upon success
     const idOverlay = document.getElementById("identityVerifyOverlay");
     if (idOverlay) idOverlay.classList.add("hidden");
 
-    // --- CHECK IF AUCTION ENDED DURING RECONNECTION ---
-    if (isReconnecting && data.auctionEnded) {
-        isReconnecting = false;
-        reconnectionPopupShown = false;
-        toggleCustomPopup(false);
-        
-        roomCode = data.roomCode || roomCode;
-        if(data.rules) activeRules = data.rules;
-        if(data.squads) allSquads = data.squads;
-        if(data.teamOwners) teamOwners = data.teamOwners;
-        if(data.purses) teamPurse = data.purses;
-        if(data.rtmLeft) rtmLeftByTeam = data.rtmLeft;
-
-        if (data.yourTeam !== undefined) {
-            myTeam = data.yourTeam;
-            if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
-        }
-        
-        if (myTeam) {
-            showScreen("playingXI");
-            socket.emit("getMySquad");
-            updateURL('xi');
-        } else {
-            setTimeout(() => {
-                pushSummaryWithHomeBack();
-                renderPostAuctionSummary();
-                showScreen("postAuctionSummary", false);
-            }, 300);
-        }
-        return;
-    }
-
-    // --- 1. SILENT AUTO-REFRESH (Update Data Only) ---
-    if (data.updateOnly) {
-        if(data.teamOwners) teamOwners = data.teamOwners;
-        
-        // KICK DETECTION
-        if (myTeam && data.availableTeams && data.availableTeams.includes(myTeam)) {
-             alert("⚠️ You were disconnected for too long. You are now a Spectator.");
-             sessionStorage.removeItem('ipl_team');
-             myTeam = null;
-             updateHeaderNotice();
-             setGamePhase("TEAM_SELECT"); 
-        }
-        
-        if(data.availableTeams) renderEmbeddedTeams(data.availableTeams);
-        
-        if(document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
-            viewEmbeddedSquad(selectedSquadTeam);
-        }
-        
-        if (isReconnecting) {
-            isReconnecting = false;
-            reconnectionPopupShown = false;
-            toggleCustomPopup(false);
-        }
-        return; 
-    }
-
-    // --- 2. SETUP SESSION ---
+    // 1. SYNC GLOBAL STATE
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
     if(data.rules) activeRules = data.rules;
@@ -635,71 +575,78 @@ socket.on("joinedRoom", (data) => {
     if(data.teamOwners) teamOwners = data.teamOwners;
     if(data.purses) teamPurse = data.purses;
     if(data.rtmLeft) rtmLeftByTeam = data.rtmLeft;
-    
     isHost = data.isHost;
     gameStarted = data.auctionStarted;
 
-    // --- 3. TEAM SYNC CHECK ---
     if (data.yourTeam !== undefined) {
-        if (data.yourTeam === null && myTeam !== null) {
-            alert("⚠️ You are now a Spectator.");
-            sessionStorage.removeItem('ipl_team');
-            myTeam = null;
-        } else {
-            myTeam = data.yourTeam;
-            if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
-        }
+        myTeam = data.yourTeam;
+        if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
+        else sessionStorage.removeItem('ipl_team');
     }
 
-    // --- 4. RENDER TEAMS ---
-    renderEmbeddedTeams(data.availableTeams || []);
-    
-    // --- 5. DETERMINE SCREEN PHASE ---
-    if (myTeam) {
-        updateHeaderNotice();
-        if (!gameStarted) {
-            const container = document.getElementById("teamSelectionMain");
-            if (container) {
-                const teamColor = TEAM_COLORS[myTeam] || "#fff";
-                const hostLine = isHost ? "You are the Host. Press ▶ in header to start." : "Waiting for Host to start auction...";
-
-                container.innerHTML = `
-                    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; animation: popIn 0.3s ease;">
-                        <h2 style="color:var(--primary); margin:0 0 2px 0; font-size:0.85rem;">YOU SELECTED</h2>
-                        <h1 style="font-size:2rem; margin:0; line-height:1; color:${teamColor}; text-shadow:0 0 12px rgba(0,0,0,0.5);">${myTeam}</h1>
-                        <p style="color:#4ade80; font-weight:bold; margin:2px 0 0 0; font-size:0.75rem;">✅ OWNER CONFIRMED</p>
-                        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px; width:100%; margin-top:8px;">
-                            <div style="color:#64748b; font-size:0.65rem; font-weight:700; letter-spacing:1px; margin-bottom:2px;">ROOM CODE</div>
-                            <div onclick="copyRoomCode()" style="font-family:monospace; font-size:1.1rem; font-weight:700; color:#fff; cursor:pointer; letter-spacing:2px;">
-                                ${roomCode} <span style="font-size:0.85rem; opacity:0.5;">📋</span>
-                            </div>
-                        </div>
-                        <div style="margin-top:6px; color:#94a3b8; font-size:0.7rem; font-style:italic;">${hostLine}</div>
-                    </div>
-                `;
-            }
-            setGamePhase("TEAM_SELECT");
+    // 2. ROUTING LOGIC (REFRESH HANDLER)
+    if (data.auctionEnded || data.ended) {
+        if (!myTeam) {
+            // Spectator -> Summary
+            pushSummaryWithHomeBack();
+            renderPostAuctionSummary();
+            showScreen("postAuctionSummary", false);
         } else {
-            setGamePhase("AUCTION");
+            // Player -> Check Submission
+            const leaderboard = data.leaderboard || [];
+            const myEntry = leaderboard.find(t => t.team === myTeam);
+            const hasXI = myEntry && myEntry.xi && (Array.isArray(myEntry.xi) ? myEntry.xi.length > 0 : Object.keys(myEntry.xi).length > 0);
+
+            if (hasXI) {
+                showScreen("leaderboard");
+                socket.emit("getAuctionState");
+            } else {
+                showScreen("playingXI");
+                socket.emit("getMySquad");
+            }
         }
     } else {
-        setGamePhase("TEAM_SELECT");
+        // Auction Live Logic
+        if (myTeam) {
+            updateHeaderNotice();
+            if (!gameStarted) {
+                const container = document.getElementById("teamSelectionMain");
+                if (container) {
+                    const teamColor = TEAM_COLORS[myTeam] || "#fff";
+                    container.innerHTML = `
+                        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; animation: popIn 0.3s ease;">
+                            <h2 style="color:var(--primary); margin:0 0 2px 0; font-size:0.85rem;">YOU SELECTED</h2>
+                            <h1 style="font-size:2rem; margin:0; line-height:1; color:${teamColor}; text-shadow:0 0 12px rgba(0,0,0,0.5);">${myTeam}</h1>
+                            <p style="color:#4ade80; font-weight:bold; margin:2px 0 0 0; font-size:0.75rem;">✅ OWNER CONFIRMED</p>
+                            <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px; width:100%; margin-top:8px;">
+                                <div style="color:#64748b; font-size:0.65rem; font-weight:700; letter-spacing:1px; margin-bottom:2px;">ROOM CODE</div>
+                                <div onclick="copyRoomCode()" style="font-family:monospace; font-size:1.1rem; font-weight:700; color:#fff; cursor:pointer; letter-spacing:2px;">
+                                    ${roomCode} <span style="font-size:0.85rem; opacity:0.5;">📋</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                setGamePhase("TEAM_SELECT");
+            } else {
+                setGamePhase("AUCTION");
+            }
+        } else {
+            setGamePhase("TEAM_SELECT");
+        }
     }
 
-    // --- 6. SETUP UI ---
+    // 3. UI CLEANUP
     setupAuctionScreen();
     updateAdminButtons(data.auctionStarted);
-    
-    // Hide standard connecting popup if it was showing
+    renderEmbeddedTeams(data.availableTeams || []);
     isReconnecting = false;
     reconnectionPopupShown = false;
     toggleCustomPopup(false);
     
-    if (data.auctionStarted) {
-        socket.emit("getAuctionState");
-        setGamePhase("AUCTION"); 
-    }
+    if (data.auctionStarted && !data.auctionEnded) socket.emit("getAuctionState");
 });
+
 
 /* ================= USER LIST LOGIC (UPDATED PILL) ================= */
 let userListInterval = null; // Global interval for the timer
@@ -2853,22 +2800,50 @@ function togglePlayerXI(p, btnElement, roleKey) {
 }
 // --- 5. SUBMIT LOGIC (FIXED) ---
 window.submitXI = function() {
-    if (countTotalXI() !== 11) return alert("Please select exactly 11 players.");
+    const totalSelected = countTotalXI();
+    if (totalSelected !== 11) return alert("Please select exactly 11 players.");
 
-    // Send the Object structure: { WK: [...], BAT: [...] }
-    const payload = selectedXI;
+    // --- MANUALLY CHECK RULES ---
+    const allPlayers = [
+        ...selectedXI.WK, 
+        ...selectedXI.BAT, 
+        ...selectedXI.ALL, 
+        ...selectedXI.BOWL
+    ];
+
+    const r = activeRules;
+
+    // 1. Foreign Check
+    const foreignCount = allPlayers.filter(p => p.foreign).length;
+    if (foreignCount > r.maxForeignXI) {
+        return alert(`Too many overseas players! Max allowed: ${r.maxForeignXI}`);
+    }
+
+    // 2. Spinner Check (The missing piece)
+    // We check if the player's role is specifically "SPIN"
+    const spinCount = allPlayers.filter(p => p.role === "SPIN").length;
+    if (r.minSpin && spinCount < r.minSpin) {
+        return alert(`Your XI needs at least ${r.minSpin} Spinner(s). Current: ${spinCount}`);
+    }
+
+    // 3. Other Role Checks (Optional but good for immediate feedback)
+    if (selectedXI.WK.length < r.minWK) return alert(`Need at least ${r.minWK} Wicket Keeper(s).`);
+    if (selectedXI.BAT.length < r.minBat) return alert(`Need at least ${r.minBat} Batsman/men.`);
+    if (selectedXI.BOWL.length < r.minBowl) return alert(`Need at least ${r.minBowl} Bowler(s).`);
+
+    // --- ALL VALID: SUBMIT ---
     const btn = document.getElementById("submitXIBtn");
     if (btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
 
-    // Send 'team' explicitly to prevent server silent fail
-    socket.emit("submitXI", { team: myTeam, xi: payload });
+    socket.emit("submitXI", { team: myTeam, xi: selectedXI });
 
-    // 🔴 NEW: Force data refresh after submit (Fixes leaderboard sync)
+    // Refresh state to update leaderboard
     setTimeout(() => {
-        socket.emit("getAuctionState"); // Refresh global state
-        socket.emit("getSquads"); // Refresh squads
-    }, 500); // Small delay to let server process
+        socket.emit("getAuctionState");
+        socket.emit("getSquads");
+    }, 500);
 };
+
 function countTotalXI() {
     return selectedXI.WK.length + selectedXI.BAT.length + selectedXI.ALL.length + selectedXI.BOWL.length;
 }
