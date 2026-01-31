@@ -30,13 +30,30 @@ const TEAM_COLORS = {
     RR: "#fb7185", DC: "#60a5fa", SRH: "#fb923c", PBKS: "#ef4444",
     GT: "#0ea5e9", LSG: "#22c55e"
 };
-// --- SOUNDS ---
+// --- SOUNDS (shared AudioContext for mobile – resume on first interaction) ---
 const soundTick = new Audio("/sounds/beep.mp3");
-function playTimerBeep() {
+let sharedAudioCtx = null;
+function getAudioContext() {
+    if (isMuted) return null;
     try {
         const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
+        if (!Ctx) return null;
+        if (!sharedAudioCtx || sharedAudioCtx.state === "closed") {
+            sharedAudioCtx = new Ctx();
+        }
+        if (sharedAudioCtx.state === "suspended") {
+            sharedAudioCtx.resume();
+        }
+        return sharedAudioCtx;
+    } catch (_) { return null; }
+}
+function unlockAudioOnInteraction() {
+    getAudioContext();
+}
+function playTimerBeep() {
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -51,9 +68,8 @@ function playTimerBeep() {
 }
 function playUnsoldSound() {
     try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
+        const ctx = getAudioContext();
+        if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -66,13 +82,12 @@ function playUnsoldSound() {
         osc.frequency.setValueAtTime(294, ctx.currentTime + 0.16);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.25);
-    } catch (_) { /* fallback silent */ }
+    } catch (_) { safePlay(soundTick); }
 }
 function playBidSound() {
     try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
+        const ctx = getAudioContext();
+        if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -84,13 +99,12 @@ function playBidSound() {
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.12);
-    } catch (_) { /* fallback silent */ }
+    } catch (_) { safePlay(soundTick); }
 }
 function playSoldSound() {
     try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
+        const ctx = getAudioContext();
+        if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -103,7 +117,7 @@ function playSoldSound() {
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.2);
-    } catch (_) { /* fallback silent */ }
+    } catch (_) { safePlay(soundTick); }
 }
 /* ================================================= */
 /* 🌐 URL ROUTING & NAVIGATION MANAGER */
@@ -165,6 +179,15 @@ function safePlay(audioObj) {
         });
     }
 }
+
+// Unlock AudioContext on first user interaction (mobile)
+function onceUnlockAudio() {
+    unlockAudioOnInteraction();
+    document.removeEventListener("click", onceUnlockAudio);
+    document.removeEventListener("touchstart", onceUnlockAudio);
+}
+document.addEventListener("click", onceUnlockAudio, { passive: true });
+document.addEventListener("touchstart", onceUnlockAudio, { passive: true });
 
 /* ================================================= */
 /* 🖱️ EVENT LISTENERS SETUP                          */
@@ -1446,6 +1469,7 @@ socket.on("timer", t => {
 const bidBtn = document.getElementById("bidBtn");
 if(bidBtn) {
     bidBtn.onclick = () => {
+        unlockAudioOnInteraction();
         if(!myTeam) return alert("Select a team first!");
         if(bidBtn.disabled) return;
         socket.emit("bid");
@@ -2470,9 +2494,8 @@ function attachAdminListeners() {
                 const tip = document.createElement("div");
                 tip.className = "skip-tip-popup";
                 tip.textContent = "already a bid placed!";
-                tip.style.cssText = "position:absolute; left:50%; transform:translateX(-50%); top:100%; margin-top:6px; padding:6px 10px; background:rgba(239,68,68,0.7); color:#fff; font-size:0.75rem; white-space:nowrap; border-radius:6px; z-index:3000; pointer-events:none; box-shadow:0 2px 8px rgba(0,0,0,0.3);";
-                skipBtn.style.position = "relative";
-                skipBtn.appendChild(tip);
+                tip.style.cssText = "position:fixed; left:50%; top:55px; transform:translateX(-50%); padding:8px 12px; background:rgba(239,68,68,0.85); color:#fff; font-size:0.75rem; white-space:nowrap; border-radius:8px; z-index:10001; pointer-events:none; box-shadow:0 4px 12px rgba(0,0,0,0.4);";
+                document.body.appendChild(tip);
                 setTimeout(() => { tip.remove(); }, 500);
                 return;
             }
@@ -2632,6 +2655,7 @@ function showScreen(id, updateHistory = true) {
     document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
     const target = document.getElementById(id);
     if (target) target.classList.remove("hidden");
+    if (id === "auctionUI") unlockAudioOnInteraction();
 
     if (!updateHistory) return;
     if (id === 'leaderboard') {
@@ -3180,12 +3204,6 @@ window.openCustomBuilder = async function() {
     listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Loading Database...</div>';
     if (countEl) countEl.textContent = "0";
     customSelectedIndexes.clear();
-    const autoEl = document.getElementById("autoSelectPoolToggle");
-    const ratingsEl = document.getElementById("useRatingsToggle");
-    if (autoEl && ratingsEl) {
-        ratingsEl.disabled = !autoEl.checked;
-        if (!autoEl.checked) ratingsEl.checked = false;
-    }
 
     try {
         // Try dedicated custom pool first, then fallback to default players
@@ -3197,20 +3215,27 @@ window.openCustomBuilder = async function() {
         customAllPlayers = json.players || [];
         const autoSelectEl = document.getElementById("autoSelectPoolToggle");
         if (autoSelectEl && autoSelectEl.checked && customAllPlayers.length > 0) {
+            let namesToSelect = [];
             try {
                 const mixedRes = await fetch("/api/players/mixed");
                 if (mixedRes.ok) {
                     const mixedJson = await mixedRes.json();
-                    const mixedNames = (mixedJson.players || []).map(pp => (pp.name || "").trim().toLowerCase());
-                    customAllPlayers.forEach((p, i) => {
-                        if (mixedNames.includes((p.name || "").trim().toLowerCase())) customSelectedIndexes.add(i);
-                    });
+                    namesToSelect = (mixedJson.players || []).map(pp => (pp.name || "").trim().toLowerCase());
                 }
-                if (customSelectedIndexes.size === 0) {
-                    const toSelect = Math.min(18, customAllPlayers.length);
-                    for (let i = 0; i < toSelect; i++) customSelectedIndexes.add(i);
+                if (namesToSelect.length === 0) {
+                    const defaultRes = await fetch("/api/players");
+                    if (defaultRes.ok) {
+                        const defaultJson = await defaultRes.json();
+                        namesToSelect = (defaultJson.players || []).map(pp => (pp.name || "").trim().toLowerCase());
+                    }
                 }
-            } catch (_) {
+            } catch (_) { /* ignore */ }
+            if (namesToSelect.length > 0) {
+                customAllPlayers.forEach((p, i) => {
+                    if (namesToSelect.includes((p.name || "").trim().toLowerCase())) customSelectedIndexes.add(i);
+                });
+            }
+            if (customSelectedIndexes.size === 0) {
                 const toSelect = Math.min(18, customAllPlayers.length);
                 for (let i = 0; i < toSelect; i++) customSelectedIndexes.add(i);
             }
@@ -3224,28 +3249,52 @@ window.openCustomBuilder = async function() {
 };
 
 window.toggleAutoSelectPool = function() {
+    // Auto select and Ratings are independent.
     const autoEl = document.getElementById("autoSelectPoolToggle");
-    const ratingsEl = document.getElementById("useRatingsToggle");
-    if (!autoEl || !ratingsEl) return;
-    if (autoEl.checked) {
-        ratingsEl.disabled = false;
-        ratingsEl.checked = true;
-    } else {
-        ratingsEl.checked = false;
-        ratingsEl.disabled = true;
-    }
-    if (typeof toggleRatingVisibility === "function") toggleRatingVisibility();
+    const overlay = document.getElementById("customBuilderOverlay");
+    if (!autoEl || !overlay || overlay.classList.contains("hidden") || !customAllPlayers.length) return;
+    if (!autoEl.checked) return;
+    (async function() {
+        let namesToSelect = [];
+        try {
+            const mixedRes = await fetch("/api/players/mixed");
+            if (mixedRes.ok) {
+                const mixedJson = await mixedRes.json();
+                namesToSelect = (mixedJson.players || []).map(pp => (pp.name || "").trim().toLowerCase());
+            }
+            if (namesToSelect.length === 0) {
+                const defaultRes = await fetch("/api/players");
+                if (defaultRes.ok) {
+                    const defaultJson = await defaultRes.json();
+                    namesToSelect = (defaultJson.players || []).map(pp => (pp.name || "").trim().toLowerCase());
+                }
+            }
+        } catch (_) { /* ignore */ }
+        customSelectedIndexes.clear();
+        if (namesToSelect.length > 0) {
+            customAllPlayers.forEach((p, i) => {
+                if (namesToSelect.includes((p.name || "").trim().toLowerCase())) customSelectedIndexes.add(i);
+            });
+        }
+        if (customSelectedIndexes.size === 0) {
+            const toSelect = Math.min(18, customAllPlayers.length);
+            for (let i = 0; i < toSelect; i++) customSelectedIndexes.add(i);
+        }
+        const countEl = document.getElementById("customCount");
+        if (countEl) countEl.textContent = String(customSelectedIndexes.size);
+        renderCustomPlayerList();
+    })();
 }
 
 window.closeCustomBuilder = function() {
     const overlay = document.getElementById("customBuilderOverlay");
     if (overlay) overlay.classList.add("hidden");
     // Deselect CUSTOM BUILDER dataset card in auth section
-    const createSection = document.getElementById("createSection");
-    if (createSection) {
-        const customCard = createSection.querySelector(".dataset-card[onclick*=\"selectDataset('custom')\"]");
-        if (customCard) customCard.classList.remove("active");
-    }
+    document.querySelectorAll(".dataset-card").forEach(card => {
+        if (card.getAttribute("onclick") && card.getAttribute("onclick").includes("selectDataset('custom'")) {
+            card.classList.remove("active");
+        }
+    });
 };
 
 function renderCustomPlayerList() {
