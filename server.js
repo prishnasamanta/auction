@@ -20,7 +20,6 @@ const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 // --- SERVER STATE ---
 let rooms = {}; // Fast in-memory storage
-let endedRooms = {}; // Summary-only storage for finished auctions
 const disconnectTimers = {};
 
 // --- STATIC FILES ---
@@ -629,35 +628,6 @@ socket.on("getAuctionState", () => {
     // 4. JOIN ROOM (with identity verification for same-name joins)
     socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
-        
-        // Check if room exists in endedRooms (auction finished, room destroyed)
-        if (!room && endedRooms[roomCode]) {
-            const summary = endedRooms[roomCode];
-            socket.join(roomCode);
-            socket.room = roomCode;
-            socket.user = user;
-            // Send summary data and redirect client to summary page
-            socket.emit("joinedRoom", {
-                rules: summary.rules,
-                squads: summary.squads,
-                purses: summary.purse,
-                roomCode: roomCode,
-                isHost: false,
-                auctionStarted: true,
-                availableTeams: [],
-                auctionEnded: true,
-                userCount: 0,
-                history: { chat: [], logs: summary.logs || [] },
-                teamOwners: {},
-                rtmLeft: summary.rtmLeft || {},
-                yourTeam: null,
-                leaderboardData: Object.values(summary.playingXI || {})
-            });
-            // Trigger client to show summary
-            socket.emit("auctionEnded");
-            return;
-        }
-        
         if(!room) return socket.emit("error", "Room not found");
         
         if(room.auctionEnded) {
@@ -1483,22 +1453,6 @@ function endAuction(r, room) {
     io.to(room).emit("auctionEnded");
     sendLog(r, room, "🛑 Auction Ended. Prepare Playing XI.");
     io.to(room).emit("squadData", { squads: r.squads, rtmLeft: r.rtmLeft || {} });
-    
-    // Store summary data for ended room (permanent)
-    endedRooms[room] = {
-        roomCode: room,
-        rules: r.rules,
-        squads: r.squads,
-        purse: r.purse,
-        playingXI: r.playingXI || {},
-        rtmLeft: r.rtmLeft || {},
-        logs: r.logs || [],
-        endedAt: Date.now()
-    };
-    
-    // Destroy room immediately – summary only remains; join redirects to summary
-    delete rooms[room];
-    console.log(`🗑️ Room ${room} destroyed. Summary preserved.`);
     
     saveToCloud();
 }
