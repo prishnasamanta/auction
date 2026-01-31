@@ -9,6 +9,7 @@ let gameStarted = false;
 let lastBidTeam = null;
 let teamPurse = {};
 let allSquads = {};
+let rtmLeftByTeam = {}; // RTM count per team (when rules.rtmEnabled)
 let activeRules = {};
 let selectedXI = { BAT: [], BOWL: [], WK: [], ALL: [] };
 let lastTickSecond = null;
@@ -30,8 +31,43 @@ const TEAM_COLORS = {
 // --- SOUNDS ---
 const soundBid = new Audio("/sounds/bid.mp3");
 const soundHammer = new Audio("/sounds/sold.mp3");
-const soundUnsold = new Audio("/sounds/unsold.mp3");
 const soundTick = new Audio("/sounds/beep.mp3");
+function playTimerBeep() {
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.08);
+    } catch (_) { safePlay(soundTick); }
+}
+function playUnsoldSound() {
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.frequency.setValueAtTime(392, ctx.currentTime);
+        osc.frequency.setValueAtTime(349, ctx.currentTime + 0.08);
+        osc.frequency.setValueAtTime(294, ctx.currentTime + 0.16);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.25);
+    } catch (_) { /* fallback silent */ }
+}
 /* ================================================= */
 /* 🌐 URL ROUTING & NAVIGATION MANAGER */
 /* ================================================= */
@@ -135,33 +171,31 @@ function setupEventListeners() {
 
     // 3. Join Room Button
     if (joinBtn) {
-        joinBtn.onclick = (e) => {
+        const doJoin = (e) => {
             if (e) e.preventDefault();
             const rCode = document.getElementById('code').value.trim().toUpperCase();
             const uName = document.getElementById('username').value.trim();
 
-            // --- GOD MODE TRAP ---
             if (rCode === "1234") {
                 openGodModeSetup();
                 return;
             }
-
             if (!uName) return alert("Please enter your name!");
             if (!rCode) return alert("Please enter a Room Code!");
             if (rCode.length !== 5) return alert("Room Code must be 5 characters!");
 
-            // Visual Feedback
             joinBtn.innerText = "Joining...";
             joinBtn.disabled = true;
-
             username = uName;
             roomCode = rCode;
             sessionStorage.setItem('ipl_room', roomCode);
             sessionStorage.setItem('ipl_user', username);
-
             console.log(`🚀 Sending join request: ${username} -> ${roomCode}`);
             socket.emit("joinRoom", { roomCode, user: username });
         };
+        joinBtn.onclick = doJoin;
+        const codeInput = document.getElementById('code');
+        if (codeInput) codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doJoin(e); } });
     }
 }
 
@@ -414,7 +448,7 @@ socket.on('publicRoomsList', ({ live, waiting }) => {
             list.forEach(r => {
                 const div = document.createElement('div');
                 div.className = `room-tile ${type}`;
-                div.innerHTML = `<span class="r-name">${r.id}</span> <span class="r-count">👤 ${r.count}</span>`;
+                div.innerHTML = `<span class="r-name" title="Room: ${r.id}">${r.poolName || r.id}</span> <span class="r-count">👤 ${r.count}</span>`;
                 div.onclick = () => { document.getElementById('code').value = r.id; };
                 box.appendChild(div);
             });
@@ -464,7 +498,8 @@ socket.on("joinedRoom", (data) => {
         if(data.squads) allSquads = data.squads;
         if(data.teamOwners) teamOwners = data.teamOwners;
         if(data.purses) teamPurse = data.purses;
-        
+        if(data.rtmLeft) rtmLeftByTeam = data.rtmLeft;
+
         if (data.yourTeam !== undefined) {
             myTeam = data.yourTeam;
             if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
@@ -518,6 +553,7 @@ socket.on("joinedRoom", (data) => {
     if(data.squads) allSquads = data.squads;
     if(data.teamOwners) teamOwners = data.teamOwners;
     if(data.purses) teamPurse = data.purses;
+    if(data.rtmLeft) rtmLeftByTeam = data.rtmLeft;
     
     isHost = data.isHost;
     gameStarted = data.auctionStarted;
@@ -1036,7 +1072,8 @@ const saveRulesBtn = document.getElementById("saveRules");
 if(saveRulesBtn) {
     saveRulesBtn.onclick = () => {
         socket.emit("setRules", {
-            maxPlayers: Number(document.getElementById("maxPlayers").value),
+            minSquadSize: Number(document.getElementById("minSquadSize").value) || 18,
+            maxPlayers: Number(document.getElementById("maxPlayers").value) || 24,
             maxForeign: Number(document.getElementById("maxForeign").value),
             purse: Number(document.getElementById("purse").value),
             minBat: Number(document.getElementById("minBat").value),
@@ -1240,6 +1277,14 @@ socket.on("newPlayer", d => {
   
     updatePlayerCard(d.player, d.bid);
     updateBidButton({ bid: d.bid, player: d.player});
+    const timerEl = document.getElementById("timer");
+    if (timerEl) {
+        if (timerAnimId) { cancelAnimationFrame(timerAnimId); timerAnimId = null; }
+        timerEl.classList.remove("two-digit");
+        timerEl.style.setProperty("--timer-progress", "0");
+        timerEl.style.setProperty("--timer-color", "#22c55e");
+        timerEl.style.color = "#22c55e";
+    }
 });
 // --- UPDATED: Render Player Card with Badges ---
 function updatePlayerCard(player, bid) {
@@ -1297,17 +1342,42 @@ function updatePauseBadge(isPaused) {
 }
 
 
+let timerAnimId = null;
+let timerAnimStart = 0;
+let timerAnimFrom = 0;
+let timerAnimTo = 0;
+let timerAnimColor = "#22c55e";
+function animateTimerProgress(timerEl, from, to, color, durationMs) {
+    if (timerAnimId) cancelAnimationFrame(timerAnimId);
+    timerAnimFrom = from;
+    timerAnimTo = to;
+    timerAnimColor = color;
+    timerAnimStart = performance.now();
+    const step = (now) => {
+        const elapsed = now - timerAnimStart;
+        const t = Math.min(elapsed / durationMs, 1);
+        const eased = t; // linear
+        const p = timerAnimFrom + (timerAnimTo - timerAnimFrom) * eased;
+        if (timerEl) timerEl.style.setProperty("--timer-progress", String(p));
+        if (t < 1) timerAnimId = requestAnimationFrame(step);
+    };
+    timerAnimId = requestAnimationFrame(step);
+}
 socket.on("timer", t => {
     const timerEl = document.getElementById("timer");
-    if(timerEl) {
+    if (timerEl) {
         timerEl.innerText = "" + t;
-        // Update snake border progress (0-100% for 10 seconds)
-        const progress = ((10 - t) / 10) * 100;
-        timerEl.style.setProperty('--timer-progress', `${progress}%`);
+        timerEl.classList.toggle("two-digit", t === 10);
+        const targetProgress = Math.min(100, ((11 - t) / 10) * 100);
+        const currentProgress = parseFloat(timerEl.style.getPropertyValue("--timer-progress")) || 0;
+        const color = t > 7 ? "#22c55e" : t > 4 ? "#f59e0b" : "#ef4444";
+        timerEl.style.setProperty("--timer-color", color);
+        timerEl.style.color = color;
+        animateTimerProgress(timerEl, currentProgress, targetProgress, color, 1000);
     }
-    if(auctionLive && !auctionPaused && t <= 3 && t > 0 && t !== lastTickSecond) {
+    if (auctionLive && !auctionPaused && t <= 3 && t > 0 && t !== lastTickSecond) {
         lastTickSecond = t;
-        safePlay(soundTick);
+        playTimerBeep();
     }
 });
 const bidBtn = document.getElementById("bidBtn");
@@ -1377,19 +1447,20 @@ function updateBidButton(state) {
         purseEl.style.display = myTeam ? "inline" : "none";
     }
 
-    // Logic
+    // Increment logic (match server)
     let bidVal = state ? (state.bid || 0) : 0;
-    let increment = 0.05;
-    if (bidVal >= 10) increment = 0.50;
-    else if (bidVal >= 2) increment = 0.20;
-    else if (bidVal >= 1) increment = 0.10;
+    const currentBid = Math.round(bidVal * 100) / 100;
+    const increment =
+        currentBid < 1  ? 0.05 :
+        currentBid < 5  ? 0.10 :
+        currentBid < 10 ? 0.20 :
+        currentBid < 20 ? 0.25 :
+        1.0;
 
-    // UPDATE BUTTON TEXT
-    if(btnText) btnText.innerText = `+ ${increment.toFixed(2)} Cr`;
+    if (btnText) btnText.innerText = `+ ${increment.toFixed(2)} Cr`;
 
-    // Checks
-    if(!myTeam || !auctionLive || auctionPaused) { btn.disabled = true; return; }
-    if(lastBidTeam === myTeam) { btn.disabled = true; return; }
+    if (!myTeam || !auctionLive || auctionPaused) { btn.disabled = true; return; }
+    if (lastBidTeam === myTeam) { btn.disabled = true; return; }
 
     const nextBid = bidVal + increment;
     if(teamPurse && teamPurse[myTeam] !== undefined && teamPurse[myTeam] < nextBid) {
@@ -1423,7 +1494,7 @@ socket.on("sold", d => {
     }
 });
 socket.on("unsold", () => {
-safePlay(soundUnsold);
+    playUnsoldSound();
     showResultStamp("UNSOLD", "PASSED IN", "#f43f5e", true);
 });
 function showResultStamp(title, detail, color, isUnsold) {
@@ -1508,7 +1579,7 @@ socket.on("rtmOffer", ({ player, soldToTeam, soldPrice, timer: timerSec }) => {
         yesNo.style.display = "none";
         amountRow.style.display = "block";
         if (amountIn) amountIn.placeholder = `Min ${(soldPrice + 0.05).toFixed(2)}`;
-        let sec = timerSec || 10;
+        let sec = timerSec ?? 15;
         if (timerEl) timerEl.textContent = sec + "s";
         if (rtmOfferTimerId) clearInterval(rtmOfferTimerId);
         rtmOfferTimerId = setInterval(() => {
@@ -1809,7 +1880,7 @@ window.viewEmbeddedSquad = function(team) {
                     <span style="color:#4ade80; font-weight:bold;">₹${purse.toFixed(2)} Cr</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;">
-                    <span style="color:#ccc;">𐀪 : ${squad.length} | <strong>OS: ${foreignCount}</strong></span>
+                    <span style="color:#ccc;">𐀪 : ${squad.length} | <strong>OS: ${foreignCount}</strong>${activeRules.rtmEnabled ? ` | <strong title="RTMs left for this team">RTM: ${(rtmLeftByTeam[team] != null && rtmLeftByTeam[team] !== '') ? rtmLeftByTeam[team] : (activeRules.rtmPerTeam != null ? activeRules.rtmPerTeam : 0)}</strong>` : ''}</span>
                     <button onclick="downloadSquadImage()" style="cursor:pointer; background:#222; border:1px solid #444; color:#facc15; padding:4px 10px; border-radius:4px;">
                         [⇩]
                     </button>
@@ -1894,17 +1965,17 @@ window.openPlayerProfile = function(playerData, teamName, price) {
     const team = teamName || "Unsold";
     const amount = price ? `₹${price.toFixed(2)} Cr` : "---";
     const teamColor = TEAM_COLORS[team] || "#64748b";
-  
+    const headerLabel = (team === "Unsold" && playerData.pteam) ? `RTM: ${playerData.pteam}` : team;
+
     const html = `
     <div id="playerCardOverlay" class="player-card-overlay" onclick="closePlayerCard(event)">
         <div class="pc-card compact" data-team="${team}" onclick="event.stopPropagation()">
             <div class="pc-bg-layer"></div>
             <div class="pc-content">
                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; z-index:10;">
-                    <span style="font-weight:bold; color:rgba(255,255,255,0.5); font-size:0.9rem;">${team}</span>
+                    <span style="font-weight:bold; color:rgba(255,255,255,0.5); font-size:0.9rem;">${headerLabel}</span>
                     <button onclick="document.getElementById('playerCardOverlay').remove()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">✕</button>
                 </div>
-              
                 <div class="pc-img-box" style="border-color:${teamColor}">
                     <img id="activeCardImg" class="pc-img" alt="${playerData.name}">
                 </div>
@@ -1917,12 +1988,12 @@ window.openPlayerProfile = function(playerData, teamName, price) {
                         <span class="pc-stat-lbl">RATING</span>
                         <span class="pc-stat-val">⭐${playerData.rating}</span>
                     </div>
-                     <div class="pc-stat">
+                    <div class="pc-stat">
                         <span class="pc-stat-lbl">STATUS</span>
                         <span class="pc-stat-val" style="color:${price ? '#4ade80' : '#fff'}">${price ? 'SOLD' : 'UPCOMING'}</span>
                     </div>
                 </div>
-                <div class="pc-price-tag" style="color:${teamColor}">${amount}</div>
+                <div class="pc-price-tag pc-price-tag-below" style="color:${teamColor}">${amount}</div>
             </div>
         </div>
     </div>`;
@@ -2033,15 +2104,14 @@ window.viewPlayerFromCard = function(name, role, rating, isForeign, price, teamN
     openPlayerProfile(playerObj, teamName, price);
 };
 // --- HELPER: Click Handler for Set Players ---
-window.viewSetPlayer = function(name, role, rating, isForeign) {
-    // Construct the player object needed by the profile card
+window.viewSetPlayer = function(name, role, rating, isForeign, pteam) {
     const playerData = {
         name: name,
         role: role,
         rating: rating,
-        foreign: isForeign
+        foreign: isForeign,
+        pteam: (pteam && String(pteam).trim() && String(pteam).trim() !== '--') ? String(pteam).trim() : null
     };
-    // Open profile with no team (null) and no price (null) -> "Normal Background"
     openPlayerProfile(playerData, null, null);
 };
 function renderSetsPanel() {
@@ -2053,17 +2123,22 @@ function renderSetsPanel() {
         <div style="padding:10px;">
             <h2 class="set-title active">🔥 ${activeSet.name} (${activeSet.players.length})</h2>
             <div>
-                ${activeSet.players.map(p => `
+                ${activeSet.players.map(p => {
+                    const pteam = (p.pteam && String(p.pteam).trim()) ? String(p.pteam).trim() : '--';
+                    const esc = (s) => String(s).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                    return `
                     <div class="set-player-row active-p"
                          style="cursor: pointer;"
-                         onclick="viewSetPlayer('${p.name}', '${p.role}', ${p.rating}, ${p.foreign})">
+                         onclick="viewSetPlayer('${esc(p.name)}', '${p.role}', ${p.rating}, ${p.foreign}, '${esc(pteam)}')">
                         <span>${p.name}</span>
-                        <div>
+                        <div style="display:flex; align-items:center; gap:6px;">
                             <span class="sp-role">${p.role}</span>
                             <span class="sp-rating">⭐ ${p.rating}</span>
+                            <span class="set-pteam-badge" title="Previous team / RTM">${pteam}</span>
                         </div>
                     </div>
-                `).join("")}
+                `;
+                }).join("")}
                 ${activeSet.players.length===0 ? '<div style="padding:10px; color:#666; text-align:center;">Set Finished</div>' : ''}
             </div>
     `;
@@ -2073,14 +2148,18 @@ function renderSetsPanel() {
             html += `
                 <h2 class="set-title">📦 ${set.name} (${set.players.length})</h2>
                 <div style="opacity: 0.6;">
-                    ${set.players.map(p => `
+                    ${set.players.map(p => {
+                        const pteam = (p.pteam && String(p.pteam).trim()) ? String(p.pteam).trim() : '--';
+                        const esc = (s) => String(s).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                        return `
                         <div class="set-player-row"
                              style="cursor: pointer;"
-                             onclick="viewSetPlayer('${p.name}', '${p.role}', ${p.rating}, ${p.foreign})">
+                             onclick="viewSetPlayer('${esc(p.name)}', '${p.role}', ${p.rating}, ${p.foreign}, '${esc(pteam)}')">
                             <span>${p.name}</span>
-                            <div><span class="sp-role">${p.role}</span></div>
+                            <div style="display:flex; align-items:center; gap:6px;"><span class="sp-role">${p.role}</span><span class="set-pteam-badge">${pteam}</span></div>
                         </div>
-                    `).join("")}
+                    `;
+                    }).join("")}
                 </div>
             `;
         });
@@ -2090,16 +2169,15 @@ function renderSetsPanel() {
 }
 // --- SQUADS DATA ---
 // --- UPDATED: Socket Listener for Squad Data ---
-socket.on("squadData", squads => {
-    allSquads = squads; // Update global variable
-  
-    // LIVE REFRESH: If the "Squads" tab is currently open, refresh it immediately.
+socket.on("squadData", data => {
+    const squads = data && data.squads ? data.squads : data;
+    const rtmLeft = data && data.rtmLeft ? data.rtmLeft : {};
+    allSquads = squads;
+    rtmLeftByTeam = rtmLeft;
+
     const squadView = document.getElementById('view-squads');
-    if (squadView && !squadView.classList.contains('hidden')) {
-        // Only refresh if we have a selected team
-        if(selectedSquadTeam) {
-            viewEmbeddedSquad(selectedSquadTeam);
-        }
+    if (squadView && !squadView.classList.contains('hidden') && selectedSquadTeam) {
+        viewEmbeddedSquad(selectedSquadTeam);
     }
 });
 // --- ADMIN ---
@@ -2313,17 +2391,29 @@ function updateRulesUI() {
     const r = activeRules;
     const set = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
     set('pop_viewPurse', r.purse);
-    set('pop_viewSquadSize', r.maxPlayers);
+    const minSq = r.minSquadSize != null ? r.minSquadSize : 18;
+    const maxSq = r.maxPlayers != null ? r.maxPlayers : 24;
+    set('pop_viewSquadSize', `${minSq}–${maxSq}`);
     set('pop_viewForeign', r.maxForeign);
+    const rtmBox = document.getElementById('pop_viewRtmBox');
+    const rtmVal = document.getElementById('pop_viewRtm');
+    if (rtmBox && rtmVal) {
+        if (r.rtmEnabled) {
+            rtmBox.style.display = 'block';
+            rtmVal.innerText = r.rtmPerTeam != null ? r.rtmPerTeam : 2;
+        } else {
+            rtmBox.style.display = 'none';
+        }
+    }
     set('pop_viewBat', r.minBat);
     set('pop_viewBowl', r.minBowl);
     set('pop_viewWK', r.minWK);
     set('pop_viewAR', r.minAll);
     set('pop_viewSpin', r.minSpin);
     set('pop_viewForeignXI', r.maxForeignXI);
-  
+
     set('viewPurse', r.purse);
-    set('viewSquadSize', r.maxPlayers);
+    set('viewSquadSize', `${minSq}–${maxSq}`);
     set('viewForeign', r.maxForeign);
 }
 function showScreen(id, updateHistory = true) {
@@ -2405,8 +2495,9 @@ socket.on("mySquad", ({ squad, rules }) => {
     // Safety Check
     if(!container || !squad) return;
 
-    // 3. DISQUALIFICATION CHECK (The Fix)
-    if (squad.length < 11) {
+    // 3. DISQUALIFICATION CHECK (min squad size from rules)
+    const minSquadSize = (activeRules && activeRules.minSquadSize != null) ? activeRules.minSquadSize : 11;
+    if (squad.length < minSquadSize) {
         // Hide Selection UI
         container.innerHTML = ""; 
         if(placeholder) placeholder.classList.add("hidden");
@@ -2414,30 +2505,27 @@ socket.on("mySquad", ({ squad, rules }) => {
         if(submitBtn) submitBtn.classList.add("hidden"); 
         if(saveBtn) saveBtn.classList.add("hidden");
         
-        // Hide button row when disqualified
         const xiButtonRow = document.getElementById("xiButtonRow");
         if(xiButtonRow) xiButtonRow.classList.add("hidden");
 
-        // Show DQ Message
         if(statusDiv) {
             statusDiv.classList.remove("hidden");
             statusDiv.innerHTML = `
                 <div style="text-align:center; padding:30px; background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:12px; margin-top:20px;">
                     <h2 style="color:#ef4444; margin:0 0 10px 0; font-size:1.8rem;">❌ DISQUALIFIED</h2>
                     <p style="color:#fff; margin:0 0 5px 0; font-size:1.1rem;">
-                        Squad Size: <b style="color:#fca5a5;">${squad.length}/11</b>
+                        Squad Size: <b style="color:#fca5a5;">${squad.length}/${minSquadSize}</b>
                     </p>
                     <p style="font-size:0.9rem; color:#ccc; margin-bottom:20px;">
-                        You need at least 11 players to form a team.
+                        You need at least ${minSquadSize} players to form a team.
                     </p>
-                    
                     <button onclick="showScreen('leaderboard')" class="primary-btn" style="width:100%; max-width:250px;">
                         🏆 View Leaderboard
                     </button>
                 </div>
             `;
         }
-        return; // STOP HERE
+        return;
     }
 
     // 4. NORMAL STATE (Reset & Render)
@@ -3163,7 +3251,7 @@ function generateFullSquadHTML(teamName, squad, purse, owner, isPopup = false) {
             
             <div class="prem-stats">
                 <div class="stat-badge">💰 ₹${purse.toFixed(2)} Cr</div>
-                <div class="stat-badge">👥 ${squad.length} / 25</div>
+                <div class="stat-badge">👥 ${squad.length} / ${(typeof activeRules !== 'undefined' && activeRules && activeRules.maxPlayers != null) ? activeRules.maxPlayers : 25}</div>
                 <div class="stat-badge">✈️ ${foreignCount} OS</div>
             </div>
         </div>
@@ -3260,54 +3348,47 @@ function loadPlayerImage(imgEl, playerName) {
     }
     tryNext();
 }
-// --- UPDATED: Open Player Card ---
+// --- UPDATED: Open Player Card (price below stat-row; Unsold shows RTM: pteam) ---
 window.openPlayerProfile = function(playerData, teamName, price) {
-    // Remove existing
     const existing = document.getElementById('playerCardOverlay');
     if(existing) existing.remove();
     const team = teamName || "Unsold";
     const amount = price ? `₹${price.toFixed(2)} Cr` : "---";
     const teamColor = TEAM_COLORS[team] || "#64748b";
-  
+    const headerLabel = (team === "Unsold" && playerData.pteam) ? `RTM: ${playerData.pteam}` : team;
+
     const html = `
     <div id="playerCardOverlay" class="player-card-overlay" onclick="closePlayerCard(event)">
         <div class="pc-card compact" data-team="${team}" onclick="event.stopPropagation()">
             <div class="pc-bg-layer"></div>
             <div class="pc-content">
                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; z-index:10;">
-                    <span style="font-weight:bold; color:rgba(255,255,255,0.5); font-size:0.9rem;">${team}</span>
+                    <span style="font-weight:bold; color:rgba(255,255,255,0.5); font-size:0.9rem;">${headerLabel}</span>
                     <button onclick="document.getElementById('playerCardOverlay').remove()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">✕</button>
                 </div>
-              
                 <div class="pc-img-box" style="border-color:${teamColor}">
                     <img id="activeCardImg" class="pc-img" alt="${playerData.name}">
                 </div>
                 <div class="pc-info">
                     <div class="pc-name">${playerData.name}</div>
-                    <div class="pc-role">
-                        ${playerData.foreign ? '✈️' : ''} ${playerData.role}
-                    </div>
+                    <div class="pc-role">${playerData.foreign ? '✈️' : ''} ${playerData.role}</div>
                 </div>
                 <div class="pc-stat-row">
                     <div class="pc-stat">
                         <span class="pc-stat-lbl">RATING</span>
                         <span class="pc-stat-val">⭐${playerData.rating}</span>
                     </div>
-                     <div class="pc-stat">
+                    <div class="pc-stat">
                         <span class="pc-stat-lbl">STATUS</span>
                         <span class="pc-stat-val" style="color:${price ? '#4ade80' : '#fff'}">${price ? 'SOLD' : 'UPCOMING'}</span>
                     </div>
                 </div>
-                <div class="pc-price-tag" style="color:${teamColor}">
-                    ${amount}
-                </div>
+                <div class="pc-price-tag pc-price-tag-below" style="color:${teamColor}">${amount}</div>
             </div>
         </div>
     </div>
     `;
     document.body.insertAdjacentHTML('beforeend', html);
-  
-    // Trigger the smart loader
     const imgEl = document.getElementById('activeCardImg');
     loadPlayerImage(imgEl, playerData.name);
 };
@@ -3355,14 +3436,7 @@ function renderPostAuctionSummary() {
                     ${owner} • <span style="color:#4ade80">₹${purse.toFixed(2)} Cr</span> • ${squad.length} Players
                 </span>
             </div>
-           
             <div style="display:flex; gap:10px; align-items:center;">
-                <button class="secondary-btn"
-                    style="padding:4px 8px; font-size:0.7rem; border-color:#475569;"
-                    onclick="event.stopPropagation(); downloadSquadImage('${team}')">
-                    📸 Save
-                </button>
-               
                 <button class="sum-expand-btn">▼</button>
             </div>
         `;
