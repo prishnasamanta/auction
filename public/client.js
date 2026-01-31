@@ -3086,20 +3086,31 @@ window.editTeam = function() {
     const statusBox = document.getElementById("xiStatus");
     const saveBtn = document.getElementById("saveXIBtn");
     const listDiv = document.getElementById("mySquadList");
+    const xiButtonRow = document.getElementById("xiButtonRow"); // Select the row
 
+    // 1. Show the entire button container row
+    if (xiButtonRow) {
+        xiButtonRow.classList.remove('hidden');
+        xiButtonRow.style.display = "flex"; 
+    }
+
+    // 2. Restore Submit Button state
     if (btn) {
         btn.classList.remove('hidden');
         btn.disabled = false;
         btn.innerText = `Update XI (${countTotalXI()}/11)`;
-        btn.style.background = ""; 
+        btn.style.background = "var(--success)"; // Keep it prominent
+        btn.style.color = "#000";
     }
 
+    // 3. Clear result messages and hide "Save Image"
     if (statusBox) { statusBox.innerHTML = ""; statusBox.classList.add("hidden"); }
     if (saveBtn) saveBtn.classList.add('hidden');
     
-    // 🔴 SHOW LIST AGAIN
+    // 4. Show the player selection list again
     if(listDiv) listDiv.classList.remove("hidden");
 
+    // 5. Re-enable interaction on player buttons
     document.querySelectorAll('.xi-player-btn').forEach(b => {
         b.style.pointerEvents = "auto";
         b.style.opacity = "1";
