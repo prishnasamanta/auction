@@ -22,6 +22,8 @@ let remainingSets = [];
 let viewSetWindow = null;
 let squadWindow = null;
 let selectedSquadTeam = null;
+let unsoldList = [];
+let soldUnsoldTab = "sold";
 // --- CONFIG ---
 const TEAM_COLORS = {
     CSK: "#facc15", MI: "#38bdf8", RCB: "#dc2626", KKR: "#a855f7",
@@ -29,8 +31,6 @@ const TEAM_COLORS = {
     GT: "#0ea5e9", LSG: "#22c55e"
 };
 // --- SOUNDS ---
-const soundBid = new Audio("/sounds/bid.mp3");
-const soundHammer = new Audio("/sounds/sold.mp3");
 const soundTick = new Audio("/sounds/beep.mp3");
 function playTimerBeep() {
     try {
@@ -68,6 +68,43 @@ function playUnsoldSound() {
         osc.stop(ctx.currentTime + 0.25);
     } catch (_) { /* fallback silent */ }
 }
+function playBidSound() {
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(523, ctx.currentTime);
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.12);
+    } catch (_) { /* fallback silent */ }
+}
+function playSoldSound() {
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(392, ctx.currentTime);
+        osc.frequency.setValueAtTime(523, ctx.currentTime + 0.06);
+        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.22, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.2);
+    } catch (_) { /* fallback silent */ }
+}
 /* ================================================= */
 /* 🌐 URL ROUTING & NAVIGATION MANAGER */
 /* ================================================= */
@@ -86,22 +123,30 @@ function updateURL(state) {
         newPath += '/xi';
         pageTitle = `Select XI - ${roomCode}`;
     }
-    // Push to history only if it changed
     if (window.location.pathname !== newPath) {
         window.history.pushState({ page: state, room: roomCode }, pageTitle, newPath);
         document.title = pageTitle;
     }
 }
-// Handle Browser "Back" Button
+// When first showing summary after auction end: push home then summary so Back from summary goes to main
+function pushSummaryWithHomeBack() {
+    if (!roomCode) return;
+    window.history.pushState({ page: 'home' }, 'Main', '/');
+    window.history.pushState({ page: 'summary', room: roomCode }, `Summary - ${roomCode}`, `/room/${roomCode}/summary`);
+    document.title = `Summary - ${roomCode}`;
+}
+// Handle Browser "Back" Button: leaderboard -> summary, summary -> main (home)
 window.onpopstate = function(event) {
     if (event.state) {
-        // Route based on history state
-        if (event.state.page === 'summary') showScreen('postAuctionSummary', false);
+        if (event.state.page === 'home') {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById('landing').classList.remove('hidden');
+            document.title = 'IPL Live Auction';
+        } else if (event.state.page === 'summary') showScreen('postAuctionSummary', false);
         else if (event.state.page === 'leaderboard') showScreen('leaderboard', false);
         else if (event.state.page === 'xi') showScreen('playingXI', false);
         else showScreen('auctionUI', false);
     } else {
-        // Fallback
         window.location.href = "/";
     }
 };
@@ -130,7 +175,11 @@ function setupEventListeners() {
     const joinBtn = document.getElementById("joinBtn");
     const usernameInput = document.getElementById("username");
 
-    // 1. Enter Arena: listen for event from Vite/React landing bundle (or bind button if present)
+    if (usernameInput) {
+        const saved = localStorage.getItem("ipl_user") || sessionStorage.getItem("ipl_user");
+        if (saved) usernameInput.value = saved;
+    }
+
     function goToAuth() {
         const landing = document.getElementById("landing");
         const auth = document.getElementById("auth");
@@ -138,6 +187,10 @@ function setupEventListeners() {
         if (auth) auth.classList.remove("hidden");
         document.body.style.overflow = "hidden";
         if (typeof switchAuthTab === "function") switchAuthTab("join");
+        if (usernameInput) {
+            const saved = localStorage.getItem("ipl_user") || sessionStorage.getItem("ipl_user");
+            if (saved) usernameInput.value = saved;
+        }
         if (window.location.pathname !== "/room") {
             window.history.pushState({ page: "room" }, "Join Room", "/room");
         }
@@ -161,6 +214,7 @@ function setupEventListeners() {
 
             username = uName;
             sessionStorage.setItem('ipl_user', username);
+            localStorage.setItem('ipl_user', username);
             
             // Emit creation event with selected dataset
             const datasetIdInput = document.getElementById('selectedSetId');
@@ -190,6 +244,7 @@ function setupEventListeners() {
             roomCode = rCode;
             sessionStorage.setItem('ipl_room', roomCode);
             sessionStorage.setItem('ipl_user', username);
+            localStorage.setItem('ipl_user', username);
             console.log(`🚀 Sending join request: ${username} -> ${roomCode}`);
             socket.emit("joinRoom", { roomCode, user: username });
         };
@@ -267,13 +322,11 @@ if (!result.active) {
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("auctionUI").classList.add("hidden");
     
-    // 3. Render Summary
+    // 3. Render Summary and set history so Back goes to main
     document.getElementById("postAuctionSummary").classList.remove("hidden");
     renderPostAuctionSummary();
-    
-    // 4. Update URL
-    updateURL('summary');
-    return; // Stop here, don't connect socket
+    pushSummaryWithHomeBack();
+    return;
 }
             // SCENARIO C: AUCTION LIVE (Proceed to Login)
             console.log("Room Active, proceeding to login...");
@@ -310,6 +363,7 @@ if (!result.active) {
             createBtn.disabled = true;
             username = uName;
             sessionStorage.setItem('ipl_user', username);
+            localStorage.setItem('ipl_user', username);
             const datasetIdInput = document.getElementById('selectedSetId');
             const datasetId = datasetIdInput ? datasetIdInput.value : 'ipl2026';
             socket.emit("createRoom", { user: username, isPublic: isPublic, datasetId });
@@ -336,6 +390,7 @@ if (!result.active) {
             roomCode = rCode;
             sessionStorage.setItem('ipl_room', roomCode);
             sessionStorage.setItem('ipl_user', username);
+            localStorage.setItem('ipl_user', username);
           
             console.log(`🚀 Sending join request: ${username} -> ${roomCode}`);
             socket.emit("joinRoom", { roomCode, user: username });
@@ -378,10 +433,9 @@ function updateBrowserURL(code) {
     }
 }
 window.switchAuthTab = function(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab' + (tab === 'join' ? 'Join' : 'Create')).classList.add('active');
-  
-    if(tab === 'create') {
+    if (tab === 'create') {
         document.getElementById('createSection').classList.remove('hidden');
         document.getElementById('joinSection').classList.add('hidden');
     } else {
@@ -398,22 +452,21 @@ window.exitToHome = function() {
         window.location.href = "/";
     }
 };
-// --- 2. BACK FROM LEADERBOARD (Fixes Empty Summary) ---
+// --- 2. BACK FROM LEADERBOARD: go to summary (replace state so summary back -> main)
 window.goBackFromLeaderboard = function() {
-    // If Auction Ended -> Go to Summary & RENDER IT
-    if (document.getElementById('postAuctionSummary') && !document.getElementById('postAuctionSummary').classList.contains('hidden')) {
-        renderPostAuctionSummary(); // <--- FIX: Force re-render
-        showScreen('postAuctionSummary');
-    }
-    // If Player in Game -> Go to XI Screen
-    else if (myTeam && !document.getElementById('playingXI').classList.contains('hidden')) {
-        showScreen('playingXI');
-    }
-    // Default Fallback (Spectator/End Game)
-    else {
+    if (roomCode && window.location.pathname === `/room/${roomCode}/leaderboard`) {
         renderPostAuctionSummary();
-        showScreen('postAuctionSummary');
+        showScreen('postAuctionSummary', false);
+        window.history.replaceState({ page: 'summary', room: roomCode }, `Summary - ${roomCode}`, `/room/${roomCode}/summary`);
+        document.title = `Summary - ${roomCode}`;
+        return;
     }
+    if (myTeam && document.getElementById('playingXI') && !document.getElementById('playingXI').classList.contains('hidden')) {
+        showScreen('playingXI');
+        return;
+    }
+    renderPostAuctionSummary();
+    showScreen('postAuctionSummary', false);
 };
 window.shareRoomLink = async function() {
     const url = window.location.href;
@@ -469,11 +522,15 @@ socket.on("roomCreated", code => {
     setupAuctionScreen();
     document.getElementById("rulesScreen").classList.remove("hidden");
     updateBrowserURL(code);
-    
-    // If host prepared a custom player pool before creating the room,
-    // send it now so the server can generate sets from that subset.
+
+    // Hide RTM row when Legends pool is selected (Legends = no RTM)
     const datasetInput = document.getElementById("selectedSetId");
     const activeDataset = datasetInput ? datasetInput.value : "ipl2026";
+    const rtmRow = document.querySelector(".rule-row-rtm");
+    const rtmCountRow = document.getElementById("rtmCountRow");
+    if (rtmRow) rtmRow.style.display = activeDataset === "legends" ? "none" : "";
+    if (rtmCountRow) rtmCountRow.style.display = activeDataset === "legends" ? "none" : (document.getElementById("rtmEnabled").checked ? "flex" : "none");
+
     if (activeDataset === "custom" && Array.isArray(window.__customSelectedPlayers) && window.__customSelectedPlayers.length > 0) {
         socket.emit("saveCustomSet", window.__customSelectedPlayers);
     }
@@ -482,6 +539,7 @@ socket.on("roomCreated", code => {
 /* ================= ROOM STATE LOGIC (FIXED) ================= */
 socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
+    unsoldList = [];
 
     // 🟢 FIX: Force close the Identity Overlay immediately upon success
     const idOverlay = document.getElementById("identityVerifyOverlay");
@@ -511,9 +569,9 @@ socket.on("joinedRoom", (data) => {
             updateURL('xi');
         } else {
             setTimeout(() => {
+                pushSummaryWithHomeBack();
                 renderPostAuctionSummary();
-                showScreen("postAuctionSummary");
-                updateURL('summary');
+                showScreen("postAuctionSummary", false);
             }, 300);
         }
         return;
@@ -737,11 +795,10 @@ socket.on("roomUsersUpdate", (data) => {
 // --- COMMAND CENTER LOGIC ---
 // 1. Switch Tabs (Sets / Feed / Squads)
 window.switchCcTab = function(tabName) {
-    // A. Update Buttons
     const buttons = document.querySelectorAll('.cc-tab-btn');
     buttons.forEach(b => {
         b.classList.remove('active');
-        if(b.innerText.toLowerCase().includes(tabName)) b.classList.add('active');
+        if (b.getAttribute('data-tab') === tabName) b.classList.add('active');
     });
     // B. Show View
     document.querySelectorAll('.cc-view').forEach(v => v.classList.add('hidden'));
@@ -798,6 +855,12 @@ function setupAuctionScreen() {
 }
 
 socket.on("error", msg => {
+    if (godModeFetchPending && document.getElementById("godPanel") && !document.getElementById("godPanel").classList.contains("hidden")) {
+        godModeFetchPending = false;
+        const notFoundEl = document.getElementById("godRoomNotFound");
+        if (notFoundEl) { notFoundEl.classList.remove("hidden"); notFoundEl.textContent = msg || "Room not found"; }
+        return;
+    }
     alert("❌ " + msg);
     if(msg.includes("not found") || msg.includes("closed") || msg.includes("expired")) {
         sessionStorage.clear();
@@ -1159,14 +1222,14 @@ socket.on("auctionState", (state) => {
             socket.emit("getMySquad");
             updateURL('xi');
         } else {
-            // Spectator -> Go to Summary
+            // Spectator -> Go to Summary (push home so Back goes to main)
             setTimeout(() => {
+                pushSummaryWithHomeBack();
                 renderPostAuctionSummary();
-                showScreen("postAuctionSummary");
-                updateURL('summary');
+                showScreen("postAuctionSummary", false);
             }, 300);
         }
-        return; // Don't update UI for ended auction
+        return;
     }
     
     // If reconnecting and auction is still active, hide popup
@@ -1389,7 +1452,7 @@ if(bidBtn) {
     };
 }
 socket.on("bidUpdate", data => {
-    safePlay(soundBid);
+    playBidSound();
     currentBid = data.bid;
     document.getElementById("bid").innerText = `₹${data.bid.toFixed(2)} Cr`;
     lastBidTeam = data.team;
@@ -1440,14 +1503,12 @@ function updateBidButton(state) {
     const purseEl = document.getElementById("bidPurseText");
     const mySquad = allSquads[myTeam] || [];
 
-    // Purse in top row (playerMeta), small green
     if (purseEl) {
         const purse = myTeam && teamPurse[myTeam] !== undefined ? teamPurse[myTeam] : 0;
         purseEl.textContent = `₹${purse.toFixed(2)} Cr`;
         purseEl.style.display = myTeam ? "inline" : "none";
     }
 
-    // Increment logic (match server)
     let bidVal = state ? (state.bid || 0) : 0;
     const currentBid = Math.round(bidVal * 100) / 100;
     const increment =
@@ -1457,46 +1518,137 @@ function updateBidButton(state) {
         currentBid < 20 ? 0.25 :
         1.0;
 
-    if (btnText) btnText.innerText = `+ ${increment.toFixed(2)} Cr`;
+    function setButtonState(disabled, subText) {
+        if (btn) btn.disabled = disabled;
+        if (btnText) {
+            btnText.innerText = subText;
+            btnText.style.fontSize = disabled && subText ? "0.7rem" : "0.75rem";
+            btnText.style.opacity = disabled && subText ? "1" : "0.8";
+        }
+    }
 
-    if (!myTeam || !auctionLive || auctionPaused) { btn.disabled = true; return; }
-    if (lastBidTeam === myTeam) { btn.disabled = true; return; }
+    if (!myTeam || !auctionLive || auctionPaused) { setButtonState(true, ""); return; }
+    if (lastBidTeam === myTeam) { setButtonState(true, ""); return; }
 
     const nextBid = bidVal + increment;
-    if(teamPurse && teamPurse[myTeam] !== undefined && teamPurse[myTeam] < nextBid) {
-        btn.disabled = true; return;
+    if (teamPurse && teamPurse[myTeam] !== undefined && teamPurse[myTeam] < nextBid) {
+        setButtonState(true, "Not enough purse"); return;
     }
-    // Squad checks...
-    if (activeRules.maxPlayers && mySquad.length >= activeRules.maxPlayers) { btn.disabled = true; return; }
+    if (activeRules.maxPlayers && mySquad.length >= activeRules.maxPlayers) {
+        setButtonState(true, "Squad full"); return;
+    }
     if (state.player && state.player.foreign) {
         const fCount = mySquad.filter(p => p.foreign).length;
-        if (activeRules.maxForeign && fCount >= activeRules.maxForeign) { btn.disabled = true; return; }
+        if (activeRules.maxForeign && fCount >= activeRules.maxForeign) {
+            setButtonState(true, "Overseas full"); return;
+        }
     }
 
-    btn.disabled = false;
+    setButtonState(false, `+ ${increment.toFixed(2)} Cr`);
 }
 
 
 socket.on("sold", d => {
-    safePlay(soundHammer);
+    playSoldSound();
     showResultStamp("SOLD", `TO ${d.team}`, TEAM_COLORS[d.team], false);
     if(d.purse) teamPurse = d.purse;
     updateHeaderNotice();
     updateBidButton({ bid: currentBid, player: currentPlayer });
 
-    // FIX: Live update without tab switch
-    const currentTab = document.querySelector('.cc-tab-btn.active');
-    // If we are in Squads tab AND looking at the team that just bought OR looking at 'Available'
     if(document.getElementById('view-squads') && !document.getElementById('view-squads').classList.contains('hidden')) {
-        if(selectedSquadTeam === d.team) {
-            viewEmbeddedSquad(selectedSquadTeam);
-        }
+        if(selectedSquadTeam === d.team) viewEmbeddedSquad(selectedSquadTeam);
     }
+    updateSoldUnsoldPopupIfOpen();
 });
-socket.on("unsold", () => {
+socket.on("unsold", (data) => {
     playUnsoldSound();
+    if (data && data.player) unsoldList.push(data.player);
     showResultStamp("UNSOLD", "PASSED IN", "#f43f5e", true);
+    updateSoldUnsoldPopupIfOpen();
 });
+
+function getSoldListFromSquads() {
+    const out = [];
+    if (!allSquads || typeof allSquads !== "object") return out;
+    for (const [team, players] of Object.entries(allSquads)) {
+        if (!Array.isArray(players)) continue;
+        players.forEach(p => {
+            out.push({ player: p, team, price: p.price != null ? p.price : 0 });
+        });
+    }
+    out.sort((a, b) => (b.price || 0) - (a.price || 0));
+    return out;
+}
+function renderSoldUnsoldList() {
+    const listEl = document.getElementById("soldUnsoldList");
+    const soldBadge = document.getElementById("soldCountBadge");
+    const unsoldBadge = document.getElementById("unsoldCountBadge");
+    if (!listEl) return;
+    const sold = getSoldListFromSquads();
+    if (soldBadge) soldBadge.textContent = String(sold.length);
+    if (unsoldBadge) unsoldBadge.textContent = String(unsoldList.length);
+    if (soldUnsoldTab === "sold") {
+        if (sold.length === 0) {
+            listEl.innerHTML = '<div style="padding:20px; color:#64748b; text-align:center;">No sold players yet</div>';
+            return;
+        }
+        listEl.innerHTML = sold.map(({ player, team, price }) => {
+            const teamColor = TEAM_COLORS[team] || "#64748b";
+            const rtmBadge = player.rtm ? '<span class="rtm-badge">RTM</span>' : "";
+            return `<div class="sold-unsold-row">
+                <div style="flex:1; min-width:0;">
+                    <div style="font-weight:600; color:#e2e8f0;">${player.name || ""}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">${player.role || ""}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:#facc15; font-weight:700;">₹${(price || 0).toFixed(2)} Cr</span>
+                    <span class="team-badge" style="background:${teamColor}20; color:${teamColor};">${team}</span>
+                    ${rtmBadge}
+                </div>
+            </div>`;
+        }).join("");
+    } else {
+        if (unsoldList.length === 0) {
+            listEl.innerHTML = '<div style="padding:20px; color:#64748b; text-align:center;">No unsold players yet</div>';
+            return;
+        }
+        listEl.innerHTML = unsoldList.map(p => `
+            <div class="sold-unsold-row">
+                <div style="flex:1; min-width:0;">
+                    <div style="font-weight:600; color:#e2e8f0;">${p.name || ""}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">${p.role || ""}${p.pteam ? " • RTM: " + p.pteam : ""}</div>
+                </div>
+            </div>
+        `).join("");
+    }
+}
+function updateSoldUnsoldPopupIfOpen() {
+    const overlay = document.getElementById("soldUnsoldOverlay");
+    if (overlay && !overlay.classList.contains("hidden")) {
+        renderSoldUnsoldList();
+    }
+}
+window.toggleSoldUnsoldPopup = function() {
+    const overlay = document.getElementById("soldUnsoldOverlay");
+    if (!overlay) return;
+    if (overlay.classList.contains("hidden")) {
+        overlay.classList.remove("hidden");
+        renderSoldUnsoldList();
+    } else {
+        overlay.classList.add("hidden");
+    }
+};
+window.closeSoldUnsoldPopup = function() {
+    document.getElementById("soldUnsoldOverlay")?.classList.add("hidden");
+};
+window.switchSoldUnsoldTab = function(tab) {
+    soldUnsoldTab = tab;
+    document.querySelectorAll(".sold-unsold-tab").forEach(b => {
+        b.classList.toggle("active", b.getAttribute("data-tab") === tab);
+    });
+    renderSoldUnsoldList();
+};
+
 function showResultStamp(title, detail, color, isUnsold) {
     const rtmOl = document.getElementById("rtmOverlay");
     if (rtmOl) { rtmOl.classList.add("hidden"); rtmOl.classList.remove("active"); }
@@ -1705,14 +1857,58 @@ socket.on("chatUpdate", d => {
     const color = TEAM_COLORS[d.team] || '#aaa';
 
     div.innerHTML = `
+        <div class="chat-msg-reactions"><span data-emoji="👍" title="Like">👍</span><span data-emoji="👏" title="Clap">👏</span><span data-emoji="😂" title="Laugh">😂</span><span data-emoji="❤️" title="Love">❤️</span><span data-emoji="🔥" title="Fire">🔥</span></div>
         <div class="chat-meta" style="color:${color}">
             <span class="chat-meta-inline">${d.team} &bull; ${d.user || 'Player'}</span>
         </div>
-        <div class="chat-text" style="color:#eee;">${d.msg}</div>
+        <div class="chat-text" style="color:#eee;">${d.msg}<span class="chat-text-reactions"></span></div>
     `;
-    
-    // Apply Border Color dynamically
     div.style.borderLeftColor = color;
+
+    (function setupReactable(el) {
+        let holdTimer = null;
+        function updateReactionsDisplay() {
+            const raw = el.dataset.reactions || "{}";
+            let reactions = {};
+            try { reactions = JSON.parse(raw); } catch (_) {}
+            const sorted = Object.entries(reactions).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            const txt = el.querySelector(".chat-text");
+            const span = el.querySelector(".chat-text-reactions");
+            if (span && txt) {
+                if (sorted.length === 0) { span.textContent = ""; span.className = "chat-text-reactions"; return; }
+                span.textContent = " " + sorted.map(([emoji]) => emoji).join(" ");
+                span.className = "chat-text-reactions has-reactions";
+            }
+        }
+        el.querySelector(".chat-msg-reactions")?.addEventListener("click", function(e) {
+            e.stopPropagation();
+            const span = e.target.closest("span[data-emoji]");
+            if (!span) return;
+            const emoji = span.getAttribute("data-emoji");
+            const raw = el.dataset.reactions || "{}";
+            let reactions = {};
+            try { reactions = JSON.parse(raw); } catch (_) {}
+            reactions[emoji] = (reactions[emoji] || 0) + 1;
+            el.dataset.reactions = JSON.stringify(reactions);
+            updateReactionsDisplay();
+            el.classList.remove("reactable-hold");
+        });
+        el.addEventListener("pointerdown", function(e) {
+            if (e.button !== 0) return;
+            holdTimer = setTimeout(function() {
+                holdTimer = null;
+                el.classList.add("reactable-hold");
+                el.dataset.reactableJustOpened = "1";
+            }, 500);
+        });
+        el.addEventListener("pointerup", function() { if (holdTimer) clearTimeout(holdTimer); });
+        el.addEventListener("pointerleave", function() { if (holdTimer) clearTimeout(holdTimer); });
+        el.addEventListener("click", function closeReactions() {
+            if (!el.classList.contains("reactable-hold")) return;
+            if (el.dataset.reactableJustOpened) { delete el.dataset.reactableJustOpened; return; }
+            el.classList.remove("reactable-hold");
+        });
+    })(div);
 
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
@@ -1993,13 +2189,13 @@ window.openPlayerProfile = function(playerData, teamName, price) {
                         <span class="pc-stat-val" style="color:${price ? '#4ade80' : '#fff'}">${price ? 'SOLD' : 'UPCOMING'}</span>
                     </div>
                 </div>
-                <div class="pc-price-tag pc-price-tag-below" style="color:${teamColor}">${amount}</div>
+                <div class="pc-price-tag pc-price-tag-inline" style="color:${teamColor}">${amount}</div>
             </div>
         </div>
     </div>`;
     document.body.insertAdjacentHTML('beforeend', html);
     const imgEl = document.getElementById('activeCardImg');
-    loadPlayerImage(imgEl, playerData.name);
+    requestAnimationFrame(() => { loadPlayerImage(imgEl, playerData.name); });
 };
 window.closePlayerCard = function(e) {
     if(e.target.id === 'playerCardOverlay') e.target.remove();
@@ -2179,6 +2375,7 @@ socket.on("squadData", data => {
     if (squadView && !squadView.classList.contains('hidden') && selectedSquadTeam) {
         viewEmbeddedSquad(selectedSquadTeam);
     }
+    updateSoldUnsoldPopupIfOpen();
 });
 // --- ADMIN ---
 /* ================= UPDATED ADMIN & LEAVE LOGIC ================= */
@@ -2266,7 +2463,22 @@ function attachAdminListeners() {
 
     add("startBtn", "start");
     add("togglePauseBtn", "togglePause");
-    add("skipBtn", "skip"); // Standard skip (next player)
+    const skipBtn = document.getElementById("skipBtn");
+    if (skipBtn) {
+        skipBtn.onclick = () => {
+            if (lastBidTeam != null) {
+                const tip = document.createElement("div");
+                tip.className = "skip-tip-popup";
+                tip.textContent = "already a bid placed!";
+                tip.style.cssText = "position:absolute; left:50%; transform:translateX(-50%); top:100%; margin-top:6px; padding:6px 10px; background:rgba(239,68,68,0.7); color:#fff; font-size:0.75rem; white-space:nowrap; border-radius:6px; z-index:3000; pointer-events:none; box-shadow:0 2px 8px rgba(0,0,0,0.3);";
+                skipBtn.style.position = "relative";
+                skipBtn.appendChild(tip);
+                setTimeout(() => { tip.remove(); }, 500);
+                return;
+            }
+            socket.emit("adminAction", "skip");
+        };
+    }
     
     // 🟢 FIX: Custom Popup for SKIP SET
     const skipSetBtn = document.getElementById("skipSetBtn");
@@ -2417,16 +2629,13 @@ function updateRulesUI() {
     set('viewForeign', r.maxForeign);
 }
 function showScreen(id, updateHistory = true) {
-    // Hide all screens
     document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
-
-    // Show target
     const target = document.getElementById(id);
     if (target) target.classList.remove("hidden");
 
-    // 🔴 NEW: Special Refresh for Leaderboard (Fix: Empty/Outdated Data)
+    if (!updateHistory) return;
     if (id === 'leaderboard') {
-        socket.emit("getAuctionState"); // Force refresh on show
+        socket.emit("getAuctionState");
         updateURL('leaderboard');
     } else if (id === 'playingXI') {
         updateURL('xi');
@@ -2464,11 +2673,12 @@ socket.on("auctionEnded", () => {
         showScreen("playingXI");
         socket.emit("getMySquad");
     } else {
-        // I am a Spectator: Go to Summary
+        // I am a Spectator: Go to Summary (push home so Back goes to main)
         setTimeout(() => {
+            pushSummaryWithHomeBack();
             renderPostAuctionSummary();
-            showScreen("postAuctionSummary");
-        }, 500); // Small delay to ensure data arrives
+            showScreen("postAuctionSummary", false);
+        }, 500);
     }
 });
 // --- 2. RENDER SELECTION LIST (FIXED) ---
@@ -2970,6 +3180,12 @@ window.openCustomBuilder = async function() {
     listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Loading Database...</div>';
     if (countEl) countEl.textContent = "0";
     customSelectedIndexes.clear();
+    const autoEl = document.getElementById("autoSelectPoolToggle");
+    const ratingsEl = document.getElementById("useRatingsToggle");
+    if (autoEl && ratingsEl) {
+        ratingsEl.disabled = !autoEl.checked;
+        if (!autoEl.checked) ratingsEl.checked = false;
+    }
 
     try {
         // Try dedicated custom pool first, then fallback to default players
@@ -2979,6 +3195,27 @@ window.openCustomBuilder = async function() {
         }
         const json = await res.json();
         customAllPlayers = json.players || [];
+        const autoSelectEl = document.getElementById("autoSelectPoolToggle");
+        if (autoSelectEl && autoSelectEl.checked && customAllPlayers.length > 0) {
+            try {
+                const mixedRes = await fetch("/api/players/mixed");
+                if (mixedRes.ok) {
+                    const mixedJson = await mixedRes.json();
+                    const mixedNames = (mixedJson.players || []).map(pp => (pp.name || "").trim().toLowerCase());
+                    customAllPlayers.forEach((p, i) => {
+                        if (mixedNames.includes((p.name || "").trim().toLowerCase())) customSelectedIndexes.add(i);
+                    });
+                }
+                if (customSelectedIndexes.size === 0) {
+                    const toSelect = Math.min(18, customAllPlayers.length);
+                    for (let i = 0; i < toSelect; i++) customSelectedIndexes.add(i);
+                }
+            } catch (_) {
+                const toSelect = Math.min(18, customAllPlayers.length);
+                for (let i = 0; i < toSelect; i++) customSelectedIndexes.add(i);
+            }
+            if (countEl) countEl.textContent = String(customSelectedIndexes.size);
+        }
         renderCustomPlayerList();
     } catch (e) {
         console.warn("Failed to load custom players", e);
@@ -2986,9 +3223,29 @@ window.openCustomBuilder = async function() {
     }
 };
 
+window.toggleAutoSelectPool = function() {
+    const autoEl = document.getElementById("autoSelectPoolToggle");
+    const ratingsEl = document.getElementById("useRatingsToggle");
+    if (!autoEl || !ratingsEl) return;
+    if (autoEl.checked) {
+        ratingsEl.disabled = false;
+        ratingsEl.checked = true;
+    } else {
+        ratingsEl.checked = false;
+        ratingsEl.disabled = true;
+    }
+    if (typeof toggleRatingVisibility === "function") toggleRatingVisibility();
+}
+
 window.closeCustomBuilder = function() {
     const overlay = document.getElementById("customBuilderOverlay");
     if (overlay) overlay.classList.add("hidden");
+    // Deselect CUSTOM BUILDER dataset card in auth section
+    const createSection = document.getElementById("createSection");
+    if (createSection) {
+        const customCard = createSection.querySelector(".dataset-card[onclick*=\"selectDataset('custom')\"]");
+        if (customCard) customCard.classList.remove("active");
+    }
 };
 
 function renderCustomPlayerList() {
@@ -3000,12 +3257,12 @@ function renderCustomPlayerList() {
     if (!listBox) return;
 
     const term = (searchInput?.value || "").trim().toLowerCase();
-    const role = roleFilter?.value || "ALL";
+    const role = (roleFilter?.value || "").trim();
 
     const rows = customAllPlayers
         .map((p, idx) => ({ p, idx }))
         .filter(({ p }) => {
-            if (role !== "ALL" && p.role !== role) return false;
+            if (role && p.role !== role) return false;
             const country = p.country || (p.foreign ? "Overseas" : "India");
             const haystack = `${p.name} ${country}`.toLowerCase();
             if (!term) return true;
@@ -3017,12 +3274,15 @@ function renderCustomPlayerList() {
         return;
     }
 
-    const showRatings = !useRatingsToggle || useRatingsToggle.checked;
+    const showRatings = useRatingsToggle && useRatingsToggle.checked;
 
     listBox.innerHTML = rows.map(({ p, idx }) => {
         const selected = customSelectedIndexes.has(idx);
         const country = p.country || (p.foreign ? "Overseas" : "India");
-        const ratingText = showRatings ? `<span style="color:#facc15; font-size:0.8rem;">⭐ ${p.rating?.toFixed ? p.rating.toFixed(1) : p.rating || "-"}</span>` : "";
+        const ratingVal = p.rating != null ? (typeof p.rating === "number" ? p.rating.toFixed(1) : String(p.rating)) : "";
+        const ratingBlock = showRatings
+            ? `<span style="display:inline-flex; align-items:center; gap:4px;"><span style="color:#facc15;">⭐</span><input type="number" step="0.1" min="0" max="10" value="${ratingVal}" data-idx="${idx}" onchange="handleRatingChange(${idx}, this.value)" style="width:48px; padding:2px 4px; background:rgba(255,255,255,0.08); border:1px solid #334155; border-radius:4px; color:#facc15; font-size:0.8rem; text-align:center;" /></span>`
+            : "";
         return `
             <div class="custom-player-row ${selected ? "selected" : ""}" data-idx="${idx}" style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-bottom:1px solid rgba(148,163,184,0.2); gap:8px;">
                 <div style="flex:1; min-width:0;">
@@ -3030,7 +3290,7 @@ function renderCustomPlayerList() {
                     <div style="font-size:0.75rem; color:#9ca3af;">${p.role} • ${country}</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                    ${ratingText}
+                    ${ratingBlock}
                     <button type="button"
                         class="secondary-btn"
                         style="width:32px; height:32px; padding:0; font-size:1rem; border-color:${selected ? "#22c55e" : "#4b5563"}; color:${selected ? "#22c55e" : "#e5e7eb"}; background:#020617;"
@@ -3042,6 +3302,13 @@ function renderCustomPlayerList() {
         `;
     }).join("");
 }
+
+window.handleRatingChange = function(idx, value) {
+    const num = parseFloat(value);
+    if (customAllPlayers[idx] != null && !Number.isNaN(num)) {
+        customAllPlayers[idx].rating = Math.min(10, Math.max(0, num));
+    }
+};
 
 window.toggleCustomSelect = function(idx) {
     if (customSelectedIndexes.has(idx)) {
@@ -3383,14 +3650,14 @@ window.openPlayerProfile = function(playerData, teamName, price) {
                         <span class="pc-stat-val" style="color:${price ? '#4ade80' : '#fff'}">${price ? 'SOLD' : 'UPCOMING'}</span>
                     </div>
                 </div>
-                <div class="pc-price-tag pc-price-tag-below" style="color:${teamColor}">${amount}</div>
+                <div class="pc-price-tag pc-price-tag-inline" style="color:${teamColor}">${amount}</div>
             </div>
         </div>
     </div>
     `;
     document.body.insertAdjacentHTML('beforeend', html);
     const imgEl = document.getElementById('activeCardImg');
-    loadPlayerImage(imgEl, playerData.name);
+    requestAnimationFrame(() => { loadPlayerImage(imgEl, playerData.name); });
 };
 window.closePlayerCard = function(e) {
     if(e.target.id === 'playerCardOverlay') e.target.remove();
@@ -3479,23 +3746,60 @@ window.exitToHome = function() {
 /* ============== GOD MODE (ADMIN) ================= */
 /* ================================================= */
 let godTargetRoom = "";
+let godModeFetchPending = false;
 function openGodModeSetup() {
     document.getElementById("landing").classList.add("hidden");
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("godPanel").classList.remove("hidden");
+    document.body.classList.add("god-panel-open");
+    const notFound = document.getElementById("godRoomNotFound");
+    if (notFound) notFound.classList.add("hidden");
 }
 window.connectGodMode = function() {
-    const target = document.getElementById("godTargetInput").value.trim().toUpperCase();
-    if(!target) return alert("Enter Target Room Code");
-  
+    const inputEl = document.getElementById("godTargetInput");
+    if (!inputEl) return;
+    const target = (inputEl.value || "").trim().toUpperCase();
+    if (!target) {
+        alert("Enter Room Code");
+        return;
+    }
+    if (typeof socket === "undefined" || !socket.connected) {
+        alert("Not connected. Please wait and try again.");
+        return;
+    }
+    const notFoundEl = document.getElementById("godRoomNotFound");
+    if (notFoundEl) notFoundEl.classList.add("hidden");
     godTargetRoom = target;
+    godModeFetchPending = true;
     socket.emit("godModeFetch", godTargetRoom);
 };
-socket.on("godModeData", ({ sets, teams }) => {
+document.getElementById("godAccessBtn")?.addEventListener("click", connectGodMode);
+let lastGodModeData = { sets: [], teams: [], activeTeams: [] };
+socket.on("godModeData", ({ sets, teams, activeTeams }) => {
+    godModeFetchPending = false;
+    lastGodModeData = { sets, teams, activeTeams: activeTeams || [] };
+    document.getElementById("godRoomNotFound")?.classList.add("hidden");
     document.getElementById("godLogin").classList.add("hidden");
     document.getElementById("godContent").classList.remove("hidden");
-    renderGodList(sets, teams);
+    const searchEl = document.getElementById("godSearchInput");
+    if (searchEl) searchEl.value = "";
+    renderGodList(sets, teams, activeTeams);
+    const searchInput = document.getElementById("godSearchInput");
+    if (searchInput && !searchInput._bound) {
+        searchInput._bound = true;
+        searchInput.addEventListener("input", () => filterGodList());
+    }
 });
+function filterGodList() {
+    const term = (document.getElementById("godSearchInput")?.value || "").trim().toLowerCase();
+    const { sets, teams, activeTeams } = lastGodModeData;
+    if (!term) {
+        renderGodList(sets, teams, activeTeams);
+        return;
+    }
+    const filtered = sets.map(set => set.filter(p => p.name.toLowerCase().includes(term) || (p.role && p.role.toLowerCase().includes(term)))).filter(s => s.length > 0);
+    renderGodList(filtered, teams, activeTeams);
+}
 socket.on("godModeSuccess", (msg) => {
     // Flash success and refresh data
     const list = document.getElementById("godPlayerList");
@@ -3505,11 +3809,10 @@ socket.on("godModeSuccess", (msg) => {
   
     socket.emit("godModeFetch", godTargetRoom);
 });
-function renderGodList(sets, teams) {
+function renderGodList(sets, teams, activeTeams) {
     const list = document.getElementById("godPlayerList");
     list.innerHTML = "";
-    // Sort team list for dropdown
-    const teamOptions = teams.sort();
+    const teamOptions = (activeTeams && activeTeams.length > 0 ? activeTeams : (teams || []).slice()).sort();
     sets.forEach(set => {
         set.forEach(player => {
             const row = document.createElement("div");
@@ -3789,20 +4092,15 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 
-// 2. Navigation Handler
-window.showScreen = function(screenId) {
-    console.log("🔄 Switching to:", screenId);
-    
-    // Hide all screens
+// 2. Navigation Handler (updateHistory=false used by onpopstate to avoid pushing duplicate state)
+window.showScreen = function(screenId, updateHistory = true) {
     document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
-    
-    // Show target
     const target = document.getElementById(screenId);
-    if(target) target.classList.remove("hidden");
+    if (target) target.classList.remove("hidden");
 
-    // Special logic for specific screens
+    if (!updateHistory) return;
     if (screenId === 'leaderboard') {
-        socket.emit("getAuctionState"); // Refresh Data
+        socket.emit("getAuctionState");
         updateURL('leaderboard');
     } else if (screenId === 'playingXI') {
         updateURL('xi');
@@ -3997,19 +4295,18 @@ socket.on("error", msg => {
 window.toggleMute = function() {
     isMuted = !isMuted;
     const btn = document.getElementById("toggleMuteBtn");
-    const img = document.getElementById("soundIconImg");
-    
+    const unmutedEl = document.getElementById("soundIconUnmuted");
+    const mutedEl = document.getElementById("soundIconMuted");
     if (isMuted) {
         btn.classList.add("muted");
         btn.title = "Unmute";
-        // 🔴 Updated to your requested icon (White version)
-        if(img) img.src = "https://img.icons8.com/windows/32/ffffff/mute--v1.png";
+        if (unmutedEl) unmutedEl.classList.add("hidden");
+        if (mutedEl) mutedEl.classList.remove("hidden");
     } else {
         btn.classList.remove("muted");
         btn.title = "Mute";
-        // Sound Playing Icon
-        if(img) img.src = "https://img.icons8.com/windows/32/ffffff/room-sound.png";
-        
+        if (unmutedEl) unmutedEl.classList.remove("hidden");
+        if (mutedEl) mutedEl.classList.add("hidden");
     }
 };
 
