@@ -148,7 +148,8 @@ app.get('/api/players/:setId?', (req, res) => {
 
 const DEFAULT_RULES = {
     purse: 120,
-    maxPlayers: 18,
+    minSquadSize: 18,
+    maxPlayers: 24,
     maxForeign: 6,
     minBat: 3,
     minBowl: 3,
@@ -289,7 +290,7 @@ function commitSoldTo(r, room, team, price) {
     r.purse[team] -= price;
     io.to(room).emit("sold", { player: p, team, price, purse: r.purse });
     sendLog(r, room, `🔨 SOLD: ${p.name} → ${team} ₹${price.toFixed(2)} Cr`);
-    io.to(room).emit("squadData", r.squads);
+    io.to(room).emit("squadData", { squads: r.squads, rtmLeft: r.rtmLeft || {} });
     r.availableTeams = r.availableTeams.filter(t => t !== team);
 }
 
@@ -320,9 +321,16 @@ io.on("connection", socket => {
     socket.on('getPublicRooms', () => {
         const liveRooms = [];
         const waitingRooms = [];
+        const poolDisplay = (datasetId) => {
+            if (!datasetId) return 'IPL 2026';
+            if (datasetId === 'legends') return 'Legends';
+            if (datasetId === 'custom') return 'Custom';
+            if (datasetId === 'mixed') return 'Mixed';
+            return 'IPL 2026';
+        };
         for (const [id, room] of Object.entries(rooms)) {
-            if (room.isPublic && !room.auctionEnded) { 
-                const info = { id: id, count: Object.keys(room.users).length };
+            if (room.isPublic && !room.auctionEnded) {
+                const info = { id, count: Object.keys(room.users).length, poolName: poolDisplay(room.datasetId) };
                 if (room.auctionStarted) {
                     liveRooms.push(info);
                 } else {
@@ -429,6 +437,7 @@ if (datasetId === "legends") {
             userCount: 1,
             teamOwners: getTeamOwners(room),
             purses: room.purse,
+            rtmLeft: room.rtmLeft || {},
             history: { chat: room.chat, logs: room.logs }
         });
 
@@ -534,9 +543,9 @@ socket.on("getAuctionState", () => {
                 auctionEnded: room.auctionEnded,
                 userCount: Object.keys(room.users).length,
                 teamOwners: getTeamOwners(room),
+                rtmLeft: room.rtmLeft || {},
                 history: { chat: room.chat, logs: room.logs },
                 yourTeam: assignedTeam,
-                // Critical Fix: Send Leaderboard Data if game is over
                 leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : [] 
             });
             
@@ -654,6 +663,7 @@ socket.on("getAuctionState", () => {
             userCount: Object.keys(room.users).length,
             history: { chat: room.chat, logs: room.logs }, 
             teamOwners: getTeamOwners(room),
+            rtmLeft: room.rtmLeft || {},
             yourTeam: socket.team || null,
             leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : []
         });
@@ -756,6 +766,7 @@ socket.on("getAuctionState", () => {
         auctionEnded: room.auctionEnded,
         userCount: Object.keys(room.users).length,
         teamOwners: getTeamOwners(room),
+        rtmLeft: room.rtmLeft || {},
         yourTeam: socket.team,
         history: { chat: room.chat, logs: room.logs },
         leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : []
@@ -891,7 +902,7 @@ socket.on("getAuctionState", () => {
     socket.on("getSquads", () => {
         const r = rooms[socket.room];
         if(!r) return;
-        socket.emit("squadData", r.squads);
+        socket.emit("squadData", { squads: r.squads, rtmLeft: r.rtmLeft || {} });
     });
     socket.on("getMySquad", () => {
         const r = rooms[socket.room];
@@ -1154,7 +1165,7 @@ socket.on("getAuctionState", () => {
             
             if (r.purse[team]) r.purse[team] -= fullPlayerObj.price;
 
-            io.to(roomCode).emit("squadData", r.squads); 
+            io.to(roomCode).emit("squadData", { squads: r.squads, rtmLeft: r.rtmLeft || {} }); 
             
             const setPayload = [];
             for (let i = r.currentSetIndex; i < r.sets.length; i++) {
@@ -1247,9 +1258,9 @@ function resolvePlayer(r, room) {
             return;
         }
 
-        // RTM: if enabled, player has pteam, pteam owner is online and has RTMs left
+        // RTM: if enabled, player has pteam, pteam owner is online and has RTMs left, and buyer !== pteam (don't offer RTM to self)
         const playerPteam = (p.pteam || "").trim();
-        if (r.rules.rtmEnabled && playerPteam && playerPteam !== "--" && (r.rtmLeft[playerPteam] || 0) > 0) {
+        if (r.rules.rtmEnabled && playerPteam && playerPteam !== "--" && playerPteam !== team && (r.rtmLeft[playerPteam] || 0) > 0) {
             const pteamSocketId = getSocketIdByTeam(r, playerPteam);
             if (pteamSocketId) {
                 r.auction.rtmPending = {
@@ -1269,7 +1280,7 @@ function resolvePlayer(r, room) {
                     player: p,
                     soldToTeam: team,
                     soldPrice: r.auction.bid,
-                    timer: 10
+                    timer: 15
                 });
                 r.auction.rtmTimer = setTimeout(() => {
                     r.auction.rtmTimer = null;
@@ -1280,7 +1291,7 @@ function resolvePlayer(r, room) {
                     io.to(room).emit("rtmOverlay", { show: false });
                     saveToCloud();
                     setTimeout(() => nextPlayer(r, room), 2000);
-                }, 10000);
+                }, 15000);
                 return;
             }
         }
@@ -1307,7 +1318,7 @@ function endAuction(r, room) {
 
     io.to(room).emit("auctionEnded");
     sendLog(r, room, "🛑 Auction Ended. Prepare Playing XI.");
-    io.to(room).emit("squadData", r.squads);
+    io.to(room).emit("squadData", { squads: r.squads, rtmLeft: r.rtmLeft || {} });
     
     // Save Final State
     saveToCloud();
