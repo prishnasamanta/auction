@@ -90,58 +90,51 @@
 <section id="auctionUI" class="screen hidden">
 
 <header class="topbar">
-    <div class="top-left">
-        <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" style="border:1px solid var(--primary); color:var(--primary);">
-            <span id="roomCodeText" style="font-family:monospace; font-weight:700;">---</span>
+    <div class="topbar-row">
+        <div class="topbar-left">
+            <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" style="border:1px solid var(--primary); color:var(--primary);">
+                <span id="roomCodeText" style="font-family:monospace; font-weight:700;">---</span>
+            </div>
+            <div id="headerTeamBadge" class="header-badge hidden" style="background:var(--gold); color:#000; font-weight:600; border:none;">
+                <span id="headerTeamName">---</span>
+            </div>
+            <button onclick="toggleUserList()" class="count-pill-btn">
+                <span class="pulse-dot"></span>
+                <span id="liveUserCount">0</span>
+            </button>
         </div>
-
-        <div id="headerTeamBadge" class="header-badge hidden" style="background:var(--gold); color:#000; font-weight:600; border:none;">
-            <span id="headerTeamName">---</span>
+        <div class="topbar-middle">
+            <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden header-icon-btn-label">
+                <span class="icon">✚</span>
+                <span class="label">Join Team</span>
+            </button>
+            <button id="rulesBtn" onclick="showRules()" class="header-icon-btn" title="Rules">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h8"/></svg>
+            </button>
+            <button id="toggleMuteBtn" class="header-icon-btn mute-toggle-btn" onclick="toggleMute()" title="Toggle Sound" aria-label="Mute sound">
+                <span id="soundIconUnmuted" class="mute-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></span>
+                <span id="soundIconMuted" class="mute-icon hidden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></span>
+            </button>
         </div>
-
-        <button onclick="toggleUserList()" class="count-pill-btn">
-            <span class="pulse-dot"></span>
-            <span id="liveUserCount">0</span>
-        </button>
-    </div>
-
-    <div class="top-right">
-        <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden header-icon-btn-label">
-            <span class="icon">✚</span>
-            <span class="label">Join Team</span>
-        </button>
-        
-<button onclick="showRules()" class="header-icon-btn" title="Rules">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h8"/></svg>
-</button>
-       <button id="toggleMuteBtn" class="header-icon-btn mute-toggle-btn" onclick="toggleMute()" title="Toggle Sound" aria-label="Mute sound">
-    <span id="soundIconUnmuted" class="mute-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></span>
-    <span id="soundIconMuted" class="mute-icon hidden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></span>
-</button>
-
-        <span id="adminControls" class="admin-group hidden">
-            <button id="startBtn" class="header-icon-btn primary header-icon-btn-label" title="Start">
-                <span class="icon">▶</span>
-                <span class="label">Start</span>
+        <div class="topbar-right">
+            <span id="adminControls" class="admin-group hidden">
+                <button id="startBtn" class="header-icon-btn primary header-icon-btn-label" title="Start">
+                    <span class="icon">▶</span>
+                    <span class="label">Start</span>
+                </button>
+                <button id="togglePauseBtn" class="header-icon-btn" title="Pause">⏸</button>
+                <button id="skipBtn" class="header-icon-btn" title="Skip">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+                </button>
+                <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
+                </button>
+                <button id="endBtn" onclick="admin('end')" class="header-icon-btn danger" title="End Game">⊘</button>
+            </span>
+            <button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">
+                <img src="https://img.icons8.com/material-outlined/24/emergency-exit.png" alt="Leave" width="24" height="24" />
             </button>
-            <button id="togglePauseBtn" class="header-icon-btn" title="Pause">⏸</button>
-            <button id="skipBtn" class="header-icon-btn" title="Skip">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-            </button>
-            <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
-            </button>
-            <button id="endBtn" onclick="admin('end')" class="header-icon-btn danger" title="End Game">⊘</button>
-        </span>
-
-<button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">
-    <img
-        src="https://img.icons8.com/material-outlined/24/emergency-exit.png"
-        alt="Leave"
-        width="24"
-        height="24"
-    />
-</button>
+        </div>
     </div>
     
     <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:10px; top:50px;">
