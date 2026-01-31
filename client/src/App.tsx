@@ -139,14 +139,14 @@ export default function App() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: '🖥️', title: 'Real-Time Sockets', desc: 'Instant bid updates synchronized across all devices. No refreshing required.' },
-              { icon: '💰', title: 'Smart Purse', desc: 'Automated budget validation. The system prevents overspending and tracks remaining funds.' },
-              { icon: '📊', title: 'Live Leaderboard', desc: 'Track squad composition, foreign player quotas, and RTM status in real-time.' },
-              { icon: '🎨', title: 'Pro UI Design', desc: 'A completely immersive dark-mode interface designed for long auction sessions.' },
+              { Icon: () => <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" strokeWidth="2"/><path strokeLinecap="round" strokeWidth="2" d="M8 21h8M12 17v4"/></svg>, title: 'Real-Time Sockets', desc: 'Instant bid updates synchronized across all devices. No refreshing required.' },
+              { Icon: () => <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>, title: 'Smart Purse', desc: 'Automated budget validation. The system prevents overspending and tracks remaining funds.' },
+              { Icon: () => <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>, title: 'Live Leaderboard', desc: 'Track squad composition, foreign player quotas, and RTM status in real-time.' },
+              { Icon: () => <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>, title: 'Pro UI Design', desc: 'A completely immersive dark-mode interface designed for long auction sessions.' },
             ].map((feature, i) => (
               <div key={i} className="glass p-8 hover:-translate-y-2 transition-transform group">
-                <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:bg-indigo-500/20 group-hover:rotate-6 transition-all text-indigo-400 text-2xl">
-                  <span>{feature.icon}</span>
+                <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:bg-indigo-500/20 group-hover:rotate-6 transition-all text-indigo-400">
+                  <feature.Icon />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
                 <p className="text-slate-400 leading-relaxed text-sm">{feature.desc}</p>
@@ -164,13 +164,15 @@ export default function App() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: '🏆', title: 'IPL 2026', desc: 'Standard IPL player pool for the 2026 season.' },
-              { icon: '⚡', title: 'LEGENDS', desc: 'All-time cricket legends from history.' },
-              { icon: '👥', title: 'MIXED', desc: 'Great icons from various eras combined.' },
-              { icon: '🛠️', title: 'CUSTOM', desc: 'Build your own player pool.' },
+              { Icon: () => <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>, title: 'IPL 2026', desc: 'Standard IPL player pool for the 2026 season.' },
+              { Icon: () => <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>, title: 'LEGENDS', desc: 'All-time cricket legends from history.' },
+              { Icon: () => <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>, title: 'MIXED', desc: 'Great icons from various eras combined.' },
+              { Icon: () => <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>, title: 'CUSTOM', desc: 'Build your own player pool.' },
             ].map((pool, i) => (
               <div key={i} className="glass p-8 text-center hover:bg-white/5 transition-colors cursor-pointer group">
-                <div className="mb-6 transform group-hover:scale-110 transition-transform inline-block text-4xl">{pool.icon}</div>
+                <div className="mb-6 transform group-hover:scale-110 transition-transform inline-flex items-center justify-center text-indigo-400">
+                  <pool.Icon />
+                </div>
                 <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-400 transition-colors">{pool.title}</h3>
                 <p className="text-slate-400 text-sm">{pool.desc}</p>
               </div>
