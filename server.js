@@ -20,6 +20,7 @@ const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 // --- SERVER STATE ---
 let rooms = {}; // Fast in-memory storage
+let endedRooms = {}; // Summary-only storage for finished auctions
 const disconnectTimers = {};
 
 // --- STATIC FILES ---
@@ -135,11 +136,20 @@ app.get('/api/players/:setId?', (req, res) => {
             pool = require("./custom");
         } else if (setId === "mixed") {
             // public/mixed.js – great icons pool
-            try {
-                pool = require("./public/mixed");
-            } catch (e2) {
-                pool = require("./mixed");
+            const mixedPaths = [
+                path.join(__dirname, "public", "mixed.js"),
+                path.join(__dirname, "mixed.js")
+            ];
+            for (const mp of mixedPaths) {
+                try {
+                    if (fs.existsSync(mp)) {
+                        pool = require(mp);
+                        if (!Array.isArray(pool)) pool = pool.default || pool || PLAYERS;
+                        break;
+                    }
+                } catch (e2) { /* try next */ }
             }
+            if (!Array.isArray(pool)) pool = PLAYERS;
         }
     } catch (e) {
         console.warn("API /api/players fallback to default PLAYERS:", e.message);
@@ -387,11 +397,11 @@ if (datasetId === "legends") {
         playerPool = PLAYERS;
     }
 } else if (datasetId === "mixed") {
-    const rootPath = path.join(process.cwd(), "mixed.js");
-    const publicPath = path.join(process.cwd(), "public", "mixed.js");
+    const rootPath = path.join(__dirname, "mixed.js");
+    const publicPath = path.join(__dirname, "public", "mixed.js");
     let selectedPath = null;
-    if (fs.existsSync(rootPath)) selectedPath = rootPath;
-    else if (fs.existsSync(publicPath)) selectedPath = publicPath;
+    if (fs.existsSync(publicPath)) selectedPath = publicPath;
+    else if (fs.existsSync(rootPath)) selectedPath = rootPath;
     if (selectedPath) {
         try {
             const imported = require(selectedPath);
@@ -619,58 +629,165 @@ socket.on("getAuctionState", () => {
     // 4. JOIN ROOM (with identity verification for same-name joins)
     socket.on("joinRoom", ({ roomCode, user }) => {
         const room = rooms[roomCode];
+        
+        // Check if room exists in endedRooms (auction finished, room destroyed)
+        if (!room && endedRooms[roomCode]) {
+            const summary = endedRooms[roomCode];
+            socket.join(roomCode);
+            socket.room = roomCode;
+            socket.user = user;
+            // Send summary data and redirect client to summary page
+            socket.emit("joinedRoom", {
+                rules: summary.rules,
+                squads: summary.squads,
+                purses: summary.purse,
+                roomCode: roomCode,
+                isHost: false,
+                auctionStarted: true,
+                availableTeams: [],
+                auctionEnded: true,
+                userCount: 0,
+                history: { chat: [], logs: summary.logs || [] },
+                teamOwners: {},
+                rtmLeft: summary.rtmLeft || {},
+                yourTeam: null,
+                leaderboardData: Object.values(summary.playingXI || {})
+            });
+            // Trigger client to show summary
+            socket.emit("auctionEnded");
+            return;
+        }
+        
         if(!room) return socket.emit("error", "Room not found");
         
         if(room.auctionEnded) {
-            return socket.emit("error", "This auction has ended and is closed.");
+            // Room still exists but auction ended - send to summary
+            socket.join(roomCode);
+            socket.room = roomCode;
+            socket.user = user;
+            socket.emit("joinedRoom", {
+                rules: room.rules,
+                squads: room.squads,
+                purses: room.purse,
+                roomCode: roomCode,
+                isHost: false,
+                auctionStarted: true,
+                availableTeams: [],
+                auctionEnded: true,
+                userCount: Object.keys(room.users).length,
+                history: { chat: room.chat, logs: room.logs },
+                teamOwners: getTeamOwners(room),
+                rtmLeft: room.rtmLeft || {},
+                yourTeam: null,
+                leaderboardData: Object.values(room.playingXI || {})
+            });
+            socket.emit("auctionEnded");
+            return;
         }
 
         const existingSocketId = Object.keys(room.users).find(id => room.users[id].name === user);
         
-        // If a user with this name already exists, trigger identity check flow
- if (existingSocketId) {
-    const oldSocketId = existingSocketId;
-    
-    // Generate Code
-    const code = Math.floor(100 + Math.random() * 900).toString();
+        // If a user with this name already exists, check if they are disconnected/away
+        if (existingSocketId) {
+            const existingUser = room.users[existingSocketId];
+            // If user is disconnected (isAway, !connected, or timer running), allow direct rejoin
+            const timerKey = `${roomCode}_${user}`;
+            const isDisconnected = existingUser.isAway || existingUser.connected === false || disconnectTimers[timerKey];
+            
+            if (isDisconnected) {
+                // Cancel any pending disconnect timer
+                if (disconnectTimers[timerKey]) {
+                    clearTimeout(disconnectTimers[timerKey]);
+                    delete disconnectTimers[timerKey];
+                }
+                // Restore user to new socket
+                const userData = room.users[existingSocketId];
+                delete room.users[existingSocketId];
+                
+                userData.id = socket.id;
+                userData.connected = true;
+                userData.isAway = false;
+                userData.disconnectTime = null;
+                userData.isKicked = false;
+                
+                room.users[socket.id] = userData;
+                
+                // Restore admin status if they were host
+                if (room.admin === existingSocketId) {
+                    room.admin = socket.id;
+                }
+                
+                socket.join(roomCode);
+                socket.room = roomCode;
+                socket.user = user;
+                socket.team = userData.team;
+                if (room.adminUser === user) socket.isAdmin = true;
+                
+                socket.emit("joinedRoom", {
+                    rules: room.rules,
+                    squads: room.squads,
+                    purses: room.purse,
+                    roomCode: roomCode,
+                    isHost: (room.adminUser === user),
+                    auctionStarted: room.auctionStarted,
+                    availableTeams: room.availableTeams,
+                    auctionEnded: room.auctionEnded,
+                    userCount: Object.keys(room.users).length,
+                    history: { chat: room.chat, logs: room.logs },
+                    teamOwners: getTeamOwners(room),
+                    rtmLeft: room.rtmLeft || {},
+                    yourTeam: userData.team,
+                    leaderboardData: room.auctionEnded ? Object.values(room.playingXI) : []
+                });
+                
+                broadcastUserList(room, roomCode);
+                sendLog(room, roomCode, `🔄 ${user} reconnected.`);
+                return;
+            }
+            
+            // User is online - trigger identity check flow
+            const oldSocketId = existingSocketId;
+            
+            // Generate Code
+            const code = Math.floor(100 + Math.random() * 900).toString();
 
-    // 1. Send Code to OLD Device (To Display)
-    io.to(oldSocketId).emit("identityShowCode", {
-        code,
-        name: user,
-        device: "New Device"
-    });
+            // 1. Send Code to OLD Device (To Display)
+            io.to(oldSocketId).emit("identityShowCode", {
+                code,
+                name: user,
+                device: "New Device"
+            });
 
-    // 2. Ask NEW Device for Input
-    socket.emit("identityInputRequired", { 
-        roomCode, 
-        name: user 
-    });
+            // 2. Ask NEW Device for Input
+            socket.emit("identityInputRequired", { 
+                roomCode, 
+                name: user 
+            });
 
-    // Store challenge
-    const challengeKey = `${roomCode}:${user}`;
-    if (!global.identityChallenges) global.identityChallenges = {};
-    
-    global.identityChallenges[challengeKey] = {
-        code,
-        roomCode,
-        name: user,
-        oldSocketId,
-        newSocketId: socket.id, // Store New Socket ID
-        createdAt: Date.now()
-    };
+            // Store challenge
+            const challengeKey = `${roomCode}:${user}`;
+            if (!global.identityChallenges) global.identityChallenges = {};
+            
+            global.identityChallenges[challengeKey] = {
+                code,
+                roomCode,
+                name: user,
+                oldSocketId,
+                newSocketId: socket.id, // Store New Socket ID
+                createdAt: Date.now()
+            };
 
-    // Auto-expire
-    setTimeout(() => {
-        const ch = global.identityChallenges[challengeKey];
-        if (ch && ch.newSocketId === socket.id) {
-            delete global.identityChallenges[challengeKey];
-            io.to(socket.id).emit("identityFailed", { reason: "timeout" });
+            // Auto-expire
+            setTimeout(() => {
+                const ch = global.identityChallenges[challengeKey];
+                if (ch && ch.newSocketId === socket.id) {
+                    delete global.identityChallenges[challengeKey];
+                    io.to(socket.id).emit("identityFailed", { reason: "timeout" });
+                }
+            }, 30000); // Give them 30 seconds
+
+            return; 
         }
-    }, 30000); // Give them 30 seconds
-
-    return; 
-}
         // Normal first-time join
         room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
 
@@ -1367,7 +1484,22 @@ function endAuction(r, room) {
     sendLog(r, room, "🛑 Auction Ended. Prepare Playing XI.");
     io.to(room).emit("squadData", { squads: r.squads, rtmLeft: r.rtmLeft || {} });
     
-    // Save Final State
+    // Store summary data for ended room (permanent)
+    endedRooms[room] = {
+        roomCode: room,
+        rules: r.rules,
+        squads: r.squads,
+        purse: r.purse,
+        playingXI: r.playingXI || {},
+        rtmLeft: r.rtmLeft || {},
+        logs: r.logs || [],
+        endedAt: Date.now()
+    };
+    
+    // Destroy room immediately – summary only remains; join redirects to summary
+    delete rooms[room];
+    console.log(`🗑️ Room ${room} destroyed. Summary preserved.`);
+    
     saveToCloud();
 }
 
