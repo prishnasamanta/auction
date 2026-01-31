@@ -592,6 +592,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     display: flex; align-items: stretch;
     height: 70px;
     background: rgba(30, 41, 59, 0.3);
+    position: relative;
 }
 
 .ac-price-box {
@@ -1150,11 +1151,11 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* EXPANDED STATE */
 #commandCenter.expanded { height: 600px; }
 
-/* 1. PREMIUM TABS ROW */
+/* 1. PREMIUM TABS ROW – slightly compact */
 .cc-tabs {
     display: flex;
     background: rgba(0, 0, 0, 0.3);
-    padding: 4px;
+    padding: 4px 6px;
     gap: 4px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -1167,16 +1168,19 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     background: transparent;
     border: none;
     color: #94a3b8;
-    padding: 10px 12px;
-    min-width: 52px;
+    padding: 8px 10px;
+    min-width: 46px;
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: 6px;
     transition: all 0.2s ease;
     position: relative;
+    box-shadow: none;
 }
 .cc-tab-btn .cc-tab-icon {
     display: block;
     flex-shrink: 0;
+    width: 20px;
+    height: 20px;
 }
 
 /* Sets: green | Feed: blue | Squads: yellow – hover/active show color */
@@ -1196,10 +1200,10 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .cc-tab-btn.active::after {
     content: '';
     position: absolute;
-    bottom: -5px;
+    bottom: -3px;
     left: 50%;
     transform: translateX(-50%);
-    width: 24px;
+    width: 20px;
     height: 2px;
     background: var(--tab-color, #6366f1);
     border-radius: 2px;
@@ -1267,6 +1271,70 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .feed-input-wrapper input:focus {
     border-color: #6366f1;
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+.feed-list-btn {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.feed-list-btn:hover {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+}
+
+/* Sold/Unsold popup */
+.sold-unsold-tab {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+.sold-unsold-tab:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.sold-unsold-tab.active { background: rgba(99, 102, 241, 0.3); color: #fff; }
+.sold-unsold-tab .count-badge {
+    background: rgba(0,0,0,0.3);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+.sold-unsold-tab.active .count-badge { background: rgba(255,255,255,0.2); }
+.sold-unsold-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    gap: 8px;
+}
+.sold-unsold-row .team-badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.sold-unsold-row .rtm-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    background: rgba(168, 85, 247, 0.3);
+    color: #c4b5fd;
 }
 
 /* 3. EXPAND HANDLE */
@@ -1792,7 +1860,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 .pc-card.compact .pc-stat-row {
-    padding: 8px 15px;
+    padding: 8px 15px 4px;
     margin-top: 5px;
 }
 
@@ -1806,7 +1874,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     margin-bottom: 15px;
 }
 
-/* Price tag below stat row: positioned under .pc-stat-row with padding and clearer look */
+/* Price tag below stat row: legacy */
 .pc-price-tag.pc-price-tag-below {
     position: relative !important;
     bottom: auto !important;
@@ -1825,6 +1893,25 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Price tag inline: right after .pc-stat-row, no gap */
+.pc-price-tag.pc-price-tag-inline {
+    position: relative !important;
+    bottom: auto !important;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 6px 12px;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* --- Fix for Live Squad Scrolling --- */
@@ -1877,32 +1964,67 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     font-family: 'Inter', sans-serif;
 }
 
-/* Base Message Row */
+/* Base Message Row – compact */
 .chat-msg {
     display: flex;
-    align-items: center; /* Changed from baseline to center for better alignment */
+    align-items: center;
     width: 100%;
-    padding: 6px 8px; /* Slightly increased for better spacing */
-    background: rgba(30, 41, 59, 0.4); /* Subtle dark background */
+    padding: 4px 6px;
+    background: rgba(30, 41, 59, 0.4);
     border-radius: 4px;
-    border-left: 3px solid var(--msg-color); /* Team Color Bar */
-    font-size: 0.85rem;
+    border-left: 3px solid var(--msg-color);
+    font-size: 0.78rem;
     color: #cbd5e1;
     transition: background 0.1s;
-    line-height: 1.4;
+    line-height: 1.35;
     position: relative;
     animation: slideInLeft 0.2s ease-out;
+    user-select: text;
 }
 
-/* Hover Effect for readability */
 .chat-msg:hover {
     background: rgba(255, 255, 255, 0.05);
 }
 
-/* Highlight "My" Messages subtly */
 .chat-msg.mine {
-    background: rgba(99, 102, 241, 0.1); /* Very faint Primary tint */
-    border-left-width: 4px; /* Slightly thicker border */
+    background: rgba(99, 102, 241, 0.1);
+    border-left-width: 4px;
+}
+
+/* Reaction bar (shown on long-press) */
+.chat-msg-reactions {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    margin-bottom: 4px;
+    padding: 4px 6px;
+    background: rgba(15, 23, 42, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    gap: 4px;
+    flex-wrap: wrap;
+    z-index: 10;
+}
+.chat-msg.reactable-hold .chat-msg-reactions {
+    display: flex;
+}
+.chat-msg-reactions span {
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+.chat-msg-reactions span:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.chat-text-reactions {
+    margin-left: 4px;
+    opacity: 0.9;
+}
+.chat-text-reactions.has-reactions {
+    font-size: 0.95em;
 }
 
 /* Metadata: team + player in a single line */
@@ -2157,8 +2279,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     position: relative;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     font-family: 'Exo 2', sans-serif;
-    /* Allow height to fit content */
-    height: auto; 
+    height: auto;
     min-height: 300px;
 }
 
@@ -3282,7 +3403,8 @@ body {
     height: 80px;
     background: rgba(30, 41, 59, 0.4);
     padding: 10px;
-    gap: 10px; /* Space between Price and Button */
+    gap: 10px;
+    position: relative;
 }
 
 /* Price Box */
@@ -3614,18 +3736,18 @@ body {
     height: 100%;
 }
 
-/* RIGHT SIDE: Scrollable */
+/* RIGHT SIDE: Buttons in one row, no scroll on mobile */
 .top-right {
     display: flex;
     align-items: center;
     gap: 4px;
-    flex: 1; /* Takes remaining space */
-    overflow-x: auto; /* Enables Horizontal Scroll */
+    flex: 1;
+    min-width: 0;
     padding: 0 10px;
     height: 100%;
-    scrollbar-width: none; /* Hide scrollbar Firefox */
+    overflow: visible;
+    justify-content: flex-end;
 }
-.top-right::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome */
 
 /* Smaller Header Buttons */
 .header-icon-btn {
@@ -3642,6 +3764,39 @@ body {
     font-size: 0.75rem;
     padding: 2px 8px;
     height: 28px;
+}
+
+/* Mobile: header one row, no scroll – top-left shrinks so buttons fit */
+@media (max-width: 600px) {
+    #auctionUI .topbar .top-left {
+        flex-shrink: 1;
+        min-width: 0;
+        max-width: 42%;
+        gap: 4px;
+        padding-left: 6px;
+    }
+    #auctionUI .topbar .top-left .header-badge,
+    #auctionUI .topbar .count-pill-btn {
+        font-size: 0.65rem;
+        padding: 2px 4px;
+        min-width: 0;
+    }
+    #auctionUI .topbar .top-right {
+        flex-shrink: 0;
+        gap: 6px;
+        padding: 0 8px;
+        min-width: 0;
+    }
+    #auctionUI .topbar .header-icon-btn {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+        flex-shrink: 0;
+    }
+    #auctionUI .topbar #toggleMuteBtn,
+    #auctionUI .topbar #togglePauseBtn {
+        margin: 0;
+    }
 }
 
 /* 4. MIDDLE WRAPPER (Fills Space) */
@@ -3752,6 +3907,14 @@ body {
 }
 .social-links a:hover { opacity: 1; transform: scale(1.1); }
 
+.footer-social {
+    color: var(--gold);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.footer-social:hover { color: #fff; }
+
 /* PC Specific Override (Optional) */
 /* If you want side-by-side on very large screens */
 @media (min-width: 1200px) {
@@ -3763,6 +3926,11 @@ body {
 /* ================================================= */
 /* 🦶 UNIVERSAL FOOTER STYLES                        */
 /* ================================================= */
+
+/* Hide footer when God Panel is open */
+body.god-panel-open .app-footer {
+    display: none !important;
+}
 
 .app-footer {
     flex-shrink: 0; /* Prevents the footer from shrinking/disappearing */
@@ -3876,20 +4044,28 @@ body {
 
 /* Tabs */
 .auth-tab-btn {
-    background: rgba(0,0,0,0.2);
+    background: rgba(15, 23, 42, 0.8);
     border: none;
+    border-bottom: 2px solid transparent;
     color: #64748b;
-    padding: 15px;
-    font-weight: 800;
+    padding: 14px 16px;
+    font-weight: 700;
     font-size: 0.85rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
     letter-spacing: 1px;
 }
+.auth-tab-btn:hover {
+    background: rgba(30, 41, 59, 0.9);
+    color: #94a3b8;
+}
 .auth-tab-btn.active {
-    background: transparent;
+    background: rgba(99, 102, 241, 0.25);
     color: #fff;
-    border-bottom: 2px solid var(--primary);
+    border-bottom-color: var(--primary);
+}
+.auth-tabs {
+    background: rgba(0, 0, 0, 0.15);
 }
 
 /* Horizontal Dataset Scroll */
@@ -4084,17 +4260,71 @@ body {
     align-items: center; 
 }
 
-/* 4. Ensure the Fantasy Card fits */
+/* 4. Ensure the Fantasy Card fits; XI wrapper doesn't clip for capture */
+#xiCardWrapper {
+    overflow: visible;
+    max-height: none;
+}
 .fantasy-card {
-    /* Prevent overflow issues */
-    max-width: 100%; 
+    max-width: 100%;
     margin: 0 auto;
 }
 
-/* 5. Mobile Tweak: Scale down slightly if screen is tiny */
+/* 5. Mobile: compact fantasy card so full XI fits (no bottom crop) */
+@media (max-width: 500px), (max-height: 700px) {
+    #squadCaptureArea .fantasy-card,
+    #xiCardWrapper .fantasy-card {
+        max-width: 100%;
+    }
+    #squadCaptureArea .fantasy-header,
+    #xiCardWrapper .fantasy-header {
+        padding: 8px 10px;
+    }
+    #squadCaptureArea .fantasy-title,
+    #xiCardWrapper .fantasy-title {
+        font-size: 1.3rem;
+    }
+    #squadCaptureArea .fantasy-rating,
+    #xiCardWrapper .fantasy-rating {
+        font-size: 0.75rem;
+    }
+    #squadCaptureArea .fantasy-body,
+    #xiCardWrapper .fantasy-body {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+    #squadCaptureArea .fantasy-role-label,
+    #xiCardWrapper .fantasy-role-label {
+        font-size: 0.6rem;
+    }
+    #squadCaptureArea .fantasy-player-row,
+    #xiCardWrapper .fantasy-player-row {
+        gap: 5px;
+    }
+    #squadCaptureArea .fantasy-player-pill,
+    #xiCardWrapper .fantasy-player-pill {
+        padding: 4px 8px;
+        min-width: 60px;
+        font-size: 0.7rem;
+    }
+    #squadCaptureArea .fantasy-footer,
+    #xiCardWrapper .fantasy-footer {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+    }
+    #squadCaptureArea .fp-name,
+    #xiCardWrapper .fp-name {
+        font-size: 0.65rem;
+        max-width: 70px;
+    }
+    #squadCaptureArea .fp-sub,
+    #xiCardWrapper .fp-sub {
+        font-size: 0.55rem;
+    }
+}
 @media (max-width: 380px) {
     .fantasy-card, .premium-squad-card {
-        zoom: 0.9; /* Slight shrink for iPhone SE/Small Androids */
+        zoom: 0.9;
     }
 }
 /* Fix for the Create Room section */
@@ -5172,30 +5402,21 @@ body {
     transform: scale(0.96);
 }
 
-#toggleMuteBtn img {
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
-    transition: transform 0.2s ease, filter 0.2s ease;
+.mute-toggle-btn .mute-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.9);
+    transition: color 0.2s ease, transform 0.2s ease;
 }
-
-#toggleMuteBtn:hover img {
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
-}
-
-#toggleMuteBtn:active img {
-    transform: scale(0.92);
-}
-
-/* Muted state */
+.mute-toggle-btn .mute-icon.hidden { display: none !important; }
+#toggleMuteBtn:hover .mute-icon { color: #fff; }
+#toggleMuteBtn:active .mute-icon { transform: scale(0.92); }
 #toggleMuteBtn.muted {
     border-color: rgba(239, 68, 68, 0.7) !important;
     background: rgba(239, 68, 68, 0.12) !important;
 }
-#toggleMuteBtn.muted img {
-    filter: brightness(0.9) sepia(0.3);
-}
+#toggleMuteBtn.muted .mute-icon { color: rgba(248, 113, 113, 0.95); }
 
 
 
