@@ -98,7 +98,7 @@
             <div id="headerTeamBadge" class="header-badge hidden" style="background:var(--gold); color:#000; font-weight:600; border:none;">
                 <span id="headerTeamName">---</span>
             </div>
-            <button onclick="toggleUserList()" class="count-pill-btn">
+            <button onclick="toggleUserList(event)" class="count-pill-btn" type="button">
                 <span class="pulse-dot"></span>
                 <span id="liveUserCount">0</span>
             </button>
@@ -221,7 +221,7 @@
                         <div class="feed-input-wrapper">
                             <button type="button" class="feed-list-btn" id="soldUnsoldBtn" onclick="toggleSoldUnsoldPopup()" title="Sold / Unsold list" aria-label="Sold Unsold list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
                             <input type="text" id="msg" placeholder="Chat..." autocomplete="off">
-                            <button class="primary-btn" onclick="sendChat()">➤</button>
+                            <button type="button" class="chat-send-btn" onclick="sendChat()" aria-label="Send message">➤</button>
                         </div>
                     </div>
                 </div>
@@ -303,12 +303,10 @@
     </section>
 
     <section id="postAuctionSummary" class="screen hidden">
-        <header class="topbar glass">
-            <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
-                <span class="brand">  AUCTION SUMMARY</span>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="exitToHome()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">🏠︎</button>
-                </div>
+        <header class="topbar glass summary-topbar">
+            <div class="summary-topbar-inner">
+                <span class="summary-brand">AUCTION SUMMARY</span>
+                <button onclick="exitToHome()" class="summary-exit-btn" type="button" aria-label="Exit to main">🏠</button>
             </div>
         </header>
 
@@ -431,7 +429,8 @@
     </div>
 
     <div id="identityVerifyOverlay" class="rules-overlay hidden">
-        <div class="glass rules-card" style="max-width: 400px; padding: 20px; text-align: center;">
+        <div class="glass rules-card identity-verify-card" style="max-width: 400px; padding: 20px; padding-top: 44px; text-align: center; position: relative;">
+            <button type="button" class="identity-verify-close" onclick="document.getElementById('identityVerifyOverlay').classList.add('hidden')" aria-label="Close and go back">×</button>
             <h2 style="color: #fca5a5; border: none;">⚠️ Identity Check</h2>
             <p>A new device is trying to join as <b id="verifyName" style="color: #fff;"></b>.</p>
             <p>Is this you trying to switch devices?</p>
