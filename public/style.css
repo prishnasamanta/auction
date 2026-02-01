@@ -6304,11 +6304,3 @@ body {
     
     .timeline-item { flex-direction: row; }
 }
-.footer-social {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  color: #fff;
-  transition: transform 0.2s ease, color 0.2s ease;
-}
