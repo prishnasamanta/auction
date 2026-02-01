@@ -150,9 +150,19 @@ function pushSummaryWithHomeBack() {
     document.title = `Summary - ${roomCode}`;
 }
 // Handle Browser "Back" Button: leaderboard -> summary, summary -> main (home)
-window.onpopstate = function(event) {
+// When on summary and user presses back: show exit confirm popup; Cancel = stay on summary, Confirm = go to main
+window.onpopstate = async function(event) {
     if (event.state) {
         if (event.state.page === 'home') {
+            const summaryEl = document.getElementById('postAuctionSummary');
+            const wasOnSummary = summaryEl && !summaryEl.classList.contains('hidden');
+            if (wasOnSummary && roomCode) {
+                const yes = await showConfirm("Are you sure you want to exit to the Main Menu?", "EXIT GAME?", "🏠");
+                if (!yes) {
+                    history.pushState({ page: 'summary', room: roomCode }, `Summary - ${roomCode}`, `/room/${roomCode}/summary`);
+                    return;
+                }
+            }
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById('landing').classList.remove('hidden');
             document.title = 'IPL Live Auction';
@@ -567,7 +577,13 @@ socket.on("joinedRoom", (data) => {
     const idOverlay = document.getElementById("identityVerifyOverlay");
     if (idOverlay) idOverlay.classList.add("hidden");
 
-    // 1. SYNC GLOBAL STATE
+    // 1. SYNC GLOBAL STATE (or partial update when updateOnly)
+    if (data.updateOnly) {
+        if (data.roomCode) roomCode = data.roomCode;
+        if (data.teamOwners !== undefined) teamOwners = data.teamOwners;
+        if (data.availableTeams !== undefined) renderEmbeddedTeams(data.availableTeams);
+        return;
+    }
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
     if(data.rules) activeRules = data.rules;
@@ -899,32 +915,39 @@ socket.on("identityShowCode", ({ code, name }) => {
 
 // 2. NEW DEVICE: Asks for Input
 socket.on("identityInputRequired", ({ roomCode, name }) => {
-    // Hide any previous loading popups
     toggleCustomPopup(false);
 
-    // Create a custom input prompt
     const overlay = document.getElementById("identityVerifyOverlay");
     overlay.classList.remove("hidden");
-    
+
+    function closeAndGoHome() {
+        overlay.classList.add("hidden");
+        overlay.innerHTML = "";
+        sessionStorage.removeItem("ipl_room");
+        sessionStorage.removeItem("ipl_team");
+        window.location.href = "/";
+    }
+
     overlay.innerHTML = `
-        <div class="glass rules-card" style="max-width: 400px; padding: 25px; text-align: center;">
+        <div class="glass rules-card identity-verify-card">
+            <button type="button" class="identity-verify-close" aria-label="Close">×</button>
             <h2 style="color: #facc15; margin-bottom:10px;">🔐 Verification</h2>
             <p style="color:#ccc; font-size:0.9rem;">
                 Check your other device for the 3-digit code.
             </p>
-            
-            <input type="number" id="verifyInput" placeholder="000" 
-                   style="font-size:2rem; text-align:center; letter-spacing:5px; margin:20px 0; background:rgba(0,0,0,0.5); border-color:#facc15;">
-            
+            <input type="number" id="verifyInput" placeholder="000" class="identity-verify-input" maxlength="3">
             <button id="btnSubmitCode" class="primary-btn" style="width:100%;">VERIFY & JOIN</button>
         </div>
     `;
 
+    const closeBtn = overlay.querySelector(".identity-verify-close");
+    if (closeBtn) closeBtn.onclick = closeAndGoHome;
+
     document.getElementById("btnSubmitCode").onclick = () => {
         const code = document.getElementById("verifyInput").value;
-        if(code.length > 0) {
+        if (code.length > 0) {
             socket.emit("verifyIdentityCode", { roomCode, name, code });
-            overlay.innerHTML = `<div style="color:white;">Verifying...</div>`; // Show loading state
+            overlay.innerHTML = `<div style="color:white;">Verifying...</div>`;
         }
     };
 });
@@ -1099,6 +1122,10 @@ socket.on("adminPromoted", () => {
     isHost = true;
     updateAdminButtons(gameStarted);
     alert("🜲 You are now the Host!");
+});
+socket.on("youAreSpectator", () => {
+    if (typeof showPopup === "function") showPopup("You are a spectator now. You can watch the auction but no longer have a team.", "SPECTATOR", "👁️");
+    else alert("You are a spectator now.");
 });
 // Save Rules
 const saveRulesBtn = document.getElementById("saveRules");
@@ -1816,54 +1843,54 @@ socket.on("chatUpdate", d => {
     const chat = document.getElementById("chat");
     if(!chat) return;
 
-    // Strict Check
-    const isMe = (d.user === username); 
-    
+    const isMe = (d.user === username);
+    const msgId = d.id || `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const reactions = d.reactions || {};
+
     const div = document.createElement("div");
-    // Both use the same base class structure now
     div.className = `chat-msg ${isMe ? 'mine' : 'others'}`;
-    
-    // Helper for time
+    div.dataset.msgId = msgId;
+    div.dataset.reactions = JSON.stringify(reactions);
+
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12:false });
     const color = TEAM_COLORS[d.team] || '#aaa';
+    const sortedReactions = Object.entries(reactions).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const reactionsBadgeHtml = sortedReactions.length
+        ? `<span class="chat-msg-reaction-badge">${sortedReactions.map(([emoji, count]) => `${emoji} ${count}`).join("  ")}</span>`
+        : "";
 
     div.innerHTML = `
         <div class="chat-msg-reactions"><span data-emoji="👍" title="Like">👍</span><span data-emoji="👏" title="Clap">👏</span><span data-emoji="😂" title="Laugh">😂</span><span data-emoji="❤️" title="Love">❤️</span><span data-emoji="🔥" title="Fire">🔥</span></div>
         <div class="chat-meta" style="color:${color}">
             <span class="chat-meta-inline">${d.team} &bull; ${d.user || 'Player'}</span>
         </div>
-        <div class="chat-text" style="color:#eee;">${d.msg}<span class="chat-text-reactions"></span></div>
+        <div class="chat-text" style="color:#eee;">${d.msg}${reactionsBadgeHtml ? reactionsBadgeHtml : ""}</div>
     `;
     div.style.borderLeftColor = color;
 
-    (function setupReactable(el) {
-        let holdTimer = null;
-        function updateReactionsDisplay() {
-            const raw = el.dataset.reactions || "{}";
-            let reactions = {};
-            try { reactions = JSON.parse(raw); } catch (_) {}
-            const sorted = Object.entries(reactions).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    (function setupReactable(el, mid) {
+        function updateReactionsDisplay(rx) {
+            const r = rx || {};
+            const sorted = Object.entries(r).sort((a, b) => b[1] - a[1]).slice(0, 3);
             const txt = el.querySelector(".chat-text");
-            const span = el.querySelector(".chat-text-reactions");
-            if (span && txt) {
-                if (sorted.length === 0) { span.textContent = ""; span.className = "chat-text-reactions"; return; }
-                span.textContent = " " + sorted.map(([emoji]) => emoji).join(" ");
-                span.className = "chat-text-reactions has-reactions";
+            if (!txt) return;
+            let badge = el.querySelector(".chat-msg-reaction-badge");
+            if (sorted.length === 0) {
+                if (badge) badge.remove();
+                return;
             }
+            const badgeHtml = `<span class="chat-msg-reaction-badge">${sorted.map(([emoji, count]) => `${emoji} ${count}`).join("  ")}</span>`;
+            if (badge) badge.outerHTML = badgeHtml; else txt.insertAdjacentHTML("beforeend", badgeHtml);
         }
         el.querySelector(".chat-msg-reactions")?.addEventListener("click", function(e) {
             e.stopPropagation();
             const span = e.target.closest("span[data-emoji]");
             if (!span) return;
             const emoji = span.getAttribute("data-emoji");
-            const raw = el.dataset.reactions || "{}";
-            let reactions = {};
-            try { reactions = JSON.parse(raw); } catch (_) {}
-            reactions[emoji] = (reactions[emoji] || 0) + 1;
-            el.dataset.reactions = JSON.stringify(reactions);
-            updateReactionsDisplay();
+            socket.emit("chatReaction", { msgId: mid, emoji });
             el.classList.remove("reactable-hold");
         });
+        let holdTimer = null;
         el.addEventListener("pointerdown", function(e) {
             if (e.button !== 0) return;
             holdTimer = setTimeout(function() {
@@ -1879,15 +1906,29 @@ socket.on("chatUpdate", d => {
             if (el.dataset.reactableJustOpened) { delete el.dataset.reactableJustOpened; return; }
             el.classList.remove("reactable-hold");
         });
-    })(div);
+    })(div, msgId);
 
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
-    
-    // Clean to maintain limits
     cleanChatMessages();
-    // Persist feed so it survives full page refresh
     saveChatToSession();
+});
+socket.on("chatReactionUpdate", ({ msgId, reactions }) => {
+    const chat = document.getElementById("chat");
+    if(!chat || !msgId) return;
+    const el = chat.querySelector(`[data-msg-id="${msgId}"]`);
+    if (!el) return;
+    el.dataset.reactions = JSON.stringify(reactions || {});
+    const sorted = Object.entries(reactions || {}).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const txt = el.querySelector(".chat-text");
+    if (!txt) return;
+    let badge = el.querySelector(".chat-msg-reaction-badge");
+    if (sorted.length === 0) {
+        if (badge) badge.remove();
+        return;
+    }
+    const badgeHtml = `<span class="chat-msg-reaction-badge">${sorted.map(([emoji, count]) => `${emoji} ${count}`).join("  ")}</span>`;
+    if (badge) badge.outerHTML = badgeHtml; else txt.insertAdjacentHTML("beforeend", badgeHtml);
 });
 
 // 2. LOG UPDATE (Merged into Chat, Max 5 logs)
@@ -2528,16 +2569,24 @@ window.toggleLateJoin = function() {
         auctionCard.classList.remove("hidden");
     }
 };
-window.toggleUserList = function() {
+window.toggleUserList = function(ev) {
+    if (ev) ev.stopPropagation();
     const list = document.getElementById("userListDropdown");
+    const btn = document.querySelector(".count-pill-btn");
+    if (!list || !btn) return;
+    const isOpening = list.classList.contains("hidden");
     list.classList.toggle("hidden");
-    if (!list.classList.contains("hidden")) {
-        document.addEventListener('click', closeUserListOutside);
+    document.removeEventListener('click', closeUserListOutside);
+    if (isOpening) {
+        setTimeout(function() {
+            document.addEventListener('click', closeUserListOutside);
+        }, 0);
     }
 };
 function closeUserListOutside(e) {
     const list = document.getElementById("userListDropdown");
     const btn = document.querySelector(".count-pill-btn");
+    if (!list || !btn) return;
     if (!list.contains(e.target) && !btn.contains(e.target)) {
         list.classList.add("hidden");
         document.removeEventListener('click', closeUserListOutside);
@@ -2799,45 +2848,28 @@ function togglePlayerXI(p, btnElement, roleKey) {
     updateXIPreview();
 }
 // --- 5. SUBMIT LOGIC (FIXED) ---
+// All validation feedback shown in xiStatus only (no popups). Server returns disqualified + reason.
 window.submitXI = function() {
     const totalSelected = countTotalXI();
-    if (totalSelected !== 11) return alert("Please select exactly 11 players.");
-
-    // --- MANUALLY CHECK RULES ---
-    const allPlayers = [
-        ...selectedXI.WK, 
-        ...selectedXI.BAT, 
-        ...selectedXI.ALL, 
-        ...selectedXI.BOWL
-    ];
-
-    const r = activeRules;
-
-    // 1. Foreign Check
-    const foreignCount = allPlayers.filter(p => p.foreign).length;
-    if (foreignCount > r.maxForeignXI) {
-        return alert(`Too many overseas players! Max allowed: ${r.maxForeignXI}`);
+    const statusDiv = document.getElementById("xiStatus");
+    if (totalSelected !== 11) {
+        if (statusDiv) {
+            statusDiv.classList.remove("hidden");
+            statusDiv.setAttribute("data-source", "preview");
+            statusDiv.innerHTML = `
+            <div class="status-box" style="padding:20px; text-align:center; border:1px solid #ef4444; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+                <h2 style="margin:0 0 5px 0; font-size:1.4rem; color:#ef4444;">❌ Select 11 players</h2>
+                <p style="margin-top:8px; color:#fca5a5; font-size:0.9rem;">Please select exactly 11 players (${totalSelected}/11).</p>
+            </div>`;
+        }
+        return;
     }
 
-    // 2. Spinner Check (The missing piece)
-    // We check if the player's role is specifically "SPIN"
-    const spinCount = allPlayers.filter(p => p.role === "SPIN").length;
-    if (r.minSpin && spinCount < r.minSpin) {
-        return alert(`Your XI needs at least ${r.minSpin} Spinner(s). Current: ${spinCount}`);
-    }
-
-    // 3. Other Role Checks (Optional but good for immediate feedback)
-    if (selectedXI.WK.length < r.minWK) return alert(`Need at least ${r.minWK} Wicket Keeper(s).`);
-    if (selectedXI.BAT.length < r.minBat) return alert(`Need at least ${r.minBat} Batsman/men.`);
-    if (selectedXI.BOWL.length < r.minBowl) return alert(`Need at least ${r.minBowl} Bowler(s).`);
-
-    // --- ALL VALID: SUBMIT ---
     const btn = document.getElementById("submitXIBtn");
     if (btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
 
     socket.emit("submitXI", { team: myTeam, xi: selectedXI });
 
-    // Refresh state to update leaderboard
     setTimeout(() => {
         socket.emit("getAuctionState");
         socket.emit("getSquads");
@@ -2939,7 +2971,8 @@ function updateXIPreview() {
 }
 function updateStatsBar() {
     const bar = document.getElementById("xiStatsBar");
-    const r = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3,minAll: 1, minSpin: 0 };
+    const statusDiv = document.getElementById("xiStatus");
+    const r = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3, minAll: 1, minSpin: 0 };
     if(!bar) return;
     const all = [...selectedXI.WK, ...selectedXI.BAT, ...selectedXI.ALL, ...selectedXI.BOWL];
     const foreign = all.filter(p => p.foreign).length;
@@ -2958,6 +2991,43 @@ function updateStatsBar() {
         ${badge("🥎", selectedXI.BOWL.length, r.minBowl)}
         ${badge("🥎", spinCount, r.minSpin)}
     `;
+
+    /* When 11 selected, show criteria status in xiStatus (only if not already showing submit result) */
+    if (statusDiv && statusDiv.getAttribute("data-source") === "result") return;
+    const count = all.length;
+    if (count !== 11) {
+        if (statusDiv && statusDiv.getAttribute("data-source") === "preview") {
+            statusDiv.innerHTML = "";
+            statusDiv.classList.add("hidden");
+            statusDiv.removeAttribute("data-source");
+        }
+        return;
+    }
+    const reasons = [];
+    if (foreign > (r.maxForeignXI || 4)) reasons.push(`Max ${r.maxForeignXI || 4} overseas in XI (you have ${foreign})`);
+    if (selectedXI.WK.length < r.minWK) reasons.push(`Need min ${r.minWK} Wicket Keeper(s)`);
+    if (selectedXI.BAT.length < r.minBat) reasons.push(`Need min ${r.minBat} Batsmen`);
+    if (selectedXI.ALL.length < r.minAll) reasons.push(`Need min ${r.minAll} All-Rounder(s)`);
+    if (selectedXI.BOWL.length < r.minBowl) reasons.push(`Need min ${r.minBowl} Bowler(s)`);
+    if ((r.minSpin || 0) > 0 && spinCount < r.minSpin) reasons.push(`Need min ${r.minSpin} Spinner(s). Current: ${spinCount}`);
+    statusDiv.classList.remove("hidden");
+    statusDiv.setAttribute("data-source", "preview");
+    if (reasons.length > 0) {
+        statusDiv.innerHTML = `
+        <div class="status-box" style="padding:20px; text-align:center; border:1px solid #ef4444; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <h2 style="margin:0 0 5px 0; font-size:1.4rem; color:#ef4444;">❌ Criteria not met</h2>
+            <div style="margin-top:8px; color:#fca5a5; font-size:0.85rem; background:rgba(239,68,68,0.1); padding:8px; border-radius:6px;">
+                ${reasons.map(rs => rs).join("<br>")}
+            </div>
+            <p style="margin-top:12px; color:#94a3b8; font-size:0.8rem;">Adjust your XI to meet requirements, then Submit.</p>
+        </div>`;
+    } else {
+        statusDiv.innerHTML = `
+        <div class="status-box" style="padding:20px; text-align:center; border:1px solid #22c55e; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <h2 style="margin:0 0 5px 0; font-size:1.4rem; color:#22c55e;">✅ Criteria met</h2>
+            <p style="margin-top:8px; color:#94a3b8; font-size:0.9rem;">Ready to submit your Playing XI.</p>
+        </div>`;
+    }
 }
 // --- 5. SUBMIT ---
 window.resetXISelection = function() {
@@ -2984,7 +3054,7 @@ window.resetXISelection = function() {
         if(saveBtn) saveBtn.classList.add('hidden');
         
         // 4. Clear Status & Unhide List
-        if(statusDiv) { statusDiv.innerHTML = ""; statusDiv.classList.add("hidden"); }
+        if(statusDiv) { statusDiv.innerHTML = ""; statusDiv.classList.add("hidden"); statusDiv.removeAttribute("data-source"); }
         if(listDiv) listDiv.classList.remove("hidden"); // Show players again
 
         // 5. Reset Card View
@@ -3018,6 +3088,7 @@ socket.on("submitResult", (res) => {
 
     if(status) {
         status.classList.remove("hidden");
+        status.setAttribute("data-source", "result");
         status.innerHTML = `
         <div class="status-box" style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             
@@ -3062,6 +3133,13 @@ window.editTeam = function() {
     const saveBtn = document.getElementById("saveXIBtn");
     const listDiv = document.getElementById("mySquadList");
     const xiButtonRow = document.getElementById("xiButtonRow"); // Select the row
+
+    // Clear result state so updateStatsBar can show criteria preview again
+    if (statusBox) {
+        statusBox.removeAttribute("data-source");
+        statusBox.innerHTML = "";
+        statusBox.classList.add("hidden");
+    }
 
     // 1. Show the entire button container row
     if (xiButtonRow) {
@@ -3549,7 +3627,7 @@ function generateFullSquadHTML(teamName, squad, purse, owner, isPopup = false) {
         
         <div class="prem-header">
             <h1 class="prem-title">${teamName}</h1>
-            <div class="prem-meta">FULL SQUAD • ${owner || 'Manager'}</div>
+            <div class="prem-meta">FULL SQUAD • ${owner || '—'}</div>
             
             <div class="prem-stats">
                 <div class="stat-badge">💰 ₹${purse.toFixed(2)} Cr</div>
@@ -3721,7 +3799,7 @@ function renderPostAuctionSummary() {
     teams.forEach(team => {
         const squad = allSquads[team];
         const purse = teamPurse[team] || 0;
-        const owner = teamOwners[team] || "Manager";
+        const owner = (teamOwners[team] || "").trim() || "—";
         const teamColor = TEAM_COLORS[team] || "#fff";
         // 1. Create Wrapper
         const item = document.createElement("div");
@@ -3765,18 +3843,7 @@ content.innerHTML = generateFullSquadHTML(team, squad, purse, owner, true);
         list.appendChild(item);
     });
 }
-// --- EXIT TO HOME (Fixed: Forces return to Main Page) ---
-window.exitToHome = function() {
-    // We removed the check for 'postAuctionSummary' so it doesn't loop back.
-   
-    if (confirm("Are you sure you want to exit to the Main Menu?")) {
-        // 1. Clear session to stop auto-reconnect logic on the landing page
-        sessionStorage.clear();
-       
-        // 2. Force hard redirect to root (Main Page)
-        window.location.href = "/";
-    }
-};
+// --- EXIT TO HOME: uses showConfirm (defined later) for consistent popup ---
 /* ================================================= */
 /* ============== GOD MODE (ADMIN) ================= */
 /* ================================================= */
