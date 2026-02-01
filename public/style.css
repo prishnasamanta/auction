@@ -1335,6 +1335,34 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     color: #fff;
 }
 
+/* Chat send button – distinct WhatsApp-style */
+.chat-send-btn {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    color: #fff;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(14, 165, 233, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s;
+}
+.chat-send-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.5);
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+}
+.chat-send-btn:active {
+    transform: scale(0.96);
+}
+
 /* Sold/Unsold popup */
 .sold-unsold-tab {
     padding: 8px 14px;
@@ -2016,15 +2044,15 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* Base Message Row – compact */
 .chat-msg {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     width: 100%;
-    padding: 4px 6px;
+    padding: 6px 8px;
     background: rgba(30, 41, 59, 0.4);
-    border-radius: 4px;
+    border-radius: 8px;
     border-left: 3px solid var(--msg-color);
     font-size: 0.78rem;
     color: #cbd5e1;
-    transition: background 0.1s;
+    transition: background 0.15s, transform 0.15s ease, box-shadow 0.15s ease;
     line-height: 1.35;
     position: relative;
     animation: slideInLeft 0.2s ease-out;
@@ -2032,7 +2060,14 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 }
 
 .chat-msg:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* WhatsApp-style: small scale + highlight when long-press (reactable-hold) */
+.chat-msg.reactable-hold {
+    transform: scale(1.02);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
 
 .chat-msg.mine {
@@ -2040,40 +2075,76 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     border-left-width: 4px;
 }
 
-/* Reaction bar (shown on long-press) */
+/* Reaction bar – WhatsApp-style floating pill above message */
 .chat-msg-reactions {
     display: none;
     position: absolute;
-    bottom: 100%;
-    left: 0;
-    margin-bottom: 4px;
-    padding: 4px 6px;
-    background: rgba(15, 23, 42, 0.95);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    gap: 4px;
-    flex-wrap: wrap;
-    z-index: 10;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    padding: 6px 10px;
+    background: rgba(30, 41, 59, 0.98);
+    border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
+    gap: 2px;
+    flex-wrap: nowrap;
+    z-index: 20;
+    align-items: center;
+    justify-content: center;
+    animation: chatReactionPop 0.2s ease forwards;
+}
+@keyframes chatReactionPop {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.85);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+    }
 }
 .chat-msg.reactable-hold .chat-msg-reactions {
     display: flex;
 }
 .chat-msg-reactions span {
     cursor: pointer;
-    font-size: 1rem;
-    padding: 2px 4px;
-    border-radius: 4px;
+    font-size: 1.25rem;
+    padding: 6px 8px;
+    border-radius: 50%;
+    transition: transform 0.15s ease, background 0.15s;
 }
 .chat-msg-reactions span:hover {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.2);
+}
+.chat-msg-reactions span:active {
+    transform: scale(1.1);
 }
 
+/* Reaction badge – WhatsApp-style pill (top 3 emoji + count) on message */
+.chat-msg-reaction-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 6px;
+    padding: 2px 8px;
+    background: rgba(15, 23, 42, 0.85);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+}
+.chat-msg-reaction-badge span {
+    white-space: nowrap;
+}
 .chat-text-reactions {
     margin-left: 4px;
-    opacity: 0.9;
+    opacity: 0.95;
+    display: inline-flex;
+    align-items: center;
 }
 .chat-text-reactions.has-reactions {
-    font-size: 0.95em;
+    font-size: 0.9em;
 }
 
 /* Metadata: team + player in a single line */
@@ -2657,6 +2728,54 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 /* --- PREMIUM SUMMARY PAGE --- */
 #postAuctionSummary {
     background: radial-gradient(circle at top, #1e293b, #0f172a);
+}
+
+/* Summary header – clearer title and exit button */
+#postAuctionSummary .summary-topbar {
+    min-height: 52px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+}
+#postAuctionSummary .summary-topbar-inner {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+#postAuctionSummary .summary-brand {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+#postAuctionSummary .summary-exit-btn {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(239,68,68,0.5);
+    border-radius: 12px;
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+#postAuctionSummary .summary-exit-btn:hover {
+    background: rgba(239,68,68,0.25);
+    border-color: #ef4444;
+    color: #fff;
+    transform: scale(1.05);
 }
 
 .summary-item {
@@ -3863,8 +3982,36 @@ body {
     flex-shrink: 0;
 }
 .topbar-right .admin-group {
-    gap: 8px !important;
+    gap: 6px !important;
     padding-left: 6px;
+}
+.topbar-right .header-icon-btn {
+    border-radius: 10px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.topbar-right .header-icon-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.topbar-right .header-icon-btn:active {
+    transform: scale(0.98);
+}
+.topbar-right #leaveBtn {
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.5);
+    color: #f87171;
+}
+.topbar-right #leaveBtn:hover {
+    background: rgba(239,68,68,0.25);
+    border-color: #ef4444;
+    color: #fff;
 }
 /* When admin controls (host) are hidden, right bar uses only leave-btn space – middle gets the rest, like lateJoin */
 .topbar-right .admin-group.hidden {
@@ -3901,12 +4048,17 @@ body {
     height: 28px;
 }
 
+/* Ensure topbar doesn't clip user-list dropdown */
+#auctionUI .topbar {
+    position: relative;
+    overflow: visible;
+}
 /* Mobile: same layout, compact badges */
 @media (max-width: 600px) {
     #auctionUI .topbar {
         display: flex;
         align-items: center;
-        overflow: hidden;
+        overflow: visible; /* was hidden – allow dropdown to show */
     }
     #auctionUI .topbar .topbar-row {
         padding: 0 4px;
@@ -4985,6 +5137,50 @@ body {
 
 .cp-btn.hidden { display: none; }
 
+/* Identity Verify Overlay: X to go back to main */
+.identity-verify-card {
+    position: relative;
+    max-width: 400px;
+    padding: 25px;
+    padding-top: 44px;
+    text-align: center;
+}
+.identity-verify-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    color: #94a3b8;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+.identity-verify-close:hover {
+    background: rgba(239,68,68,0.3);
+    color: #fff;
+}
+.identity-verify-input {
+    font-size: 2rem;
+    text-align: center;
+    letter-spacing: 5px;
+    margin: 20px 0;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #facc15;
+    border-radius: 8px;
+    color: #fff;
+    padding: 10px;
+    width: 100%;
+    max-width: 140px;
+}
+
 @keyframes bounceIn { 
     0% { transform: scale(0); } 
     50% { transform: scale(1.2); } 
@@ -5220,13 +5416,17 @@ body {
         font-size: 0.85rem !important;
     }
     
-    #postAuctionSummary .topbar .brand {
-        font-size: 0.9rem !important;
+    #postAuctionSummary .topbar .brand,
+    #postAuctionSummary .summary-brand {
+        font-size: 0.95rem !important;
     }
     
-    #postAuctionSummary .topbar button {
-        padding: 4px 8px !important;
-        font-size: 0.85rem !important;
+    #postAuctionSummary .topbar button,
+    #postAuctionSummary .summary-exit-btn {
+        padding: 6px 10px !important;
+        font-size: 1rem !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
     }
 }
 
