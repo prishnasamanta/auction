@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require('path');
+const fs = require('fs');
 const PLAYERS = require("./players"); // Ensure players.js exists
 
 const app = express();
@@ -21,6 +22,7 @@ const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 // --- SERVER STATE ---
 let rooms = {}; // Fast in-memory storage
 const disconnectTimers = {};
+const hostLeftEmptyTimers = {}; // When host leaves with no one else, room lives 2 mins then destroy
 
 // --- STATIC FILES ---
 app.use(express.static(path.join(__dirname, 'public')));
@@ -363,10 +365,7 @@ io.on("connection", socket => {
         const code = generateRoomCode();
         
         // Choose player pool based on selected dataset (default -> PLAYERS)
- const path = require('path');
-const fs = require('fs');
-
-let playerPool = PLAYERS;
+        let playerPool = PLAYERS;
 
 if (datasetId === "legends") {
     const rootPath = path.join(process.cwd(), "legends.js");
@@ -529,10 +528,12 @@ socket.on("getAuctionState", () => {
             }
 
             let assignedTeam = null;
+            let wasKicked = false;
 
             if(oldSocketId) {
                 // Restore old user data to new socket ID
                 const userData = room.users[oldSocketId];
+                wasKicked = userData.isKicked;
                 delete room.users[oldSocketId];
                 
                 userData.id = socket.id;
@@ -544,9 +545,17 @@ socket.on("getAuctionState", () => {
                 room.users[socket.id] = userData;
                 assignedTeam = userData.team;
 
-                // Restore Admin Status if they were host
+                // Restore Admin Status if they were host, or reclaim host if room was waiting (2-min timer)
                 if (room.admin === oldSocketId) {
                     room.admin = socket.id;
+                } else if (room.admin === null && room.pendingHostName === username) {
+                    room.admin = socket.id;
+                    room.adminUser = username;
+                    delete room.pendingHostName;
+                    if (hostLeftEmptyTimers[roomId]) {
+                        clearTimeout(hostLeftEmptyTimers[roomId]);
+                        delete hostLeftEmptyTimers[roomId];
+                    }
                 }
             } else {
                 // New User / Spectator joining mid-game or post-game
@@ -591,7 +600,8 @@ socket.on("getAuctionState", () => {
 
             if(assignedTeam) {
                 socket.emit("teamPicked", { team: assignedTeam, remaining: room.availableTeams });
-            } 
+            }
+            if (wasKicked) socket.emit("youAreSpectator");
 
             // 3. HANDLE GAME PHASE ROUTING
             if (room.auctionEnded) {
@@ -672,6 +682,7 @@ socket.on("getAuctionState", () => {
                 }
                 // Restore user to new socket
                 const userData = room.users[existingSocketId];
+                const wasKicked = userData.isKicked;
                 delete room.users[existingSocketId];
                 
                 userData.id = socket.id;
@@ -682,9 +693,17 @@ socket.on("getAuctionState", () => {
                 
                 room.users[socket.id] = userData;
                 
-                // Restore admin status if they were host
+                // Restore admin status if they were host, or reclaim host if room was waiting (host left, 2-min timer)
                 if (room.admin === existingSocketId) {
                     room.admin = socket.id;
+                } else if (room.admin === null && room.pendingHostName === user) {
+                    room.admin = socket.id;
+                    room.adminUser = user;
+                    delete room.pendingHostName;
+                    if (hostLeftEmptyTimers[roomCode]) {
+                        clearTimeout(hostLeftEmptyTimers[roomCode]);
+                        delete hostLeftEmptyTimers[roomCode];
+                    }
                 }
                 
                 socket.join(roomCode);
@@ -712,6 +731,53 @@ socket.on("getAuctionState", () => {
                 
                 broadcastUserList(room, roomCode);
                 sendLog(room, roomCode, `🔄 ${user} reconnected.`);
+                if (wasKicked) socket.emit("youAreSpectator");
+                return;
+            }
+            
+            // Kicked user rejoining as spectator (same name, was kicked after 90s – allow rejoin with no team)
+            if (existingUser.isKicked) {
+                const userData = room.users[existingSocketId];
+                delete room.users[existingSocketId];
+                userData.id = socket.id;
+                userData.connected = true;
+                userData.isAway = false;
+                userData.isKicked = false;
+                userData.team = null;
+                room.users[socket.id] = userData;
+                if (room.admin === existingSocketId) room.admin = socket.id;
+                else if (room.admin === null && room.pendingHostName === user) {
+                    room.admin = socket.id;
+                    room.adminUser = user;
+                    delete room.pendingHostName;
+                    if (hostLeftEmptyTimers[roomCode]) {
+                        clearTimeout(hostLeftEmptyTimers[roomCode]);
+                        delete hostLeftEmptyTimers[roomCode];
+                    }
+                }
+                socket.join(roomCode);
+                socket.room = roomCode;
+                socket.user = user;
+                socket.team = null;
+                socket.emit("joinedRoom", {
+                    rules: room.rules,
+                    squads: room.squads,
+                    purses: room.purse,
+                    roomCode: roomCode,
+                    isHost: (room.admin === socket.id),
+                    auctionStarted: room.auctionStarted,
+                    availableTeams: room.availableTeams,
+                    auctionEnded: room.auctionEnded,
+                    userCount: Object.keys(room.users).length,
+                    history: { chat: room.chat, logs: room.logs },
+                    teamOwners: getTeamOwners(room),
+                    rtmLeft: room.rtmLeft || {},
+                    yourTeam: null,
+                    leaderboardData: room.auctionEnded ? Object.values(room.playingXI || {}) : [],
+                    isSpectatorRejoin: true
+                });
+                broadcastUserList(room, roomCode);
+                socket.emit("youAreSpectator");
                 return;
             }
             
@@ -1009,9 +1075,19 @@ socket.on("getAuctionState", () => {
     socket.on("chat", data => {
         const r = rooms[socket.room];
         if(!r) return;
-        r.chat.push(data);
-        if(r.chat.length > 20) r.chat.shift(); 
-        io.to(socket.room).emit("chatUpdate", data);
+        const msg = { ...data, id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`, reactions: {} };
+        r.chat.push(msg);
+        if(r.chat.length > 20) r.chat.shift();
+        io.to(socket.room).emit("chatUpdate", msg);
+    });
+    socket.on("chatReaction", ({ msgId, emoji }) => {
+        const r = rooms[socket.room];
+        if(!r || !msgId || !emoji) return;
+        const msg = r.chat.find(m => m.id === msgId);
+        if(!msg) return;
+        if(!msg.reactions) msg.reactions = {};
+        msg.reactions[emoji] = (msg.reactions[emoji] || 0) + 1;
+        io.to(socket.room).emit("chatReactionUpdate", { msgId, reactions: msg.reactions });
     });
     socket.on("getSquads", () => {
         const r = rooms[socket.room];
@@ -1117,53 +1193,69 @@ socket.on("getAuctionState", () => {
         const GRACE_PERIOD = 90000; 
 
         disconnectTimers[timerKey] = setTimeout(() => {
-            if (rooms[roomCode] && rooms[roomCode].users[socket.id]) {
-                const finalRoom = rooms[roomCode];
-                const targetUser = finalRoom.users[socket.id];
-                const userTeam = targetUser.team;
+            const finalRoom = rooms[roomCode];
+            if (!finalRoom) { delete disconnectTimers[timerKey]; return; }
+            // Find user by name (they may still be keyed by old socket.id)
+            const userEntry = Object.entries(finalRoom.users).find(([, u]) => u.name === userName);
+            if (!userEntry) { delete disconnectTimers[timerKey]; return; }
+            const [oldSocketId, targetUser] = userEntry;
+            const userTeam = targetUser.team;
 
-                targetUser.isKicked = true; 
-                targetUser.team = null; 
+            targetUser.isKicked = true;
+            targetUser.team = null;
 
-                // HOST TRANSFER
-                if (finalRoom.admin === socket.id) {
-                    const remainingIDs = Object.keys(finalRoom.users).filter(id => !finalRoom.users[id].isKicked && !finalRoom.users[id].isAway);
-                    
-                    if (remainingIDs.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * remainingIDs.length);
-                        const newHostID = remainingIDs[randomIndex];
-                        finalRoom.admin = newHostID;
-                        finalRoom.adminUser = finalRoom.users[newHostID].name;
-                        
-                        io.to(newHostID).emit("adminPromoted");
-                        sendLog(finalRoom, roomCode, `👑 Host timed out. ${finalRoom.adminUser} is now Host.`);
-                    } else {
-                         finalRoom.isPublic = false; 
-                         finalRoom.auctionEnded = true; 
-                         io.to(roomCode).emit("forceHome", "Auction ended (No active players).");
-                         // Save state as we close
-                         saveToCloud();
-                    }
+            // HOST TRANSFER (don't destroy room – transfer or keep for 2 mins)
+            if (finalRoom.admin === oldSocketId) {
+                const remainingIDs = Object.keys(finalRoom.users).filter(id => id !== oldSocketId && !finalRoom.users[id].isKicked && !finalRoom.users[id].isAway);
+
+                if (remainingIDs.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * remainingIDs.length);
+                    const newHostID = remainingIDs[randomIndex];
+                    finalRoom.admin = newHostID;
+                    finalRoom.adminUser = finalRoom.users[newHostID].name;
+
+                    io.to(newHostID).emit("adminPromoted");
+                    sendLog(finalRoom, roomCode, `👑 Host timed out. ${finalRoom.adminUser} is now Host.`);
+                } else {
+                    // No one else – keep room for 2 mins then destroy (don't end auction immediately)
+                    finalRoom.admin = null;
+                    finalRoom.adminUser = null;
+                    finalRoom.pendingHostName = userName; // so host can rejoin and reclaim
+                    sendLog(finalRoom, roomCode, `⏳ Host left. Room will close in 2 minutes if no one rejoins.`);
+                    const EMPTY_ROOM_GRACE = 120000; // 2 mins
+                    hostLeftEmptyTimers[roomCode] = setTimeout(() => {
+                        if (rooms[roomCode]) {
+                            const r = rooms[roomCode];
+                            const activeCount = Object.keys(r.users).filter(id => !r.users[id].isKicked && !r.users[id].isAway).length;
+                            if (activeCount === 0) {
+                                io.to(roomCode).emit("forceHome", "Room closed (no active players).");
+                                delete rooms[roomCode];
+                                saveToCloud();
+                            }
+                        }
+                        delete hostLeftEmptyTimers[roomCode];
+                    }, EMPTY_ROOM_GRACE);
                 }
-
-                // FREE TEAM
-                if (userTeam && !finalRoom.auctionEnded) {
-                    if (!finalRoom.availableTeams.includes(userTeam)) {
-                        finalRoom.availableTeams.push(userTeam);
-                        finalRoom.availableTeams.sort();
-                    }
-                    io.to(roomCode).emit("teamPicked", { team: null, remaining: finalRoom.availableTeams });
-                    sendLog(finalRoom, roomCode, `🏃 ${userTeam} is available (Player Timed Out).`);
-                }
-
-                broadcastUserList(finalRoom, roomCode);
-                io.to(roomCode).emit("joinedRoom", { 
-                    updateOnly: true, 
-                    teamOwners: getTeamOwners(finalRoom),
-                    availableTeams: finalRoom.availableTeams,
-                    userCount: Object.keys(finalRoom.users).length
-                });
             }
+
+            // FREE TEAM
+            if (userTeam && !finalRoom.auctionEnded) {
+                if (!finalRoom.availableTeams.includes(userTeam)) {
+                    finalRoom.availableTeams.push(userTeam);
+                    finalRoom.availableTeams.sort();
+                }
+                io.to(roomCode).emit("teamPicked", { team: null, remaining: finalRoom.availableTeams });
+                sendLog(finalRoom, roomCode, `🏃 ${userTeam} is available (Player Timed Out).`);
+            }
+
+            broadcastUserList(finalRoom, roomCode);
+            io.to(roomCode).emit("joinedRoom", {
+                updateOnly: true,
+                roomCode,
+                teamOwners: getTeamOwners(finalRoom),
+                availableTeams: finalRoom.availableTeams,
+                userCount: Object.keys(finalRoom.users).length
+            });
             delete disconnectTimers[timerKey];
         }, GRACE_PERIOD);
     });
@@ -1207,6 +1299,7 @@ socket.on("getAuctionState", () => {
         else if (counts.BAT < R.minBat) { disqualified = true; reason = `Need min ${R.minBat} Batsmen`; }
         else if (counts.ALL < R.minAll) { disqualified = true; reason = `Need min ${R.minAll} All-Rounders`; }
         else if (counts.BOWL < R.minBowl) { disqualified = true; reason = `Need min ${R.minBowl} Bowlers`; }
+        else if ((R.minSpin || 0) > 0 && counts.SPIN < R.minSpin) { disqualified = true; reason = `Need min ${R.minSpin} Spinner(s). Current: ${counts.SPIN}`; }
         
         const finalRating = disqualified ? 0 : Number((totalRating / 11).toFixed(2));
 
