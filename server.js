@@ -341,7 +341,7 @@ io.on("connection", socket => {
     });
 
     // 2. CREATE ROOM
-    socket.on("createRoom", ({ user, isPublic, datasetId }) => {
+    socket.on("createRoom", async ({ user, isPublic, datasetId }) => {
         const code = generateRoomCode();
         
         // Choose player pool based on selected dataset (default -> PLAYERS)
