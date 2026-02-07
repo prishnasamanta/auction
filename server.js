@@ -3,7 +3,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const path = require('path');
 const fs = require('fs');
-const PLAYERS = require("./players"); // Ensure players.js exists
+const PLAYERS = require("./players");
 
 const app = express();
 const server = http.createServer(app);
@@ -22,7 +22,7 @@ const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://auction-10874.firebaseio.com"
+  databaseURL: "https://auction-10874-default-rtdb.asia-southeast1.firebasedatabase.app"
 });
 
 
