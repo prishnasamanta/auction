@@ -91,27 +91,28 @@
                     <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 10px; font-weight:700; letter-spacing:1px;">SELECT PLAYER POOL</label>
                     
                     <div class="dataset-scroll-container">
-                        <div class="dataset-card active" onclick="selectDataset('ipl2026', this)">
+                        <div class="dataset-card active" data-dataset-id="ipl2026" onclick="selectDataset('ipl2026', this)">
                             <div class="ds-icon">🏆</div>
                             <div class="ds-title">IPL 2026</div>
                             <div class="ds-sub">Standard</div>
                         </div>
-                        <div class="dataset-card" onclick="selectDataset('legends', this)">
+                        <div class="dataset-card" data-dataset-id="legends" onclick="selectDataset('legends', this)">
                             <div class="ds-icon">🔥</div>
                             <div class="ds-title">LEGENDS</div>
                             <div class="ds-sub">All-Time</div>
                         </div>
-                        <div class="dataset-card" onclick="selectDataset('mixed', this)">
+                        <div class="dataset-card" data-dataset-id="mixed" onclick="selectDataset('mixed', this)">
                             <div class="ds-icon">⚔️</div>
                             <div class="ds-title">MIXED</div>
                             <div class="ds-sub">Great Icon</div>
                         </div>
-                        <div class="dataset-card" onclick="selectDataset('custom', this)">
+                        <div class="dataset-card" data-dataset-id="custom" onclick="selectDataset('custom', this)">
                             <div class="ds-icon">🛠️</div>
                             <div class="ds-title">CUSTOM</div>
                             <div class="ds-sub">Builder</div>
                         </div>
                     </div>
+                    <div id="poolSelectedLabel" class="pool-selected-label">IPL 2026 pool is selected</div>
                     <input type="hidden" id="selectedSetId" value="ipl2026">
 
                     <button id="createBtn" class="primary-btn" style="width:100%; margin-top:25px; box-shadow:0 4px 15px rgba(99, 102, 241, 0.3);">CREATE ROOM</button>
@@ -529,21 +530,40 @@
                 </div>
             </div>
 
-            <!-- Upload: format info + file input (hidden until Upload clicked) -->
-            <div id="customBuilderUploadSection" class="hidden" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:12px;">
+            <!-- Upload: back arrow top-left, format, example table, then button -->
+            <div id="customBuilderUploadSection" class="hidden" style="flex:1; overflow-y:auto; padding:15px; padding-top:48px; display:flex; flex-direction:column; gap:12px; position:relative;">
+                <button type="button" onclick="customBuilderBackToChoice()" class="custom-upload-back-btn" title="Back" aria-label="Back">←</button>
                 <div id="customUploadFormat" style="background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; font-size:0.8rem; color:#94a3b8; white-space:pre-wrap;">CSV format (Excel-compatible):
 • Column 1: Player name
 • Column 2: Role (BAT, BOWL, WK, ALL, PACE, SPIN)
 • Column 3: Tag (e.g. WK1, BAT1, BOWL1, ALL1 — required)
 • Column 4: Rating (optional, 0–10)
-• Column 5: RTM (optional, Team Name)
+• Column 5: RTM (optional, Team name e.g. KKR, RCB, MI — shown next to player in sets)
 • Use comma to separate. First row can be header.</div>
+                <div class="csv-format-example" style="background:rgba(0,0,0,0.25); padding:10px; border-radius:8px; overflow:auto;">
+                    <table class="csv-example-table" cellpadding="6" cellspacing="0" style="width:100%; max-width:560px; font-size:0.75rem; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:rgba(255,255,255,0.08); color:#cbd5e1;">
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">Player Name</th>
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">Role</th>
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">Tag</th>
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">Rating</th>
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">RTM</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color:#94a3b8;">
+                            <tr><td style="border:1px solid rgba(255,255,255,0.08);">Virat Kohli</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT1</td><td style="border:1px solid rgba(255,255,255,0.08);">9.5</td><td style="border:1px solid rgba(255,255,255,0.08);">RCB</td></tr>
+                            <tr><td style="border:1px solid rgba(255,255,255,0.08);">Rohit Sharma</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT2</td><td style="border:1px solid rgba(255,255,255,0.08);">9</td><td style="border:1px solid rgba(255,255,255,0.08);">MI</td></tr>
+                            <tr><td style="border:1px solid rgba(255,255,255,0.08);">Shubman Gill</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT1</td><td style="border:1px solid rgba(255,255,255,0.08);">8.5</td><td style="border:1px solid rgba(255,255,255,0.08);">GT</td></tr>
+                            <tr><td style="border:1px solid rgba(255,255,255,0.08);">Suryakumar Yadav</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT1</td><td style="border:1px solid rgba(255,255,255,0.08);">9</td><td style="border:1px solid rgba(255,255,255,0.08);">MI</td></tr>
+                        </tbody>
+                    </table>
+                </div>
                 <label class="secondary-btn" style="display:inline-block; padding:10px 20px; cursor:pointer; text-align:center;">
                     Choose CSV file
-                    <input type="file" id="customCsvInput" accept=".csv,.txt" style="display:none;">
+                    <input type="file" id="customCsvInput" accept=".csv" style="display:none;">
                 </label>
                 <div id="customUploadResult" class="hidden" style="font-size:0.85rem; color:#4ade80;"></div>
-                <button type="button" onclick="customBuilderBackToChoice()" class="secondary-btn" style="padding:8px 16px; align-self:flex-start;">← Back</button>
             </div>
 
             <!-- Filters + list (hidden until Show available players clicked) -->
