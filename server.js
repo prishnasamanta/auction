@@ -495,11 +495,28 @@ socket.on("getAuctionState", () => {
         lastBidTeam: r.auction.lastBidTeam
     });
 
-    // Send Leaderboard if data exists (Fixes Issue 4)
-    if (Object.keys(r.playingXI).length > 0) {
-        const board = Object.values(r.playingXI).sort((a,b) => {
-            if(b.rating !== a.rating) return b.rating - a.rating; 
-            return (b.purse || 0) - (a.purse || 0); 
+    // Always send leaderboard when auction ended: include ALL teams (disqualified/no-submit = 0 rating)
+    if (r.auctionEnded) {
+        const allTeamNames = Object.keys(r.purse || {});
+        const boardMap = {};
+        allTeamNames.forEach(t => {
+            const entry = r.playingXI[t];
+            const purse = (r.purse && r.purse[t]) != null ? r.purse[t] : 0;
+            if (entry) {
+                boardMap[t] = { ...entry, team: t, rating: entry.disqualified ? 0 : (entry.rating != null ? entry.rating : 0), purse };
+            } else {
+                boardMap[t] = { team: t, rating: 0, disqualified: true, reason: "No XI submitted", purse, xi: [] };
+            }
+        });
+        const board = Object.values(boardMap).sort((a, b) => {
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            return (b.purse || 0) - (a.purse || 0);
+        });
+        socket.emit("leaderboard", board);
+    } else if (Object.keys(r.playingXI).length > 0) {
+        const board = Object.values(r.playingXI).sort((a, b) => {
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            return (b.purse || 0) - (a.purse || 0);
         });
         socket.emit("leaderboard", board);
     }
@@ -606,15 +623,23 @@ socket.on("getAuctionState", () => {
             // 3. HANDLE GAME PHASE ROUTING
             if (room.auctionEnded) {
                 socket.emit("auctionEnded"); // Triggers client routing (XI or Summary)
-                
-                // Send Leaderboard if available
-                if(Object.keys(room.playingXI).length > 0){
-                    const board = Object.values(room.playingXI).sort((a,b) => {
-                       if(b.rating !== a.rating) return b.rating - a.rating; 
-                       return (b.purse || 0) - (a.purse || 0); 
-                    });
-                    socket.emit("leaderboard", board);
-                }
+                // Full leaderboard: all teams (disqualified/no-submit = 0 rating)
+                const allTeamNames = Object.keys(room.purse || {});
+                const boardMap = {};
+                allTeamNames.forEach(t => {
+                    const entry = room.playingXI[t];
+                    const purse = (room.purse && room.purse[t]) != null ? room.purse[t] : 0;
+                    if (entry) {
+                        boardMap[t] = { ...entry, team: t, rating: entry.disqualified ? 0 : (entry.rating != null ? entry.rating : 0), purse };
+                    } else {
+                        boardMap[t] = { team: t, rating: 0, disqualified: true, reason: "No XI submitted", purse, xi: [] };
+                    }
+                });
+                const board = Object.values(boardMap).sort((a, b) => {
+                    if (b.rating !== a.rating) return b.rating - a.rating;
+                    return (b.purse || 0) - (a.purse || 0);
+                });
+                socket.emit("leaderboard", board);
             } else if (room.auctionStarted) {
                 // If auction is LIVE, send current player data immediately
                 socket.emit("auctionStarted");
