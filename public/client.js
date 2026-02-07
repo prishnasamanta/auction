@@ -150,9 +150,19 @@ function pushSummaryWithHomeBack() {
     document.title = `Summary - ${roomCode}`;
 }
 // Handle Browser "Back" Button: leaderboard -> summary, summary -> main (home)
-window.onpopstate = function(event) {
+// When on summary and user presses back: show exit confirm popup; Cancel = stay on summary, Confirm = go to main
+window.onpopstate = async function(event) {
     if (event.state) {
         if (event.state.page === 'home') {
+            const summaryEl = document.getElementById('postAuctionSummary');
+            const wasOnSummary = summaryEl && !summaryEl.classList.contains('hidden');
+            if (wasOnSummary && roomCode) {
+                const yes = await showConfirm("Are you sure you want to exit to the Main Menu?", "EXIT GAME?", "🏠");
+                if (!yes) {
+                    history.pushState({ page: 'summary', room: roomCode }, `Summary - ${roomCode}`, `/room/${roomCode}/summary`);
+                    return;
+                }
+            }
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById('landing').classList.remove('hidden');
             document.title = 'IPL Live Auction';
@@ -240,7 +250,6 @@ function setupEventListeners() {
                 }
                 return;
             }
-
             // Visual Feedback
             createBtn.innerText = "Creating...";
             createBtn.disabled = true;
@@ -248,6 +257,10 @@ function setupEventListeners() {
             username = uName;
             sessionStorage.setItem('ipl_user', username);
             localStorage.setItem('ipl_user', username);
+            
+            // Emit creation event with selected dataset
+           const datasetIdInput = document.getElementById('selectedSetId');
+           const datasetId = datasetIdInput ? datasetIdInput.value : "ipl2026";
             
             socket.emit("createRoom", { user: username, isPublic: isPublic, datasetId });
         };
@@ -352,37 +365,10 @@ if (!result.active) {
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("auctionUI").classList.add("hidden");
     
-    // 3. Respect URL on refresh: stay on leaderboard or XI if that was the page
-    const path = window.location.pathname;
-    const wantLeaderboard = path === `/room/${roomCode}/leaderboard`;
-    const wantXi = path === `/room/${roomCode}/xi`;
-    if (wantLeaderboard) {
-        document.getElementById("postAuctionSummary").classList.add("hidden");
-        document.getElementById("leaderboard").classList.remove("hidden");
-        window.history.replaceState({ page: 'leaderboard', room: roomCode }, `Leaderboard - ${roomCode}`, path);
-        document.title = `Leaderboard - ${roomCode}`;
-        renderPostAuctionSummary();
-        socket.emit("getAuctionState");
-    } else if (wantXi) {
-        myTeam = myTeam || sessionStorage.getItem('ipl_team');
-        if (myTeam) {
-            document.getElementById("postAuctionSummary").classList.add("hidden");
-            document.getElementById("playingXI").classList.remove("hidden");
-            window.history.replaceState({ page: 'xi', room: roomCode }, `Select XI - ${roomCode}`, path);
-            document.title = `Select XI - ${roomCode}`;
-            renderPostAuctionSummary();
-            socket.emit("getAuctionState");
-            socket.emit("getMySquad");
-        } else {
-            document.getElementById("postAuctionSummary").classList.remove("hidden");
-            renderPostAuctionSummary();
-            pushSummaryWithHomeBack();
-        }
-    } else {
-        document.getElementById("postAuctionSummary").classList.remove("hidden");
-        renderPostAuctionSummary();
-        pushSummaryWithHomeBack();
-    }
+    // 3. Render Summary and set history so Back goes to main
+    document.getElementById("postAuctionSummary").classList.remove("hidden");
+    renderPostAuctionSummary();
+    pushSummaryWithHomeBack();
     return;
 }
             // SCENARIO C: AUCTION LIVE (Proceed to Login)
@@ -414,22 +400,15 @@ if (!result.active) {
             const uName = usernameInput.value.trim();
             const isPublic = document.getElementById('isPublicRoom').checked;
             if(!uName) return alert("Please enter your name!");
-            const datasetIdInput = document.getElementById('selectedSetId');
-            const datasetId = datasetIdInput ? datasetIdInput.value : 'ipl2026';
-            if (datasetId === 'custom' && (!window.__customSelectedPlayers || window.__customSelectedPlayers.length === 0)) {
-                if (typeof showPopup === 'function') {
-                    showPopup("Select a custom player pool first. Click CUSTOM, then choose \"Show available players\" or \"Upload your own player pool\", pick players, and Confirm Set.", "No pool selected", "⚠️", true);
-                } else {
-                    alert("No pool selected. Please select a custom player pool first.");
-                }
-                return;
-            }
+          
             // Visual Feedback
             createBtn.innerText = "Creating...";
             createBtn.disabled = true;
             username = uName;
             sessionStorage.setItem('ipl_user', username);
             localStorage.setItem('ipl_user', username);
+            const datasetIdInput = document.getElementById('selectedSetId');
+            const datasetId = datasetIdInput ? datasetIdInput.value : 'ipl2026';
             socket.emit("createRoom", { user: username, isPublic: isPublic, datasetId });
         };
     }
@@ -502,8 +481,6 @@ window.switchAuthTab = function(tab) {
     if (tab === 'create') {
         document.getElementById('createSection').classList.remove('hidden');
         document.getElementById('joinSection').classList.add('hidden');
-        syncDatasetCardActive();
-        updatePoolSelectedLabel();
     } else {
         document.getElementById('createSection').classList.add('hidden');
         document.getElementById('joinSection').classList.remove('hidden');
@@ -607,70 +584,16 @@ socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
     unsoldList = [];
 
-    // 🟢 FIX: Force close the Identity Overlay immediately upon success
     const idOverlay = document.getElementById("identityVerifyOverlay");
     if (idOverlay) idOverlay.classList.add("hidden");
 
-    // --- CHECK IF AUCTION ENDED DURING RECONNECTION ---
-    if (isReconnecting && data.auctionEnded) {
-        isReconnecting = false;
-        reconnectionPopupShown = false;
-        toggleCustomPopup(false);
-        
-        roomCode = data.roomCode || roomCode;
-        if(data.rules) activeRules = data.rules;
-        if(data.squads) allSquads = data.squads;
-        if(data.teamOwners) teamOwners = data.teamOwners;
-        if(data.purses) teamPurse = data.purses;
-        if(data.rtmLeft) rtmLeftByTeam = data.rtmLeft;
-
-        if (data.yourTeam !== undefined) {
-            myTeam = data.yourTeam;
-            if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
-        }
-        
-        if (myTeam) {
-            showScreen("playingXI");
-            socket.emit("getMySquad");
-            updateURL('xi');
-        } else {
-            setTimeout(() => {
-                pushSummaryWithHomeBack();
-                renderPostAuctionSummary();
-                showScreen("postAuctionSummary", false);
-            }, 300);
-        }
+    // 1. SYNC GLOBAL STATE (or partial update when updateOnly)
+    if (data.updateOnly) {
+        if (data.roomCode) roomCode = data.roomCode;
+        if (data.teamOwners !== undefined) teamOwners = data.teamOwners;
+        if (data.availableTeams !== undefined) renderEmbeddedTeams(data.availableTeams);
         return;
     }
-
-    // --- 1. SILENT AUTO-REFRESH (Update Data Only) ---
-    if (data.updateOnly) {
-        if(data.teamOwners) teamOwners = data.teamOwners;
-        
-        // KICK DETECTION
-        if (myTeam && data.availableTeams && data.availableTeams.includes(myTeam)) {
-             alert("⚠️ You were disconnected for too long. You are now a Spectator.");
-             sessionStorage.removeItem('ipl_team');
-             myTeam = null;
-             updateHeaderNotice();
-             setGamePhase("TEAM_SELECT"); 
-        }
-        
-        if(data.availableTeams) renderEmbeddedTeams(data.availableTeams);
-        
-        if(document.getElementById('tab-squads') && document.getElementById('tab-squads').classList.contains('active')) {
-            viewEmbeddedSquad(selectedSquadTeam);
-        }
-        
-        if (isReconnecting) {
-            isReconnecting = false;
-            reconnectionPopupShown = false;
-            toggleCustomPopup(false);
-        }
-        return; 
-    }
-
-    // --- 2. SETUP SESSION ---
     roomCode = data.roomCode;
     sessionStorage.setItem('ipl_room', roomCode);
     if(data.rules) activeRules = data.rules;
@@ -678,71 +601,78 @@ socket.on("joinedRoom", (data) => {
     if(data.teamOwners) teamOwners = data.teamOwners;
     if(data.purses) teamPurse = data.purses;
     if(data.rtmLeft) rtmLeftByTeam = data.rtmLeft;
-    
     isHost = data.isHost;
     gameStarted = data.auctionStarted;
 
-    // --- 3. TEAM SYNC CHECK ---
     if (data.yourTeam !== undefined) {
-        if (data.yourTeam === null && myTeam !== null) {
-            alert("⚠️ You are now a Spectator.");
-            sessionStorage.removeItem('ipl_team');
-            myTeam = null;
-        } else {
-            myTeam = data.yourTeam;
-            if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
-        }
+        myTeam = data.yourTeam;
+        if(myTeam) sessionStorage.setItem('ipl_team', myTeam);
+        else sessionStorage.removeItem('ipl_team');
     }
 
-    // --- 4. RENDER TEAMS ---
-    renderEmbeddedTeams(data.availableTeams || []);
-    
-    // --- 5. DETERMINE SCREEN PHASE ---
-    if (myTeam) {
-        updateHeaderNotice();
-        if (!gameStarted) {
-            const container = document.getElementById("teamSelectionMain");
-            if (container) {
-                const teamColor = TEAM_COLORS[myTeam] || "#fff";
-                const hostLine = isHost ? "You are the Host. Press ▶ in header to start." : "Waiting for Host to start auction...";
-
-                container.innerHTML = `
-                    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; animation: popIn 0.3s ease;">
-                        <h2 style="color:var(--primary); margin:0 0 2px 0; font-size:0.85rem;">YOU SELECTED</h2>
-                        <h1 style="font-size:2rem; margin:0; line-height:1; color:${teamColor}; text-shadow:0 0 12px rgba(0,0,0,0.5);">${myTeam}</h1>
-                        <p style="color:#4ade80; font-weight:bold; margin:2px 0 0 0; font-size:0.75rem;">✅ OWNER CONFIRMED</p>
-                        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px; width:100%; margin-top:8px;">
-                            <div style="color:#64748b; font-size:0.65rem; font-weight:700; letter-spacing:1px; margin-bottom:2px;">ROOM CODE</div>
-                            <div onclick="copyRoomCode()" style="font-family:monospace; font-size:1.1rem; font-weight:700; color:#fff; cursor:pointer; letter-spacing:2px;">
-                                ${roomCode} <span style="font-size:0.85rem; opacity:0.5;">📋</span>
-                            </div>
-                        </div>
-                        <div style="margin-top:6px; color:#94a3b8; font-size:0.7rem; font-style:italic;">${hostLine}</div>
-                    </div>
-                `;
-            }
-            setGamePhase("TEAM_SELECT");
+    // 2. ROUTING LOGIC (REFRESH HANDLER)
+    if (data.auctionEnded || data.ended) {
+        if (!myTeam) {
+            // Spectator -> Summary
+            pushSummaryWithHomeBack();
+            renderPostAuctionSummary();
+            showScreen("postAuctionSummary", false);
         } else {
-            setGamePhase("AUCTION");
+            // Player -> Check Submission
+            const leaderboard = data.leaderboard || [];
+            const myEntry = leaderboard.find(t => t.team === myTeam);
+            const hasXI = myEntry && myEntry.xi && (Array.isArray(myEntry.xi) ? myEntry.xi.length > 0 : Object.keys(myEntry.xi).length > 0);
+
+            if (hasXI) {
+                showScreen("leaderboard");
+                socket.emit("getAuctionState");
+            } else {
+                showScreen("playingXI");
+                socket.emit("getMySquad");
+            }
         }
     } else {
-        setGamePhase("TEAM_SELECT");
+        // Auction Live Logic
+        if (myTeam) {
+            updateHeaderNotice();
+            if (!gameStarted) {
+                const container = document.getElementById("teamSelectionMain");
+                if (container) {
+                    const teamColor = TEAM_COLORS[myTeam] || "#fff";
+                    container.innerHTML = `
+                        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; animation: popIn 0.3s ease;">
+                            <h2 style="color:var(--primary); margin:0 0 2px 0; font-size:0.85rem;">YOU SELECTED</h2>
+                            <h1 style="font-size:2rem; margin:0; line-height:1; color:${teamColor}; text-shadow:0 0 12px rgba(0,0,0,0.5);">${myTeam}</h1>
+                            <p style="color:#4ade80; font-weight:bold; margin:2px 0 0 0; font-size:0.75rem;">✅ OWNER CONFIRMED</p>
+                            <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px; width:100%; margin-top:8px;">
+                                <div style="color:#64748b; font-size:0.65rem; font-weight:700; letter-spacing:1px; margin-bottom:2px;">ROOM CODE</div>
+                                <div onclick="copyRoomCode()" style="font-family:monospace; font-size:1.1rem; font-weight:700; color:#fff; cursor:pointer; letter-spacing:2px;">
+                                    ${roomCode} <span style="font-size:0.85rem; opacity:0.5;">📋</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                setGamePhase("TEAM_SELECT");
+            } else {
+                setGamePhase("AUCTION");
+            }
+        } else {
+            setGamePhase("TEAM_SELECT");
+        }
     }
 
-    // --- 6. SETUP UI ---
+    // 3. UI CLEANUP
     setupAuctionScreen();
     updateAdminButtons(data.auctionStarted);
-    
-    // Hide standard connecting popup if it was showing
+    renderEmbeddedTeams(data.availableTeams || []);
     isReconnecting = false;
     reconnectionPopupShown = false;
     toggleCustomPopup(false);
     
-    if (data.auctionStarted) {
-        socket.emit("getAuctionState");
-        setGamePhase("AUCTION"); 
-    }
+    if (data.auctionStarted && !data.auctionEnded) socket.emit("getAuctionState");
 });
+
 
 /* ================= USER LIST LOGIC (UPDATED PILL) ================= */
 let userListInterval = null; // Global interval for the timer
@@ -995,37 +925,39 @@ socket.on("identityShowCode", ({ code, name }) => {
 
 // 2. NEW DEVICE: Asks for Input
 socket.on("identityInputRequired", ({ roomCode, name }) => {
-    // Hide any previous loading popups
     toggleCustomPopup(false);
 
-    // Create a custom input prompt
     const overlay = document.getElementById("identityVerifyOverlay");
     overlay.classList.remove("hidden");
-    
+
+    function closeAndGoHome() {
+        overlay.classList.add("hidden");
+        overlay.innerHTML = "";
+        sessionStorage.removeItem("ipl_room");
+        sessionStorage.removeItem("ipl_team");
+        window.location.href = "/";
+    }
+
     overlay.innerHTML = `
-        <div class="glass rules-card identity-verify-card" style="max-width: 400px; padding: 25px; text-align: center; position: relative;">
-            <button type="button" id="identityVerifyBack" class="identity-verify-back" aria-label="Back" style="position:absolute; top:12px; left:12px; background:none; border:none; color:#94a3b8; font-size:1.25rem; cursor:pointer; padding:4px; line-height:1;">←</button>
+        <div class="glass rules-card identity-verify-card">
+            <button type="button" class="identity-verify-close" aria-label="Close">×</button>
             <h2 style="color: #facc15; margin-bottom:10px;">🔐 Verification</h2>
             <p style="color:#ccc; font-size:0.9rem;">
                 Check your other device for the 3-digit code.
             </p>
-            
-            <input type="number" id="verifyInput" placeholder="000" 
-                   style="font-size:2rem; text-align:center; letter-spacing:5px; margin:20px 0; background:rgba(0,0,0,0.5); border-color:#facc15;">
-            
+            <input type="number" id="verifyInput" placeholder="000" class="identity-verify-input" maxlength="3">
             <button id="btnSubmitCode" class="primary-btn" style="width:100%;">VERIFY & JOIN</button>
         </div>
     `;
 
-    document.getElementById("identityVerifyBack").onclick = () => {
-        overlay.classList.add("hidden");
-    };
+    const closeBtn = overlay.querySelector(".identity-verify-close");
+    if (closeBtn) closeBtn.onclick = closeAndGoHome;
 
     document.getElementById("btnSubmitCode").onclick = () => {
         const code = document.getElementById("verifyInput").value;
-        if(code.length > 0) {
+        if (code.length > 0) {
             socket.emit("verifyIdentityCode", { roomCode, name, code });
-            overlay.innerHTML = `<div style="color:white;">Verifying...</div>`; // Show loading state
+            overlay.innerHTML = `<div style="color:white;">Verifying...</div>`;
         }
     };
 });
@@ -1200,6 +1132,10 @@ socket.on("adminPromoted", () => {
     isHost = true;
     updateAdminButtons(gameStarted);
     alert("🜲 You are now the Host!");
+});
+socket.on("youAreSpectator", () => {
+    if (typeof showPopup === "function") showPopup("You are a spectator now. You can watch the auction but no longer have a team.", "SPECTATOR", "👁️");
+    else alert("You are a spectator now.");
 });
 // Save Rules
 const saveRulesBtn = document.getElementById("saveRules");
@@ -1631,49 +1567,85 @@ socket.on("sold", d => {
         if(selectedSquadTeam === d.team) viewEmbeddedSquad(selectedSquadTeam);
     }
     updateSoldUnsoldPopupIfOpen();
-
-    // Append sold tile to feed with trophy icon and Save card button
-    const chat = document.getElementById("chat");
-    if (chat && d.player && d.team && d.price != null) {
-        const teamColor = TEAM_COLORS[d.team] || "#94a3b8";
-        const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-        const playerName = d.player.name || "";
-        const div = document.createElement("div");
-        div.className = "chat-msg log-message sold-tile";
-        div.innerHTML = `
-            <div class="sold-tile-header">
-                <span class="sold-tile-icon">🏆</span>
-                <span class="sold-tile-text"><strong>${esc(playerName)}</strong> sold to <span style="color:${teamColor}">${esc(d.team)}</span> • ₹${Number(d.price).toFixed(2)} Cr</span>
+    // Append premium sold tile to feed
+const chat = document.getElementById("chat");
+if (chat && d.player && d.team && d.price != null) {
+    const teamColor = TEAM_COLORS[d.team] || "#94a3b8";
+    const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    const playerName = d.player.name || "";
+    
+    const div = document.createElement("div");
+    div.className = "premium-sold-tile";
+    
+    // Using a more structured innerHTML for better CSS targeting
+    div.innerHTML = `
+        <div class="tile-glow" style="background: ${teamColor}33"></div>
+        <div class="tile-content">
+            <div class="tile-left">
+                <div class="icon-wrapper" style="border-color: ${teamColor}">
+                    <span class="premium-icon">🏆</span>
+                </div>
+                <div class="tile-details">
+                    <span class="player-name">${esc(playerName)}</span>
+                    <span class="sale-info">Sold to <b style="color:${teamColor}">${esc(d.team)}</b></span>
+                </div>
             </div>
-            <button type="button" class="sold-tile-save-btn">💾 Save card</button>
-        `;
-        const btn = div.querySelector(".sold-tile-save-btn");
-        if (btn) {
-            const playerData = { name: playerName, role: d.player.role || "", rating: d.player.rating != null ? d.player.rating : 0, foreign: !!d.player.foreign };
-            btn.onclick = function() {
-                openPlayerProfile(playerData, d.team, d.price);
-                setTimeout(function() {
-                    const overlay = document.getElementById("playerCardOverlay");
-                    if (overlay && overlay.querySelector && overlay.querySelector(".pc-card")) {
-                        const card = overlay.querySelector(".pc-card");
-                        if (typeof html2canvas !== "undefined") {
-                            html2canvas(card, { backgroundColor: null, scale: 2 }).then(function(canvas) {
-                                const a = document.createElement("a");
-                                a.download = (playerName || "player").replace(/\s+/g, "_") + "_card.png";
-                                a.href = canvas.toDataURL("image/png");
-                                a.click();
-                            });
-                        }
+            <div class="tile-right">
+                <div class="price-tag">₹${Number(d.price).toFixed(2)} Cr</div>
+                <button type="button" class="btn-premium-save">
+                    <span class="btn-text">Save Card</span>
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                </button>
+            </div>
+        </div>
+    `;
+
+    const btn = div.querySelector(".btn-premium-save");
+    if (btn) {
+        const playerData = { 
+            name: playerName, 
+            role: d.player.role || "", 
+            rating: d.player.rating != null ? d.player.rating : 0, 
+            foreign: !!d.player.foreign 
+        };
+
+        btn.onclick = function() {
+            btn.classList.add("loading");
+            openPlayerProfile(playerData, d.team, d.price);
+
+            // Wait for DOM to render the card
+            setTimeout(() => {
+                const overlay = document.getElementById("playerCardOverlay");
+                const card = overlay?.querySelector(".pc-card");
+
+                if (card && typeof html2canvas !== "undefined") {
+                    html2canvas(card, { 
+                        backgroundColor: null, 
+                        scale: 3, // Higher scale = Higher quality
+                        useCORS: true 
+                    }).then(canvas => {
+                        const a = document.createElement("a");
+                        a.download = `${playerName.replace(/\s+/g, "_")}_Exclusive_Card.png`;
+                        a.href = canvas.toDataURL("image/png");
+                        a.click();
+                        
+                        btn.classList.remove("loading");
                         overlay.remove();
-                    }
-                }, 300);
-            };
-        }
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
-        cleanChatMessages();
-        saveChatToSession();
+                    });
+                } else {
+                    btn.classList.remove("loading");
+                    if (overlay) overlay.remove();
+                }
+            }, 400);
+        };
     }
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    cleanChatMessages();
+    saveChatToSession();
+}
+
 });
 socket.on("unsold", (data) => {
     playUnsoldSound();
@@ -1960,54 +1932,54 @@ socket.on("chatUpdate", d => {
     const chat = document.getElementById("chat");
     if(!chat) return;
 
-    // Strict Check
-    const isMe = (d.user === username); 
-    
+    const isMe = (d.user === username);
+    const msgId = d.id || `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const reactions = d.reactions || {};
+
     const div = document.createElement("div");
-    // Both use the same base class structure now
     div.className = `chat-msg ${isMe ? 'mine' : 'others'}`;
-    
-    // Helper for time
+    div.dataset.msgId = msgId;
+    div.dataset.reactions = JSON.stringify(reactions);
+
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12:false });
     const color = TEAM_COLORS[d.team] || '#aaa';
+    const sortedReactions = Object.entries(reactions).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const reactionsBadgeHtml = sortedReactions.length
+        ? `<span class="chat-msg-reaction-badge">${sortedReactions.map(([emoji, count]) => `${emoji} ${count}`).join("  ")}</span>`
+        : "";
 
     div.innerHTML = `
         <div class="chat-msg-reactions"><span data-emoji="👍" title="Like">👍</span><span data-emoji="👏" title="Clap">👏</span><span data-emoji="😂" title="Laugh">😂</span><span data-emoji="❤️" title="Love">❤️</span><span data-emoji="🔥" title="Fire">🔥</span></div>
         <div class="chat-meta" style="color:${color}">
             <span class="chat-meta-inline">${d.team} &bull; ${d.user || 'Player'}</span>
         </div>
-        <div class="chat-text" style="color:#eee;">${d.msg}<span class="chat-text-reactions"></span></div>
+        <div class="chat-text" style="color:#eee;">${d.msg}${reactionsBadgeHtml ? reactionsBadgeHtml : ""}</div>
     `;
     div.style.borderLeftColor = color;
 
-    (function setupReactable(el) {
-        let holdTimer = null;
-        function updateReactionsDisplay() {
-            const raw = el.dataset.reactions || "{}";
-            let reactions = {};
-            try { reactions = JSON.parse(raw); } catch (_) {}
-            const sorted = Object.entries(reactions).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    (function setupReactable(el, mid) {
+        function updateReactionsDisplay(rx) {
+            const r = rx || {};
+            const sorted = Object.entries(r).sort((a, b) => b[1] - a[1]).slice(0, 3);
             const txt = el.querySelector(".chat-text");
-            const span = el.querySelector(".chat-text-reactions");
-            if (span && txt) {
-                if (sorted.length === 0) { span.textContent = ""; span.className = "chat-text-reactions"; return; }
-                span.textContent = " " + sorted.map(([emoji]) => emoji).join(" ");
-                span.className = "chat-text-reactions has-reactions";
+            if (!txt) return;
+            let badge = el.querySelector(".chat-msg-reaction-badge");
+            if (sorted.length === 0) {
+                if (badge) badge.remove();
+                return;
             }
+            const badgeHtml = `<span class="chat-msg-reaction-badge">${sorted.map(([emoji, count]) => `${emoji} ${count}`).join("  ")}</span>`;
+            if (badge) badge.outerHTML = badgeHtml; else txt.insertAdjacentHTML("beforeend", badgeHtml);
         }
         el.querySelector(".chat-msg-reactions")?.addEventListener("click", function(e) {
             e.stopPropagation();
             const span = e.target.closest("span[data-emoji]");
             if (!span) return;
             const emoji = span.getAttribute("data-emoji");
-            const raw = el.dataset.reactions || "{}";
-            let reactions = {};
-            try { reactions = JSON.parse(raw); } catch (_) {}
-            reactions[emoji] = (reactions[emoji] || 0) + 1;
-            el.dataset.reactions = JSON.stringify(reactions);
-            updateReactionsDisplay();
+            socket.emit("chatReaction", { msgId: mid, emoji });
             el.classList.remove("reactable-hold");
         });
+        let holdTimer = null;
         el.addEventListener("pointerdown", function(e) {
             if (e.button !== 0) return;
             holdTimer = setTimeout(function() {
@@ -2023,15 +1995,29 @@ socket.on("chatUpdate", d => {
             if (el.dataset.reactableJustOpened) { delete el.dataset.reactableJustOpened; return; }
             el.classList.remove("reactable-hold");
         });
-    })(div);
+    })(div, msgId);
 
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
-    
-    // Clean to maintain limits
     cleanChatMessages();
-    // Persist feed so it survives full page refresh
     saveChatToSession();
+});
+socket.on("chatReactionUpdate", ({ msgId, reactions }) => {
+    const chat = document.getElementById("chat");
+    if(!chat || !msgId) return;
+    const el = chat.querySelector(`[data-msg-id="${msgId}"]`);
+    if (!el) return;
+    el.dataset.reactions = JSON.stringify(reactions || {});
+    const sorted = Object.entries(reactions || {}).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const txt = el.querySelector(".chat-text");
+    if (!txt) return;
+    let badge = el.querySelector(".chat-msg-reaction-badge");
+    if (sorted.length === 0) {
+        if (badge) badge.remove();
+        return;
+    }
+    const badgeHtml = `<span class="chat-msg-reaction-badge">${sorted.map(([emoji, count]) => `${emoji} ${count}`).join("  ")}</span>`;
+    if (badge) badge.outerHTML = badgeHtml; else txt.insertAdjacentHTML("beforeend", badgeHtml);
 });
 
 // 2. LOG UPDATE (Merged into Chat, Max 5 logs)
@@ -2657,7 +2643,6 @@ function setGamePhase(phase) {
         // Show "Join" button in header if I am a spectator
         if(lateJoinBtn && !myTeam) lateJoinBtn.classList.remove("hidden");
         forceAuctionTileTransparency();
-        updateHeaderNotice(); // show "Spectator" in badge when no team
     }
 }
 
@@ -2673,16 +2658,24 @@ window.toggleLateJoin = function() {
         auctionCard.classList.remove("hidden");
     }
 };
-window.toggleUserList = function() {
+window.toggleUserList = function(ev) {
+    if (ev) ev.stopPropagation();
     const list = document.getElementById("userListDropdown");
+    const btn = document.querySelector(".count-pill-btn");
+    if (!list || !btn) return;
+    const isOpening = list.classList.contains("hidden");
     list.classList.toggle("hidden");
-    if (!list.classList.contains("hidden")) {
-        document.addEventListener('click', closeUserListOutside);
+    document.removeEventListener('click', closeUserListOutside);
+    if (isOpening) {
+        setTimeout(function() {
+            document.addEventListener('click', closeUserListOutside);
+        }, 0);
     }
 };
 function closeUserListOutside(e) {
     const list = document.getElementById("userListDropdown");
     const btn = document.querySelector(".count-pill-btn");
+    if (!list || !btn) return;
     if (!list.contains(e.target) && !btn.contains(e.target)) {
         list.classList.add("hidden");
         document.removeEventListener('click', closeUserListOutside);
@@ -2691,32 +2684,20 @@ function closeUserListOutside(e) {
 function updateHeaderNotice() {
     const headerBadge = document.getElementById("headerTeamBadge");
     const headerName = document.getElementById("headerTeamName");
-
-    if (!headerBadge || !headerName) return;
-
-    if (myTeam) {
-        headerBadge.classList.remove("hidden");
-        headerName.innerText = myTeam;
-        headerName.style.fontSize = "";
-        const color = TEAM_COLORS[myTeam] || "#fff";
-        headerBadge.style.background = "transparent";
-        headerBadge.style.border = `1px solid ${color}`;
-        headerBadge.style.color = color;
+    
+    if (!myTeam) {
+        if(headerBadge) headerBadge.classList.add("hidden");
         return;
     }
 
-    // Spectator: in auction phase with no team — show "Spectator" in small font
-    const auctionCard = document.getElementById("auctionCard");
-    const isSpectator = gameStarted && auctionCard && !auctionCard.classList.contains("hidden");
-    if (isSpectator) {
+    if(headerBadge) {
         headerBadge.classList.remove("hidden");
-        headerName.innerText = "Spectator";
-        headerName.style.fontSize = "0.7rem";
+        headerName.innerText = myTeam;
+        const color = TEAM_COLORS[myTeam] || '#fff';
+        // Transparent badge with team-colored border + text
         headerBadge.style.background = "transparent";
-        headerBadge.style.border = "1px solid #64748b";
-        headerBadge.style.color = "#94a3b8";
-    } else {
-        headerBadge.classList.add("hidden");
+        headerBadge.style.border = `1px solid ${color}`;
+        headerBadge.style.color = color;
     }
 }
 
@@ -2956,23 +2937,34 @@ function togglePlayerXI(p, btnElement, roleKey) {
     updateXIPreview();
 }
 // --- 5. SUBMIT LOGIC (FIXED) ---
+// All validation feedback shown in xiStatus only (no popups). Server returns disqualified + reason.
 window.submitXI = function() {
-    if (countTotalXI() !== 11) return alert("Please select exactly 11 players.");
+    const totalSelected = countTotalXI();
+    const statusDiv = document.getElementById("xiStatus");
+    if (totalSelected !== 11) {
+        if (statusDiv) {
+            statusDiv.classList.remove("hidden");
+            statusDiv.setAttribute("data-source", "preview");
+            statusDiv.innerHTML = `
+            <div class="status-box" style="padding:20px; text-align:center; border:1px solid #ef4444; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+                <h2 style="margin:0 0 5px 0; font-size:1.4rem; color:#ef4444;">❌ Select 11 players</h2>
+                <p style="margin-top:8px; color:#fca5a5; font-size:0.9rem;">Please select exactly 11 players (${totalSelected}/11).</p>
+            </div>`;
+        }
+        return;
+    }
 
-    // Send the Object structure: { WK: [...], BAT: [...] }
-    const payload = selectedXI;
     const btn = document.getElementById("submitXIBtn");
     if (btn) { btn.disabled = true; btn.innerText = "Submitting..."; }
 
-    // Send 'team' explicitly to prevent server silent fail
-    socket.emit("submitXI", { team: myTeam, xi: payload });
+    socket.emit("submitXI", { team: myTeam, xi: selectedXI });
 
-    // 🔴 NEW: Force data refresh after submit (Fixes leaderboard sync)
     setTimeout(() => {
-        socket.emit("getAuctionState"); // Refresh global state
-        socket.emit("getSquads"); // Refresh squads
-    }, 500); // Small delay to let server process
+        socket.emit("getAuctionState");
+        socket.emit("getSquads");
+    }, 500);
 };
+
 function countTotalXI() {
     return selectedXI.WK.length + selectedXI.BAT.length + selectedXI.ALL.length + selectedXI.BOWL.length;
 }
@@ -3068,7 +3060,8 @@ function updateXIPreview() {
 }
 function updateStatsBar() {
     const bar = document.getElementById("xiStatsBar");
-    const r = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3,minAll: 1, minSpin: 0 };
+    const statusDiv = document.getElementById("xiStatus");
+    const r = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3, minAll: 1, minSpin: 0 };
     if(!bar) return;
     const all = [...selectedXI.WK, ...selectedXI.BAT, ...selectedXI.ALL, ...selectedXI.BOWL];
     const foreign = all.filter(p => p.foreign).length;
@@ -3087,6 +3080,43 @@ function updateStatsBar() {
         ${badge("🥎", selectedXI.BOWL.length, r.minBowl)}
         ${badge("🥎", spinCount, r.minSpin)}
     `;
+
+    /* When 11 selected, show criteria status in xiStatus (only if not already showing submit result) */
+    if (statusDiv && statusDiv.getAttribute("data-source") === "result") return;
+    const count = all.length;
+    if (count !== 11) {
+        if (statusDiv && statusDiv.getAttribute("data-source") === "preview") {
+            statusDiv.innerHTML = "";
+            statusDiv.classList.add("hidden");
+            statusDiv.removeAttribute("data-source");
+        }
+        return;
+    }
+    const reasons = [];
+    if (foreign > (r.maxForeignXI || 4)) reasons.push(`Max ${r.maxForeignXI || 4} overseas in XI (you have ${foreign})`);
+    if (selectedXI.WK.length < r.minWK) reasons.push(`Need min ${r.minWK} Wicket Keeper(s)`);
+    if (selectedXI.BAT.length < r.minBat) reasons.push(`Need min ${r.minBat} Batsmen`);
+    if (selectedXI.ALL.length < r.minAll) reasons.push(`Need min ${r.minAll} All-Rounder(s)`);
+    if (selectedXI.BOWL.length < r.minBowl) reasons.push(`Need min ${r.minBowl} Bowler(s)`);
+    if ((r.minSpin || 0) > 0 && spinCount < r.minSpin) reasons.push(`Need min ${r.minSpin} Spinner(s). Current: ${spinCount}`);
+    statusDiv.classList.remove("hidden");
+    statusDiv.setAttribute("data-source", "preview");
+    if (reasons.length > 0) {
+        statusDiv.innerHTML = `
+        <div class="status-box" style="padding:20px; text-align:center; border:1px solid #ef4444; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <h2 style="margin:0 0 5px 0; font-size:1.4rem; color:#ef4444;">❌ Criteria not met</h2>
+            <div style="margin-top:8px; color:#fca5a5; font-size:0.85rem; background:rgba(239,68,68,0.1); padding:8px; border-radius:6px;">
+                ${reasons.map(rs => rs).join("<br>")}
+            </div>
+            <p style="margin-top:12px; color:#94a3b8; font-size:0.8rem;">Adjust your XI to meet requirements, then Submit.</p>
+        </div>`;
+    } else {
+        statusDiv.innerHTML = `
+        <div class="status-box" style="padding:20px; text-align:center; border:1px solid #22c55e; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <h2 style="margin:0 0 5px 0; font-size:1.4rem; color:#22c55e;">✅ Criteria met</h2>
+            <p style="margin-top:8px; color:#94a3b8; font-size:0.9rem;">Ready to submit your Playing XI.</p>
+        </div>`;
+    }
 }
 // --- 5. SUBMIT ---
 window.resetXISelection = function() {
@@ -3113,7 +3143,7 @@ window.resetXISelection = function() {
         if(saveBtn) saveBtn.classList.add('hidden');
         
         // 4. Clear Status & Unhide List
-        if(statusDiv) { statusDiv.innerHTML = ""; statusDiv.classList.add("hidden"); }
+        if(statusDiv) { statusDiv.innerHTML = ""; statusDiv.classList.add("hidden"); statusDiv.removeAttribute("data-source"); }
         if(listDiv) listDiv.classList.remove("hidden"); // Show players again
 
         // 5. Reset Card View
@@ -3147,6 +3177,7 @@ socket.on("submitResult", (res) => {
 
     if(status) {
         status.classList.remove("hidden");
+        status.setAttribute("data-source", "result");
         status.innerHTML = `
         <div class="status-box" style="padding:20px; text-align:center; border:1px solid ${res.disqualified ? '#ef4444' : '#22c55e'}; background:#0f172a; border-radius:12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             
@@ -3190,20 +3221,38 @@ window.editTeam = function() {
     const statusBox = document.getElementById("xiStatus");
     const saveBtn = document.getElementById("saveXIBtn");
     const listDiv = document.getElementById("mySquadList");
+    const xiButtonRow = document.getElementById("xiButtonRow"); // Select the row
 
+    // Clear result state so updateStatsBar can show criteria preview again
+    if (statusBox) {
+        statusBox.removeAttribute("data-source");
+        statusBox.innerHTML = "";
+        statusBox.classList.add("hidden");
+    }
+
+    // 1. Show the entire button container row
+    if (xiButtonRow) {
+        xiButtonRow.classList.remove('hidden');
+        xiButtonRow.style.display = "flex"; 
+    }
+
+    // 2. Restore Submit Button state
     if (btn) {
         btn.classList.remove('hidden');
         btn.disabled = false;
         btn.innerText = `Update XI (${countTotalXI()}/11)`;
-        btn.style.background = ""; 
+        btn.style.background = "var(--success)"; // Keep it prominent
+        btn.style.color = "#000";
     }
 
+    // 3. Clear result messages and hide "Save Image"
+    if (statusBox) { statusBox.innerHTML = ""; statusBox.classList.add("hidden"); }
     if (saveBtn) saveBtn.classList.add('hidden');
-    // Keep xiStatus visible so Edit + Leaderboard buttons always stay
-    if (statusBox) statusBox.classList.remove("hidden");
-
+    
+    // 4. Show the player selection list again
     if(listDiv) listDiv.classList.remove("hidden");
 
+    // 5. Re-enable interaction on player buttons
     document.querySelectorAll('.xi-player-btn').forEach(b => {
         b.style.pointerEvents = "auto";
         b.style.opacity = "1";
@@ -3260,16 +3309,14 @@ function renderPopupContent(mode) {
 
         if (hasValidXI) {
              // 🔴 USE generateFantasyCardHTML (The image generator from Submit page)
-             const rating = d.disqualified ? 0 : (d.rating != null ? d.rating : 0);
-             container.innerHTML = generateFantasyCardHTML(d.team, d.xi, rating, 11, false);
+             // We pass 'false' at the end so it doesn't use the 'generatedCard' ID which might conflict
+             container.innerHTML = generateFantasyCardHTML(d.team, d.xi, d.rating, 11, false);
         } else {
-             const notSubmittedMsg = d.disqualified ? "Playing 11: Not submitted." : `${d.team} hasn't submitted a Playing XI yet.`;
              container.innerHTML = `
                 <div style="text-align:center; padding:40px; color:#94a3b8; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
                     <div style="font-size:3rem; margin-bottom:10px; opacity:0.5;">🏏</div>
-                    <h3 style="margin:0; color:#fff;">${d.disqualified ? "Playing 11: Not submitted" : "XI Not Available"}</h3>
-                    <p style="font-size:0.9rem;">${notSubmittedMsg}</p>
-                    <p style="font-size:0.8rem; margin-top:8px;">Switch to <strong>Full Squad</strong> tab to view their squad.</p>
+                    <h3 style="margin:0; color:#fff;">XI Not Available</h3>
+                    <p style="font-size:0.9rem;">${d.team} hasn't submitted a Playing XI yet.</p>
                 </div>`;
         }
     } else {
@@ -3287,9 +3334,7 @@ window.selectDataset = function(id, el) {
 
     // Visually update selection
     document.querySelectorAll('.dataset-card').forEach(c => c.classList.remove('active'));
-    if (el) el.classList.add('active');
-
-    updatePoolSelectedLabel();
+    el.classList.add('active');
 
     // If host chooses CUSTOM, open the builder overlay
     if (id === "custom") {
@@ -3299,70 +3344,26 @@ window.selectDataset = function(id, el) {
     }
 };
 
-function updatePoolSelectedLabel() {
-    const label = document.getElementById("poolSelectedLabel");
-    if (!label) return;
-    const setId = (document.getElementById("selectedSetId") || {}).value || "ipl2026";
-    const poolNames = { ipl2026: "IPL 2026", legends: "Legends", mixed: "Mixed", custom: "Custom" };
-    const name = poolNames[setId] || setId;
-    if (setId === "custom" && Array.isArray(window.__customSelectedPlayers) && window.__customSelectedPlayers.length > 0) {
-        label.textContent = window.__customSelectedPlayers.length + " players in this pool selected.";
-        label.style.display = "block";
-    } else {
-        label.textContent = "\"" + name + "\" pool selected.";
-        label.style.display = "block";
-    }
-}
-
 // ================= CUSTOM BUILDER LOGIC =================
-function getCustomBuilderEls() {
-    return {
-        choice: document.getElementById("customBuilderChoice"),
-        uploadSection: document.getElementById("customBuilderUploadSection"),
-        listSection: document.getElementById("customBuilderListSection"),
-        listBox: document.getElementById("customPlayerList"),
-        countEl: document.getElementById("customCount"),
-        uploadResult: document.getElementById("customUploadResult"),
-        csvInput: document.getElementById("customCsvInput"),
-        footer: document.getElementById("customBuilderFooter"),
-    };
-}
-
-window.customBuilderBackToChoice = function() {
-    const el = getCustomBuilderEls();
-    if (el.choice) el.choice.classList.remove("hidden");
-    if (el.uploadSection) el.uploadSection.classList.add("hidden");
-    if (el.listSection) el.listSection.classList.add("hidden");
-    if (el.footer) el.footer.classList.add("hidden");
-};
-
-window.customBuilderShowUpload = function() {
-    const el = getCustomBuilderEls();
-    if (el.choice) el.choice.classList.add("hidden");
-    if (el.listSection) el.listSection.classList.add("hidden");
-    if (el.uploadSection) el.uploadSection.classList.remove("hidden");
-    if (el.footer) el.footer.classList.add("hidden");
-    if (el.uploadResult) { el.uploadResult.classList.add("hidden"); el.uploadResult.textContent = ""; }
-    if (el.csvInput) el.csvInput.value = "";
-};
-
-window.customBuilderShowAvailable = async function() {
+// Open overlay and load players (from custom.js if present, else players.js pool)
+window.openCustomBuilder = async function() {
     const overlay = document.getElementById("customBuilderOverlay");
-    const el = getCustomBuilderEls();
-    if (!overlay || !el.listBox) return;
+    const listBox = document.getElementById("customPlayerList");
+    const countEl = document.getElementById("customCount");
 
-    if (el.choice) el.choice.classList.add("hidden");
-    if (el.uploadSection) el.uploadSection.classList.add("hidden");
-    if (el.listSection) el.listSection.classList.remove("hidden");
-    if (el.footer) el.footer.classList.remove("hidden");
+    if (!overlay || !listBox) return;
 
-    el.listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Loading Database...</div>';
-    if (el.countEl) el.countEl.textContent = "0";
+    overlay.classList.remove("hidden");
+    listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Loading Database...</div>';
+    if (countEl) countEl.textContent = "0";
     customSelectedIndexes.clear();
 
     try {
+        // Try dedicated custom pool first, then fallback to default players
         let res = await fetch("/api/players/custom");
-        if (!res.ok) res = await fetch("/api/players");
+        if (!res.ok) {
+            res = await fetch("/api/players");
+        }
         const json = await res.json();
         customAllPlayers = json.players || [];
         const autoSelectEl = document.getElementById("autoSelectPoolToggle");
@@ -3391,114 +3392,14 @@ window.customBuilderShowAvailable = async function() {
                 const toSelect = Math.min(18, customAllPlayers.length);
                 for (let i = 0; i < toSelect; i++) customSelectedIndexes.add(i);
             }
-            if (el.countEl) el.countEl.textContent = String(customSelectedIndexes.size);
+            if (countEl) countEl.textContent = String(customSelectedIndexes.size);
         }
         renderCustomPlayerList();
     } catch (e) {
         console.warn("Failed to load custom players", e);
-        el.listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#f87171;">Failed to load players.</div>';
+        listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#f87171;">Failed to load players.</div>';
     }
 };
-
-// Open overlay: show only the two buttons (choice). Do not load list until "Show available players" is clicked.
-window.openCustomBuilder = async function() {
-    const overlay = document.getElementById("customBuilderOverlay");
-    const el = getCustomBuilderEls();
-
-    if (!overlay) return;
-
-    overlay.classList.remove("hidden");
-    customSelectedIndexes.clear();
-    if (el.countEl) el.countEl.textContent = "0";
-
-    if (el.choice) el.choice.classList.remove("hidden");
-    if (el.uploadSection) el.uploadSection.classList.add("hidden");
-    if (el.listSection) el.listSection.classList.add("hidden");
-    if (el.footer) el.footer.classList.add("hidden");
-
-    // Bind CSV input once
-    if (el.csvInput && !el.csvInput._bound) {
-        el.csvInput._bound = true;
-        el.csvInput.addEventListener("change", function handleCsvUpload(ev) {
-            const file = ev.target.files && ev.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = (e.target && e.target.result) || "";
-                const parsed = parseCustomCsv(text);
-                if (parsed.length === 0) {
-                    if (getCustomBuilderEls().uploadResult) {
-                        getCustomBuilderEls().uploadResult.textContent = "No valid rows found. Check format.";
-                        getCustomBuilderEls().uploadResult.classList.remove("hidden");
-                        getCustomBuilderEls().uploadResult.style.color = "#f87171";
-                    }
-                    return;
-                }
-                customAllPlayers = parsed;
-                customSelectedIndexes.clear();
-                parsed.forEach((_, i) => customSelectedIndexes.add(i));
-                const resEl = getCustomBuilderEls().uploadResult;
-                if (resEl) {
-                    resEl.textContent = parsed.length + " players loaded. Showing list to confirm selection.";
-                    resEl.style.color = "#4ade80";
-                    resEl.classList.remove("hidden");
-                }
-                // Switch to list view with uploaded players
-                if (getCustomBuilderEls().listSection) getCustomBuilderEls().listSection.classList.remove("hidden");
-                if (getCustomBuilderEls().uploadSection) getCustomBuilderEls().uploadSection.classList.add("hidden");
-                if (getCustomBuilderEls().footer) getCustomBuilderEls().footer.classList.remove("hidden");
-                if (getCustomBuilderEls().countEl) getCustomBuilderEls().countEl.textContent = String(customSelectedIndexes.size);
-                renderCustomPlayerList();
-            };
-            reader.readAsText(file, "UTF-8");
-            ev.target.value = "";
-        });
-    }
-};
-
-// Parse CSV: Name, Role, Tag [, Rating] [, RTM]. Role inferred from Tag if missing. Rating optional; RTM optional.
-function parseCustomCsv(text) {
-    const rows = [];
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const parts = line.split(",").map(p => p.trim());
-        if (parts.length < 3) continue;
-        const name = parts[0];
-        if (/^(name|player|player name)$/i.test(name)) continue; // skip header row
-        let role = (parts[1] || "").toUpperCase();
-        const tag = (parts[2] || "").trim();
-        if (!name || !tag) continue;
-        if (!role && tag) {
-            if (/^WK\d?$/i.test(tag)) role = "WK";
-            else if (/^BAT\d?$/i.test(tag)) role = "BAT";
-            else if (/^BOWL\d?$/i.test(tag)) role = "BOWL";
-            else if (/^ALL\d?$/i.test(tag)) role = "ALL";
-            else if (/^PACE$/i.test(tag)) role = "PACE";
-            else if (/^SPIN$/i.test(tag)) role = "SPIN";
-            else role = "BAT";
-        }
-        let rating = null;
-        if (parts.length >= 4 && parts[3] !== "") {
-            const r = parseFloat(parts[3]);
-            if (!Number.isNaN(r)) rating = Math.min(10, Math.max(0, r));
-        }
-        let rtm = false;
-        if (parts.length >= 5) {
-            const rtmStr = (parts[4] || "").toLowerCase();
-            rtm = rtmStr === "1" || rtmStr === "yes" || rtmStr === "true";
-        }
-        rows.push({
-            name,
-            role,
-            tag,
-            rating: rating != null ? rating : undefined,
-            rtm,
-            foreign: false,
-        });
-    }
-    return rows;
-}
 
 window.toggleAutoSelectPool = function() {
     // Auto select and Ratings are independent.
@@ -3541,8 +3442,10 @@ window.toggleAutoSelectPool = function() {
 window.closeCustomBuilder = function() {
     const overlay = document.getElementById("customBuilderOverlay");
     if (overlay) overlay.classList.add("hidden");
-    customBuilderBackToChoice();
-    // When × is clicked: deselect Custom card and switch to IPL 2026 (label shows "IPL 2026 pool selected")
+        customBuilderBackToChoice();
+
+    // Deselect CUSTOM BUILDER dataset card in auth section
+       // When × is clicked: deselect Custom card and switch to IPL 2026 (label shows "IPL 2026 pool selected")
     const hidden = document.getElementById("selectedSetId");
     if (hidden && hidden.value === "custom") {
         hidden.value = "ipl2026";
@@ -3550,7 +3453,7 @@ window.closeCustomBuilder = function() {
         syncDatasetCardActive();
         updatePoolSelectedLabel();
     }
-}
+};
 
 function renderCustomPlayerList() {
     const listBox = document.getElementById("customPlayerList");
@@ -3563,15 +3466,10 @@ function renderCustomPlayerList() {
     const term = (searchInput?.value || "").trim().toLowerCase();
     const role = (roleFilter?.value || "").trim();
 
-    const roleMatches = (r, pr) => {
-        if (!r) return true;
-        if (r === "BOWL") return pr === "BOWL" || pr === "PACE" || pr === "SPIN";
-        return pr === r;
-    };
     const rows = customAllPlayers
         .map((p, idx) => ({ p, idx }))
         .filter(({ p }) => {
-            if (!roleMatches(role, p.role)) return false;
+            if (role && p.role !== role) return false;
             const country = p.country || (p.foreign ? "Overseas" : "India");
             const haystack = `${p.name} ${country}`.toLowerCase();
             if (!term) return true;
@@ -3665,23 +3563,7 @@ window.saveCustomSet = async function() {
     window.__customSelectedPlayers = selected;
 
     closeCustomBuilder();
-    // Keep Custom card active (green) when set is locked
-    const hidden = document.getElementById("selectedSetId");
-    if (hidden) hidden.value = "custom";
-    syncDatasetCardActive();
-    updatePoolSelectedLabel();
 };
-
-function syncDatasetCardActive() {
-    const setId = (document.getElementById("selectedSetId") || {}).value || "ipl2026";
-    document.querySelectorAll(".dataset-card").forEach(c => {
-        if ((c.getAttribute("data-dataset") || "").toLowerCase() === setId.toLowerCase()) {
-            c.classList.add("active");
-        } else {
-            c.classList.remove("active");
-        }
-    });
-}
 // --- FIX: LEADERBOARD DOWNLOAD BUTTON ---
 window.downloadPopupCard = function() {
     if (!currentPopupData || !currentPopupData.team) return;
@@ -3725,7 +3607,7 @@ socket.on("leaderboard", (board) => {
             let statusHtml = '<span class="lb-status-icon lb-dash">-</span>';
             
             if (t.disqualified) {
-                statusHtml = `<span class="lb-status-icon lb-cross" title="Disqualified">✕</span>`;
+                statusHtml = `<span class="lb-status-icon lb-cross" title="Disqualified">❌</span>`;
             } 
             // Check if XI exists and has players (valid submission)
             else if (
@@ -3736,13 +3618,14 @@ socket.on("leaderboard", (board) => {
             ) {
                 statusHtml = `<span class="lb-status-icon lb-tick">✅</span>`;
             }
-
             const displayRating = t.disqualified ? 0 : (t.rating != null ? t.rating : 0);
+
             tr.innerHTML = `
                 <td>#${i+1}</td>
                 <td>
                     <div class="lb-team-name" style="color:${TEAM_COLORS[t.team] || '#fff'}">${t.team}</div>
                 </td>
+                <td class="lb-rating">⭐ ${t.rating}</td>
                 <td class="lb-rating">⭐ ${displayRating}</td>
                 <td style="font-family:monospace; color:#ccc;">₹${Number(t.purse).toFixed(2)}</td>
                 <td>${statusHtml}</td>
@@ -3840,7 +3723,7 @@ function generateFullSquadHTML(teamName, squad, purse, owner, isPopup = false) {
         
         <div class="prem-header">
             <h1 class="prem-title">${teamName}</h1>
-            <div class="prem-meta">FULL SQUAD • ${owner || 'Manager'}</div>
+            <div class="prem-meta">FULL SQUAD • ${owner || '—'}</div>
             
             <div class="prem-stats">
                 <div class="stat-badge">💰 ₹${purse.toFixed(2)} Cr</div>
@@ -4012,7 +3895,7 @@ function renderPostAuctionSummary() {
     teams.forEach(team => {
         const squad = allSquads[team];
         const purse = teamPurse[team] || 0;
-        const owner = teamOwners[team] || "Manager";
+        const owner = (teamOwners[team] || "").trim() || "—";
         const teamColor = TEAM_COLORS[team] || "#fff";
         // 1. Create Wrapper
         const item = document.createElement("div");
@@ -4056,18 +3939,7 @@ content.innerHTML = generateFullSquadHTML(team, squad, purse, owner, true);
         list.appendChild(item);
     });
 }
-// --- EXIT TO HOME (Fixed: Forces return to Main Page) ---
-window.exitToHome = function() {
-    // We removed the check for 'postAuctionSummary' so it doesn't loop back.
-   
-    if (confirm("Are you sure you want to exit to the Main Menu?")) {
-        // 1. Clear session to stop auto-reconnect logic on the landing page
-        sessionStorage.clear();
-       
-        // 2. Force hard redirect to root (Main Page)
-        window.location.href = "/";
-    }
-};
+// --- EXIT TO HOME: uses showConfirm (defined later) for consistent popup ---
 /* ================================================= */
 /* ============== GOD MODE (ADMIN) ================= */
 /* ================================================= */
@@ -4635,8 +4507,6 @@ window.toggleMute = function() {
         if (mutedEl) mutedEl.classList.add("hidden");
     }
 };
-
-
 /* ================= GLOBAL REFRESH LOGIC ================= */
 function refreshGlobalUI() {
     // 1. Refresh Squad View if active
