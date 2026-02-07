@@ -417,6 +417,29 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 .custom-builder-choice-card .custom-choice-title { font-weight: 700; font-size: 0.8rem; color: #fff; margin-bottom: 2px; line-height: 1.2; }
 .custom-builder-choice-card .custom-choice-sub { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; }
 
+/* Upload section: small back arrow top-left */
+.custom-upload-back-btn {
+    position: absolute;
+    top: 12px;
+    left: 15px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    z-index: 2;
+}
+.custom-upload-back-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+#customBuilderUploadSection .csv-format-example { margin-top: 0; }
+
 /* Filter row: same height (36px) and style for back, search, select, ? */
 .custom-filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .custom-filter-control {
@@ -1440,32 +1463,30 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     color: #fff;
 }
 
-/* Chat send button – distinct WhatsApp-style */
+/* Chat send button – same size and style as feed-list-btn (36px, rectangular) */
 .chat-send-btn {
     flex-shrink: 0;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border: none;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0ea5e9, #0284c7);
-    color: #fff;
-    font-size: 1.25rem;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    color: #94a3b8;
+    font-size: 1rem;
     line-height: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 10px rgba(14, 165, 233, 0.4);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s;
+    transition: background 0.2s, color 0.2s;
 }
 .chat-send-btn:hover {
-    transform: scale(1.08);
-    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.5);
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    background: rgba(255,255,255,0.12);
+    color: #fff;
 }
 .chat-send-btn:active {
-    transform: scale(0.96);
+    background: rgba(255,255,255,0.08);
 }
 
 /* Sold/Unsold popup */
@@ -1639,6 +1660,38 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     color:#facc15; 
     font-size: 0.8rem; 
 }
+
+/* Panel sets: premium look; pteam badge next to player name */
+.panel-sets-inner.premium-panel {
+    padding: 14px;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.4));
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.panel-sets-inner .set-title { margin-top: 10px; margin-bottom: 8px; }
+.panel-sets-inner .set-title:first-child { margin-top: 0; }
+.set-players-list { margin-bottom: 8px; }
+.set-players-list.set-upcoming { opacity: 0.7; }
+.set-row-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+.set-player-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.set-pteam-badge {
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+.set-row-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.set-empty-msg { padding: 10px; color: #64748b; text-align: center; font-size: 0.85rem; }
 
 /* ================= MOBILE RESPONSIVENESS ================= */
 
@@ -2317,15 +2370,25 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
 
 #msg {
     flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     color: white;
-    padding: 10px 15px;
-    border-radius: 20px;
+    padding: 8px 12px;
+    border-radius: 8px;
     outline: none;
     transition: all 0.2s;
+    font-size: 0.88rem;
+    height: 36px;
+    min-height: 36px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
-#msg:focus { border-color: var(--primary); background: rgba(0,0,0,0.3); }
+#msg::placeholder { color: rgba(255, 255, 255, 0.4); }
+#msg:focus {
+    border-color: var(--primary);
+    background: rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
 
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
@@ -4525,6 +4588,13 @@ body {
 .ds-title { font-weight: 700; font-size: 0.8rem; color: #fff; margin-bottom: 2px; }
 .ds-sub { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; }
 
+.pool-selected-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-top: 8px;
+    margin-bottom: 0;
+    display: block;
+}
 
 /* ================================================= */
 /* 🔧 HEADER & TRANSPARENCY FIXES                    */
@@ -6411,18 +6481,20 @@ body {
 }
 .premium-sold-tile {
     position: relative;
-    margin: 12px 8px;
-    padding: 16px;
+    margin: 4px 6px;
+    padding: 6px 10px;
     background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border-radius: 8px;
+    border-left: 3px solid rgba(251, 191, 36, 0.4);
     overflow: hidden;
-    transition: transform 0.2s ease;
+    transition: background 0.15s;
+    min-height: auto;
+    font-size: 0.8rem;
+    line-height: 1.35;
 }
 
 .premium-sold-tile:hover {
-    transform: translateY(-2px);
     background: rgba(255, 255, 255, 0.08);
 }
 
@@ -6432,9 +6504,17 @@ body {
     align-items: center;
     position: relative;
     z-index: 1;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.tile-left { display: flex; align-items: center; gap: 12px; }
+.tile-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+.premium-sold-tile .icon-wrapper {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+}
 
 .icon-wrapper {
     width: 40px;
@@ -6459,6 +6539,11 @@ body {
     font-size: 0.85rem;
     color: #cbd5e1;
 }
+
+.premium-sold-tile .player-name { font-size: 0.85rem; font-weight: 600; }
+.premium-sold-tile .price-tag { font-size: 0.8rem; margin-bottom: 0; }
+.premium-sold-tile .btn-premium-save { padding: 4px 8px; font-size: 0.7rem; }
+.premium-sold-tile .tile-details .sale-info { font-size: 0.75rem; }
 
 .price-tag {
     font-family: 'Monaco', monospace;
