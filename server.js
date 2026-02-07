@@ -1253,10 +1253,21 @@ socket.on("getAuctionState", () => {
                             const r = rooms[roomCode];
                             const activeCount = Object.keys(r.users).filter(id => !r.users[id].isKicked && !r.users[id].isAway).length;
                             if (activeCount === 0) {
-                                io.to(roomCode).emit("forceHome", "Room closed (no active players).");
-                                delete rooms[roomCode];
-                                saveToCloud();
-                            }
+    // 🛡️ DATA PROTECTION FIX:
+    // Only delete the room if the auction was ABANDONED (never finished).
+    // If the auction ended, we KEEP it so people can view results later.
+    if (!r.auctionEnded) {
+        console.log(`🗑️ Deleting abandoned lobby: ${roomCode}`);
+        io.to(roomCode).emit("forceHome", "Room closed (no active players).");
+        delete rooms[roomCode];
+        saveToCloud();
+    } else {
+        console.log(`💾 Persisting completed game: ${roomCode} for results viewing.`);
+        // We do NOT delete the room. 
+        // We do NOT call saveToCloud here (it's already saved from endAuction).
+    }
+}
+
                         }
                         delete hostLeftEmptyTimers[roomCode];
                     }, EMPTY_ROOM_GRACE);
