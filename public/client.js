@@ -259,8 +259,8 @@ function setupEventListeners() {
             localStorage.setItem('ipl_user', username);
             
             // Emit creation event with selected dataset
-           const datasetIdInput = document.getElementById('selectedSetId');
-           const datasetId = datasetIdInput ? datasetIdInput.value : "ipl2026";
+         //  const datasetIdInput = document.getElementById('selectedSetId');
+           //const datasetId = datasetIdInput ? datasetIdInput.value : "ipl2026";
             
             socket.emit("createRoom", { user: username, isPublic: isPublic, datasetId });
         };
@@ -407,8 +407,8 @@ if (!result.active) {
             username = uName;
             sessionStorage.setItem('ipl_user', username);
             localStorage.setItem('ipl_user', username);
-            const datasetIdInput = document.getElementById('selectedSetId');
-            const datasetId = datasetIdInput ? datasetIdInput.value : 'ipl2026';
+           // const datasetIdInput = document.getElementById('selectedSetId');
+            //const datasetId = datasetIdInput ? datasetIdInput.value : 'ipl2026';
             socket.emit("createRoom", { user: username, isPublic: isPublic, datasetId });
         };
     }
