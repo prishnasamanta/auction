@@ -11,13 +11,22 @@ const io = new Server(server, {
     pingTimeout: 60000, 
     pingInterval: 25000
 });
+const admin = require("firebase-admin");
 
-// --- JSONBIN.IO CONFIGURATION ---
-// Replace these with your actual keys from jsonbin.io
-const BIN_ID = process.env.BIN_ID; 
-const API_KEY = process.env.API_KEY; 
+// Note: You must download your service account key from Firebase Console
+// and place it in your project folder.
+// Check if we are local or on a server
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
+    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
+    : require("./firebase-service-account.json");
 
-const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://auction-10874.firebaseio.com"
+});
+
+
+const db = admin.database();
 
 // --- SERVER STATE ---
 let rooms = {}; // Fast in-memory storage
@@ -42,76 +51,46 @@ app.get('/room/:roomCode*', (req, res) => {
 /* ================================================= */
 
 // 1. READ ALL DATA (Load on startup)
-async function loadFromCloud() {
-    console.log("☁️ Loading Data from Cloud...");
+// This helper saves ONLY the changed room, preventing data loss in other rooms
+async function syncRoom(roomCode) {
+    const r = rooms[roomCode];
+    if (!r) return;
     try {
-        const res = await fetch(BIN_URL + "/latest", {
-            headers: { 'X-Master-Key': API_KEY }
-        });
-        
-        if (!res.ok) throw new Error(`Fetch failed: ${res.statusText}`);
-        
-        const json = await res.json();
-        
-        // Merge cloud data (history) with current memory
-        if (json.record && json.record.rooms) {
-            rooms = { ...json.record.rooms, ...rooms };
-            console.log(`✅ Loaded ${Object.keys(rooms).length} rooms from Cloud.`);
-        }
-    } catch (e) {
-        console.error("⚠️ Cloud Load Failed (Starting Empty):", e.message);
-    }
-}
+        // We sanitize to avoid circular socket references
+        const cleanData = JSON.parse(JSON.stringify(r)); 
+        // We remove the 'auction.interval' because it can't be saved to JSON
+        if (cleanData.auction) delete cleanData.auction.interval;
 
-// 2. SAVE DATA (Persist state)
-async function saveToCloud() {
-    try {
-        // We sanitize the rooms object to avoid circular JSON errors if any sockets are stored
-        // (Though our 'rooms' structure mostly stores data, checking ensures safety)
-        const cleanRooms = JSON.parse(JSON.stringify(rooms)); 
-
-        await fetch(BIN_URL, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': API_KEY
-            },
-            body: JSON.stringify({ rooms: cleanRooms })
-        });
-        console.log("💾 Data Saved to Cloud");
+        await db.ref(`rooms/${roomCode}`).set(cleanData);
+        console.log(`☁️ Firebase: Room ${roomCode} synced.`);
     } catch (e) {
-        console.error("⚠️ Cloud Save Failed:", e.message);
+        console.error("⚠️ Firebase Sync Failed:", e.message);
     }
 }
 
 // Load data immediately when server starts
-loadFromCloud();
 
 /* ================================================= */
 /* 🌐 API ROUTES                                     */
 /* ================================================= */
-
-// API: Client checks this when visiting /room/CODE
 app.get('/api/room/:code', async (req, res) => {
     const code = req.params.code.toUpperCase();
-    
-    // 1. Check Memory first (Fastest)
     let room = rooms[code];
 
-    // 2. If not in memory, try refreshing from Cloud (Sync check)
     if (!room) {
-        await loadFromCloud();
-        room = rooms[code];
+        // Pull from Firebase if server restarted
+        const snapshot = await db.ref(`rooms/${code}`).once('value');
+        if (snapshot.exists()) {
+            rooms[code] = snapshot.val();
+            room = rooms[code];
+        }
     }
 
-    if (!room) {
-        return res.json({ exists: false });
-    }
+    if (!room) return res.json({ exists: false });
 
-    // Return Data for Client to Render
     res.json({
         exists: true,
-        active: !room.auctionEnded, 
+        active: !room.auctionEnded,
         data: {
             squads: room.squads,      
             purses: room.purse,
@@ -311,6 +290,7 @@ function commitSoldTo(r, room, team, price, isRtm) {
     sendLog(r, room, `🔨 SOLD: ${p.name} → ${team} ₹${price.toFixed(2)} Cr`);
     io.to(room).emit("squadData", { squads: r.squads, rtmLeft: r.rtmLeft || {} });
     r.availableTeams = r.availableTeams.filter(t => t !== team);
+    syncRoom(room);
 }
 
 function sendLog(room, code, msg) {
@@ -479,7 +459,7 @@ if (datasetId === "legends") {
         broadcastSets(room, code);
         
         // Save initial state
-        saveToCloud();
+await syncRoom(code);
     });
 // Add or Update this handler
 socket.on("getAuctionState", () => {
@@ -1094,6 +1074,7 @@ socket.on("getAuctionState", () => {
             team: socket.team
         });
         sendLog(r, socket.room, `⚬ ${socket.team} bids ₹${r.auction.bid.toFixed(2)} Cr`);
+        syncRoom(socket.room);
     });
 
     // 9. CHAT & SQUADS
@@ -1138,7 +1119,7 @@ socket.on("getAuctionState", () => {
         r.auction.rtmPending = null;
         commitSoldTo(r, socket.room, pend.team, pend.bid);
         io.to(socket.room).emit("rtmOverlay", { show: false });
-        saveToCloud();
+        syncRoom(socket.room);
         setTimeout(() => nextPlayer(r, socket.room), 2000);
     });
 
@@ -1153,7 +1134,7 @@ socket.on("getAuctionState", () => {
             r.auction.rtmPending = null;
             commitSoldTo(r, socket.room, pend.team, pend.bid);
             io.to(socket.room).emit("rtmOverlay", { show: false });
-            saveToCloud();
+            syncRoom(socket.room);
             setTimeout(() => nextPlayer(r, socket.room), 2000);
             return;
         }
@@ -1170,7 +1151,7 @@ socket.on("getAuctionState", () => {
             r.auction.rtmPending = null;
             commitSoldTo(r, socket.room, pend.pteam, amt, true);
             io.to(socket.room).emit("rtmOverlay", { show: false });
-            saveToCloud();
+            syncRoom(socket.room);
             setTimeout(() => nextPlayer(r, socket.room), 2000);
         }
     });
@@ -1184,7 +1165,7 @@ socket.on("getAuctionState", () => {
         r.auction.rtmPending = null;
         commitSoldTo(r, socket.room, buyerTeam, pend.rtmPrice, true);
         io.to(socket.room).emit("rtmOverlay", { show: false });
-        saveToCloud();
+        syncRoom(socket.room);
         setTimeout(() => nextPlayer(r, socket.room), 2000);
     });
 
@@ -1197,7 +1178,7 @@ socket.on("getAuctionState", () => {
         r.auction.rtmPending = null;
         commitSoldTo(r, socket.room, pend.pteam, pend.rtmPrice, true);
         io.to(socket.room).emit("rtmOverlay", { show: false });
-        saveToCloud();
+        syncRoom(socket.room);
         setTimeout(() => nextPlayer(r, socket.room), 2000);
     });
 
@@ -1252,21 +1233,24 @@ socket.on("getAuctionState", () => {
                         if (rooms[roomCode]) {
                             const r = rooms[roomCode];
                             const activeCount = Object.keys(r.users).filter(id => !r.users[id].isKicked && !r.users[id].isAway).length;
-                            if (activeCount === 0) {
-    // 🛡️ DATA PROTECTION FIX:
-    // Only delete the room if the auction was ABANDONED (never finished).
-    // If the auction ended, we KEEP it so people can view results later.
-    if (!r.auctionEnded) {
-        console.log(`🗑️ Deleting abandoned lobby: ${roomCode}`);
-        io.to(roomCode).emit("forceHome", "Room closed (no active players).");
-        delete rooms[roomCode];
-        saveToCloud();
-    } else {
-        console.log(`💾 Persisting completed game: ${roomCode} for results viewing.`);
-        // We do NOT delete the room. 
-        // We do NOT call saveToCloud here (it's already saved from endAuction).
-    }
-}
+                        if (activeCount === 0) {
+                            // 🛡️ DATA PROTECTION FIX:
+                            if (!r.auctionEnded) {
+                                console.log(`🗑️ Deleting abandoned lobby: ${roomCode}`);
+                                io.to(roomCode).emit("forceHome", "Room closed (no active players).");
+                                
+                                // 1. Remove from local memory
+                                delete rooms[roomCode];
+                                
+                                // 2. Remove from Firebase (Since it was abandoned)
+                                // FIX: Use db.ref().remove() instead of saveToCloud()
+                                db.ref(`rooms/${roomCode}`).remove(); 
+                            } else {
+                                console.log(`💾 Persisting completed game: ${roomCode} for results viewing.`);
+                                // We do NOT delete from Firebase. We only delete from RAM.
+                                delete rooms[roomCode];
+                            }
+                        }
 
                         }
                         delete hostLeftEmptyTimers[roomCode];
@@ -1364,7 +1348,7 @@ socket.on("getAuctionState", () => {
 
         io.to(socket.room).emit("leaderboard", board);
         // Save state after important event
-        saveToCloud();
+syncRoom(socket.room);
     });
 
     socket.on("checkAdmin", () => {
@@ -1441,7 +1425,7 @@ socket.on("getAuctionState", () => {
             io.to(roomCode).emit("setUpdate", setPayload);
 
             socket.emit("godModeSuccess", `Moved ${fullPlayerObj.name} to ${team}`);
-            saveToCloud(); // Save change
+            syncRoom(socket.room); // Save change
         } else {
             socket.emit("error", "Player not found");
         }
@@ -1517,7 +1501,7 @@ function resolvePlayer(r, room) {
         if (r.purse[team] < r.auction.bid) {
             io.to(room).emit("unsold", { player: p });
             sendLog(r, room, `❌ UNSOLD (Insufficient Funds): ${p.name}`);
-            saveToCloud();
+            syncRoom(room);
             return;
         }
 
@@ -1552,7 +1536,7 @@ function resolvePlayer(r, room) {
                     r.auction.rtmPending = null;
                     commitSoldTo(r, room, pend.team, pend.bid);
                     io.to(room).emit("rtmOverlay", { show: false });
-                    saveToCloud();
+                    syncRoom(room);
                     setTimeout(() => nextPlayer(r, room), 2000);
                 }, 15000);
                 return;
@@ -1565,7 +1549,7 @@ function resolvePlayer(r, room) {
         sendLog(r, room, `❌ UNSOLD: ${p.name}`);
     }
 
-    saveToCloud();
+syncRoom(room);
 }
 
 function endAuction(r, room) {
@@ -1583,7 +1567,7 @@ function endAuction(r, room) {
     sendLog(r, room, "🛑 Auction Ended. Prepare Playing XI.");
     io.to(room).emit("squadData", { squads: r.squads, rtmLeft: r.rtmLeft || {} });
     
-    saveToCloud();
+syncRoom(room);
 }
 
 const PORT = process.env.PORT || 3500; 
