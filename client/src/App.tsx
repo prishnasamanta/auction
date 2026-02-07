@@ -8,6 +8,7 @@ function handleEnterArena() {
 
 export default function App() {
   const [scrolled, setScrolled] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -17,6 +18,52 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-transparent text-slate-100 font-sans selection:bg-indigo-500/30">
+      {/* How to Play modal */}
+      {showHowToPlay && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowHowToPlay(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="How to Play"
+        >
+          <div
+            className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-4 border-b border-white/10 bg-slate-800/50">
+              <h2 className="text-xl font-bold text-indigo-400">How to Play</h2>
+              <button
+                type="button"
+                onClick={() => setShowHowToPlay(false)}
+                className="text-slate-400 hover:text-white p-1 rounded"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto text-sm space-y-4 text-slate-300">
+              <p className="leading-relaxed">Create or join a room with a 5-letter code. Pick your franchise (CSK, MI, RCB, etc.). The host starts the auction; you bid in real time. Stay within purse limits and squad rules.</p>
+              <h3 className="font-semibold text-white">About sets</h3>
+              <p className="leading-relaxed">Each auction uses a <strong>player set</strong>: IPL 2026 (current squad), Legends (all-time greats), Mixed (icons from different eras), or Custom (your own pool). The host chooses the set when creating the room.</p>
+              <h3 className="font-semibold text-white">Custom player pool</h3>
+              <p className="leading-relaxed">When creating a room, select &quot;Custom&quot; to build your own set. You can <strong>show available players</strong> from the database and pick who to include, or <strong>upload your own pool</strong> via a CSV file (columns: Name, Role, Tag e.g. WK1/BAT1, optional Rating, optional RTM). Confirm the set before starting the auction.</p>
+              <h3 className="font-semibold text-white">Spectators</h3>
+              <p className="leading-relaxed">If the auction has already started and all teams are taken, you can join as a spectator to watch the bidding. Use &quot;Join Team&quot; later if a spot opens.</p>
+            </div>
+            <div className="p-4 border-t border-white/10 bg-slate-800/30">
+              <button
+                type="button"
+                onClick={() => { setShowHowToPlay(false); handleEnterArena(); }}
+                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-bold text-white hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
+              >
+                Start Play
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Infinite Tape */}
       <div className="fixed top-0 left-0 w-full h-10 bg-gradient-to-r from-indigo-600 to-purple-600 z-50 flex items-center overflow-hidden lp-tape">
         <div className="infinite-tape-content whitespace-nowrap flex gap-8 font-bold text-sm tracking-wider pl-full">
@@ -50,7 +97,11 @@ export default function App() {
             ⚡ IPL <span className="text-gradient">AUCTION</span>
           </div>
           <div className="hidden md:flex gap-8 font-medium text-slate-400">
-            {['How to Play', 'Features', 'Player Pools', 'FAQ'].map((item) => (
+            <button type="button" onClick={() => setShowHowToPlay(true)} className="hover:text-white hover:text-indigo-400 transition-colors relative group bg-transparent border-none cursor-pointer font-inherit">
+              How to Play
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full" />
+            </button>
+            {['Features', 'Player Pools', 'FAQ'].map((item) => (
               <a
                 key={item}
                 href={'#' + item.toLowerCase().replace(/\s+/g, '-')}
@@ -116,12 +167,9 @@ export default function App() {
             <button
               type="button"
               className="px-8 py-4 bg-transparent border border-white/10 rounded-xl font-bold text-white hover:bg-white/5 hover:-translate-y-1 transition-all"
-              onClick={() => {
-                const el = document.getElementById('how-to-play');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => setShowHowToPlay(true)}
             >
-              VIEW RULES
+              HOW TO PLAY
             </button>
           </div>
         </div>
@@ -251,7 +299,7 @@ export default function App() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="pt-12 md:pt-24 pb-24 px-4">
+      <section id="faq" className="pt-12 md:pt-24 pb-16 px-4">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-bold text-center mb-16">FAQ</h2>
           <div className="space-y-4">
@@ -269,23 +317,46 @@ export default function App() {
         </div>
       </section>
 
-  <footer
+      {/* Bottom CTA — Start Play */}
+      <section className="pt-8 pb-32 px-4">
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-slate-400 mb-6">Ready to build your dream team?</p>
+          <button
+            type="button"
+            onClick={handleEnterArena}
+            className="px-10 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-1 transition-all inline-flex items-center gap-2"
+          >
+            <span>⚡</span> Start Play
+          </button>
+        </div>
+      </section>
+
+      <footer
         className="app-footer"
         style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', zIndex: 100 }}
       >
-        <div class="footer-content">
-            <span>Made with <span style="color:#e11d48;">❤️</span> by <b>PRS</b></span>
-            <span class="separator">•</span>
-            <div class="social-links">
-                <!-- Discord -->
-                <a href="https://discord.gg/gpACU3Gdg" target="_blank" rel="noopener" class="footer-social" title="Discord" aria-label="Discord"><img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="Discord"/></a>
-                <a href="https://whatsapp.com/channel/0029Vb7Z5EABKfi1oKCpTB3j" target="_blank" rel="noopener" class="footer-social" title="WhatsApp" aria-label="WhatsApp"><img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp--v1.png" alt="WhatsApp"/></a>
-                <a href="https://github.com/prishnasamanta/" target="_blank" rel="noopener" class="footer-social" title="GitHub" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
-                <a href="https://t.me/+89xATBNX_aI4YmY1" target="_blank" rel="noopener" class="footer-social" title="Telegram" aria-label="Telegram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
-             <!--   <a href="#" target="_blank" rel="noopener" class="footer-social" title="Twitter / X" aria-label="Twitter"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a> -->
-                <a href="https://www.instagram.com/prs_prishna72?igsh=MWNpMW5lenhtd2h1dA==" target="_blank" rel="noopener" class="footer-social" title="Instagram" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
-                <a href="https://www.facebook.com/pri.shi.773" target="_blank" rel="noopener" class="footer-social" title="Facebook" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
-            </div>
+        <div className="footer-content">
+          <span>
+            Made with <span style={{ color: '#e11d48' }}>❤️</span> by <b>PRS</b>
+          </span>
+          <span className="separator">•</span>
+          <a
+            href="https://docs.google.com/document/d/1Fz7SsuT23zZvWAuQE7FJTJ0QsZ-sZa6hliIG9fKVNXE/edit?tab=t.0"
+            target="_blank"
+            rel="noreferrer"
+            className="footer-link"
+          >
+            Support for ☕
+          </a>
+          <span className="separator">•</span>
+          <div className="social-links">
+            <a href="https://discord.gg/gpACU3Gdg" target="_blank" rel="noreferrer">
+              <img width="20" height="20" src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="discord" />
+            </a>
+            <a href="https://whatsapp.com/channel/0029Vb7Z5EABKfi1oKCpTB3j" target="_blank" rel="noreferrer">
+              <img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp--v1.png" alt="whatsapp" />
+            </a>
+          </div>
         </div>
       </footer>
     </div>
