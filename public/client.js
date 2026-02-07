@@ -3345,25 +3345,54 @@ window.selectDataset = function(id, el) {
 };
 
 // ================= CUSTOM BUILDER LOGIC =================
-// Open overlay and load players (from custom.js if present, else players.js pool)
-window.openCustomBuilder = async function() {
+function getCustomBuilderEls() {
+    return {
+        choice: document.getElementById("customBuilderChoice"),
+        uploadSection: document.getElementById("customBuilderUploadSection"),
+        listSection: document.getElementById("customBuilderListSection"),
+        listBox: document.getElementById("customPlayerList"),
+        countEl: document.getElementById("customCount"),
+        uploadResult: document.getElementById("customUploadResult"),
+        csvInput: document.getElementById("customCsvInput"),
+        footer: document.getElementById("customBuilderFooter"),
+    };
+}
+
+window.customBuilderBackToChoice = function() {
+    const el = getCustomBuilderEls();
+    if (el.choice) el.choice.classList.remove("hidden");
+    if (el.uploadSection) el.uploadSection.classList.add("hidden");
+    if (el.listSection) el.listSection.classList.add("hidden");
+    if (el.footer) el.footer.classList.add("hidden");
+};
+
+window.customBuilderShowUpload = function() {
+    const el = getCustomBuilderEls();
+    if (el.choice) el.choice.classList.add("hidden");
+    if (el.listSection) el.listSection.classList.add("hidden");
+    if (el.uploadSection) el.uploadSection.classList.remove("hidden");
+    if (el.footer) el.footer.classList.add("hidden");
+    if (el.uploadResult) { el.uploadResult.classList.add("hidden"); el.uploadResult.textContent = ""; }
+    if (el.csvInput) el.csvInput.value = "";
+};
+
+window.customBuilderShowAvailable = async function() {
     const overlay = document.getElementById("customBuilderOverlay");
-    const listBox = document.getElementById("customPlayerList");
-    const countEl = document.getElementById("customCount");
+    const el = getCustomBuilderEls();
+    if (!overlay || !el.listBox) return;
 
-    if (!overlay || !listBox) return;
+    if (el.choice) el.choice.classList.add("hidden");
+    if (el.uploadSection) el.uploadSection.classList.add("hidden");
+    if (el.listSection) el.listSection.classList.remove("hidden");
+    if (el.footer) el.footer.classList.remove("hidden");
 
-    overlay.classList.remove("hidden");
-    listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Loading Database...</div>';
-    if (countEl) countEl.textContent = "0";
+    el.listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Loading Database...</div>';
+    if (el.countEl) el.countEl.textContent = "0";
     customSelectedIndexes.clear();
 
     try {
-        // Try dedicated custom pool first, then fallback to default players
         let res = await fetch("/api/players/custom");
-        if (!res.ok) {
-            res = await fetch("/api/players");
-        }
+        if (!res.ok) res = await fetch("/api/players");
         const json = await res.json();
         customAllPlayers = json.players || [];
         const autoSelectEl = document.getElementById("autoSelectPoolToggle");
@@ -3392,14 +3421,115 @@ window.openCustomBuilder = async function() {
                 const toSelect = Math.min(18, customAllPlayers.length);
                 for (let i = 0; i < toSelect; i++) customSelectedIndexes.add(i);
             }
-            if (countEl) countEl.textContent = String(customSelectedIndexes.size);
+            if (el.countEl) el.countEl.textContent = String(customSelectedIndexes.size);
         }
         renderCustomPlayerList();
     } catch (e) {
         console.warn("Failed to load custom players", e);
-        listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#f87171;">Failed to load players.</div>';
+        el.listBox.innerHTML = '<div style="text-align:center; padding:20px; color:#f87171;">Failed to load players.</div>';
     }
 };
+
+// ================= CUSTOM BUILDER LOGIC =================
+// Open overlay: show only the two buttons (choice). Do not load list until "Show available players" is clicked.
+window.openCustomBuilder = async function() {
+    const overlay = document.getElementById("customBuilderOverlay");
+    const el = getCustomBuilderEls();
+
+    if (!overlay) return;
+
+    overlay.classList.remove("hidden");
+    customSelectedIndexes.clear();
+    if (el.countEl) el.countEl.textContent = "0";
+
+    if (el.choice) el.choice.classList.remove("hidden");
+    if (el.uploadSection) el.uploadSection.classList.add("hidden");
+    if (el.listSection) el.listSection.classList.add("hidden");
+    if (el.footer) el.footer.classList.add("hidden");
+
+    // Bind CSV input once
+    if (el.csvInput && !el.csvInput._bound) {
+        el.csvInput._bound = true;
+        el.csvInput.addEventListener("change", function handleCsvUpload(ev) {
+            const file = ev.target.files && ev.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = (e.target && e.target.result) || "";
+                const parsed = parseCustomCsv(text);
+                if (parsed.length === 0) {
+                    if (getCustomBuilderEls().uploadResult) {
+                        getCustomBuilderEls().uploadResult.textContent = "No valid rows found. Check format.";
+                        getCustomBuilderEls().uploadResult.classList.remove("hidden");
+                        getCustomBuilderEls().uploadResult.style.color = "#f87171";
+                    }
+                    return;
+                }
+                customAllPlayers = parsed;
+                customSelectedIndexes.clear();
+                parsed.forEach((_, i) => customSelectedIndexes.add(i));
+                const resEl = getCustomBuilderEls().uploadResult;
+                if (resEl) {
+                    resEl.textContent = parsed.length + " players loaded. Showing list to confirm selection.";
+                    resEl.style.color = "#4ade80";
+                    resEl.classList.remove("hidden");
+                }
+                // Switch to list view with uploaded players
+                if (getCustomBuilderEls().listSection) getCustomBuilderEls().listSection.classList.remove("hidden");
+                if (getCustomBuilderEls().uploadSection) getCustomBuilderEls().uploadSection.classList.add("hidden");
+                if (getCustomBuilderEls().footer) getCustomBuilderEls().footer.classList.remove("hidden");
+                if (getCustomBuilderEls().countEl) getCustomBuilderEls().countEl.textContent = String(customSelectedIndexes.size);
+                renderCustomPlayerList();
+            };
+            reader.readAsText(file, "UTF-8");
+            ev.target.value = "";
+        });
+    }
+};
+
+// Parse CSV: Name, Role, Tag [, Rating] [, RTM]. Role inferred from Tag if missing. Rating optional; RTM optional.
+function parseCustomCsv(text) {
+    const rows = [];
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const parts = line.split(",").map(p => p.trim());
+        if (parts.length < 3) continue;
+        const name = parts[0];
+        if (/^(name|player|player name)$/i.test(name)) continue; // skip header row
+        let role = (parts[1] || "").toUpperCase();
+        const tag = (parts[2] || "").trim();
+        if (!name || !tag) continue;
+        if (!role && tag) {
+            if (/^WK\d?$/i.test(tag)) role = "WK";
+            else if (/^BAT\d?$/i.test(tag)) role = "BAT";
+            else if (/^BOWL\d?$/i.test(tag)) role = "BOWL";
+            else if (/^ALL\d?$/i.test(tag)) role = "ALL";
+            else if (/^PACE$/i.test(tag)) role = "PACE";
+            else if (/^SPIN$/i.test(tag)) role = "SPIN";
+            else role = "BAT";
+        }
+        let rating = null;
+        if (parts.length >= 4 && parts[3] !== "") {
+            const r = parseFloat(parts[3]);
+            if (!Number.isNaN(r)) rating = Math.min(10, Math.max(0, r));
+        }
+        let rtm = false;
+        if (parts.length >= 5) {
+            const rtmStr = (parts[4] || "").toLowerCase();
+            rtm = rtmStr === "1" || rtmStr === "yes" || rtmStr === "true";
+        }
+        rows.push({
+            name,
+            role,
+            tag,
+            rating: rating != null ? rating : undefined,
+            rtm,
+            foreign: false,
+        });
+    }
+    return rows;
+}
 
 window.toggleAutoSelectPool = function() {
     // Auto select and Ratings are independent.
