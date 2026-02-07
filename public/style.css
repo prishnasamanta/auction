@@ -379,6 +379,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 
     color: #e2e8f0;
 }
 
+
 /* Custom builder: choice as dataset-style cards */
 .custom-builder-choice {
     flex: 1;
@@ -6270,3 +6271,89 @@ body {
     
     .timeline-item { flex-direction: row; }
 }
+.premium-sold-tile {
+    position: relative;
+    margin: 12px 8px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.premium-sold-tile:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tile-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.tile-left { display: flex; align-items: center; gap: 12px; }
+
+.icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.2);
+}
+
+.player-name {
+    display: block;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    color: #fff;
+}
+
+.sale-info {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+}
+
+.price-tag {
+    font-family: 'Monaco', monospace;
+    font-weight: bold;
+    color: #fbbf24; /* Goldish color */
+    text-align: right;
+    margin-bottom: 6px;
+}
+
+/* Premium Button */
+.btn-premium-save {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-premium-save:hover {
+    background: #e2e8f0;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
+
+.btn-premium-save.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.svg-icon { width: 14px; height: 14px; fill: currentColor; }
