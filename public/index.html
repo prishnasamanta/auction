@@ -3,13 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta name="google-site-verification" content="zHAzVVOwadzV6be986tsLzfXJHwzdlv1gR9l0Sazgks" />
-    <title>IPL Live Auction</title>
+    <title>IPL Live Auction – Live Multiplayer Cricket Auction Simulator</title>
+    <meta name="description" content="Live auction simulator with multiple player pools. Real-time multiplayer IPL cricket auction – bid on players with friends, build your dream team, get player cards and Playing XI. Create rooms, join as spectator, see leaderboard.">
+    <meta name="keywords" content="IPL auction, cricket auction, live auction simulator, multiplayer auction, IPL 2026, cricket game, bid on players, fantasy cricket auction">
+    <link rel="canonical" href="https://www.auctionsimulator.in/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.auctionsimulator.in/">
+    <meta property="og:title" content="IPL Live Auction – Live Multiplayer Cricket Auction Simulator">
+    <meta property="og:description" content="Live auction simulator with multiple player pools. Real-time multiplayer – bid on players with friends, build your dream team, get player cards and Playing XI.">
+    <meta property="og:image" content="https://www.auctionsimulator.in/logo.png">
+    <meta property="og:site_name" content="IPL Live Auction">
+    <meta property="og:locale" content="en_IN">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.auctionsimulator.in/">
+    <meta name="twitter:title" content="IPL Live Auction – Live Multiplayer Cricket Auction Simulator">
+    <meta name="twitter:description" content="Live auction simulator with multiple player pools. Real-time multiplayer – bid on players with friends, build your dream team.">
+    <meta name="twitter:image" content="https://www.auctionsimulator.in/logo.png">
+
     <link rel="icon" type="image/png" href="/logo.png?v=2">
     <link rel="shortcut icon" type="image/png" href="/logo.png?v=2">
     <link rel="apple-touch-icon" href="/logo.png?v=2">
 
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "IPL Live Auction",
+      "description": "Live auction simulator with multiple player pools. Real-time multiplayer cricket auction – bid on players with friends, build your dream team, get player cards and Playing XI.",
+      "url": "https://www.auctionsimulator.in/",
+      "applicationCategory": "Game",
+      "operatingSystem": "Any",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" }
+    }
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="/style.css">
     <!-- Vite-built React landing (no CDN Tailwind/React/Babel = less lag during bidding) -->
@@ -59,27 +90,28 @@
                     <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 10px; font-weight:700; letter-spacing:1px;">SELECT PLAYER POOL</label>
                     
                     <div class="dataset-scroll-container">
-                        <div class="dataset-card active" onclick="selectDataset('ipl2026', this)">
+                        <div class="dataset-card active" data-dataset="ipl2026" onclick="selectDataset('ipl2026', this)">
                             <div class="ds-icon">🏆</div>
                             <div class="ds-title">IPL 2026</div>
                             <div class="ds-sub">Standard</div>
                         </div>
-                        <div class="dataset-card" onclick="selectDataset('legends', this)">
+                        <div class="dataset-card" data-dataset="legends" onclick="selectDataset('legends', this)">
                             <div class="ds-icon">🔥</div>
                             <div class="ds-title">LEGENDS</div>
                             <div class="ds-sub">All-Time</div>
                         </div>
-                        <div class="dataset-card" onclick="selectDataset('mixed', this)">
+                        <div class="dataset-card" data-dataset="mixed" onclick="selectDataset('mixed', this)">
                             <div class="ds-icon">⚔️</div>
                             <div class="ds-title">MIXED</div>
                             <div class="ds-sub">Great Icon</div>
                         </div>
-                        <div class="dataset-card" onclick="selectDataset('custom', this)">
+                        <div class="dataset-card" data-dataset="custom" onclick="selectDataset('custom', this)">
                             <div class="ds-icon">🛠️</div>
                             <div class="ds-title">CUSTOM</div>
                             <div class="ds-sub">Builder</div>
                         </div>
                     </div>
+                    <div id="poolSelectedLabel" class="pool-selected-label" style="display:none; font-size:0.75rem; color:#94a3b8; margin-top:6px; min-height:1.2em;"></div>
                     <input type="hidden" id="selectedSetId" value="ipl2026">
 
                     <button id="createBtn" class="primary-btn" style="width:100%; margin-top:25px; box-shadow:0 4px 15px rgba(99, 102, 241, 0.3);">CREATE ROOM</button>
@@ -99,7 +131,7 @@
             <div id="headerTeamBadge" class="header-badge hidden" style="background:var(--gold); color:#000; font-weight:600; border:none;">
                 <span id="headerTeamName">---</span>
             </div>
-            <button onclick="toggleUserList(event)" class="count-pill-btn" type="button">
+            <button onclick="toggleUserList()" class="count-pill-btn">
                 <span class="pulse-dot"></span>
                 <span id="liveUserCount">0</span>
             </button>
@@ -222,7 +254,7 @@
                         <div class="feed-input-wrapper">
                             <button type="button" class="feed-list-btn" id="soldUnsoldBtn" onclick="toggleSoldUnsoldPopup()" title="Sold / Unsold list" aria-label="Sold Unsold list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
                             <input type="text" id="msg" placeholder="Chat..." autocomplete="off">
-                            <button type="button" class="chat-send-btn" onclick="sendChat()" aria-label="Send message">➤</button>
+                            <button class="primary-btn" onclick="sendChat()">➤</button>
                         </div>
                     </div>
                 </div>
@@ -304,10 +336,12 @@
     </section>
 
     <section id="postAuctionSummary" class="screen hidden">
-        <header class="topbar glass summary-topbar">
-            <div class="summary-topbar-inner">
-                <span class="summary-brand">AUCTION SUMMARY</span>
-                <button onclick="exitToHome()" class="summary-exit-btn" type="button" aria-label="Exit to main">🏠</button>
+        <header class="topbar glass">
+            <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                <span class="brand">  AUCTION SUMMARY</span>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="exitToHome()" class="secondary-btn" style="border-color:#ef4444; color:#ef4444;">🏠︎</button>
+                </div>
             </div>
         </header>
 
@@ -430,8 +464,7 @@
     </div>
 
     <div id="identityVerifyOverlay" class="rules-overlay hidden">
-        <div class="glass rules-card identity-verify-card" style="max-width: 400px; padding: 20px; padding-top: 44px; text-align: center; position: relative;">
-            <button type="button" class="identity-verify-close" onclick="document.getElementById('identityVerifyOverlay').classList.add('hidden')" aria-label="Close and go back">×</button>
+        <div class="glass rules-card" style="max-width: 400px; padding: 20px; text-align: center;">
             <h2 style="color: #fca5a5; border: none;">⚠️ Identity Check</h2>
             <p>A new device is trying to join as <b id="verifyName" style="color: #fff;"></b>.</p>
             <p>Is this you trying to switch devices?</p>
@@ -476,41 +509,85 @@
             <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; background:#0f172a;">
                 <div>
                     <h3 style="margin:0; color:var(--gold);">🛠️ Build Custom Set</h3>
-                    <div style="font-size:0.75rem; color:#94a3b8;">Select players & edit ratings</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">Select players or upload your pool</div>
                 </div>
                 <button onclick="closeCustomBuilder()" style="background:none; border:none; color:#fff; font-size:1.5rem;">&times;</button>
             </div>
 
-            <div style="padding:15px; background:rgba(0,0,0,0.2);">
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <input id="customSearch" type="text" placeholder="Search Name..." onkeyup="filterCustomList()" style="flex:2; padding:8px; background:rgba(255,255,255,0.05); border:1px solid #334155;">
-                    <select id="customRoleFilter" onchange="filterCustomList()" style="flex:1; background:#1e293b; color:white; border:1px solid #334155; border-radius:8px; padding:0 5px;">
-                        <option value="">All Roles</option>
-                        <option value="BAT">Batters</option>
-                        <option value="BOWL">Bowlers</option>
-                        <option value="ALL">All-Rounders</option>
-                        <option value="WK">Wicket Keepers</option>
-                    </select>
-                </div>
-                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                    <label class="toggle-switch" style="padding:5px 10px; background:transparent; border:none; margin:0;">
-                        <input type="checkbox" id="autoSelectPoolToggle" onchange="toggleAutoSelectPool()">
-                        <span class="slider" style="width:34px; height:18px;"></span>
-                        <span class="label-text" style="font-size:0.8rem;">Auto select</span>
-                    </label>
-                    <label class="toggle-switch" style="padding:5px 10px; background:transparent; border:none; margin:0;">
-                        <input type="checkbox" id="useRatingsToggle" onchange="toggleRatingVisibility()">
-                        <span class="slider" style="width:34px; height:18px;"></span>
-                        <span class="label-text" style="font-size:0.8rem;">Ratings</span>
-                    </label>
+            <!-- Initial choice: two card-style options like dataset cards -->
+            <div id="customBuilderChoice" class="custom-builder-choice">
+                <div class="custom-builder-choice-cards">
+                    <div class="custom-builder-choice-card" onclick="customBuilderShowAvailable()" role="button" tabindex="0">
+                        <div class="custom-choice-icon">👥</div>
+                        <div class="custom-choice-title">Show available players</div>
+                        <div class="custom-choice-sub">From database</div>
+                    </div>
+                    <div class="custom-builder-choice-card" onclick="customBuilderShowUpload()" role="button" tabindex="0">
+                        <div class="custom-choice-icon">📤</div>
+                        <div class="custom-choice-title">Upload your own pool</div>
+                        <div class="custom-choice-sub">CSV file</div>
+                    </div>
                 </div>
             </div>
 
-            <div id="customPlayerList" class="custom-scroll" style="flex:1; overflow-y:auto; padding:10px;">
-                <div style="text-align:center; padding:20px; color:#666;">Loading Database...</div>
+            <!-- Upload: format info + file input (hidden until Upload clicked) -->
+            <div id="customBuilderUploadSection" class="hidden" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:12px;">
+                <div id="customUploadFormat" style="background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; font-size:0.8rem; color:#94a3b8; white-space:pre-wrap;">CSV format (Excel-compatible):
+• Column 1: Player name
+• Column 2: Role (BAT, BOWL, WK, ALL, PACE, SPIN)
+• Column 3: Tag (e.g. WK1, BAT1, BOWL1, ALL1 — required)
+• Column 4: Rating (optional, 0–10)
+• Column 5: RTM (optional: 1/0 or yes/no)
+• Use comma to separate. First row can be header.</div>
+                <label class="secondary-btn" style="display:inline-block; padding:10px 20px; cursor:pointer; text-align:center;">
+                    Choose CSV file
+                    <input type="file" id="customCsvInput" accept=".csv,.txt" style="display:none;">
+                </label>
+                <div id="customUploadResult" class="hidden" style="font-size:0.85rem; color:#4ade80;"></div>
+                <button type="button" onclick="customBuilderBackToChoice()" class="secondary-btn" style="padding:8px 16px; align-self:flex-start;">← Back</button>
             </div>
 
-            <div style="padding:15px; border-top:1px solid rgba(255,255,255,0.1); background:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+            <!-- Filters + list (hidden until Show available players clicked) -->
+            <div id="customBuilderListSection" class="hidden" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+                <div style="padding:15px; background:rgba(0,0,0,0.2); position:relative;">
+                    <div class="custom-filter-row">
+                        <button type="button" onclick="customBuilderBackToChoice()" class="custom-filter-control custom-list-back-btn" title="Back">←</button>
+                        <input id="customSearch" type="text" placeholder="Search Name..." onkeyup="filterCustomList()" class="custom-filter-control custom-filter-search">
+                        <select id="customRoleFilter" onchange="filterCustomList()" class="custom-filter-control custom-role-filter-select">
+                            <option value="">All Roles</option>
+                            <option value="BAT">Batters</option>
+                            <option value="BOWL">Bowlers</option>
+                            <option value="ALL">All-Rounders</option>
+                            <option value="WK">Wicket Keepers</option>
+                        </select>
+                        <button type="button" id="customRoleFilterHelp" class="custom-filter-control custom-role-help-btn" title="How custom set works" onclick="document.getElementById('customRoleHelpPopup').classList.toggle('hidden')">?</button>
+                    </div>
+                    <div id="customRoleHelpPopup" class="custom-role-help-popup hidden">
+                        <div class="custom-role-help-content">
+                            <strong>How custom set works</strong>
+                            <p>• <b>Auto select</b>: Pre-fills selection from Mixed pool (or default) so you can tweak from a ready list.</p>
+                            <p>• <b>Ratings</b>: Toggle to show/edit player ratings (0–10) for your pool.</p>
+                            <p>• Pick players with ✓, then <b>Confirm Set</b> to lock the pool for your room.</p>
+                            <button type="button" onclick="document.getElementById('customRoleHelpPopup').classList.add('hidden')" class="secondary-btn" style="margin-top:8px; padding:6px 12px;">Close</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <label class="toggle-switch" style="padding:5px 10px; background:transparent; border:none; margin:0;">
+                            <input type="checkbox" id="autoSelectPoolToggle" onchange="toggleAutoSelectPool()">
+                            <span class="slider" style="width:34px; height:18px;"></span>
+                            <span class="label-text" style="font-size:0.8rem;">Auto select</span>
+                        </label>
+                        <label class="toggle-switch" style="padding:5px 10px; background:transparent; border:none; margin:0;">
+                            <input type="checkbox" id="useRatingsToggle" onchange="toggleRatingVisibility()">
+                            <span class="slider" style="width:34px; height:18px;"></span>
+                            <span class="label-text" style="font-size:0.8rem;">Ratings</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="customPlayerList" class="custom-scroll" style="flex:1; overflow-y:auto; padding:10px;"></div>
+            </div>
+
+            <div id="customBuilderFooter" style="padding:15px; border-top:1px solid rgba(255,255,255,0.1); background:#0f172a; display:flex; justify-content:space-between; align-items:center;">
                 <div style="font-size:0.9rem;">Selected: <b id="customCount" style="color:var(--success);">0</b></div>
                 <button onclick="saveCustomSet()" class="primary-btn" style="padding:8px 20px;">✅ Confirm Set</button>
             </div>
@@ -593,14 +670,13 @@
             <span>Made with <span style="color:#e11d48;">❤️</span> by <b>PRS</b></span>
             <span class="separator">•</span>
             <div class="social-links">
-                <!-- Discord -->
                 <a href="https://discord.gg/gpACU3Gdg" target="_blank" rel="noopener" class="footer-social" title="Discord" aria-label="Discord"><img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="Discord"/></a>
                 <a href="https://whatsapp.com/channel/0029Vb7Z5EABKfi1oKCpTB3j" target="_blank" rel="noopener" class="footer-social" title="WhatsApp" aria-label="WhatsApp"><img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp--v1.png" alt="WhatsApp"/></a>
-                <a href="https://github.com/prishnasamanta/" target="_blank" rel="noopener" class="footer-social" title="GitHub" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
-                <a href="https://t.me/+89xATBNX_aI4YmY1" target="_blank" rel="noopener" class="footer-social" title="Telegram" aria-label="Telegram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
-             <!--   <a href="#" target="_blank" rel="noopener" class="footer-social" title="Twitter / X" aria-label="Twitter"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a> -->
-                <a href="https://www.instagram.com/prs_prishna72?igsh=MWNpMW5lenhtd2h1dA==" target="_blank" rel="noopener" class="footer-social" title="Instagram" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
-                <a href="https://www.facebook.com/pri.shi.773" target="_blank" rel="noopener" class="footer-social" title="Facebook" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                <a href="#" target="_blank" rel="noopener" class="footer-social" title="GitHub" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+                <a href="#" target="_blank" rel="noopener" class="footer-social" title="Telegram" aria-label="Telegram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
+                <a href="#" target="_blank" rel="noopener" class="footer-social" title="Twitter / X" aria-label="Twitter"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+                <a href="#" target="_blank" rel="noopener" class="footer-social" title="Instagram" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+                <a href="#" target="_blank" rel="noopener" class="footer-social" title="Facebook" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
             </div>
         </div>
     </footer>
@@ -610,3 +686,42 @@
     <script type="module" src="/assets/landing.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
