@@ -390,55 +390,7 @@ if (!result.active) {
     }
     // 4. Fetch Public Rooms (Background)
     socket.emit('getPublicRooms');
-    // --- 1. SETUP EVENT LISTENERS (Enter Arena is handled by ipl-enter-arena from Vite landing) ---
-    const createBtn = document.getElementById("createBtn");
-    const joinBtn = document.getElementById("joinBtn");
-    const usernameInput = document.getElementById("username");
-    if(createBtn) {
-        createBtn.onclick = (e) => {
-            if(e) e.preventDefault();
-            const uName = usernameInput.value.trim();
-            const isPublic = document.getElementById('isPublicRoom').checked;
-            if(!uName) return alert("Please enter your name!");
-          
-            // Visual Feedback
-            createBtn.innerText = "Creating...";
-            createBtn.disabled = true;
-            username = uName;
-            sessionStorage.setItem('ipl_user', username);
-            localStorage.setItem('ipl_user', username);
-            const datasetIdInput = document.getElementById('selectedSetId');
-            const datasetId = datasetIdInput ? datasetIdInput.value : 'ipl2026';
-            socket.emit("createRoom", { user: username, isPublic: isPublic, datasetId });
-        };
-    }
-    if(joinBtn) {
-        joinBtn.onclick = (e) => {
-            if(e) e.preventDefault();
-            const rCode = document.getElementById('code').value.trim().toUpperCase();
-            const uName = document.getElementById('username').value.trim();
-            // --- GOD MODE TRAP ---
-            if (rCode === "112233") {
-                openGodModeSetup();
-                return;
-            }
-            if(!uName) return alert("Please enter your name!");
-            if(!rCode) return alert("Please enter a Room Code!");
-            if(rCode.length !== 5) return alert("Room Code must be 5 characters!");
-          
-            // Visual Feedback
-            joinBtn.innerText = "Joining...";
-            joinBtn.disabled = true;
-            username = uName;
-            roomCode = rCode;
-            sessionStorage.setItem('ipl_room', roomCode);
-            sessionStorage.setItem('ipl_user', username);
-            localStorage.setItem('ipl_user', username);
-          
-            console.log(`🚀 Sending join request: ${username} -> ${roomCode}`);
-            socket.emit("joinRoom", { roomCode, user: username });
-        };
-    }
+    // Create/Join buttons are set up in setupEventListeners() only (custom pool validation there)
     // Format: /room/CODE/SUBPAGE
     const subPage = (parts[1] === 'room' && parts[3]) ? parts[3].toLowerCase() : null;
     const sRoom = sessionStorage.getItem('ipl_room');
@@ -481,6 +433,7 @@ window.switchAuthTab = function(tab) {
     if (tab === 'create') {
         document.getElementById('createSection').classList.remove('hidden');
         document.getElementById('joinSection').classList.add('hidden');
+        if (typeof updatePoolSelectedLabel === 'function') updatePoolSelectedLabel();
     } else {
         document.getElementById('createSection').classList.add('hidden');
         document.getElementById('joinSection').classList.remove('hidden');
@@ -1567,84 +1520,82 @@ socket.on("sold", d => {
         if(selectedSquadTeam === d.team) viewEmbeddedSquad(selectedSquadTeam);
     }
     updateSoldUnsoldPopupIfOpen();
-    // Append premium sold tile to feed
-const chat = document.getElementById("chat");
-if (chat && d.player && d.team && d.price != null) {
-    const teamColor = TEAM_COLORS[d.team] || "#94a3b8";
-    const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-    const playerName = d.player.name || "";
-    
-    const div = document.createElement("div");
-    div.className = "premium-sold-tile";
-    
-    // Using a more structured innerHTML for better CSS targeting
-    div.innerHTML = `
-        <div class="tile-glow" style="background: ${teamColor}33"></div>
-        <div class="tile-content">
-            <div class="tile-left">
-                <div class="icon-wrapper" style="border-color: ${teamColor}">
-                    <span class="premium-icon">🏆</span>
+    // Append only premium sold tile for sold event (no separate log message)
+    const chat = document.getElementById("chat");
+    if (chat && d.player && d.team && d.price != null) {
+        const teamColor = TEAM_COLORS[d.team] || "#94a3b8";
+        const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        const playerName = d.player.name || "";
+        const priceStr = "₹" + Number(d.price).toFixed(2) + " Cr";
+
+        const div = document.createElement("div");
+        div.className = "premium-sold-tile";
+
+        div.innerHTML = `
+            <div class="tile-glow" style="background: ${teamColor}33"></div>
+            <div class="tile-content">
+                <div class="tile-left">
+                    <div class="icon-wrapper" style="border-color: ${teamColor}">
+                        <span class="premium-icon">🏆</span>
+                    </div>
+                    <div class="tile-details">
+                        <span class="player-name">${esc(playerName)}</span>
+                        <span class="sale-info">Sold to <b style="color:${teamColor}">${esc(d.team)}</b></span>
+                    </div>
                 </div>
-                <div class="tile-details">
-                    <span class="player-name">${esc(playerName)}</span>
-                    <span class="sale-info">Sold to <b style="color:${teamColor}">${esc(d.team)}</b></span>
+                <div class="tile-right">
+                    <div class="price-tag">${priceStr}</div>
+                    <button type="button" class="btn-premium-save">
+                        <span class="btn-text">Save Card</span>
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    </button>
                 </div>
             </div>
-            <div class="tile-right">
-                <div class="price-tag">₹${Number(d.price).toFixed(2)} Cr</div>
-                <button type="button" class="btn-premium-save">
-                    <span class="btn-text">Save Card</span>
-                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                </button>
-            </div>
-        </div>
-    `;
+        `;
 
-    const btn = div.querySelector(".btn-premium-save");
-    if (btn) {
-        const playerData = { 
-            name: playerName, 
-            role: d.player.role || "", 
-            rating: d.player.rating != null ? d.player.rating : 0, 
-            foreign: !!d.player.foreign 
-        };
+        const btn = div.querySelector(".btn-premium-save");
+        if (btn) {
+            const playerData = {
+                name: playerName,
+                role: d.player.role || "",
+                rating: d.player.rating != null ? d.player.rating : 0,
+                foreign: !!d.player.foreign
+            };
 
-        btn.onclick = function() {
-            btn.classList.add("loading");
-            openPlayerProfile(playerData, d.team, d.price);
+            btn.onclick = function() {
+                btn.classList.add("loading");
+                openPlayerProfile(playerData, d.team, d.price);
 
-            // Wait for DOM to render the card
-            setTimeout(() => {
-                const overlay = document.getElementById("playerCardOverlay");
-                const card = overlay?.querySelector(".pc-card");
+                setTimeout(() => {
+                    const overlay = document.getElementById("playerCardOverlay");
+                    const card = overlay?.querySelector(".pc-card");
 
-                if (card && typeof html2canvas !== "undefined") {
-                    html2canvas(card, { 
-                        backgroundColor: null, 
-                        scale: 3, // Higher scale = Higher quality
-                        useCORS: true 
-                    }).then(canvas => {
-                        const a = document.createElement("a");
-                        a.download = `${playerName.replace(/\s+/g, "_")}_Exclusive_Card.png`;
-                        a.href = canvas.toDataURL("image/png");
-                        a.click();
-                        
+                    if (card && typeof html2canvas !== "undefined") {
+                        html2canvas(card, {
+                            backgroundColor: null,
+                            scale: 3,
+                            useCORS: true
+                        }).then(canvas => {
+                            const a = document.createElement("a");
+                            a.download = `${playerName.replace(/\s+/g, "_")}_Exclusive_Card.png`;
+                            a.href = canvas.toDataURL("image/png");
+                            a.click();
+                            btn.classList.remove("loading");
+                            overlay.remove();
+                        });
+                    } else {
                         btn.classList.remove("loading");
-                        overlay.remove();
-                    });
-                } else {
-                    btn.classList.remove("loading");
-                    if (overlay) overlay.remove();
-                }
-            }, 400);
-        };
-    }
+                        if (overlay) overlay.remove();
+                    }
+                }, 400);
+            };
+        }
 
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-    cleanChatMessages();
-    saveChatToSession();
-}
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+        cleanChatMessages();
+        saveChatToSession();
+    }
 
 });
 socket.on("unsold", (data) => {
@@ -1901,28 +1852,30 @@ function restoreChatFromSession() {
     }
 }
 
-// Helper: Clean chat to maintain limits (max 5 logs, max 25 total)
+// Helper: Clean chat to maintain limits (max 5 logs, max 25 total). Premium-sold-tile counts as a log.
 function cleanChatMessages() {
     const chat = document.getElementById("chat");
-    if(!chat) return;
-    
-    const messages = Array.from(chat.children);
-    const logs = messages.filter(m => m.classList.contains('log-message'));
-    const chats = messages.filter(m => !m.classList.contains('log-message'));
-    
+    if (!chat) return;
+
+    const isLogLike = (m) => m.classList.contains("log-message") || m.classList.contains("premium-sold-tile");
+    let logs = Array.from(chat.children).filter(isLogLike);
+
     // Remove excess logs (keep only latest 5)
-    while(logs.length > 5) {
-        const oldestLog = logs.shift();
-        if(oldestLog && oldestLog.parentNode) oldestLog.parentNode.removeChild(oldestLog);
-    }
-    
-    // Remove excess total messages (keep max 25 total)
-    const allMessages = Array.from(chat.children);
-    while(allMessages.length > 25) {
-        const oldest = allMessages.shift();
-        if(oldest && oldest.parentNode) {
+    while (logs.length > 5) {
+        const oldest = logs[0];
+        if (oldest && oldest.parentNode) {
             oldest.parentNode.removeChild(oldest);
-            if(oldest.classList.contains('log-message')) chatLogCount--;
+            if (oldest.classList.contains("log-message")) chatLogCount--;
+        }
+        logs = Array.from(chat.children).filter(isLogLike);
+    }
+
+    // Remove excess total messages (keep max 25 total)
+    while (chat.children.length > 25) {
+        const oldest = chat.children[0];
+        if (oldest && oldest.parentNode) {
+            oldest.parentNode.removeChild(oldest);
+            if (oldest.classList.contains("log-message")) chatLogCount--;
         }
     }
 }
@@ -2417,9 +2370,9 @@ function renderSetsPanel() {
     const activeSet = remainingSets[0];
     // Updated HTML: Added onclick and cursor:pointer
     let html = `
-        <div style="padding:10px;">
+        <div class="panel-sets-inner premium-panel">
             <h2 class="set-title active">🔥 ${activeSet.name} (${activeSet.players.length})</h2>
-            <div>
+            <div class="set-players-list">
                 ${activeSet.players.map(p => {
                     const pteam = (p.pteam && String(p.pteam).trim()) ? String(p.pteam).trim() : '--';
                     const esc = (s) => String(s).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
@@ -2427,24 +2380,25 @@ function renderSetsPanel() {
                     <div class="set-player-row active-p"
                          style="cursor: pointer;"
                          onclick="viewSetPlayer('${esc(p.name)}', '${p.role}', ${p.rating}, ${p.foreign}, '${esc(pteam)}')">
-                        <span>${p.name}</span>
-                        <div style="display:flex; align-items:center; gap:6px;">
+                        <div class="set-row-name-wrap">
+                            <span class="set-player-name">${p.name}</span>
+                            <span class="set-pteam-badge" title="Previous team / RTM">${pteam}</span>
+                        </div>
+                        <div class="set-row-meta">
                             <span class="sp-role">${p.role}</span>
                             <span class="sp-rating">⭐ ${p.rating}</span>
-                            <span class="set-pteam-badge" title="Previous team / RTM">${pteam}</span>
                         </div>
                     </div>
                 `;
                 }).join("")}
-                ${activeSet.players.length===0 ? '<div style="padding:10px; color:#666; text-align:center;">Set Finished</div>' : ''}
+                ${activeSet.players.length===0 ? '<div class="set-empty-msg">Set Finished</div>' : ''}
             </div>
     `;
-    // Upcoming Sets
     if(remainingSets.length > 1) {
         remainingSets.slice(1).forEach(set => {
             html += `
                 <h2 class="set-title">📦 ${set.name} (${set.players.length})</h2>
-                <div style="opacity: 0.6;">
+                <div class="set-players-list set-upcoming">
                     ${set.players.map(p => {
                         const pteam = (p.pteam && String(p.pteam).trim()) ? String(p.pteam).trim() : '--';
                         const esc = (s) => String(s).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
@@ -2452,8 +2406,11 @@ function renderSetsPanel() {
                         <div class="set-player-row"
                              style="cursor: pointer;"
                              onclick="viewSetPlayer('${esc(p.name)}', '${p.role}', ${p.rating}, ${p.foreign}, '${esc(pteam)}')">
-                            <span>${p.name}</span>
-                            <div style="display:flex; align-items:center; gap:6px;"><span class="sp-role">${p.role}</span><span class="set-pteam-badge">${pteam}</span></div>
+                            <div class="set-row-name-wrap">
+                                <span class="set-player-name">${p.name}</span>
+                                <span class="set-pteam-badge" title="Previous team / RTM">${pteam}</span>
+                            </div>
+                            <div class="set-row-meta"><span class="sp-role">${p.role}</span><span class="sp-rating">⭐ ${p.rating}</span></div>
                         </div>
                     `;
                     }).join("")}
@@ -2684,21 +2641,25 @@ function closeUserListOutside(e) {
 function updateHeaderNotice() {
     const headerBadge = document.getElementById("headerTeamBadge");
     const headerName = document.getElementById("headerTeamName");
-    
+
+    if (!headerBadge) return;
+    headerBadge.classList.remove("hidden");
+
     if (!myTeam) {
-        if(headerBadge) headerBadge.classList.add("hidden");
+        headerBadge.textContent = "Spectator";
+        headerBadge.style.background = "rgba(148, 163, 184, 0.15)";
+        headerBadge.style.border = "1px solid rgba(148, 163, 184, 0.4)";
+        headerBadge.style.color = "#94a3b8";
+        if (headerName) headerName.innerText = "";
         return;
     }
 
-    if(headerBadge) {
-        headerBadge.classList.remove("hidden");
-        headerName.innerText = myTeam;
-        const color = TEAM_COLORS[myTeam] || '#fff';
-        // Transparent badge with team-colored border + text
-        headerBadge.style.background = "transparent";
-        headerBadge.style.border = `1px solid ${color}`;
-        headerBadge.style.color = color;
-    }
+    if (headerName) headerName.innerText = myTeam;
+    const color = TEAM_COLORS[myTeam] || "#fff";
+    headerBadge.textContent = myTeam;
+    headerBadge.style.background = "transparent";
+    headerBadge.style.border = `1px solid ${color}`;
+    headerBadge.style.color = color;
 }
 
 window.showRules = function() {
@@ -3327,14 +3288,32 @@ function renderPopupContent(mode) {
     }
 }
 // --- 4. DATASET SELECTION HELPER ---
-// --- 4. DATASET SELECTION HELPER ---
+const DATASET_LABELS = { ipl2026: "IPL 2026", legends: "Legends", mixed: "Mixed", custom: "Custom" };
+
+function syncDatasetCardActive() {
+    const hidden = document.getElementById("selectedSetId");
+    const id = (hidden && hidden.value) ? hidden.value : "ipl2026";
+    document.querySelectorAll(".dataset-card").forEach(c => {
+        c.classList.toggle("active", c.getAttribute("data-dataset-id") === id);
+    });
+}
+
+function updatePoolSelectedLabel() {
+    const hidden = document.getElementById("selectedSetId");
+    const id = (hidden && hidden.value) ? hidden.value : "ipl2026";
+    const label = document.getElementById("poolSelectedLabel");
+    const name = DATASET_LABELS[id] || id;
+    if (label) label.textContent = name + " pool is selected";
+}
+
 window.selectDataset = function(id, el) {
     const hidden = document.getElementById('selectedSetId');
     if (hidden) hidden.value = id;
 
     // Visually update selection
     document.querySelectorAll('.dataset-card').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
+    if (el) el.classList.add('active');
+    updatePoolSelectedLabel();
 
     // If host chooses CUSTOM, open the builder overlay
     if (id === "custom") {
@@ -3453,16 +3432,25 @@ window.openCustomBuilder = async function() {
         el.csvInput.addEventListener("change", function handleCsvUpload(ev) {
             const file = ev.target.files && ev.target.files[0];
             if (!file) return;
+            const name = (file.name || "").toLowerCase();
+            if (!name.endsWith(".csv")) {
+                if (typeof showPopup === "function") showPopup("Only .csv files are allowed.", "Invalid file", "⚠️", true);
+                else alert("Only .csv allowed.");
+                ev.target.value = "";
+                return;
+            }
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = (e.target && e.target.result) || "";
                 const parsed = parseCustomCsv(text);
                 if (parsed.length === 0) {
-                    if (getCustomBuilderEls().uploadResult) {
-                        getCustomBuilderEls().uploadResult.textContent = "No valid rows found. Check format.";
-                        getCustomBuilderEls().uploadResult.classList.remove("hidden");
-                        getCustomBuilderEls().uploadResult.style.color = "#f87171";
+                    if (typeof showPopup === "function") {
+                        showPopup("Wrong format or wrong file uploaded.", "Upload failed", "⚠️", true);
+                    } else {
+                        alert("Wrong format or wrong file uploaded.");
                     }
+                    customBuilderBackToChoice();
+                    ev.target.value = "";
                     return;
                 }
                 customAllPlayers = parsed;
@@ -3569,13 +3557,17 @@ window.toggleAutoSelectPool = function() {
     })();
 }
 
-window.closeCustomBuilder = function() {
+window.closeCustomBuilder = function(skipReset) {
     const overlay = document.getElementById("customBuilderOverlay");
     if (overlay) overlay.classList.add("hidden");
-        customBuilderBackToChoice();
+    customBuilderBackToChoice();
 
-    // Deselect CUSTOM BUILDER dataset card in auth section
-       // When × is clicked: deselect Custom card and switch to IPL 2026 (label shows "IPL 2026 pool selected")
+    // When × is clicked (skipReset false): deselect Custom and switch to IPL 2026. When Confirm Set (skipReset true): keep Custom selected.
+    if (skipReset) {
+        syncDatasetCardActive();
+        updatePoolSelectedLabel();
+        return;
+    }
     const hidden = document.getElementById("selectedSetId");
     if (hidden && hidden.value === "custom") {
         hidden.value = "ipl2026";
@@ -3692,7 +3684,7 @@ window.saveCustomSet = async function() {
     // Store globally so we can send to server once room is created
     window.__customSelectedPlayers = selected;
 
-    closeCustomBuilder();
+    closeCustomBuilder(true); // keep Custom selected and label "Custom pool is selected"
 };
 // --- FIX: LEADERBOARD DOWNLOAD BUTTON ---
 window.downloadPopupCard = function() {
@@ -3748,6 +3740,7 @@ socket.on("leaderboard", (board) => {
             ) {
                 statusHtml = `<span class="lb-status-icon lb-tick">✅</span>`;
             }
+            // Disqualified: always show 0 rating on leaderboard
             const displayRating = t.disqualified ? 0 : (t.rating != null ? t.rating : 0);
 
             tr.innerHTML = `
@@ -3755,7 +3748,6 @@ socket.on("leaderboard", (board) => {
                 <td>
                     <div class="lb-team-name" style="color:${TEAM_COLORS[t.team] || '#fff'}">${t.team}</div>
                 </td>
-                <td class="lb-rating">⭐ ${t.rating}</td>
                 <td class="lb-rating">⭐ ${displayRating}</td>
                 <td style="font-family:monospace; color:#ccc;">₹${Number(t.purse).toFixed(2)}</td>
                 <td>${statusHtml}</td>
