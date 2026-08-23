@@ -29,11 +29,11 @@ let squadInlineModeByTeam = {};
 let squadInlineXIByTeam = {};
 
 const ROLE_SVGS = {
-    bat: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 7 3-3a2.12 2.12 0 0 1 3 3l-3 3"/><path d="m5 16 7-7"/><path d="m3 21 3-3"/><circle cx="19" cy="19" r="2" fill="currentColor"/></svg>`,
-    bowl: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/><path d="M12 3a9 9 0 0 0 0 18"/><path d="M8.5 7.5c1.5 2 1.5 7 0 9"/><path d="M15.5 7.5c-1.5 2-1.5 7 0 9"/></svg>`,
-    spin: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M2.5 12c3-4 6-4 9.5 0s6.5 4 9.5 0"/><path d="m17 7 3 2-2 3"/></svg>`,
-    wk: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18"/><path d="M12 3v18"/><path d="M18 3v18"/><path d="M4 3h16"/></svg>`,
-    all: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 16 6-6"/><path d="m10 4 2 2-7 7-2-2z"/><circle cx="18" cy="18" r="3.5"/><path d="M18 14.5a3.5 3.5 0 0 1 0 7"/></svg>`,
+    bat: `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><path d="M19.7 2.3a1.5 1.5 0 0 0-2.1 0l-3.3 3.3 2.1 2.1 3.3-3.3a1.5 1.5 0 0 0 0-2.1zM13.2 6.7 4.1 15.8c-.4.4-.6.9-.6 1.4v2.3c0 .8.7 1.5 1.5 1.5h2.3c.5 0 1-.2 1.4-.6l9.1-9.1-4.6-4.6z"/></svg>`,
+    bowl: `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`,
+    spin: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3c3 3 4.5 6 4.5 9s-1.5 6-4.5 9"/><path d="M12 3c-3 3-4.5 6-4.5 9s1.5 6 4.5 9"/><path d="M3 12h18"/><path d="m16 8 3-3-3-3"/></svg>`,
+    wk: `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><path d="M5 2h2v19H5zm6 0h2v19h-2zm6 0h2v19h-2zM3 4h18v2H3z"/></svg>`,
+    all: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 8-8"/><path d="m9 3 2 2-6 6-2-2z"/><circle cx="17.5" cy="17.5" r="4.5" fill="currentColor" stroke="none"/><path d="M14.5 17.5a3 3 0 0 1 6 0" stroke="#000" stroke-width="1.5"/></svg>`,
     share: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`
 };
 
@@ -771,7 +771,7 @@ function updatePublicRoomsUI() {
     if (preview) {
         preview.innerHTML = "";
         if (total > 0) {
-            all.slice(0, 2).forEach(r => preview.appendChild(createPublicRoomTile(r, r.roomType)));
+            all.slice(0, 3).forEach(r => preview.appendChild(createPublicRoomTile(r, r.roomType)));
         }
     }
 
@@ -779,10 +779,10 @@ function updatePublicRoomsUI() {
     if (browseActive) renderPublicRoomsListFull();
 
     if (toggle) {
-        if (total <= 2) toggle.classList.add("hidden");
+        if (total <= 3) toggle.classList.add("hidden");
         else {
             toggle.classList.remove("hidden");
-            toggle.innerHTML = `View all active rooms (<span id="publicRoomsCount">${total}</span>)`;
+            toggle.innerHTML = `View all ${total} rooms`;
         }
     }
 }
