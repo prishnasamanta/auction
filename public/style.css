@@ -14151,3 +14151,158 @@ button[disabled] {
         max-width: 460px !important;
     }
 }
+
+/* ================================================================== */
+/* 📱 STICKER PANEL & UPLOAD UI ENHANCEMENTS                          */
+/* ================================================================== */
+
+.sticker-panel {
+    position: absolute;
+    bottom: 50px;
+    left: 8px;
+    right: 8px;
+    background: rgba(10, 18, 16, 0.96) !important;
+    border: 1px solid rgba(52, 211, 153, 0.35) !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sticker-panel.hidden {
+    display: none !important;
+}
+
+.sticker-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 6px;
+}
+
+.sticker-folder-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(52, 211, 153, 0.12);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    border-radius: 8px;
+    color: #6ee7b7;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sticker-folder-btn:hover {
+    background: rgba(52, 211, 153, 0.22);
+    border-color: #34d399;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.sticker-panel-local-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+.sticker-panel-local-note {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+.sticker-panel-local-note strong {
+    color: #34d399;
+}
+
+.sticker-folder-mini-btn {
+    background: rgba(52, 211, 153, 0.15);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    border-radius: 6px;
+    color: #6ee7b7;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sticker-folder-mini-btn:hover {
+    background: rgba(52, 211, 153, 0.28);
+    color: #fff;
+}
+
+.sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    width: 100%;
+}
+
+.sticker-chip {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 2px;
+}
+
+.sticker-chip:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(52, 211, 153, 0.5);
+    transform: scale(1.08);
+}
+
+.sticker-chip img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+@media (max-width: 640px) {
+    .sticker-panel {
+        bottom: 56px;
+        left: 4px;
+        right: 4px;
+        max-height: 220px;
+        padding: 10px !important;
+    }
+
+    .sticker-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+    }
+
+    .sticker-chip {
+        font-size: 1.2rem;
+    }
+
+    .sticker-folder-btn {
+        padding: 7px 10px;
+        font-size: 0.75rem;
+    }
+}

@@ -2955,18 +2955,16 @@ function renderStickerPanel() {
         ...customChips,
         ...legacy.map((src, i) => `<button type="button" class="sticker-chip sticker-image-chip" data-testid="sticker-legacy-${i}" onclick="sendSticker('${src.replace(/'/g, "\\'")}')" title="Legacy ${i + 1}"><img src="${src}" alt="sticker" loading="lazy" decoding="async"></button>`)
     ].join("");
-    const hasLocalStickers = customFiles.length > 0 || legacy.length > 0;
-    const showLinkFolder = !hasLocalStickers;
     const headHtml = showLinkFolder
-            ? (isStickerMobileUi()
-                ? `<div class="sticker-panel-actions sticker-panel-actions--mobile">
-                        <button type="button" class="sticker-folder-btn" data-testid="sticker-add-folder-btn" onclick="openStickerWhatsappPicker()" title="Link WhatsApp stickers folder on this device (local only)">📁 Link WhatsApp</button>
-                   </div>`
-                : `<div class="sticker-panel-actions sticker-panel-actions--desktop">
-                        <button type="button" class="sticker-folder-btn" data-testid="sticker-add-folder-btn" onclick="openStickerFolderPicker()" title="Link a folder on this device — stickers stay local, nothing is uploaded">📁 Link Folder</button>
-                   </div>`)
+            ? `<div class="sticker-panel-actions">
+                    <button type="button" class="sticker-folder-btn" data-testid="sticker-bulk-btn" onclick="openStickerBulkPicker()" title="Choose sticker image files from your device">🖼️ Choose Images</button>
+                    <button type="button" class="sticker-folder-btn" data-testid="sticker-add-folder-btn" onclick="openStickerFolderPicker()" title="Link an entire stickers folder on this device">📁 Link Folder</button>
+               </div>`
             : (hasLocalStickers && customFiles.length > 0
-                ? `<div class="sticker-panel-local-note">Using <strong>${customFiles.length}</strong> sticker${customFiles.length === 1 ? "" : "s"} from your device (local only)</div>`
+                ? `<div class="sticker-panel-local-bar">
+                        <span class="sticker-panel-local-note"><strong>${customFiles.length}</strong> sticker${customFiles.length === 1 ? "" : "s"} loaded</span>
+                        <button type="button" class="sticker-folder-mini-btn" onclick="openStickerBulkPicker()" title="Add more stickers">✚ Add More</button>
+                   </div>`
                 : "");
     const hintHtml = moreCustom
         ? `<div class="sticker-load-hint">Showing <strong>${renderCount}</strong> of <strong>${customFiles.length}</strong> — scroll for more</div>`
