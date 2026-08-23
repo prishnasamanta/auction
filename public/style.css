@@ -12561,6 +12561,759 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
         justify-content: flex-end;
     }
 }
+/* ================================================================== */
+/* 🎨 UI/UX OVERHAUL – Professional Buttons, Auth, Google, Mobile     */
+/* ================================================================== */
+
+/* ---- 1. AUTH PAGE LAYOUT FIX ---- */
+
+/* Remove floating animation – replace with elegant entrance */
+.landing-card, .auth-card {
+    animation: authCardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes authCardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Auth page must scroll on small devices */
+#auth.screen {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    padding: 20px 0;
+}
+
+.auth-page {
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 12px;
+}
+
+/* ---- 2. AUTH TAB BUTTONS (Pill Design) ---- */
+
+.auth-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.auth-tab-btn {
+    flex: 1;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: #94a3b8;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    letter-spacing: 0.01em;
+}
+
+.auth-tab-btn:hover {
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.auth-tab-btn.active {
+    background: rgba(52, 211, 153, 0.14);
+    color: #34d399;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.12);
+}
+
+/* ---- 3. PROFESSIONAL GOOGLE SIGN-IN BUTTON ---- */
+
+.auth-google-sync-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    margin-top: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #cbd5e1;
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    min-height: 46px;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-google-sync-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(66, 133, 244, 0.06), rgba(52, 168, 83, 0.04), rgba(251, 188, 4, 0.04), rgba(234, 67, 53, 0.06));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.auth-google-sync-btn:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.07);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.auth-google-sync-btn:hover::before {
+    opacity: 1;
+}
+
+.auth-google-sync-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Google "G" icon */
+.auth-google-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 4px;
+    background: #fff;
+    color: transparent;
+    font-weight: 800;
+    font-size: 0.85rem;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%234285F4' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%2334A853' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/%3E%3Cpath fill='%23EA4335' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3C/svg%3E");
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#authGoogleBtnLabel {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    text-align: left;
+}
+
+/* Connected state – green accent */
+.auth-google-sync-btn--linked {
+    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(34, 197, 94, 0.06);
+}
+
+.auth-google-sync-btn--linked:hover {
+    border-color: rgba(34, 197, 94, 0.5);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.auth-google-sync-btn--linked .auth-google-icon {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4), 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.auth-google-sync-btn--linked #authGoogleBtnLabel {
+    color: #6ee7b7;
+}
+
+/* ---- 4. SEE GAME HISTORY BUTTON ---- */
+
+.auth-see-history-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    margin-top: 8px;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 10px;
+    color: #a5b4fc;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 42px;
+}
+
+.auth-see-history-btn:hover {
+    background: rgba(99, 102, 241, 0.14);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #c7d2fe;
+    transform: translateY(-1px);
+}
+
+.auth-see-history-btn:active {
+    transform: translateY(0);
+}
+
+/* ---- 5. PRIMARY BUTTON UPGRADE ---- */
+
+.primary-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.primary-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
+/* Auth "Go" button fix */
+.auth-go-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: 1 !important;
+    min-width: 64px;
+    padding: 0 20px !important;
+    font-size: 0.95rem;
+    height: 44px;
+}
+
+/* Auth "Create room" button */
+.auth-create-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px 24px;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    border-radius: 12px;
+    min-height: 48px;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-create-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.auth-create-btn:hover::after {
+    transform: translateX(100%);
+}
+
+/* ---- 6. SECONDARY BUTTON UPGRADE ---- */
+
+.secondary-btn {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.secondary-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.4);
+    outline-offset: 2px;
+}
+
+/* ---- 7. JOIN ROW ALIGNMENT FIX ---- */
+
+.auth-join-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.auth-join-row .auth-input-code {
+    flex: 1;
+}
+
+/* ---- 8. AUTH FIELD LABELS ---- */
+
+.auth-field-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    margin-top: 14px;
+}
+
+.auth-field-label:first-child {
+    margin-top: 0;
+}
+
+/* ---- 9. AUTH DIVIDER ---- */
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 12px;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- 10. PUBLIC ROOMS BUTTON ---- */
+
+.auth-public-rooms-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    margin-top: 10px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.auth-public-rooms-btn:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ---- 11. AUTH GAME HISTORY STYLES ---- */
+
+.auth-game-history-head {
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-public-browse-back {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.2s;
+}
+
+.auth-public-browse-back:hover {
+    color: #e2e8f0;
+}
+
+.auth-public-browse-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 8px 0 4px;
+}
+
+.auth-game-history-user {
+    font-size: 0.82rem;
+    color: #6ee7b7;
+    font-weight: 500;
+}
+
+.auth-history-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    color: #e2e8f0;
+    font-family: var(--font-body);
+}
+
+.auth-history-row:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.25);
+}
+
+.auth-history-code {
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #c7d2fe;
+    letter-spacing: 0.08em;
+}
+
+.auth-history-meta {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.auth-history-sub {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.auth-history-loading,
+.auth-history-error {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.auth-history-error {
+    color: #fca5a5;
+}
+
+/* ---- 12. AUTH HEADING STYLES ---- */
+
+.auth-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    margin-bottom: 4px;
+}
+
+.auth-heading {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin: 0 0 4px;
+    line-height: 1.2;
+}
+
+.auth-heading-accent {
+    background: linear-gradient(135deg, var(--primary), var(--turf-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ---- 13. PUBLIC ROOMS EMPTY & PREVIEW ---- */
+
+.auth-public-rooms-empty {
+    text-align: center;
+    padding: 12px;
+    color: #64748b;
+    font-size: 0.82rem;
+}
+
+.auth-public-rooms-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Room tile upgrades */
+.room-tile {
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.2s ease;
+}
+
+.room-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.r-code {
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: #c7d2fe;
+    letter-spacing: 0.06em;
+    min-width: 50px;
+}
+
+.r-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: #e2e8f0;
+    margin: 0 8px;
+}
+
+.r-host {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-right: 8px;
+}
+
+.r-count {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ---- 14. DATASET CARD UPGRADES ---- */
+
+.dataset-scroll-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.dataset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
+    min-height: 80px;
+}
+
+.dataset-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.dataset-card.active {
+    background: rgba(52, 211, 153, 0.1);
+    border-color: rgba(52, 211, 153, 0.5);
+    box-shadow: 0 0 16px rgba(52, 211, 153, 0.15);
+}
+
+.ds-icon {
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+}
+
+.ds-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #e2e8f0;
+    letter-spacing: 0.06em;
+}
+
+.ds-sub {
+    font-size: 0.6rem;
+    color: #64748b;
+    margin-top: 2px;
+    text-transform: uppercase;
+}
+
+.pool-selected-label {
+    font-size: 0.75rem;
+    color: #6ee7b7;
+    text-align: center;
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+/* ---- 15. AUTH TOGGLE BOX ---- */
+
+.auth-toggle-box {
+    margin-top: 12px;
+    margin-bottom: 8px;
+}
+
+/* ---- 16. UNIVERSAL BUTTON FOCUS ---- */
+
+button:focus-visible {
+    outline: 2px solid var(--primary, #34d399);
+    outline-offset: 2px;
+}
+
+button:disabled,
+button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ---- 17. AUTH CARD OVERLAY PANELS ---- */
+
+.auth-card.auth-public-browse-active .auth-card-main,
+.auth-card.auth-history-active .auth-card-main {
+    display: none;
+}
+
+.auth-game-history,
+.auth-public-rooms-browse {
+    padding: 0;
+}
+
+.auth-game-history-list {
+    padding: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.auth-room-list-full {
+    max-height: 400px;
+}
+
+/* ================================================================== */
+/* 📱 MOBILE RESPONSIVENESS                                            */
+/* ================================================================== */
+
+/* Phones (< 480px) */
+@media (max-width: 480px) {
+    .auth-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 16px 16px 0 0 !important;
+        margin: 0 !important;
+        padding: 24px 16px !important;
+        border-top-width: 3px !important;
+    }
+
+    .auth-page {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .auth-heading {
+        font-size: 1.35rem;
+    }
+
+    .auth-tab-btn {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+
+    .auth-google-sync-btn {
+        padding: 14px 14px;
+        font-size: 0.88rem;
+        min-height: 48px;
+    }
+
+    .auth-see-history-btn {
+        min-height: 44px;
+    }
+
+    .dataset-scroll-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .dataset-card {
+        min-height: 72px;
+        padding: 12px 8px;
+    }
+
+    .primary-btn {
+        min-height: 48px;
+        font-size: 0.95rem;
+    }
+
+    .auth-create-btn {
+        min-height: 52px;
+        font-size: 1rem;
+    }
+
+    #auth #username,
+    #auth #code {
+        max-width: 100%;
+        height: 48px;
+        font-size: 1rem;
+    }
+
+    #auth #joinBtn {
+        height: 48px;
+        min-height: 48px;
+    }
+
+    .room-tile {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .r-host {
+        display: none;
+    }
+
+    .auth-game-history-list {
+        max-height: 50vh;
+    }
+
+    .auth-custom-builder {
+        padding: 0 !important;
+    }
+
+    .auth-custom-builder .rules-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 16px 16px 0 0 !important;
+        max-height: 90vh !important;
+    }
+}
+
+/* Small phones (< 360px) */
+@media (max-width: 360px) {
+    .auth-heading {
+        font-size: 1.2rem;
+    }
+
+    .auth-tab-btn {
+        padding: 9px 10px;
+        font-size: 0.82rem;
+    }
+
+    .dataset-card .ds-title {
+        font-size: 0.65rem;
+    }
+}
+
+/* Tablets (481px – 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+    .auth-card {
+        max-width: 420px !important;
+        padding: 28px !important;
+    }
+
+    .dataset-scroll-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
 
 /* Desktop auth card enhancement */
 @media (min-width: 769px) {
@@ -12907,10 +13660,81 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     text-align: center;
 }
 
-.auth-public-rooms-btn:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #e2e8f0;
-    background: rgba(255, 255, 255, 0.04);
+.auth-account-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.auth-account-bar .auth-google-sync-btn {
+    flex: 1;
+    margin-top: 0;
+    min-height: 42px;
+    padding: 8px 14px;
+}
+
+.auth-inline-history-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    background: rgba(99, 102, 241, 0.12);
+    color: #c7d2fe;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.auth-inline-history-btn:hover {
+    background: rgba(99, 102, 241, 0.22);
+    border-color: rgba(99, 102, 241, 0.6);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.auth-inline-history-btn:active {
+    transform: translateY(0);
+}
+
+/* Crisp SVG Role Icons */
+.role-svg-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    width: 18px;
+    height: 18px;
+    color: #34d399;
+    flex-shrink: 0;
+}
+
+.role-svg-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.role-svg-bat { color: #f59e0b; }
+.role-svg-bowl { color: #38bdf8; }
+.role-svg-spin { color: #a855f7; }
+.role-svg-wk { color: #ec4899; }
+.role-svg-all { color: #10b981; }
+.role-svg-share { color: #34d399; }
+
+.role-svg--title {
+    width: 20px;
+    height: 20px;
 }
 
 /* ---- 6. AUTH GAME HISTORY & OVERLAYS ---- */

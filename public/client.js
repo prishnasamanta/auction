@@ -28,20 +28,28 @@ let selectedSquadTeam = null;
 let squadInlineModeByTeam = {};
 let squadInlineXIByTeam = {};
 
+const ROLE_SVGS = {
+    bat: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 7 3-3a2.12 2.12 0 0 1 3 3l-3 3"/><path d="m5 16 7-7"/><path d="m3 21 3-3"/><circle cx="19" cy="19" r="2" fill="currentColor"/></svg>`,
+    bowl: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/><path d="M12 3a9 9 0 0 0 0 18"/><path d="M8.5 7.5c1.5 2 1.5 7 0 9"/><path d="M15.5 7.5c-1.5 2-1.5 7 0 9"/></svg>`,
+    spin: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M2.5 12c3-4 6-4 9.5 0s6.5 4 9.5 0"/><path d="m17 7 3 2-2 3"/></svg>`,
+    wk: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18"/><path d="M12 3v18"/><path d="M18 3v18"/><path d="M4 3h16"/></svg>`,
+    all: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 16 6-6"/><path d="m10 4 2 2-7 7-2-2z"/><circle cx="18" cy="18" r="3.5"/><path d="M18 14.5a3.5 3.5 0 0 1 0 7"/></svg>`,
+    share: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`
+};
+
 const ROLE_ICON_KEYS = { WK: "wk", BAT: "bat", ALL: "all", BOWL: "bowl", SPIN: "spin", SHARE: "share" };
 
 function roleIconHtml(role, extraClass = "") {
     const key = ROLE_ICON_KEYS[role] || String(role || "").toLowerCase();
-    if (!key) return "";
+    const svg = ROLE_SVGS[key] || ROLE_SVGS.bowl;
     const cls = extraClass ? ` ${extraClass}` : "";
-    return `<span class="role-ico role-ico--${key}${cls}" role="img" aria-hidden="true"></span>`;
+    return `<span class="role-svg-icon role-svg-${key}${cls}" aria-hidden="true">${svg}</span>`;
 }
 
 function roleGroupTitleHtml(roleKey, withLabel = false) {
-    const iconKey = ROLE_ICON_KEYS[roleKey] || "bowl";
-    const icon = roleIconHtml(iconKey, "role-ico--title");
+    const icon = roleIconHtml(roleKey, "role-svg--title");
     if (!withLabel) return icon;
-    const labels = { WK: "WK", BAT: "BAT", ALL: "ALL", BOWL: "BOWL" };
+    const labels = { WK: "WK", BAT: "BAT", ALL: "ALL", BOWL: "BOWL", SPIN: "SPIN" };
     return `<span class="role-group-title-inner">${icon}<span class="role-group-label">${labels[roleKey] || roleKey}</span></span>`;
 }
 
