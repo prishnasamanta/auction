@@ -12561,21 +12561,27 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
         justify-content: flex-end;
     }
 }
+
+/* Desktop auth card enhancement */
+@media (min-width: 769px) {
+    .auth-card {
+        max-width: 460px !important;
+    }
+}
 /* ================================================================== */
 /* 🎨 UI/UX OVERHAUL – Professional Buttons, Auth, Google, Mobile     */
 /* ================================================================== */
 
-/* ---- 1. AUTH PAGE LAYOUT FIX ---- */
+/* ---- 1. AUTH PAGE LAYOUT & SLIDE TRANSITIONS ---- */
 
-/* Remove floating animation – replace with elegant entrance */
 .landing-card, .auth-card {
-    animation: authCardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: authCardEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes authCardEntrance {
     from {
         opacity: 0;
-        transform: translateY(24px) scale(0.98);
+        transform: translateY(20px) scale(0.98);
     }
     to {
         opacity: 1;
@@ -12583,7 +12589,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     }
 }
 
-/* Auth page must scroll on small devices */
 #auth.screen {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -12598,6 +12603,30 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     align-items: center;
     justify-content: center;
     padding: 20px 12px;
+}
+
+/* Card view switching (slide switch, no scrolling inside lobby) */
+.auth-card.auth-history-active .auth-card-main,
+.auth-card.auth-public-browse-active .auth-card-main {
+    display: none !important;
+}
+
+.auth-card.auth-history-active #authGameHistory:not(.hidden),
+.auth-card.auth-public-browse-active #publicRoomsBrowse:not(.hidden) {
+    display: flex !important;
+    flex-direction: column !important;
+    animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 /* ---- 2. AUTH TAB BUTTONS (Pill Design) ---- */
@@ -12688,7 +12717,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     box-shadow: none;
 }
 
-/* Google "G" icon */
 .auth-google-icon {
     display: flex;
     align-items: center;
@@ -12717,7 +12745,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     text-align: left;
 }
 
-/* Connected state – green accent */
 .auth-google-sync-btn--linked {
     border-color: rgba(34, 197, 94, 0.35);
     background: rgba(34, 197, 94, 0.06);
@@ -12768,7 +12795,7 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     transform: translateY(0);
 }
 
-/* ---- 5. PRIMARY BUTTON UPGRADE ---- */
+/* ---- 5. PRIMARY & SECONDARY BUTTONS ---- */
 
 .primary-btn {
     min-height: 44px;
@@ -12785,7 +12812,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     outline-offset: 3px;
 }
 
-/* Auth "Go" button fix */
 .auth-go-btn {
     display: flex !important;
     align-items: center;
@@ -12797,7 +12823,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     height: 44px;
 }
 
-/* Auth "Create room" button */
 .auth-create-btn {
     width: 100%;
     margin-top: 16px;
@@ -12810,21 +12835,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     overflow: hidden;
 }
 
-.auth-create-btn::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
-    transform: translateX(-100%);
-    transition: transform 0.6s ease;
-}
-
-.auth-create-btn:hover::after {
-    transform: translateX(100%);
-}
-
-/* ---- 6. SECONDARY BUTTON UPGRADE ---- */
-
 .secondary-btn {
     min-height: 40px;
     display: inline-flex;
@@ -12836,13 +12846,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     transition: all 0.2s ease;
 }
 
-.secondary-btn:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.4);
-    outline-offset: 2px;
-}
-
-/* ---- 7. JOIN ROW ALIGNMENT FIX ---- */
-
 .auth-join-row {
     display: flex;
     gap: 8px;
@@ -12852,8 +12855,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
 .auth-join-row .auth-input-code {
     flex: 1;
 }
-
-/* ---- 8. AUTH FIELD LABELS ---- */
 
 .auth-field-label {
     display: block;
@@ -12869,8 +12870,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
 .auth-field-label:first-child {
     margin-top: 0;
 }
-
-/* ---- 9. AUTH DIVIDER ---- */
 
 .auth-divider {
     display: flex;
@@ -12891,8 +12890,6 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     height: 1px;
     background: rgba(255, 255, 255, 0.08);
 }
-
-/* ---- 10. PUBLIC ROOMS BUTTON ---- */
 
 .auth-public-rooms-btn {
     display: block;
@@ -12916,11 +12913,22 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     background: rgba(255, 255, 255, 0.04);
 }
 
-/* ---- 11. AUTH GAME HISTORY STYLES ---- */
+/* ---- 6. AUTH GAME HISTORY & OVERLAYS ---- */
 
-.auth-game-history-head {
-    padding: 16px;
+.auth-game-history,
+.auth-public-rooms-browse {
+    padding: 0;
+    width: 100%;
+}
+
+.auth-game-history-head,
+.auth-public-browse-head {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 12px;
 }
 
 .auth-public-browse-back {
@@ -12934,14 +12942,15 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
 }
 
 .auth-public-browse-back:hover {
-    color: #e2e8f0;
+    color: #34d399;
 }
 
 .auth-public-browse-title {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 800;
     color: #f1f5f9;
-    margin: 8px 0 4px;
+    margin: 8px 0 2px;
+    letter-spacing: 0.02em;
 }
 
 .auth-game-history-user {
@@ -12950,15 +12959,23 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     font-weight: 500;
 }
 
+.auth-game-history-list {
+    padding: 4px 0;
+    max-height: 380px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .auth-history-row {
     display: flex;
     flex-direction: column;
     gap: 2px;
     width: 100%;
     padding: 12px 14px;
-    margin-bottom: 6px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -12970,11 +12987,12 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
 .auth-history-row:hover {
     background: rgba(99, 102, 241, 0.1);
     border-color: rgba(99, 102, 241, 0.25);
+    transform: translateY(-1px);
 }
 
 .auth-history-code {
     font-weight: 800;
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     color: #c7d2fe;
     letter-spacing: 0.08em;
 }
@@ -12993,7 +13011,7 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
 .auth-history-loading,
 .auth-history-error {
     text-align: center;
-    padding: 20px;
+    padding: 24px;
     color: #64748b;
     font-size: 0.85rem;
 }
@@ -13002,90 +13020,7 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     color: #fca5a5;
 }
 
-/* ---- 12. AUTH HEADING STYLES ---- */
-
-.auth-eyebrow {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    margin-bottom: 4px;
-}
-
-.auth-heading {
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #f1f5f9;
-    margin: 0 0 4px;
-    line-height: 1.2;
-}
-
-.auth-heading-accent {
-    background: linear-gradient(135deg, var(--primary), var(--turf-glow));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* ---- 13. PUBLIC ROOMS EMPTY & PREVIEW ---- */
-
-.auth-public-rooms-empty {
-    text-align: center;
-    padding: 12px;
-    color: #64748b;
-    font-size: 0.82rem;
-}
-
-.auth-public-rooms-preview {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-/* Room tile upgrades */
-.room-tile {
-    border-radius: 10px;
-    padding: 12px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    transition: all 0.2s ease;
-}
-
-.room-tile:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.r-code {
-    font-weight: 800;
-    font-size: 0.82rem;
-    color: #c7d2fe;
-    letter-spacing: 0.06em;
-    min-width: 50px;
-}
-
-.r-name {
-    flex: 1;
-    font-weight: 600;
-    font-size: 0.82rem;
-    color: #e2e8f0;
-    margin: 0 8px;
-}
-
-.r-host {
-    font-size: 0.72rem;
-    color: #64748b;
-    margin-right: 8px;
-}
-
-.r-count {
-    font-size: 0.78rem;
-    color: #94a3b8;
-    font-weight: 600;
-}
-
-/* ---- 14. DATASET CARD UPGRADES ---- */
+/* ---- 7. DATASET CARDS & ROOM TILES ---- */
 
 .dataset-scroll-container {
     display: grid;
@@ -13149,53 +13084,22 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     font-weight: 500;
 }
 
-/* ---- 15. AUTH TOGGLE BOX ---- */
-
-.auth-toggle-box {
-    margin-top: 12px;
-    margin-bottom: 8px;
+.room-tile {
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.2s ease;
 }
 
-/* ---- 16. UNIVERSAL BUTTON FOCUS ---- */
-
-button:focus-visible {
-    outline: 2px solid var(--primary, #34d399);
-    outline-offset: 2px;
-}
-
-button:disabled,
-button[disabled] {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* ---- 17. AUTH CARD OVERLAY PANELS ---- */
-
-.auth-card.auth-public-browse-active .auth-card-main,
-.auth-card.auth-history-active .auth-card-main {
-    display: none;
-}
-
-.auth-game-history,
-.auth-public-rooms-browse {
-    padding: 0;
-}
-
-.auth-game-history-list {
-    padding: 12px;
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.auth-room-list-full {
-    max-height: 400px;
+.room-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* ================================================================== */
 /* 📱 MOBILE RESPONSIVENESS                                            */
 /* ================================================================== */
 
-/* Phones (< 480px) */
 @media (max-width: 480px) {
     .auth-card {
         width: 100% !important;
@@ -13274,20 +13178,8 @@ button[disabled] {
     .auth-game-history-list {
         max-height: 50vh;
     }
-
-    .auth-custom-builder {
-        padding: 0 !important;
-    }
-
-    .auth-custom-builder .rules-card {
-        width: 100% !important;
-        max-width: 100% !important;
-        border-radius: 16px 16px 0 0 !important;
-        max-height: 90vh !important;
-    }
 }
 
-/* Small phones (< 360px) */
 @media (max-width: 360px) {
     .auth-heading {
         font-size: 1.2rem;
@@ -13303,7 +13195,6 @@ button[disabled] {
     }
 }
 
-/* Tablets (481px – 768px) */
 @media (min-width: 481px) and (max-width: 768px) {
     .auth-card {
         max-width: 420px !important;
@@ -13315,7 +13206,6 @@ button[disabled] {
     }
 }
 
-/* Desktop auth card enhancement */
 @media (min-width: 769px) {
     .auth-card {
         max-width: 460px !important;
