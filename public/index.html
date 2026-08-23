@@ -57,23 +57,28 @@
 
 
 <section id="auth" class="screen hidden theme-app">
+    <header class="auth-global-topbar">
+        <div class="auth-topbar-brand">
+            <img src="/logo.png?v=2" alt="IPL Live Auction Logo" class="auth-topbar-logo">
+            <span class="auth-topbar-title">IPL AUCTION</span>
+        </div>
+        <div id="authAccountBar" class="auth-account-bar">
+            <button type="button" id="authGoogleBtn" class="auth-google-sync-btn secondary-btn" onclick="authGoogleSync()" title="Sign in with Google to save your auction history">
+                <span class="auth-google-icon" aria-hidden="true">G</span>
+                <span id="authGoogleBtnLabel">Google Sync</span>
+            </button>
+            <button type="button" id="authSeeHistoryBtn" class="auth-inline-history-btn hidden" onclick="openAuthGameHistory()" title="View your games history">
+                📜 History
+            </button>
+        </div>
+    </header>
+
     <div class="auth-page">
     <div class="auth-wrapper">
         <div class="glass auth-card">
             <div class="auth-card-main">
             <div class="auth-card-head">
-                <div class="auth-top-meta-row">
-                    <p class="auth-eyebrow">Room lobby</p>
-                    <div id="authAccountBar" class="auth-account-bar">
-                        <button type="button" id="authGoogleBtn" class="auth-google-sync-btn secondary-btn" onclick="authGoogleSync()" title="Sign in with Google to save your auction history">
-                            <span class="auth-google-icon" aria-hidden="true">G</span>
-                            <span id="authGoogleBtnLabel">Google Sync</span>
-                        </button>
-                        <button type="button" id="authSeeHistoryBtn" class="auth-inline-history-btn hidden" onclick="openAuthGameHistory()" title="View your games history">
-                            📜 History
-                        </button>
-                    </div>
-                </div>
+                <p class="auth-eyebrow">Room lobby</p>
                 <h2 class="auth-heading">Enter the <span class="auth-heading-accent">arena</span></h2>
             </div>
 
