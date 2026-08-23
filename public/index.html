@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="google-site-verification" content="zHAzVVOwadzV6be986tsLzfXJHwzdlv1gR9l0Sazgks" />
+     <title>IPL Live Auction – Live Multiplayer Cricket Auction Simulator</title>
+    <meta name="description" content="Live auction simulator with multiple player pools. Real-time multiplayer IPL cricket auction – bid on players with friends, build your dream team, get player cards and Playing XI. Create rooms, join as spectator, see leaderboard.">
+    <meta name="keywords" content="IPL auction, cricket auction, live auction simulator, multiplayer auction, IPL 2026, cricket game, bid on players, fantasy cricket auction">
+    <link rel="canonical" href="https://www.auctionsimulator.in/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.auctionsimulator.in/">
+    <meta property="og:title" content="IPL Live Auction – Live Multiplayer Cricket Auction Simulator">
+    <meta property="og:description" content="Live auction simulator with multiple player pools. Real-time multiplayer – bid on players with friends, build your dream team, get player cards and Playing XI.">
+    <meta property="og:image" content="https://www.auctionsimulator.in/logo.png">
+    <meta property="og:site_name" content="IPL Live Auction">
+    <meta property="og:locale" content="en_IN">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.auctionsimulator.in/">
+    <meta name="twitter:title" content="IPL Live Auction – Live Multiplayer Cricket Auction Simulator">
+    <meta name="twitter:description" content="Live auction simulator with multiple player pools. Real-time multiplayer – bid on players with friends, build your dream team.">
+    <meta name="twitter:image" content="https://www.auctionsimulator.in/logo.png">
+
+    <link rel="icon" type="image/png" href="/logo.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="/logo.png?v=2">
+    <link rel="apple-touch-icon" href="/logo.png?v=2">
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Exo+2:wght@400;600;800&family=Inter:wght@400;600&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+        <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "IPL Live Auction",
+      "description": "Live auction simulator with multiple player pools. Mock IPL cricket auction – bid on players with friends, build your dream team.",
+      "url": "https://www.auctionsimulator.in/",
+      "applicationCategory": "Game",
+      "operatingSystem": "Any",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" }
+    }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/style-renovation.css">
+    <!-- Vite-built React landing (no CDN Tailwind/React/Babel = less lag during bidding) -->
+    <link rel="stylesheet" href="/assets/landing.css">
+</head>
+
+<body class="theme-app">
+<canvas id="bg-canvas"></canvas>
+<section id="landing" class="screen landing-scrollable landing-themed">
+    <div id="landing-root"></div>
+</section>
+
+
+<section id="auth" class="screen hidden theme-app">
+    <div class="auth-page">
+    <div class="auth-wrapper">
+        <div class="glass auth-card">
+            <div class="auth-card-main">
+            <div class="auth-card-head">
+                <p class="auth-eyebrow">Room lobby</p>
+                <h2 class="auth-heading">Enter the <span class="auth-heading-accent">arena</span></h2>
+            </div>
+
+            <div class="auth-tabs">
+                <button type="button" onclick="switchAuthTab('join')" class="auth-tab-btn active" id="tabJoin">Join room</button>
+                <button type="button" onclick="switchAuthTab('create')" class="auth-tab-btn" id="tabCreate">Create room</button>
+            </div>
+
+            <div class="auth-body">
+                <label class="auth-field-label" for="username">Display name</label>
+                <input id="username" class="auth-input" placeholder="Your name in the auction" autocomplete="nickname">
+
+                <div id="joinSection">
+                    <label class="auth-field-label" for="code">Room code</label>
+                    <div class="auth-join-row">
+                        <input id="code" class="auth-input auth-input-code" placeholder="ABCDE" maxlength="5" autocomplete="off">
+                        <button type="button" id="joinBtn" class="primary-btn auth-go-btn">Go</button>
+                    </div>
+
+                    <button type="button" id="authGoogleBtn" class="auth-google-sync-btn secondary-btn" onclick="authGoogleSync()" title="Sign in with Google to save your auction history">
+                        <span class="auth-google-icon" aria-hidden="true">G</span>
+                        <span id="authGoogleBtnLabel">Add Google to sync</span>
+                    </button>
+                    <button type="button" id="authSeeHistoryBtn" class="auth-see-history-btn secondary-btn hidden" onclick="openAuthGameHistory()">
+                        📜 See game history
+                    </button>
+
+                    <div class="auth-divider"><span>Public rooms</span></div>
+                    <p id="publicRoomsEmpty" class="auth-public-rooms-empty">No active rooms right now.</p>
+                    <div id="publicRoomsPreview" class="auth-public-rooms-preview"></div>
+                    <button type="button" id="publicRoomsToggle" class="auth-public-rooms-btn hidden" onclick="togglePublicRoomsList()">
+                        View all active rooms (<span id="publicRoomsCount">0</span>)
+                    </button>
+                </div>
+
+                <div id="createSection" class="hidden">
+                    <div class="auth-toggle-box">
+                        <label class="toggle-switch auth-toggle">
+                            <span class="label-text">Public room</span>
+                            <input type="checkbox" id="isPublicRoom" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <label class="auth-field-label auth-field-label-pool">Player pool</label>
+                    
+                    <div class="dataset-scroll-container">
+                        <div class="dataset-card active" data-dataset-id="ipl2026" onclick="selectDataset('ipl2026', this)">
+                            <div class="ds-icon">🏆</div>
+                            <div class="ds-title">IPL 2026</div>
+                            <div class="ds-sub">Standard</div>
+                        </div>
+                        <div class="dataset-card" data-dataset-id="legends" onclick="selectDataset('legends', this)">
+                            <div class="ds-icon">🔥</div>
+                            <div class="ds-title">LEGENDS</div>
+                            <div class="ds-sub">All-Time</div>
+                        </div>
+                        <div class="dataset-card" data-dataset-id="mixed" onclick="selectDataset('mixed', this)">
+                            <div class="ds-icon">⚔️</div>
+                            <div class="ds-title">MIXED</div>
+                            <div class="ds-sub">Great Icon</div>
+                        </div>
+                        <div class="dataset-card" data-dataset-id="custom" onclick="selectDataset('custom', this)">
+                            <div class="ds-icon">🛠️</div>
+                            <div class="ds-title">CUSTOM</div>
+                            <div class="ds-sub">Builder</div>
+                        </div>
+                    </div>
+
+                    <div id="poolSelectedLabel" class="pool-selected-label">IPL 2026 pool is selected</div>
+                    <input type="hidden" id="selectedSetId" value="ipl2026">
+
+                    <button type="button" id="createBtn" class="primary-btn auth-create-btn">Create room</button>
+                </div>
+            </div>
+            </div>
+
+            <div id="authGameHistory" class="auth-game-history hidden" aria-hidden="true">
+                <div class="auth-game-history-head">
+                    <button type="button" class="auth-public-browse-back" onclick="closeAuthGameHistory()">← Back to lobby</button>
+                    <h3 class="auth-public-browse-title">Your games</h3>
+                    <p id="authGameHistoryUser" class="auth-game-history-user"></p>
+                </div>
+                <p id="authGameHistoryEmpty" class="auth-public-rooms-empty hidden">No completed games yet. Finish an auction while signed in.</p>
+                <div id="authGameHistoryList" class="auth-game-history-list custom-scroll"></div>
+            </div>
+
+            <div id="publicRoomsBrowse" class="auth-public-rooms-browse hidden" aria-hidden="true">
+                <div class="auth-public-browse-head">
+                    <button type="button" class="auth-public-browse-back" onclick="closePublicRoomsBrowse()">← Back to lobby</button>
+                    <h3 class="auth-public-browse-title">Public rooms</h3>
+                </div>
+                <p id="publicRoomsBrowseEmpty" class="auth-public-rooms-empty hidden">No active rooms right now.</p>
+                <div id="publicRoomListFull" class="room-list-box custom-scroll auth-room-list-full"></div>
+            </div>
+
+            <div id="customBuilderOverlay" class="auth-custom-builder auth-custom-builder-card hidden">
+        <div class="glass rules-card cb-panel">
+            <header class="cb-header">
+                <div class="cb-header-text">
+                    <p class="cb-eyebrow">Custom pool</p>
+                    <h3 class="cb-title">Build your set</h3>
+                    <p class="cb-sub">Select from the database or upload a CSV</p>
+                </div>
+                <button type="button" class="cb-close" onclick="closeCustomBuilder()" aria-label="Close">&times;</button>
+            </header>
+
+            <div id="customBuilderChoice" class="custom-builder-choice">
+                <div class="custom-builder-choice-cards">
+                    <div class="custom-builder-choice-card" onclick="customBuilderShowAvailable()" role="button" tabindex="0">
+                        <span class="custom-choice-icon" aria-hidden="true">👥</span>
+                        <span class="custom-choice-title">Show available players</span>
+                        <span class="custom-choice-sub">From database</span>
+                    </div>
+                    <div class="custom-builder-choice-card" onclick="customBuilderShowUpload()" role="button" tabindex="0">
+                        <span class="custom-choice-icon" aria-hidden="true">📤</span>
+                        <span class="custom-choice-title">Upload your own pool</span>
+                        <span class="custom-choice-sub">CSV file</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload: back arrow top-left, format, example table, then button -->
+            <div id="customBuilderUploadSection" class="hidden">
+                <button type="button" onclick="customBuilderBackToChoice()" class="custom-upload-back-btn" title="Back" aria-label="Back">←</button>
+                <div id="customUploadFormat" style="background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; font-size:0.8rem; color:#94a3b8; white-space:pre-wrap;">CSV format (Excel-compatible):
+• Column 1: Player name
+• Column 2: Role (BAT, BOWL, WK, ALL, PACE, SPIN)
+• Column 3: Tag (e.g. WK1, BAT1, BOWL1, ALL1 — required)
+• Column 4: Rating (optional, 0–10)
+• Column 5: RTM (optional, Team name e.g. KKR, RCB, MI — shown next to player in sets)
+• Use comma to separate. First row can be header.</div>
+                <div class="csv-format-example" style="background:rgba(0,0,0,0.25); padding:10px; border-radius:8px; overflow:visible;">
+                    <table class="csv-example-table" cellpadding="6" cellspacing="0" style="width:100%; max-width:560px; font-size:0.75rem; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:rgba(255,255,255,0.08); color:#cbd5e1;">
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">Player Name</th>
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">Role</th>
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">Tag</th>
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">Rating</th>
+                                <th style="text-align:left; border:1px solid rgba(255,255,255,0.1);">RTM</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color:#94a3b8;">
+                            <tr><td style="border:1px solid rgba(255,255,255,0.08);">Virat Kohli</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT1</td><td style="border:1px solid rgba(255,255,255,0.08);">9.5</td><td style="border:1px solid rgba(255,255,255,0.08);">RCB</td></tr>
+                            <tr><td style="border:1px solid rgba(255,255,255,0.08);">Rohit Sharma</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT2</td><td style="border:1px solid rgba(255,255,255,0.08);">9</td><td style="border:1px solid rgba(255,255,255,0.08);">MI</td></tr>
+                            <tr><td style="border:1px solid rgba(255,255,255,0.08);">Shubman Gill</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT1</td><td style="border:1px solid rgba(255,255,255,0.08);">8.5</td><td style="border:1px solid rgba(255,255,255,0.08);">GT</td></tr>
+                            <tr><td style="border:1px solid rgba(255,255,255,0.08);">Suryakumar Yadav</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT</td><td style="border:1px solid rgba(255,255,255,0.08);">BAT1</td><td style="border:1px solid rgba(255,255,255,0.08);">9</td><td style="border:1px solid rgba(255,255,255,0.08);">MI</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <label class="secondary-btn" style="display:inline-block; padding:10px 20px; cursor:pointer; text-align:center;">
+                    Choose CSV file
+                    <input type="file" id="customCsvInput" accept=".csv" style="display:none;">
+                </label>
+                <div id="customUploadResult" class="hidden" style="font-size:0.85rem; color:#4ade80;"></div>
+            </div>
+
+            <!-- Filters + list (hidden until Show available players clicked) -->
+            <div id="customBuilderListSection" class="hidden">
+                <div style="padding:15px; background:rgba(0,0,0,0.2); position:relative;">
+                    <div class="custom-filter-row">
+                        <button type="button" onclick="customBuilderBackToChoice()" class="custom-filter-control custom-list-back-btn" title="Back">←</button>
+                        <input id="customSearch" type="text" placeholder="Search Name..." onkeyup="filterCustomList()" class="custom-filter-control custom-filter-search">
+                        <select id="customRoleFilter" onchange="filterCustomList()" class="custom-filter-control custom-role-filter-select">
+                            <option value="">All Roles</option>
+                            <option value="BAT">Batters</option>
+                            <option value="BOWL">Bowlers</option>
+                            <option value="ALL">All-Rounders</option>
+                            <option value="WK">Wicket Keepers</option>
+                        </select>
+                        <button type="button" id="customRoleFilterHelp" class="custom-filter-control custom-role-help-btn" title="How custom set works" onclick="document.getElementById('customRoleHelpPopup').classList.toggle('hidden')">?</button>
+                    </div>
+                    <div id="customRoleHelpPopup" class="custom-role-help-popup hidden">
+                        <div class="custom-role-help-content">
+                            <strong>How custom set works</strong>
+                            <p>• <b>Auto select</b>: Pre-fills selection from Mixed pool (or default) so you can tweak from a ready list.</p>
+                            <p>• <b>Ratings</b>: Toggle to show/edit player ratings (0–10) for your pool.</p>
+                            <p>• Pick players with ✓, then <b>Confirm Set</b> to lock the pool for your room.</p>
+                            <button type="button" onclick="document.getElementById('customRoleHelpPopup').classList.add('hidden')" class="secondary-btn" style="margin-top:8px; padding:6px 12px;">Close</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <label class="toggle-switch" style="padding:5px 10px; background:transparent; border:none; margin:0;">
+                            <input type="checkbox" id="autoSelectPoolToggle" onchange="toggleAutoSelectPool()">
+                            <span class="slider" style="width:34px; height:18px;"></span>
+                            <span class="label-text" style="font-size:0.8rem;">Auto select</span>
+                        </label>
+                        <label class="toggle-switch" style="padding:5px 10px; background:transparent; border:none; margin:0;">
+                            <input type="checkbox" id="useRatingsToggle" onchange="toggleRatingVisibility()">
+                            <span class="slider" style="width:34px; height:18px;"></span>
+                            <span class="label-text" style="font-size:0.8rem;">Ratings</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="customPlayerList" class="custom-scroll" style="flex:1; overflow-y:auto; padding:10px;"></div>
+            </div>
+
+            <footer id="customBuilderFooter" class="cb-footer">
+                <div class="cb-footer-count">Selected: <b id="customCount">0</b></div>
+                <button type="button" onclick="saveCustomSet()" class="primary-btn cb-confirm-btn">Confirm set</button>
+            </footer>
+        </div>
+    </div>
+
+        </div>
+    </div>
+    </div>
+</section>
+<section id="auctionUI" class="screen hidden">
+
+<header class="topbar">
+    <div class="topbar-row">
+        <div class="topbar-left">
+            <div class="header-room-share">
+                <div id="roomCodeBadge" class="header-badge" onclick="copyRoomCode()" style="border:1px solid var(--primary); color:var(--primary);">
+                    <span id="roomCodeText" style="font-family:monospace; font-weight:700;">---</span>
+                </div>
+                <button type="button" id="shareBtn" class="header-share-btn" onclick="shareRoomLink()" title="Share room" aria-label="Share room">
+                    <span class="role-ico role-ico--share" aria-hidden="true"></span>
+                </button>
+            </div>
+            <div id="headerTeamBadge" class="header-badge hidden" style="background:var(--gold); color:#000; font-weight:600; border:none;">
+                <span id="headerTeamName">---</span>
+            </div>
+            <button onclick="toggleUserList(event)" class="count-pill-btn" type="button">
+                <span id="liveUserCount">0</span>
+            </button>
+        </div>
+        <div class="topbar-middle">
+            <button id="lateJoinBtn" onclick="toggleLateJoin()" class="header-icon-btn hidden header-icon-btn-label">
+                <span class="icon">✚</span>
+                <span class="label">Join Team</span>
+            </button>
+            <button id="refreshBtn" onclick="forceRefreshAuction()" class="header-icon-btn" title="Refresh auction state" aria-label="Refresh">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+            </button>
+            <button id="toggleMuteBtn" class="header-icon-btn mute-toggle-btn" onclick="toggleMute()" title="Toggle Sound" aria-label="Mute sound">
+                <span id="soundIconUnmuted" class="mute-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></span>
+                <span id="soundIconMuted" class="mute-icon hidden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></span>
+            </button>
+        </div>
+        <div class="topbar-right">
+            <span id="adminControls" class="admin-group hidden">
+                <button id="startBtn" class="header-icon-btn primary header-icon-btn-label" title="Start">
+                    <span class="icon">▶</span>
+                    <span class="label">Start</span>
+                </button>
+                <button id="togglePauseBtn" class="header-icon-btn" title="Pause">⏸</button>
+                <button id="skipBtn" class="header-icon-btn" title="Skip">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+                </button>
+                <button id="skipSetBtn" class="header-icon-btn warning" title="Skip Set">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
+                </button>
+                <button id="endBtn" onclick="admin('end')" class="header-icon-btn danger" title="End Game">⊘</button>
+            </span>
+            <button id="leaveBtn" class="header-icon-btn danger hidden" title="Leave">
+                <img src="https://img.icons8.com/material-outlined/24/emergency-exit.png" alt="Leave" width="24" height="24" />
+            </button>
+        </div>
+    </div>
+    
+    <div id="userListDropdown" class="user-list-dropdown hidden glass" style="left:10px; top:50px;">
+        <h4 style="margin:0 0 10px 0; color:#94a3b8; font-size:0.7rem;">ACTIVE USERS</h4>
+        <div id="userListContent"></div>
+    </div>
+</header>
+
+
+    <div class="auction-wrapper">
+        
+        <div class="auction-center">
+            
+            <div id="teamSelectionMain" class="glass" style="width: 100%; max-width: 530px;">
+                <h2 style="color:var(--primary); margin:0 0 4px 0; font-size:1rem;">CHOOSE YOUR TEAM</h2>
+                <div id="embeddedTeamList" class="team-list"></div>
+                <div id="waitingForHostMsg" class="hidden" style="margin-top:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                    <h3 style="margin:0 0 2px 0; font-size:0.95rem; color:#22c55e;">✅ Team Selected</h3>
+                    <p style="color:#aaa; font-size:0.8rem; margin:0;">Waiting for Host to start...</p>
+                </div>
+            </div>
+
+            <div class="auction glass hidden" id="auctionCard">
+                <div id="resultOverlay" class="ac-result-overlay hidden"></div>
+                <div id="rtmOverlay" class="ac-result-overlay hidden">
+                    <div class="premium-fullcard">
+                        <div class="pf-title" style="color:var(--gold);">Issuing RTM</div>
+                        <div class="pf-detail">Right to Match in progress</div>
+                    </div>
+                </div>
+
+                <div class="ac-top-row">
+                    <div class="ac-info-box">
+                        <div id="playerName" class="ac-name-text">WAITING...</div>
+                        <div id="playerMeta" class="ac-role-text">---</div>
+                    </div>
+
+                    <div class="ac-status-box">
+                        <div id="timer" class="ac-timer-box two-digit">10</div>
+                        <div id="currentBidder" class="ac-leader-badge hidden">
+                            <span id="bidderName">---</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ac-bot-row">
+                    <div class="ac-price-box">
+                        <span class="lbl">CURRENT BID</span>
+                        <div id="bid" class="val">₹0.00 Cr</div>
+                    </div>
+
+                    <button id="bidBtn" class="ac-main-bid-btn">
+                        <span style="font-size:1.5rem; font-weight:800;">BID</span>
+                        <span id="btnIncText" style="font-size:0.75rem; font-family:monospace; opacity:0.8;"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="commandCenter" class="glass">
+            
+            <div class="cc-tabs">
+                <button class="cc-tab-btn" data-tab="sets" onclick="switchCcTab('sets')" title="Sets"><svg class="cc-tab-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg></button>
+                <button class="cc-tab-btn active" data-tab="feed" onclick="switchCcTab('feed')" title="Feed"><svg class="cc-tab-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+                <button class="cc-tab-btn" data-tab="squads" onclick="switchCcTab('squads')" title="Squads"><svg class="cc-tab-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+            </div>
+
+            <div id="ccContent" class="cc-content">
+                
+                <div id="view-sets" class="cc-view hidden">
+                    <div id="panel-sets" class="scroll-view">
+                        <div style="padding:10px; color:#aaa; text-align:center;">Loading Sets...</div>
+                    </div>
+                </div>
+
+                <div id="view-feed" class="cc-view">
+                    <div id="feedChat">
+                        <div id="chat">
+                            <div class="chat-msg log-message chat-c2" data-msg-category="c2" style="border-left-color:rgba(251,191,36,0.3); background:rgba(0,0,0,0.2);">
+                                <div class="chat-text" style="color:#94a3b8;">Waiting for auction...</div>
+                            </div>
+                        </div>
+                        <div class="feed-input-wrapper">
+                            <button type="button" class="feed-list-btn" id="soldUnsoldBtn" onclick="toggleSoldUnsoldPopup()" title="Sold / Unsold list" aria-label="Sold Unsold list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+                            <button type="button" class="feed-list-btn hidden" id="hostQuickSettingsBtn" onclick="openHostQuickSettings()" title="Host quick settings" aria-label="Host quick settings">⚙</button>
+                            <button type="button" class="feed-list-btn" id="stickerBtn" onclick="toggleStickerPanel()" title="Stickers" aria-label="Open stickers">😊</button>
+                            <input type="text" id="msg" placeholder="Chat..." autocomplete="off">
+                            <button type="button" class="chat-send-btn" onclick="sendChat()" aria-label="Send message">➤</button>
+                        </div>
+                        <div id="stickerPanel" class="sticker-panel hidden"></div>
+                    </div>
+                </div>
+
+                <div id="view-squads" class="cc-view hidden">
+                    <div id="squadTabList" class="horizontal-tabs"></div>
+                    <div id="embeddedSquadView" class="scroll-view">
+                        <div style="padding:10px; color:#aaa; text-align:center;">Select a team</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+    </div> 
+</section>
+
+<section id="playingXI" class="screen hidden">
+    <div style="max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh;">
+        
+        <div class="playing-xi-title-row" style="text-align:center; margin-bottom: 10px;">
+            <h2 id="playingXiTitle" style="margin:0; color:var(--gold); font-size:1.5rem;">🧢 SELECT PLAYING XI</h2>
+        </div>
+
+        <div id="xiStatsBar" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 15px;"></div>
+
+        <div id="xiCardWrapper" class="hidden" style="margin-bottom: 20px;"></div>
+
+        <div id="xiPlaceholder" class="xi-placeholder">
+            <div style="font-size:3rem; margin-bottom:10px;">🏏</div>
+            Select players below...
+        </div>
+
+        <div id="xiButtonRow" style="display: flex; gap: 10px; position: sticky; top: 10px; z-index: 50; background:rgba(15,23,42,0.95); padding:10px 0; border-radius: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <button id="submitXIBtn" onclick="submitXI()" class="primary-btn" style="flex: 2; box-shadow:0 4px 10px rgba(0,0,0,0.5);">
+                Submit XI (0/11)
+            </button>
+            
+            <button onclick="resetXISelection()" class="secondary-btn" title="Reset Selection" style="width:50px; border-color:#ef4444; color:#ef4444; background:#1e293b; font-size: 1.2rem;">
+                ↻
+            </button>
+            
+            <button id="saveXIBtn" onclick="downloadSheetPNG()" class="secondary-btn hidden" style="flex: 1; color:var(--gold); border-color:var(--gold); background:#1e293b;">
+                📸 Save
+            </button>
+        </div>
+
+        <div id="xiStatus" class="hidden" style="margin-top: 20px; margin-bottom: 25px; position: relative; z-index: 1; min-height: 20px;"></div>
+
+        <div id="mySquadList"></div>
+    </div>
+</section>
+
+    <section id="leaderboard" class="screen hidden lb-screen">
+        <header class="lb-topbar glass">
+            <button type="button" onclick="goBackFromLeaderboard()" class="lb-back-btn" aria-label="Back">←</button>
+            <div class="lb-topbar-title">
+                <span class="lb-topbar-ico" aria-hidden="true">🏆</span>
+                <div>
+                    <span class="lb-topbar-main">Tournament standings</span>
+                    <span class="lb-topbar-sub" id="lbRoomCodeLabel"></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="lb-container">
+            <div class="lb-scroll-wrapper custom-scroll">
+                <table class="lb-table">
+                    <thead>
+                        <tr>
+                            <th class="lb-th-rank">#</th>
+                            <th class="lb-th-team">Team</th>
+                            <th class="lb-th-rating">Rating</th>
+                            <th class="lb-th-purse">Purse</th>
+                            <th class="lb-th-status">XI</th>
+                            <th class="lb-th-view">View</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="postAuctionSummary" class="screen hidden summary-screen">
+        <header class="topbar glass summary-topbar">
+            <div class="summary-topbar-inner">
+                <div class="summary-topbar-brand">
+                    <span class="summary-brand-icon" aria-hidden="true">🏆</span>
+                    <div class="summary-brand-text">
+                        <span class="summary-brand">Auction Summary</span>
+                        <span class="summary-brand-sub" id="summaryRoomMeta">Room results & squads</span>
+                    </div>
+                </div>
+                <div class="summary-topbar-actions">
+                    <button onclick="openSummaryRules()" class="summary-rules-btn" type="button"><span class="summary-btn-ico" aria-hidden="true">📜</span><span class="summary-btn-label">Rules</span></button>
+                    <button onclick="openRoomLeaderboardFromSummary()" class="summary-leaderboard-btn" type="button"><span class="summary-btn-ico" aria-hidden="true">📊</span><span class="summary-btn-label">Leaderboard</span></button>
+                    <button onclick="exitToHome()" class="summary-exit-btn" type="button" aria-label="Exit to main"><span class="summary-btn-ico" aria-hidden="true">🏠</span><span class="summary-btn-label">Home</span></button>
+                </div>
+            </div>
+        </header>
+
+        <div class="summary-page-body">
+            <p class="summary-lead">The auction has ended. Tap a team to view their full squad.</p>
+            <div id="summaryInsights" class="summary-insights">
+                <button class="summary-insight-card" type="button" onclick="toggleSummaryInsight('top')">🔥 Top Purchases</button>
+                <button class="summary-insight-card" type="button" onclick="toggleSummaryInsight('best')">🏅 Team Insights</button>
+            </div>
+            <div id="summaryInsightPanel" class="summary-insight-panel hidden"></div>
+            <div id="summaryList" class="summary-list"></div>
+            <div class="summary-actions">
+                <button class="summary-action-btn" type="button" onclick="shareRoomSummary()">🔗 Share Now</button>
+                <button class="summary-action-btn secondary" type="button" onclick="exitToHome()">🏠 Go Home</button>
+            </div>
+        </div>
+    </section>
+
+    <div id="summaryRulesOverlay" class="rules-overlay hidden" onclick="closeSummaryRules(event)">
+        <div class="glass rules-card summary-rules-card" onclick="event.stopPropagation()">
+            <div class="summary-rules-head">
+                <h3>📜 Room rules</h3>
+                <button type="button" class="summary-rules-close" onclick="closeSummaryRules()" aria-label="Close">✕</button>
+            </div>
+            <div id="summaryRulesBody" class="summary-rules-body"></div>
+        </div>
+    </div>
+
+    <div id="squadViewOverlay" class="rules-overlay hidden">
+    <div class="glass rules-card">
+        <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:space-between; background:#0f172a;">
+            <div style="display:flex; gap:5px;">
+                <button id="btnShowXI" onclick="switchPopupView('XI')" class="tab-btn active" style="font-size:0.8rem; padding:6px 12px;">Playing XI</button>
+                <button id="btnShowFull" onclick="switchPopupView('FULL')" class="tab-btn" style="font-size:0.8rem; padding:6px 12px;">Full Squad</button>
+            </div>
+            <button onclick="document.getElementById('squadViewOverlay').classList.add('hidden')" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+
+        <div id="squadCaptureArea"></div>
+
+        <div id="popupDownloadFooter" style="padding:15px; border-top:1px solid rgba(255,255,255,0.1); background:#0f172a;">
+            <button id="downloadPopupCard" onclick="downloadPopupCard()" class="primary-btn" style="width:100%;">📸 Download Card</button>
+        </div>
+    </div>
+</div>
+
+    <div id="soldUnsoldOverlay" class="rules-overlay hidden">
+        <div class="glass rules-card" style="max-width:480px; max-height:85vh; display:flex; flex-direction:column;">
+            <div style="padding:12px 15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; background:#0f172a;">
+                <div class="sold-unsold-tabs" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" class="sold-unsold-tab" data-tab="sets" onclick="switchSoldUnsoldTab('sets')"><span>Sets</span></button>
+                    <button type="button" class="sold-unsold-tab active" data-tab="sold" onclick="switchSoldUnsoldTab('sold')"><span>Sold</span> <span id="soldCountBadge" class="count-badge">0</span></button>
+                    <button type="button" class="sold-unsold-tab" data-tab="unsold" onclick="switchSoldUnsoldTab('unsold')"><span>Unsold</span> <span id="unsoldCountBadge" class="count-badge">0</span></button>
+                </div>
+                <button type="button" onclick="closeSoldUnsoldPopup()" style="background:none; border:none; color:#fff; font-size:1.25rem; cursor:pointer; padding:4px;">&times;</button>
+            </div>
+            <div id="soldUnsoldList" class="custom-scroll" style="flex:1; overflow-y:auto; padding:10px; min-height:200px;"></div>
+        </div>
+    </div>
+
+    <div id="rulesScreen" class="rules-overlay hidden">
+        <div class="overlay-card">
+            <h2>⚙️ Tournament Setup</h2>
+            <div class="rules-scroll-area">
+                <div class="rules-section">
+                    <h4>💰 General Settings</h4>
+                    <div class="rule-row"><label>Total Purse (Cr)</label><input id="purse" type="number" value="120"></div>
+                    <div class="rule-row"><label>Squad size</label><span style="display:flex; gap:8px; align-items:center;"><input id="minSquadSize" type="number" value="18" min="1" max="30" placeholder="Min"><span style="color:#64748b;">–</span><input id="maxPlayers" type="number" value="24" min="1" max="30" placeholder="Max"></span></div>
+                    <div class="rule-row"><label>Max Foreign (Squad)</label><input id="maxForeign" type="number" value="6"></div>
+                    <div class="rule-row rule-row-rtm">
+                        <label>RTM?</label>
+                        <label class="toggle-switch" style="display:inline-flex; align-items:center; gap:8px;">
+                            <input type="checkbox" id="rtmEnabled" unchecked>
+                            <span class="slider"></span>
+                            <span class="label-text" style="font-size:0.9rem;">No</span>
+                        </label>
+                    </div>
+                    <div class="rule-row" id="rtmCountRow" style="display:none;">
+                        <label>RTMs per team</label>
+                        <input id="rtmPerTeam" type="number" value="2" min="1" max="10">
+                    </div>
+                </div>
+                <div class="rules-section">
+                    <h4>🧢 Playing XI Requirements</h4>
+                    <div class="rule-row"><label>Min Batsmen</label><input id="minBat" type="number" value="3"></div>
+                    <div class="rule-row"><label>Min Bowlers</label><input id="minBowl" type="number" value="3"></div>
+                    <div class="rule-row"><label>Min Wicket Keepers</label><input id="minWK" type="number" value="1"></div>
+                    <div class="rule-row"><label>Min All-Rounders</label><input id="minAll" type="number" value="1"></div>
+                    <div class="rule-row"><label>Min Spinners</label><input id="minSpin" type="number" value="1"></div>
+                    <div class="rule-row"><label>Max Foreign (Playing XI)</label><input id="maxForeignXI" type="number" value="4"></div>
+                </div>
+            </div>
+            <div class="rules-footer">
+                <button id="saveRules" class="primary-btn" style="width:100%;">🔒 Lock Rules & Start</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewRulesOverlay" class="rules-overlay hidden" onclick="closeRules(event)">
+        <div class="glass rules-card" style="max-width: 400px; width: 90%; padding: 0;">
+            <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; color:var(--gold);">📜 Tournament Rules</h3>
+                <button onclick="document.getElementById('viewRulesOverlay').classList.add('hidden')" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div class="rule-box" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                        <div style="font-size:0.8rem; color:#aaa;">💰 Total Purse</div>
+                        <div style="font-size:1.2rem; font-weight:bold;">₹<span id="pop_viewPurse">---</span> Cr</div>
+                    </div>
+                    <div class="rule-box" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                        <div style="font-size:0.8rem; color:#aaa;">👥 Squad size</div>
+                        <div style="font-size:1.2rem; font-weight:bold;"><span id="pop_viewSquadSize">---</span></div>
+                    </div>
+                    <div class="rule-box" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                        <div style="font-size:0.8rem; color:#aaa;">✈️ Max Foreign</div>
+                        <div style="font-size:1.2rem; font-weight:bold;"><span id="pop_viewForeign">---</span></div>
+                    </div>
+                    <div class="rule-box" id="pop_viewRtmBox" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:none;">
+                        <div style="font-size:0.8rem; color:#aaa;">🔄 RTM</div>
+                        <div style="font-size:1.2rem; font-weight:bold;"><span id="pop_viewRtm">---</span></div>
+                    </div>
+                </div>
+                <h4 style="margin: 0 0 10px 0; color:var(--primary); font-size:0.9rem; text-transform:uppercase;">Playing XI Requirements</h4>
+                <ul style="list-style:none; padding:0; margin:0; font-size:0.9rem; color:#ccc; line-height: 1.6;">
+                    <li>🏏 Min Batsmen: <span id="pop_viewBat" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>🥎 Min Bowlers: <span id="pop_viewBowl" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>🥎 Spinners: <span id="pop_viewSpin" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>🧤 Min WKs: <span id="pop_viewWK" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>🌟 Min All-Rounders: <span id="pop_viewAR" style="color:#fff; font-weight:bold;">-</span></li>
+                    <li>✈︎ Max Foreign XI: <span id="pop_viewForeignXI" style="color:#fff; font-weight:bold;">-</span></li>
+                </ul>
+            </div>
+            <div style="padding: 15px; text-align:center; border-top: 1px solid rgba(255,255,255,0.1);">
+                <button onclick="document.getElementById('viewRulesOverlay').classList.add('hidden')" class="secondary-btn" style="width:100%;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="identityVerifyOverlay" class="rules-overlay hidden">
+        <div class="glass rules-card identity-verify-card" style="max-width: 400px; padding: 20px; padding-top: 44px; text-align: center; position: relative;">
+            <button type="button" class="identity-verify-close" onclick="document.getElementById('identityVerifyOverlay').classList.add('hidden')" aria-label="Close and go back">×</button>
+            <h2 style="color: #fca5a5; border: none;">⚠️ Identity Check</h2>
+            <p>A new device is trying to join as <b id="verifyName" style="color: #fff;"></b>.</p>
+            <p>Is this you trying to switch devices?</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button id="btnVerifyYes" class="primary-btn" style="width: 100%;">Yes, Switch Device</button>
+                <button id="btnVerifyNo" class="secondary-btn" style="width: 100%; border-color: #ef4444; color: #ef4444;">No, Block Them</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rtmOfferOverlay" class="rules-overlay hidden">
+        <div class="glass rules-card" style="max-width: 380px; padding: 24px; text-align: center;">
+            <h3 style="margin:0 0 8px 0; color:var(--gold);">🔄 Right to Match</h3>
+            <p id="rtmOfferPlayer" style="margin:0 0 16px 0; font-size:1.1rem; color:#f8fafc;"></p>
+            <p style="margin:0 0 16px 0; font-size:0.9rem; color:#94a3b8;">Use RTM?</p>
+            <div id="rtmOfferYesNo" style="display:flex; gap:12px; justify-content:center; margin-bottom:16px;">
+                <button id="rtmOfferYes" class="primary-btn">Yes</button>
+                <button id="rtmOfferNo" class="secondary-btn">No</button>
+            </div>
+            <div id="rtmOfferAmountRow" style="display:none;">
+                <label style="display:block; margin-bottom:8px; color:#94a3b8;">Amount (Cr) — more than sold price</label>
+                <input id="rtmOfferAmount" type="number" min="0" step="0.05" placeholder="0.00" style="width:100%; padding:10px; background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:8px; color:#fff; font-size:1rem; margin-bottom:8px;">
+                <div id="rtmOfferTimer" style="font-size:0.9rem; color:var(--gold); margin-bottom:12px;">15s</div>
+                <button id="rtmOfferSubmit" class="primary-btn" style="width:100%;">Submit RTM</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rtmBuyerChoiceOverlay" class="rules-overlay hidden">
+        <div class="glass rules-card" style="max-width: 380px; padding: 24px; text-align: center;">
+            <h3 style="margin:0 0 8px 0; color:var(--gold);">🔄 RTM Match</h3>
+            <p id="rtmBuyerChoiceText" style="margin:0 0 16px 0; font-size:1rem; color:#f8fafc;"></p>
+            <div style="display:flex; gap:12px; justify-content:center;">
+                <button id="rtmBuyerYes" class="primary-btn">Yes, keep at this price</button>
+                <button id="rtmBuyerNo" class="secondary-btn">No</button>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <section id="godPanel" class="screen hidden god-panel-screen">
+        <div class="glass god-panel-card">
+            <div style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; color:#ef4444; font-size:1.2rem;">GOD MODE</h2>
+                <button onclick="window.location.reload()" class="secondary-btn" style="padding:5px 10px; font-size:0.8rem;">Exit</button>
+            </div>
+            <div id="godLogin">
+                <p style="color:#aaa; font-size:0.9rem;">Enter the Room Code you want to manipulate:</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <input id="godTargetInput" placeholder="Room Code" style="text-transform:uppercase; flex:1; min-width:120px;">
+                    <button type="button" id="godAccessBtn" class="primary-btn" style="background:#ef4444;">Access</button>
+                </div>
+                <div id="godRoomNotFound" class="hidden" style="margin-top:12px; padding:10px 14px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; color:#f87171; font-weight:600;">Room not found</div>
+            </div>
+            <div id="godContent" class="hidden" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+                <div style="margin-bottom:8px;">
+                    <input id="godSearchInput" type="text" placeholder="Search players..." style="width:100%; padding:8px 12px; background:rgba(0,0,0,0.3); border:1px solid #333; border-radius:8px; color:#fff; font-size:0.9rem;">
+                </div>
+                <div class="god-header" style="display:flex; justify-content:space-between; color:#666; font-size:0.75rem; padding-bottom:5px;">
+                    <span>PLAYER</span> <span>ASSIGN TO</span>
+                </div>
+                <div id="godPlayerList" style="flex:1; overflow-y:auto; padding-right:5px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Command Center Tabs
+        function switchCcTab(tabName) {
+            document.querySelectorAll('.cc-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+            document.querySelectorAll('.cc-view').forEach(panel => panel.classList.add('hidden'));
+            const target = document.getElementById(`view-${tabName}`);
+            if (target) target.classList.remove('hidden');
+        }
+        function switchFeedMode(mode) {
+            document.querySelectorAll('.sub-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.feed-mode-container').forEach(container => container.classList.remove('active'));
+            document.getElementById(`mode-${mode}`).classList.add('active');
+        }
+        let isMaximized = false;
+        let isCollapsed = false;
+        function toggleMaximize() {
+            const cmdCenter = document.getElementById('commandCenter');
+            isMaximized = !isMaximized;
+            cmdCenter.classList.toggle('maximized', isMaximized);
+        }
+        function toggleCcExpand() {
+            const cmdCenter = document.getElementById('commandCenter');
+            isCollapsed = !isCollapsed;
+            cmdCenter.classList.toggle('collapsed', isCollapsed);
+            document.getElementById('expandBtn').textContent = isCollapsed ? '□' : '−';
+        }
+    </script>
+<div id="customPopup" class="cp-overlay hidden">
+    <div class="cp-card">
+        <div class="cp-border-gradient"></div>
+        
+        <div class="cp-inner">
+            <div class="cp-icon" id="cpIcon">⚠️</div>
+            <h3 class="cp-title" id="cpTitle">Confirm Action</h3>
+            <p class="cp-msg" id="cpMessage">Are you sure you want to proceed?</p>
+            
+            <div class="cp-actions">
+                <button id="cpBtnCancel" class="cp-btn cp-btn-cancel">CANCEL</button>
+                <button id="cpBtnOk" class="cp-btn cp-btn-ok">CONFIRM</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="hostQuickSettingsOverlay" class="hqs-overlay hidden">
+    <div class="hqs-card glass">
+        <div class="hqs-head">
+            <h3>Host Quick Settings</h3>
+            <button type="button" class="hqs-close" onclick="closeHostQuickSettings()">✕</button>
+        </div>
+        <div class="hqs-body">
+            <label class="hqs-label" for="hqsTimer">Auction timer</label>
+            <div class="hqs-chip-row" id="hqsTimerChips" role="group" aria-label="Auction timer">
+                <button type="button" class="hqs-chip" data-value="5" onclick="setHqsTimer(5)">5s</button>
+                <button type="button" class="hqs-chip" data-value="7" onclick="setHqsTimer(7)">7s</button>
+                <button type="button" class="hqs-chip" data-value="10" onclick="setHqsTimer(10)">10s</button>
+            </div>
+            <input id="hqsTimer" type="hidden" value="10" />
+
+            <label class="hqs-label" for="hqsMinSquad">Minimum squad size</label>
+            <div class="hqs-chip-row" id="hqsMinSquadChips" role="group" aria-label="Minimum squad size">
+                <button type="button" class="hqs-chip" data-value="12" onclick="setHqsMinSquad(12)">12</button>
+                <button type="button" class="hqs-chip" data-value="15" onclick="setHqsMinSquad(15)">15</button>
+                <button type="button" class="hqs-chip" data-value="18" onclick="setHqsMinSquad(18)">18</button>
+            </div>
+            <input id="hqsMinSquad" type="hidden" value="18" />
+        </div>
+        <div class="hqs-actions">
+            <button type="button" class="secondary-btn" onclick="closeHostQuickSettings()">Cancel</button>
+            <button type="button" class="primary-btn" onclick="saveHostQuickSettings()">Save</button>
+        </div>
+    </div>
+</div>
+
+    <footer class="app-footer">
+        <div class="footer-content">
+            <span>Made with <span style="color:#e11d48;">❤️</span> by <b>PRS</b></span>
+            <span class="separator">•</span>
+            <div class="social-links">
+                <!-- Discord -->
+                <a href="https://discord.gg/gpACU3Gdg" target="_blank" rel="noopener" class="footer-social" title="Discord" aria-label="Discord"><img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="Discord"/></a>
+                <a href="https://whatsapp.com/channel/0029Vb7Z5EABKfi1oKCpTB3j" target="_blank" rel="noopener" class="footer-social" title="WhatsApp" aria-label="WhatsApp"><img width="18" height="18" src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp--v1.png" alt="WhatsApp"/></a>
+                <a href="https://github.com/prishnasamanta/" target="_blank" rel="noopener" class="footer-social" title="GitHub" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+                <a href="https://t.me/+89xATBNX_aI4YmY1" target="_blank" rel="noopener" class="footer-social" title="Telegram" aria-label="Telegram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
+             <!--   <a href="#" target="_blank" rel="noopener" class="footer-social" title="Twitter / X" aria-label="Twitter"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a> -->
+                <a href="https://www.instagram.com/prs_prishna72?igsh=MWNpMW5lenhtd2h1dA==" target="_blank" rel="noopener" class="footer-social" title="Instagram" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+                <a href="https://www.facebook.com/pri.shi.773" target="_blank" rel="noopener" class="footer-social" title="Facebook" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
+    <script src="/firebase-web-config.js"></script>
+    <script src="/firebase-auth.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/client.js"></script>
+    <script type="module" src="/assets/landing.js"></script>
+</body>
+</html>
+

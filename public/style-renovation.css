@@ -1,0 +1,384 @@
+/* === UI RENOVATION: team select, leaderboard, summary, auth history === */
+
+#teamSelectionMain.team-select-mode,
+#auctionUI #teamSelectionMain.glass.team-select-mode {
+    border: 1px solid rgba(52, 211, 153, 0.45) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.08), 0 12px 40px rgba(0, 0, 0, 0.35) !important;
+    padding: 10px 12px !important;
+    background: rgba(15, 23, 42, 0.35) !important;
+    backdrop-filter: blur(12px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+}
+
+#embeddedTeamList {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 8px !important;
+    gap: 8px 6px !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+#embeddedTeamList .team-btn {
+    width: 100% !important;
+    max-width: 68px !important;
+    min-height: 58px !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    padding: 5px 4px !important;
+    gap: 2px !important;
+    border-radius: 10px !important;
+}
+
+@media (max-width: 520px) {
+    #embeddedTeamList {
+        gap: 8px 5px !important;
+        padding: 8px 6px !important;
+    }
+    #embeddedTeamList .team-btn {
+        max-width: 62px !important;
+        min-height: 54px !important;
+        font-size: 0.62rem !important;
+    }
+    #embeddedTeamList .team-btn .team-code {
+        font-size: 0.62rem !important;
+    }
+    #embeddedTeamList .team-btn .team-balance {
+        font-size: 0.48rem !important;
+    }
+}
+
+/* Leaderboard */
+.lb-screen {
+    background: transparent;
+}
+
+.lb-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lb-back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 23, 42, 0.6);
+    color: #e2e8f0;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.lb-topbar-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.lb-topbar-main {
+    display: block;
+    font-family: var(--font-display, "Syne", sans-serif);
+    font-weight: 700;
+    font-size: 1rem;
+    color: #f8fafc;
+}
+
+.lb-topbar-sub {
+    display: block;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    letter-spacing: 0.06em;
+}
+
+#leaderboard .lb-container {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 16px;
+    height: calc(100vh - 72px);
+}
+
+#leaderboard .lb-scroll-wrapper {
+    border-radius: 16px;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    background: linear-gradient(165deg, rgba(15, 23, 42, 0.85), rgba(2, 6, 23, 0.9));
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+#leaderboard .lb-table thead th {
+    background: rgba(15, 23, 42, 0.95);
+    color: #34d399;
+    font-size: 0.68rem;
+    padding: 12px 14px;
+}
+
+#leaderboard .lb-table tbody td {
+    padding: 12px 14px;
+}
+
+.lb-team-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lb-team-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.lb-rank--gold { color: #facc15; }
+.lb-rank--silver { color: #e2e8f0; }
+.lb-rank--bronze { color: #fb923c; }
+
+.lb-view-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    background: rgba(52, 211, 153, 0.12);
+    color: #6ee7b7;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+@media (max-width: 640px) {
+    #leaderboard .lb-table thead {
+        display: none;
+    }
+    #leaderboard .lb-table,
+    #leaderboard .lb-table tbody,
+    #leaderboard .lb-table tr,
+    #leaderboard .lb-table td {
+        display: block;
+        width: 100%;
+    }
+    #leaderboard .lb-table tr.lb-row {
+        margin-bottom: 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(30, 41, 59, 0.5);
+        padding: 10px 12px;
+    }
+    #leaderboard .lb-table td {
+        border: none;
+        padding: 4px 0;
+        text-align: left !important;
+    }
+    #leaderboard .lb-table td::before {
+        content: attr(data-label);
+        display: inline-block;
+        min-width: 4.5rem;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-right: 8px;
+    }
+    #leaderboard .lb-view-cell {
+        margin-top: 6px;
+    }
+}
+
+/* Post-auction summary */
+.summary-screen {
+    background: transparent;
+}
+
+.summary-page-body {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 88px 16px 32px;
+}
+
+.summary-lead {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin: 0 0 20px;
+}
+
+.summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#postAuctionSummary .summary-item {
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.55);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#postAuctionSummary .summary-item:hover {
+    border-color: rgba(52, 211, 153, 0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+#postAuctionSummary .summary-header {
+    padding: 14px 16px;
+    cursor: pointer;
+}
+
+.summary-rules-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 23, 42, 0.5);
+    color: #e2e8f0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.summary-rules-card {
+    max-width: 480px;
+    width: calc(100% - 24px);
+    margin: 10vh auto;
+}
+
+.summary-rules-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.summary-rules-head h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.summary-rules-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.summary-rules-body {
+    padding: 16px;
+    max-height: 65vh;
+    overflow-y: auto;
+}
+
+.summary-rules-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+/* Auth Google history */
+.auth-see-history-btn {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.auth-google-sync-btn--linked {
+    border-color: rgba(52, 211, 153, 0.45) !important;
+    color: #6ee7b7 !important;
+}
+
+.auth-card.auth-history-active .auth-card-main,
+.auth-card.auth-public-browse-active .auth-card-main {
+    display: none;
+}
+
+.auth-game-history {
+    padding: 12px 0 0;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-game-history-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: min(52vh, 380px);
+}
+
+.auth-history-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.5);
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.auth-history-row:hover {
+    border-color: rgba(52, 211, 153, 0.4);
+    background: rgba(52, 211, 153, 0.08);
+}
+
+.auth-history-code {
+    font-family: var(--font-display, "Syne", sans-serif);
+    font-weight: 800;
+    font-size: 1rem;
+    color: #34d399;
+    letter-spacing: 0.08em;
+}
+
+.auth-history-meta {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+}
+
+.auth-history-sub {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.auth-game-history-user {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.auth-history-loading,
+.auth-history-error {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    padding: 16px;
+}
+
+.room-tile .r-code {
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #34d399;
+    font-size: 0.85rem;
+}
+
+.room-tile .r-host {
+    display: block;
+    font-size: 0.7rem;
+    color: #94a3b8;
+}

@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-pitch-950 text-slate-100 antialiased font-sans;
+  }
+}
+
+/* ── Hero tile (preserved — uses global .glass + .text-gradient from style.css) ── */
+.lp-hero-tile {
+  animation: lp-pulse-glow 4s ease-in-out infinite;
+}
+
+/* ── New landing theme tokens ── */
+.lp-page {
+  --lp-turf: #34d399;
+  --lp-turf-dim: #10b981;
+  --lp-gold: #fbbf24;
+  --lp-surface: rgba(15, 26, 22, 0.72);
+  --lp-border: rgba(52, 211, 153, 0.14);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.lp-display {
+  font-family: Syne, system-ui, sans-serif;
+}
+
+.lp-gradient-text {
+  background: linear-gradient(135deg, #6ee7b7 0%, #34d399 40%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lp-gradient-text-gold {
+  background: linear-gradient(90deg, #fde68a, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Tape */
+@keyframes lp-tape-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.lp-tape-v2 .lp-tape-track {
+  display: flex;
+  gap: 3rem;
+  width: max-content;
+  animation: lp-tape-scroll 28s linear infinite;
+  padding-left: 100%;
+}
+
+.lp-tape-v2:hover .lp-tape-track {
+  animation-play-state: paused;
+}
+
+/* Scroll reveal */
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  filter: blur(6px);
+  transition:
+    opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.85s ease;
+  will-change: opacity, transform, filter;
+}
+
+.lp-reveal--visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* Section surfaces */
+.lp-glass-panel {
+  background: linear-gradient(145deg, rgba(15, 26, 22, 0.85), rgba(5, 10, 8, 0.92));
+  border: 1px solid var(--lp-border);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--tw-shadow-card, 0 24px 80px rgba(0, 0, 0, 0.4));
+}
+
+.lp-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+/* Feature card hover */
+.lp-feature-card {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.35s;
+}
+
+.lp-feature-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(52, 211, 153, 0.45);
+  box-shadow: 0 20px 50px rgba(52, 211, 153, 0.12);
+}
+
+/* FAQ */
+.lp-faq-v2 {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 18, 16, 0.6);
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.lp-faq-v2[data-open='true'] {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(16, 40, 32, 0.5);
+}
+
+/* Player cards marquee (preserved animation name) */
+@keyframes lp-cards-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.lp-cards-track {
+  display: flex;
+  gap: 1.5rem;
+  width: max-content;
+  animation: lp-cards-scroll 34s linear infinite;
+}
+
+.lp-cards-track:hover {
+  animation-play-state: paused;
+}
+
+/* Grid noise overlay */
+.lp-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+  .lp-tape-v2 .lp-tape-track,
+  .lp-cards-track {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .lp-hero-tile {
+    padding: 1.25rem 1rem;
+    margin-top: 1.5rem;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050a08;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #10b981, #34d399);
+  border-radius: 9999px;
+}
