@@ -1145,7 +1145,7 @@ socket.on("roomCreated", code => {
 });
 /* ================= ROOM STATE LOGIC ================= */
 /* ================= ROOM STATE LOGIC (FIXED) ================= */
-socket.on("joinedRoom", data => { setTimeout(renderGeneralTab, 100); }); socket.on("_joinedRoom_old", (data) => {
+socket.on("joinedRoom", (data) => {
     console.log("Room Data:", data);
     unsoldList = [];
 
@@ -1507,6 +1507,14 @@ socket.on("identityShowCode", ({ code, name }) => {
 // 2. NEW DEVICE: Asks for Input (3-digit code verification modal)
 socket.on("identityInputRequired", ({ roomCode, name }) => {
     toggleCustomPopup(false);
+    
+    // Reset the "Joining..." button since we are paused for verification
+    const joinBtn = document.getElementById("joinBtn");
+    if (joinBtn) {
+        joinBtn.innerText = "GO";
+        joinBtn.disabled = false;
+    }
+
     const overlay = document.getElementById("identityVerifyOverlay");
     if (!overlay) return;
     overlay.classList.remove("hidden");
@@ -1574,6 +1582,11 @@ socket.on("identityDismiss", () => {
     if (overlay) {
         overlay.classList.add("hidden");
         overlay.innerHTML = "";
+    }
+    const joinBtn = document.getElementById("joinBtn");
+    if (joinBtn) {
+        joinBtn.innerText = "GO";
+        joinBtn.disabled = false;
     }
 });
 
@@ -3534,7 +3547,6 @@ function renderGeneralTab() {
                 <div class="gt-rmini" id="pop_viewRtmBox" style="display:none;">${svgIco.rtm}<div><b id="pop_viewRtm">---</b><span> RTM</span></div></div>
             </div>
         </div>
-        <div class="mobile-bottom-xi-bar mobile-only">${xiPillsHtml}</div>
     `;
 
     // 2. Host Settings Section (Embedded in General Tab)
@@ -3588,6 +3600,9 @@ function renderGeneralTab() {
     // 3. Security Inbox
     let inboxHtml = "";
     if (activeIdentityCodeAlert) {
+        const elapsed = Math.floor((Date.now() - activeIdentityCodeAlert.time) / 1000);
+        const remaining = Math.max(0, 20 - elapsed);
+        
         inboxHtml = `
             <div class="gt-inbox-card has-alert">
                 <div class="gt-inbox-head">${svgIco.mail}<span>Security Inbox • <span style="color:#ef4444;font-weight:800;">1 Alert</span></span></div>
@@ -3595,9 +3610,26 @@ function renderGeneralTab() {
                     <div class="gt-alert-msg">Device trying to join as <strong>"${esc(activeIdentityCodeAlert.name)}"</strong></div>
                     <div class="gt-alert-sub">Share code with joining device:</div>
                     <div class="gt-alert-code-box"><span class="gt-alert-code">${esc(activeIdentityCodeAlert.code)}</span></div>
+                    <div style="text-align:center; color:#ef4444; font-size:0.85rem; font-weight:600; margin-top: 8px;">Time remaining: <span id="hostVerifyTimer">${remaining}s</span></div>
                 </div>
             </div>
         `;
+        
+        if (!window.hostVerifyInterval) {
+            window.hostVerifyInterval = setInterval(() => {
+                if(!activeIdentityCodeAlert) {
+                    clearInterval(window.hostVerifyInterval);
+                    window.hostVerifyInterval = null;
+                    return;
+                }
+                const el = document.getElementById("hostVerifyTimer");
+                if (el) {
+                    const elps = Math.floor((Date.now() - activeIdentityCodeAlert.time) / 1000);
+                    const rem = Math.max(0, 20 - elps);
+                    el.innerText = rem + "s";
+                }
+            }, 1000);
+        }
     } else {
         inboxHtml = `
             <div class="gt-inbox-card">
