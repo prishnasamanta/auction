@@ -709,6 +709,10 @@ function createPublicRoomTile(r, type) {
         if (codeInput) codeInput.value = r.id;
         closePublicRoomsBrowse();
         if (typeof switchAuthTab === "function") switchAuthTab("join");
+        
+        // Auto-join
+        const joinBtn = document.getElementById("joinBtn");
+        if (joinBtn) joinBtn.click();
     };
     return div;
 }
@@ -826,37 +830,73 @@ function getDeviceId() {
 
 function updateAuthGoogleButtons() {
     const btn = document.getElementById("authGoogleBtn");
-    const label = document.getElementById("authGoogleBtnLabel");
-    const histBtn = document.getElementById("authSeeHistoryBtn");
-    const iconEl = btn ? btn.querySelector(".auth-google-icon") : null;
+    const profileBtn = document.getElementById("authProfileBtn");
+    const profileImg = document.getElementById("authProfileImg");
+    const sidebarProfileImg = document.getElementById("sidebarProfileImg");
+    
+    // Check local storage for name
+    const savedName = localStorage.getItem("ipl_user") || sessionStorage.getItem("ipl_user") || "";
+    const sidebarNameInput = document.getElementById("sidebarNameInput");
+    if (sidebarNameInput) sidebarNameInput.value = savedName;
 
     if (iplGoogleLinked && iplGoogleProfile) {
-        const displayName = iplGoogleProfile.name || iplGoogleProfile.email || "Google Account";
-        if (label) label.textContent = `Connected as ${displayName}`;
-        if (btn) {
-            btn.classList.add("auth-google-sync-btn--linked");
-            btn.title = `Connected as ${displayName} (${iplGoogleProfile.email || ""}) – Click to view game history or switch`;
-        }
-        if (iconEl && iplGoogleProfile.photo) {
-            iconEl.style.backgroundImage = `url('${iplGoogleProfile.photo}')`;
-            iconEl.style.backgroundSize = "cover";
-            iconEl.style.borderRadius = "50%";
-        }
-        if (histBtn) histBtn.classList.remove("hidden");
+        if (btn) btn.classList.add("hidden");
+        if (profileBtn) profileBtn.classList.remove("hidden");
+        
+        const photoUrl = iplGoogleProfile.photo || "https://img.icons8.com/color/48/000000/google-logo.png";
+        if (profileImg) profileImg.src = photoUrl;
+        if (sidebarProfileImg) sidebarProfileImg.src = photoUrl;
     } else {
-        if (label) label.textContent = "Add Google to sync";
-        if (btn) {
-            btn.classList.remove("auth-google-sync-btn--linked");
-            btn.title = "Sign in with Google to save your auction history";
-        }
-        if (iconEl) {
-            iconEl.style.backgroundImage = "";
-            iconEl.style.backgroundSize = "";
-            iconEl.style.borderRadius = "";
-        }
-        if (histBtn) histBtn.classList.add("hidden");
+        if (btn) btn.classList.remove("hidden");
+        if (profileBtn) profileBtn.classList.add("hidden");
     }
 }
+
+// Sidebar Logic
+window.openProfileSidebar = function() {
+    const sidebar = document.getElementById("profileSidebar");
+    if (sidebar) sidebar.classList.remove("hidden");
+    // Trigger reflow for animation
+    void sidebar.offsetWidth;
+    if (sidebar) sidebar.classList.add("open");
+};
+
+window.closeProfileSidebar = function() {
+    const sidebar = document.getElementById("profileSidebar");
+    if (sidebar) {
+        sidebar.classList.remove("open");
+        setTimeout(() => { sidebar.classList.add("hidden"); }, 300);
+    }
+};
+
+window.saveSidebarName = function() {
+    const input = document.getElementById("sidebarNameInput");
+    if (input) {
+        const newName = input.value.trim();
+        if (newName) {
+            localStorage.setItem("ipl_user", newName);
+            sessionStorage.setItem("ipl_user", newName);
+            if (typeof showPopup === "function") {
+                showPopup("Display name updated! It will be used in your next game.", "NAME SAVED", "✅");
+            }
+        }
+    }
+};
+
+window.confirmLogout = function() {
+    const modal = document.getElementById("logoutConfirmModal");
+    if (modal) modal.classList.remove("hidden");
+};
+
+window.performLogout = function() {
+    if (typeof authGoogleLogout === "function") {
+        authGoogleLogout().then(() => {
+            localStorage.removeItem("ipl_user");
+            sessionStorage.removeItem("ipl_user");
+            window.location.reload();
+        });
+    }
+};
 
 async function refreshAuthGoogleState() {
     const u = window.iplFirebase && window.iplFirebase.user;

@@ -154,15 +154,62 @@
             <span class="auth-topbar-title">IPL AUCTION</span>
         </div>
         <div id="authAccountBar" class="auth-account-bar">
+            <!-- Sync Button (Shown when not logged in) -->
             <button type="button" id="authGoogleBtn" class="auth-google-sync-btn secondary-btn" onclick="authGoogleSync()" title="Sign in with Google to save your auction history">
                 <span class="auth-google-icon" aria-hidden="true">G</span>
                 <span id="authGoogleBtnLabel">Google Sync</span>
             </button>
+            
+            <!-- Profile Avatar (Shown when logged in) -->
+            <button type="button" id="authProfileBtn" class="auth-profile-btn hidden" onclick="openProfileSidebar()">
+                <img id="authProfileImg" src="" alt="Profile" class="auth-profile-img">
+            </button>
+
             <button type="button" id="authSeeHistoryBtn" class="auth-inline-history-btn hidden" onclick="openAuthGameHistory()" title="View your games history">
                 📜 History
             </button>
         </div>
     </header>
+
+    <!-- Profile Sidebar -->
+    <div id="profileSidebar" class="profile-sidebar hidden">
+        <div class="sidebar-header">
+            <h3>Your Profile</h3>
+            <button class="sidebar-close-btn" onclick="closeProfileSidebar()">✕</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="sidebar-avatar-wrapper">
+                <img id="sidebarProfileImg" src="" alt="Profile" class="sidebar-avatar">
+            </div>
+            <div class="sidebar-field">
+                <label>Display Name</label>
+                <div class="sidebar-name-row">
+                    <input type="text" id="sidebarNameInput" class="auth-input" maxlength="20">
+                    <button type="button" class="primary-btn sidebar-save-btn" onclick="saveSidebarName()">Save</button>
+                </div>
+            </div>
+            <div class="sidebar-actions">
+                <button type="button" class="secondary-btn sidebar-action-btn" onclick="openAuthGameHistory(); closeProfileSidebar();">
+                    📜 Your History
+                </button>
+                <button type="button" class="danger-btn sidebar-action-btn" onclick="confirmLogout()">
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutConfirmModal" class="auth-modal hidden">
+        <div class="auth-modal-content">
+            <h3>Log Out?</h3>
+            <p>Are you sure you want to log out from Google?</p>
+            <div class="auth-modal-actions">
+                <button type="button" class="secondary-btn" onclick="document.getElementById('logoutConfirmModal').classList.add('hidden')">Cancel</button>
+                <button type="button" class="danger-btn" onclick="performLogout()">Yes, Log Out</button>
+            </div>
+        </div>
+    </div>
 
     <div class="auth-page">
     <div class="auth-wrapper">
@@ -188,12 +235,8 @@
                         <input id="code" class="auth-input auth-input-code" placeholder="ABCDE" maxlength="5" autocomplete="off">
                         <button type="button" id="joinBtn" class="primary-btn auth-go-btn">Go</button>
                     </div>
-
-                    <div class="auth-divider"><span>Public rooms</span></div>
-                    <p id="publicRoomsEmpty" class="auth-public-rooms-empty">No active rooms right now.</p>
-                    <div id="publicRoomsPreview" class="auth-public-rooms-preview"></div>
-                    <button type="button" id="publicRoomsToggle" class="auth-public-rooms-btn hidden" onclick="togglePublicRoomsList()">
-                        View all active rooms (<span id="publicRoomsCount">0</span>)
+                    <button type="button" id="publicRoomsToggle" class="secondary-btn auth-public-rooms-btn compact-public-rooms" onclick="openPublicRoomsBrowse()">
+                        <span aria-hidden="true">🌐</span> Browse Public Rooms (<span id="publicRoomsCount">0</span>)
                     </button>
                 </div>
 
