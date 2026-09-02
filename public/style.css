@@ -9644,10 +9644,12 @@ body {
 #embeddedSquadView .squad-header-compact .xi-stat-badge {
     flex: 0 0 auto !important;
     white-space: nowrap;
-    padding: 2px 5px !important;
-    border-radius: 4px !important;
+    padding: 2px 8px !important;
+    border-radius: 9999px !important;
     font-size: 0.62rem !important;
     line-height: 1.15 !important;
+    height: 20px !important;
+    min-height: 20px !important;
     background: rgba(0, 0, 0, 0.4) !important;
     border: 1px solid rgba(148, 163, 184, 0.35) !important;
 }
@@ -11758,9 +11760,11 @@ section#auth.theme-app {
 .chat-msg.log-message .chat-text.log-text { font-size: 0.78rem !important; line-height: 1.25 !important; }
 
 #embeddedSquadView .xi-stat-badge {
-    border-radius: 6px !important;
-    padding: 2px 6px !important;
+    border-radius: 9999px !important;
+    padding: 2px 8px !important;
     font-size: 0.62rem !important;
+    height: 20px !important;
+    min-height: 20px !important;
 }
 #embeddedSquadView .squad-xi-header-row--xi {
     flex-wrap: nowrap !important; gap: 4px !important; min-height: 28px !important;
@@ -16917,4 +16921,63 @@ button[disabled] {
     background: rgba(168,85,247,0.14) !important;
     border-color: rgba(168,85,247,0.45) !important;
     color: #c084fc !important;
+}
+
+/* ============================================================ */
+/* OVERHAUL v5 FIX: Squad Watermark, Empty State, Badge Shape    */
+/* ============================================================ */
+
+/* Squad watermark should NOT push content down or create empty space */
+#embeddedSquadView #squad-display-container {
+    min-height: 0 !important;
+    overflow: visible !important;
+}
+
+/* When squad is empty, don't let view-squad-list flex-grow into a huge box */
+#embeddedSquadView #view-squad-list:empty,
+#embeddedSquadView #view-squad-list:has(.sq-empty-squad) {
+    flex: 0 0 auto !important;
+    min-height: 50px !important;
+    height: auto !important;
+}
+
+/* Position empty message clearly at top, not buried below watermark */
+#embeddedSquadView .sq-empty-squad {
+    position: relative !important;
+    z-index: 2 !important;
+    text-align: center !important;
+    padding: 30px 12px !important;
+    color: #94a3b8 !important;
+    font-style: italic !important;
+    font-size: 0.82rem !important;
+}
+
+/* Squad watermark: small, non-intrusive, fixed behind header only */
+#embeddedSquadView .squad-watermark,
+#squad-display-container .squad-watermark {
+    position: absolute !important;
+    top: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 120px !important;
+    height: 120px !important;
+    background-size: contain !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    opacity: 0.07 !important;
+    z-index: 0 !important;
+    pointer-events: none !important;
+}
+
+/* FORCE OBROUND (border-radius: 9999px) on ALL xi-stat-badge everywhere */
+#embeddedSquadView .xi-stat-badge,
+#embeddedSquadView .squad-header-compact .xi-stat-badge,
+#embeddedSquadView .inline-xi-stats .xi-stat-badge,
+#embeddedSquadView #inlineXiHeaderStats .xi-stat-badge,
+#auctionUI .xi-stat-badge,
+.xi-stat-badge.obround {
+    border-radius: 9999px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    padding: 2px 8px !important;
 }

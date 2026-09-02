@@ -3469,9 +3469,9 @@ function renderGeneralTab() {
     `;
 
     // 2. Host Settings Section (Embedded in General Tab)
-    const isHost = !!isAdmin;
+    const isHostUser = !!isHost;
     let hostHtml = "";
-    if (isHost) {
+    if (isHostUser) {
         const curTimer = (activeRules && activeRules.bidTimer != null) ? activeRules.bidTimer : 10;
         const curMinSquad = (activeRules && activeRules.minSquadSize != null) ? activeRules.minSquadSize : 18;
         hostHtml = `
@@ -3510,7 +3510,7 @@ function renderGeneralTab() {
                 <div class="gt-card-head">${svgIco.gear}<span>Host Status</span></div>
                 <div class="gt-host-body-spectator">
                     <span>Host: <strong>${esc(activeRules?.hostName || 'Host')}</strong></span>
-                    <span class="gt-status-badge">${auctionStarted ? 'Auction Live' : 'Lobby Waiting'}</span>
+                    <span class="gt-status-badge">${gameStarted ? 'Auction Live' : 'Lobby Waiting'}</span>
                 </div>
             </div>
         `;
