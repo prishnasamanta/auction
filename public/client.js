@@ -1108,7 +1108,7 @@ socket.on("roomCreated", code => {
 });
 /* ================= ROOM STATE LOGIC ================= */
 /* ================= ROOM STATE LOGIC (FIXED) ================= */
-socket.on("joinedRoom", (data) => {
+socket.on("joinedRoom", data => { setTimeout(renderGeneralTab, 100); }); socket.on("_joinedRoom_old", (data) => {
     console.log("Room Data:", data);
     unsoldList = [];
 
@@ -1351,7 +1351,7 @@ window.switchCcTab = function(tabName) {
         socket.emit("getSquads");
     }
     if (tabName === 'sets') {
-        if (typeof renderRulesPanel === 'function') renderRulesPanel();
+        renderGeneralTab();
     }
 };
 
@@ -3350,7 +3350,6 @@ window.viewEmbeddedSquad = function(team) {
                         <button type="button" onclick="downloadSquadImage()" class="squad-dl-btn" title="Download">↓</button>
                     </div>
                 </div>
-            </div>
                 ` : `
                 <div class="squad-xi-header-row squad-xi-header-row--xi">
                     <span id="inlineXiHeaderStats" class="inline-xi-stats header-inline xi-stats-bar xi-stats-bar--full">${getInlineXIStatsHtml(team)}</span>

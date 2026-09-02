@@ -16872,3 +16872,49 @@ button[disabled] {
 .sel-player-meta { display: flex; flex-direction: column; flex: 1; min-width: 0; text-align: left; }
 .sel-name { font-size: 0.75rem; font-weight: 700; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sel-rating { font-size: 0.62rem; color: #fbbf24; font-weight: 700; }
+
+
+/* ============================================================ */
+/* FORCE TRUE OBROUND (STADIUM / CAPSULE) SHAPE FOR BADGES      */
+/* ============================================================ */
+
+.xi-stat-badge,
+.xi-pill,
+.inline-stat-chip,
+.xi-stat-badge.obround,
+.xi-stat-item .xi-stat-badge,
+#inlineXiHeaderStats .xi-stat-badge,
+#view-squad-list .inline-stat-chip,
+#panel-sets .gt-xi-chip,
+#panel-sets .gt-room-chip,
+#panel-sets .gt-hchip {
+    border-radius: 9999px !important;
+    padding: 3px 10px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+    border-width: 1px !important;
+    border-style: solid !important;
+}
+
+.xi-stat-badge.ok {
+    background: rgba(34,197,94,0.14) !important;
+    border-color: rgba(34,197,94,0.45) !important;
+    color: #4ade80 !important;
+}
+
+.xi-stat-badge.bad {
+    background: rgba(239,68,68,0.14) !important;
+    border-color: rgba(239,68,68,0.45) !important;
+    color: #f87171 !important;
+}
+
+.xi-stat-badge.bought-count-badge {
+    background: rgba(168,85,247,0.14) !important;
+    border-color: rgba(168,85,247,0.45) !important;
+    color: #c084fc !important;
+}
