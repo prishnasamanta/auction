@@ -293,6 +293,14 @@ app.get('/room', (req, res) => {
     res.redirect('/');
 });
 
+// Alias routes for direct access to summary & leaderboard
+app.get('/summary/:code', (req, res) => {
+    res.redirect(`/room/${req.params.code}/summary`);
+});
+app.get('/leaderboard/:code', (req, res) => {
+    res.redirect(`/room/${req.params.code}/leaderboard`);
+});
+
 app.get('/room/:roomCode*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

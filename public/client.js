@@ -1330,6 +1330,17 @@ window.switchCcTab = function(tabName) {
     // B. Show View
     document.querySelectorAll('.cc-view').forEach(v => v.classList.add('hidden'));
     document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+    // Clear notification badges when switching to respective tabs
+    if (tabName === 'feed') {
+        const feedBadge = document.getElementById('feedTabBadge');
+        if (feedBadge) feedBadge.classList.add('hidden');
+    }
+    if (tabName === 'sets') {
+        const genBadge = document.getElementById('generalTabBadge');
+        if (genBadge) genBadge.classList.add('hidden');
+    }
+
     // C. Trigger Data Refresh if needed
     if (tabName === 'squads') {
         // Always prefer my current team when opening Squads tab
@@ -1431,16 +1442,28 @@ socket.on("identityChallenge", ({ code, name, roomCode, expiresIn }) => {
 socket.on("identityPending", ({ roomCode, name }) => {
     showPopup(`Another device is already using the name "${name}".\n\nWaiting for confirmation on that device...`, "VERIFYING IDENTITY", "🔐");
 });
-// 1. OLD DEVICE: Shows the Code
+let activeIdentityCodeAlert = null;
+
+function setIdentityCodeAlert(code, name) {
+    activeIdentityCodeAlert = { code, name, time: Date.now() };
+    const badge = document.getElementById("generalTabBadge");
+    if (badge) badge.classList.remove("hidden");
+    if (typeof renderGeneralTab === "function") renderGeneralTab();
+}
+
+function clearIdentityCodeAlert() {
+    activeIdentityCodeAlert = null;
+    const badge = document.getElementById("generalTabBadge");
+    if (badge) badge.classList.add("hidden");
+    if (typeof renderGeneralTab === "function") renderGeneralTab();
+}
+
+// 1. OLD DEVICE: Shows Red Dot + Notice inside General Tab
 socket.on("identityShowCode", ({ code, name }) => {
-    showPopup(
-        `A new device is trying to join as "${name}".\n\nYour Verification Code:\n\n<span class="id-code-chip">${code}</span>\n\nEnter this on the new device.`, 
-        "SECURITY ALERT", 
-        "🛡️"
-    );
+    setIdentityCodeAlert(code, name);
 });
 
-// 2. NEW DEVICE: Asks for Input
+// 2. NEW DEVICE: Asks for Input (3-digit code verification modal)
 socket.on("identityInputRequired", ({ roomCode, name }) => {
     toggleCustomPopup(false);
     const overlay = document.getElementById("identityVerifyOverlay");
@@ -1483,8 +1506,9 @@ socket.on("identityInputRequired", ({ roomCode, name }) => {
     }
 });
 
-// 3. Close overlay instruction for Old Device
+// 3. Close overlay / Clear notification instruction
 socket.on("identityDismiss", () => {
+    clearIdentityCodeAlert();
     toggleCustomPopup(false);
     const overlay = document.getElementById("identityVerifyOverlay");
     if (overlay) {
@@ -1494,20 +1518,22 @@ socket.on("identityDismiss", () => {
 });
 
 socket.on("identitySuccess", ({ message }) => {
+    clearIdentityCodeAlert();
     showPopup(message || "Verification successful.", "VERIFIED", "✅");
 });
 
 socket.on("identityTakeoverSuccess", ({ by }) => {
+    clearIdentityCodeAlert();
     showPopup(`Another device joined successfully as "${by}".`, "LOGIN TRANSFERRED", "ℹ️");
 });
 
 socket.on("identityFailed", ({ reason }) => {
+    clearIdentityCodeAlert();
     toggleCustomPopup(false);
     let msg = "Identity verification failed.";
     if (reason === "timeout") msg = "Identity verification timed out. Please try again.";
     if (reason === "invalid") msg = "Incorrect code. You cannot join with this name.";
     showPopup(msg, "ACCESS DENIED", "❌", true);
-    // Show popup first, then redirect
     sessionStorage.removeItem("ipl_room");
     setTimeout(() => {
         window.location.href = "/";
@@ -2593,6 +2619,13 @@ socket.on("chatUpdate", d => {
     chat.scrollTop = chat.scrollHeight;
     cleanChatMessages();
     saveChatToSession();
+
+    // Show red dot on Feed tab if not currently active
+    const feedView = document.getElementById('view-feed');
+    if (feedView && feedView.classList.contains('hidden')) {
+        const badge = document.getElementById('feedTabBadge');
+        if (badge) badge.classList.remove('hidden');
+    }
 });
 socket.on("chatReactionUpdate", ({ msgId, reactions }) => {
     const chat = document.getElementById("chat");
@@ -3168,6 +3201,7 @@ window.switchInfoTab = function(tabName) {
     document.getElementById(`tab-${tabName}`).classList.add('active');
     document.getElementById('panel-feed').classList.add('hidden');
     document.getElementById('panel-squads').classList.add('hidden');
+    document.getElementById('panel-sets').classList.add('hidden');
   
     const target = document.getElementById(`panel-${tabName}`);
     if(target) {
@@ -3176,6 +3210,8 @@ window.switchInfoTab = function(tabName) {
     }
     if (tabName === 'squads') {
         renderSquadTabs();
+    } else if (tabName === 'sets') {
+        renderGeneralTab();
     }
 };
 function renderSquadTabs() {
@@ -3185,110 +3221,109 @@ function renderSquadTabs() {
     if (box) box.classList.add("hidden");
     container.classList.remove("hidden");
   
-    const teams = Object.keys(allSquads).sort();
+    // Gather ALL teams in the tournament
+    const teams = Array.from(new Set([
+        ...Object.keys(allSquads || {}),
+        ...Object.keys(TEAM_COLORS || {}),
+        ...((activeRules && activeRules.teams) ? activeRules.teams : [])
+    ])).filter(Boolean).sort();
   
     if (!selectedSquadTeam && myTeam) selectedSquadTeam = myTeam;
     if (!selectedSquadTeam && teams.length > 0) selectedSquadTeam = teams[0];
+    
     container.innerHTML = teams.map(t => {
         const teamColor = TEAM_COLORS[t] || '#facc15';
-        const owner = String(teamOwners[t] || "").trim();
-        const purse = Number(teamPurse[t] || 0);
-        return `<button onclick="viewEmbeddedSquad('${t}')"
-         data-team="${t}"
-         class="h-team-btn"
-         style="--team-color: ${teamColor};">
-         <span class="sqt-logo"><img src="/logos/${t}.png" alt="${t}" onerror="this.style.display='none'"></span>
-         <span class="sqt-team">${t}</span>
-         <span class="sqt-owner ${owner ? "" : "hidden"}">${owner}</span>
-         <span class="sqt-purse">₹${purse.toFixed(2)} Cr</span>
-         </button>`;
+        const owner = String(teamOwners[t] || "").trim() || "Available";
+        const purse = Number(teamPurse[t] != null ? teamPurse[t] : (activeRules?.purse || 120));
+        const squad = allSquads[t] || [];
+        const foreignCount = squad.filter(p => p.foreign).length;
+        const isMyTeam = (myTeam && myTeam === t);
+        return `
+            <div class="team-squad-card ${isMyTeam ? 'is-my-team' : ''}" 
+                 onclick="viewEmbeddedSquad('${t}')"
+                 style="--team-col: ${teamColor};">
+                <div class="tsc-top">
+                    <div class="tsc-logo-wrap">
+                        <img src="/logos/${t}.png" alt="${t}" class="tsc-logo" onerror="this.style.display='none'">
+                        <span class="tsc-code" style="color:${teamColor};">${t}</span>
+                    </div>
+                    <div class="tsc-badge ${isMyTeam ? 'tsc-my-badge' : ''}">${isMyTeam ? '⭐ MY TEAM' : (owner !== 'Available' ? '👤 ' + owner : 'Vacant')}</div>
+                </div>
+                <div class="tsc-bottom">
+                    <div class="tsc-stat">
+                        <span class="tsc-lbl">Purse Left</span>
+                        <span class="tsc-val tsc-purse">₹${purse.toFixed(2)} Cr</span>
+                    </div>
+                    <div class="tsc-stat">
+                        <span class="tsc-lbl">Squad</span>
+                        <span class="tsc-val">${squad.length} <small style="color:#94a3b8;">(${foreignCount} ✈️)</small></span>
+                    </div>
+                </div>
+            </div>
+        `;
     }).join("");
 }
 /* =========================================
    2. INITIALIZATION LOGIC
-   (Creates the buttons inside your empty HTML div)
    ========================================= */
 function initSquadTabs() {
-    const tabContainer = document.getElementById('squadTabList');
-    if (!tabContainer) return; // Safety check
-    tabContainer.innerHTML = ''; // Clear any existing buttons
-    // Create a button for each team in TEAM_COLORS
-    Object.keys(TEAM_COLORS).forEach(team => {
-        const btn = document.createElement('button');
-        btn.innerText = team;
-        btn.className = 'h-team-btn'; // Class for styling
-      
-        // When clicked, run the view function
-        btn.onclick = () => viewEmbeddedSquad(team);
-      
-        tabContainer.appendChild(btn);
-    });
+    renderSquadTabs();
 }
 /* =========================================
-   3. MAIN VIEW LOGIC
-   (Renders the selected team's details)
+   SQUAD EMBEDDED VIEW & TAB CONTROLS
    ========================================= */
 window.viewEmbeddedSquad = function(team) {
     selectedSquadTeam = team;
     const tabList = document.getElementById("squadTabList");
     if (tabList) tabList.classList.add("hidden");
-    // 1. Tab Logic (no active color highlight for team buttons)
-    // 2. Data
     const box = document.getElementById("embeddedSquadView");
-    if (box) box.classList.remove("hidden");
+    if (!box) return;
+    box.classList.remove("hidden");
+
     const squad = allSquads[team] || [];
-    const purse = teamPurse[team] || 0;
+    const purse = Number(teamPurse[team] != null ? teamPurse[team] : (activeRules?.purse || 120));
     const owner = teamOwners[team] || "Available";
     const foreignCount = squad.filter(p => p.foreign).length;
     const teamColor = TEAM_COLORS[team] || '#fff';
     const isInlineXI = squadInlineModeByTeam[team] === "XI";
-    // 3. Categorize
+
+    // Categorize
     const cat = { WK: [], BAT: [], ALL: [], BOWL: [] };
     squad.forEach(p => {
-        if(cat[p.role]) cat[p.role].push(p);
+        if (cat[p.role]) cat[p.role].push(p);
         else cat.BOWL.push(p);
     });
-    // --- HELPER: Generate "Pro" Player Rows ---
-    const generateProCardHTML = (players) => {
-        return players.map(p => `
-            <div class="pro-player-card" style="border-left-color:${teamColor}">
-                <div class="pp-left">
-                    <span class="pp-name">
-                        ${p.foreign ? '<span class="foreign-icon">✈️</span>' : ''} ${p.name}
-                    </span>
-                </div>
-                <div class="pp-right" style="text-align:right;">
-                    <span class="pp-price">₹${p.price.toFixed(2)}</span>
-                    <span class="pp-rating" style="color:#888; font-size:0.75rem;">⭐${p.rating}</span>
-                </div>
-            </div>
-        `).join('');
-    };
-    // 4. INJECT HTML (Dashboard View with faded logo watermark)
-    const logoUrl = `/logos/${team}.png`;
-    box.innerHTML = `
-        <div id="squad-display-container" style="position:relative; --team-logo: url('${logoUrl}'); --team-color: ${teamColor};">
-            <div class="squad-watermark"></div>
-            <div class="squad-header-compact">
-                <div class="squad-head-top ${isInlineXI ? 'hidden' : ''}">
-                    <button class="squad-back-btn squad-back-inline" onclick="backToSquadTeams()">← Back</button>
-                    <h2 style="color:${teamColor}; margin:0;">${team}</h2>
-                    ${(myTeam && myTeam === team) ? `<button onclick="downloadSquadImage()" class="squad-dl-btn">[⇩]</button>` : ``}
-                </div>
-                <div class="${isInlineXI ? 'hidden' : ''}" style="display:flex; justify-content:space-between; margin-top:4px; color:#94a3b8; font-size:0.8rem;">
-                    <span>Owner: <span style="color:#fff">${owner}</span></span>
-                    <span style="color:#4ade80; font-weight:bold;">₹${purse.toFixed(2)} Cr</span>
-                </div>
-                <div class="squad-xi-header-row ${isInlineXI ? 'squad-xi-header-row--xi' : ''}" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; font-size:0.72rem; line-height:1;">
-                    ${isInlineXI ? '' : `<span style="color:#cbd5e1;">𐀪 : ${squad.length} | <strong>OS: ${foreignCount}</strong>${activeRules.rtmEnabled ? ` | <strong title="RTMs left for this team">RTM: ${(rtmLeftByTeam[team] != null && rtmLeftByTeam[team] !== '') ? rtmLeftByTeam[team] : (activeRules.rtmPerTeam != null ? activeRules.rtmPerTeam : 0)}</strong>` : ''}</span>`}
-                    ${isInlineXI ? `<span id="inlineXiHeaderStats" class="inline-xi-stats header-inline xi-stats-bar xi-stats-bar--full">${getInlineXIStatsHtml(team)}</span>` : ''}
-                    ${(!isInlineXI && myTeam && myTeam === team) ? `<button type="button" class="squad-check-xi-btn" onclick="openPlayingXIFromSquad('${team}')">Check XI</button>` : ''}
-                </div>
-            </div>
-            <div id="view-squad-list" class="compact-list"></div>
-        </div>
 
+    const logoUrl = `/logos/${team}.png`;
+    const rtmVal = (rtmLeftByTeam[team] != null && rtmLeftByTeam[team] !== '') ? rtmLeftByTeam[team] : (activeRules.rtmPerTeam != null ? activeRules.rtmPerTeam : 0);
+
+    box.innerHTML = `
+        <div id="squad-display-container" class="${isInlineXI ? 'in-xi-mode' : ''}" style="position:relative; --team-logo: url('${logoUrl}'); --team-color: ${teamColor};">
+            <div class="squad-watermark"></div>
+            <div class="squad-header-compact ${isInlineXI ? 'squad-header-xi-compact' : ''}">
+                ${!isInlineXI ? `
+                <div class="squad-head-single-row">
+                    <button type="button" class="squad-back-btn squad-back-inline" onclick="backToSquadTeams()">← Back</button>
+                    <div class="squad-head-center">
+                        <span class="squad-team-title" style="color:${teamColor};">${team}</span>
+                        <span class="squad-head-meta">${owner} · ♟${squad.length} OS:${foreignCount}${activeRules.rtmEnabled ? ' RTM:'+rtmVal : ''}</span>
+                    </div>
+                    <div class="squad-head-right-grp">
+                        <span class="sq-purse-lbl">₹${purse.toFixed(2)} Cr</span>
+                        <button type="button" class="squad-check-xi-btn" onclick="openPlayingXIFromSquad('${team}')">Check XI</button>
+                        <button type="button" onclick="downloadSquadImage()" class="squad-dl-btn" title="Download">↓</button>
+                    </div>
+                </div>
+                ` : `
+                <div class="squad-xi-header-row squad-xi-header-row--xi">
+                    <span id="inlineXiHeaderStats" class="inline-xi-stats header-inline xi-stats-bar xi-stats-bar--full">${getInlineXIStatsHtml(team)}</span>
+                </div>
+                `}
+            </div>
+            <div id="view-squad-list" class="compact-list ${isInlineXI ? 'view-squad-list--xi' : ''}"></div>
+        </div>
     `;
+
     // 5. Populate Visible List (or XI inline mode)
     if (squadInlineModeByTeam[team] === "XI") {
         renderInlineSquadXI(team);
@@ -3296,18 +3331,41 @@ window.viewEmbeddedSquad = function(team) {
     }
 
     const viewList = document.getElementById("view-squad-list");
+    if (!viewList) return;
+
+    if (squad.length === 0) {
+        viewList.innerHTML = `<div class="sq-empty-squad">No players bought yet in this auction.</div>`;
+        return;
+    }
+
+    const roleTitles = {
+        WK: "🧤 Wicket Keepers",
+        BAT: "🏏 Batsmen",
+        ALL: "⚡ All-Rounders",
+        BOWL: "🥎 Bowlers"
+    };
+
     ['WK', 'BAT', 'ALL', 'BOWL'].forEach(r => {
         if(cat[r].length > 0) {
             const h = document.createElement("div");
             h.className = "role-header";
-            h.innerText = r;
+            h.innerHTML = `<span>${roleTitles[r] || r}</span><span class="role-count-badge">${cat[r].length}</span>`;
             viewList.appendChild(h);
             cat[r].forEach(p => {
                 const row = document.createElement("div");
                 row.className = "sq-row";
                 const boughtViaRtm = !!(p && (p.rtm === true || p.viaRtm === true || p.isRtm === true || p.rtmUsed === true));
                 const showRtmTag = boughtViaRtm && !!p.pteam && (team === p.pteam);
-                row.innerHTML = `<span>${p.foreign ? '✈️' : ''} ${p.name}${showRtmTag ? ' <span class="sq-rtm-pill">[RTM]</span>' : ''}</span><span style="color:#4ade80;">₹${p.price.toFixed(2)}</span>`;
+                row.innerHTML = `
+                    <div class="sq-row-left">
+                        ${p.foreign ? '<span class="sq-foreign-tag" title="Overseas">✈️</span>' : ''}
+                        <span class="sq-pname">${p.name}</span>
+                        ${showRtmTag ? '<span class="sq-rtm-pill">[RTM]</span>' : ''}
+                    </div>
+                    <div class="sq-row-right">
+                        <span class="sq-price-val">₹${Number(p.price || 0).toFixed(2)} Cr</span>
+                    </div>
+                `;
                 row.onclick = () => {
                     viewList.querySelectorAll(".sq-row.flash").forEach(el => el.classList.remove("flash"));
                     row.classList.add("flash");
@@ -3327,6 +3385,108 @@ window.backToSquadTeams = function() {
     if (box) box.classList.add("hidden");
     if (tabList) tabList.classList.remove("hidden");
 };
+
+function renderGeneralTab() {
+    const container = document.getElementById("panel-sets");
+    if (!container) return;
+    const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    // SVG icon helper
+    const svgIco = {
+        bat: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l7-7m4-4l7-7M14 4l6 6-10 10-6-6z"/></svg>`,
+        bowl: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12a4 4 0 018 0"/></svg>`,
+        spin: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>`,
+        wk: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11V7a5 5 0 0110 0v4"/><rect x="3" y="11" width="18" height="11" rx="2"/></svg>`,
+        ar: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+        os: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
+        purse: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
+        squad: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>`,
+        foreign: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
+        rtm: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>`,
+        mail: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>`,
+    };
+
+    // 1. Compact Room + Rules combined card
+    const rulesHtml = `
+        <div class="gt-combined-card">
+            <div class="gt-room-strip">
+                <span class="gt-room-chip"><span class="gt-chip-lbl">Room</span> <b>${roomCode || '---'}</b></span>
+                <span class="gt-room-chip"><span class="gt-chip-lbl">Host</span> <b>${activeRules?.hostName || '---'}</b></span>
+                <span class="gt-room-chip"><span class="gt-chip-lbl">Pool</span> <b>${activeRules?.poolName || '---'}</b></span>
+            </div>
+            <div class="gt-rules-mini">
+                <div class="gt-rmini">${svgIco.purse}<div><b id="pop_viewPurse">---</b><span> Cr</span></div></div>
+                <div class="gt-rmini">${svgIco.squad}<div><b id="pop_viewSquadSize">---</b><span> Squad</span></div></div>
+                <div class="gt-rmini">${svgIco.foreign}<div><b id="pop_viewForeign">---</b><span> OS</span></div></div>
+                <div class="gt-rmini" id="pop_viewRtmBox" style="display:none;">${svgIco.rtm}<div><b id="pop_viewRtm">---</b><span> RTM</span></div></div>
+            </div>
+            <div class="gt-xi-strip">
+                <span class="gt-xi-label">XI</span>
+                <span class="gt-xi-chip">${svgIco.bat}<b id="pop_viewBat">-</b></span>
+                <span class="gt-xi-chip">${svgIco.bowl}<b id="pop_viewBowl">-</b></span>
+                <span class="gt-xi-chip">${svgIco.spin}<b id="pop_viewSpin">-</b></span>
+                <span class="gt-xi-chip">${svgIco.wk}<b id="pop_viewWK">-</b></span>
+                <span class="gt-xi-chip">${svgIco.ar}<b id="pop_viewAR">-</b></span>
+                <span class="gt-xi-chip">${svgIco.os}<b id="pop_viewForeignXI">-</b></span>
+            </div>
+        </div>
+    `;
+
+    // 2. Security Inbox
+    let inboxHtml = "";
+    if (activeIdentityCodeAlert) {
+        inboxHtml = `
+            <div class="gt-inbox-card has-alert">
+                <div class="gt-inbox-head">${svgIco.mail}<span>Security Inbox • <span style="color:#ef4444;font-weight:800;">1 Alert</span></span></div>
+                <div class="gt-inbox-alert-body">
+                    <div class="gt-alert-msg">Device trying to join as <strong>"${esc(activeIdentityCodeAlert.name)}"</strong></div>
+                    <div class="gt-alert-sub">Share this code with that device:</div>
+                    <div class="gt-alert-code-box"><span class="gt-alert-code">${esc(activeIdentityCodeAlert.code)}</span></div>
+                </div>
+            </div>
+        `;
+    } else {
+        inboxHtml = `
+            <div class="gt-inbox-card">
+                <div class="gt-inbox-head">${svgIco.mail}<span>Security Inbox</span></div>
+                <div class="gt-inbox-empty">No alerts. Verification codes appear here when another device tries to join as you.</div>
+            </div>
+        `;
+    }
+
+    // 3. Upcoming Sets
+    let setsHtml = "";
+    if (remainingSets && remainingSets.length > 0) {
+        const activeSet = remainingSets[0];
+        const escQ = (s) => String(s || "").replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        setsHtml = `
+            <div class="gt-sets-section">
+                <div class="gt-section-head-bar"><span>Upcoming Players</span><span class="gt-set-badge">${activeSet.players.length} in set</span></div>
+                <div class="gt-active-set-name">${activeSet.name}</div>
+                <div class="gt-set-list">
+                    ${activeSet.players.map(p => {
+                        const pteam = (p.pteam && String(p.pteam).trim()) ? String(p.pteam).trim() : '';
+                        return `<div class="gt-set-row" onclick="viewSetPlayer('${escQ(p.name)}','${p.role}',${p.rating},${p.foreign},'${escQ(pteam || '--')}')">
+                            <span class="gt-sp-name">${p.name}${pteam ? `<span class="gt-sp-pteam">${pteam}</span>` : ''}</span>
+                            <span class="gt-sp-meta"><span class="gt-sp-role">${p.role}</span><span class="gt-sp-rat">★${p.rating}</span></span>
+                        </div>`;
+                    }).join("")}
+                    ${activeSet.players.length === 0 ? '<div class="gt-set-done">Set complete</div>' : ''}
+                </div>
+            </div>
+        `;
+        if (remainingSets.length > 1) {
+            setsHtml += `<div class="gt-upcoming-queue">`;
+            remainingSets.slice(1).forEach(set => {
+                setsHtml += `<div class="gt-uq-row"><span>${set.name}</span><span class="gt-uq-count">${set.players.length}</span></div>`;
+            });
+            setsHtml += `</div>`;
+        }
+    }
+
+    container.innerHTML = `${rulesHtml}${inboxHtml}${setsHtml}`;
+    updateRulesUI();
+}
 
 function renderInlineSquadXI(team) {
     const viewList = document.getElementById("view-squad-list");
@@ -3405,6 +3565,25 @@ function renderInlineSquadXI(team) {
             { key: "ALL", label: "ALL", players: s.ALL || [] },
             { key: "BOWL", label: "BOWL", players: s.BOWL || [] }
         ];
+window.getCricketAvatarSvg = function(name, role) {
+    const initials = String(name || "").trim().split(/\s+/).map(n => n[0]).slice(0, 2).join("").toUpperCase() || "IPL";
+    const colors = {
+        BAT: "#f59e0b",
+        BOWL: "#38bdf8",
+        SPIN: "#a855f7",
+        WK: "#ec4899",
+        ALL: "#10b981"
+    };
+    const c = colors[role] || "#34d399";
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+      <rect width="100" height="100" fill="#0f1a16" rx="16"/>
+      <circle cx="50" cy="40" r="22" fill="${c}" fill-opacity="0.25" stroke="${c}" stroke-width="2"/>
+      <text x="50" y="47" font-family="sans-serif" font-size="18" font-weight="bold" fill="#ffffff" text-anchor="middle">${initials}</text>
+      <path d="M 20 90 C 20 65 80 65 80 90 Z" fill="${c}" fill-opacity="0.3"/>
+    </svg>`;
+    return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+};
+
         const rowsHTML = blocks.map(b => {
             if (!b.players.length) return "";
             return `
@@ -3414,7 +3593,7 @@ function renderInlineSquadXI(team) {
                     ${b.players.map(p => `
                         <div class="fantasy-player-pill inline-circle-pill ${p.foreign ? 'foreign' : ''}" title="${p.name}">
                             <div class="inline-circle-avatar">
-                                <img src="${playerImageSrc(p.name)}" alt="${p.name}" onerror="this.src='https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png';">
+                                <img src="${playerImageSrc(p.name)}" alt="${p.name}" onerror="this.onerror=null; this.src=getCricketAvatarSvg('${String(p.name).replace(/'/g, "\\'")}','${p.role}');">
                             </div>
                             <div class="inline-circle-name">${shortCardName(p.name)}</div>
                         </div>
@@ -3485,7 +3664,7 @@ function renderInlineSquadXI(team) {
                             <div class="inline-role-group-grid">
                                 ${players.map(p => `
                                     <button class="inline-xi-player-btn ${isSelected(p, k) ? 'picked' : ''}" onclick="toggleInlineSquadXIPick('${team}','${String(p.name).replace(/'/g, "\\'")}')">
-                                        <img class="sel-avatar" src="${playerImageSrc(p.name)}" alt="${p.name}" onerror="this.src='https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png';">
+                                        <img class="sel-avatar" src="${playerImageSrc(p.name)}" alt="${p.name}" onerror="this.onerror=null; this.src=getCricketAvatarSvg(this.alt, '');">
                                         <div class="sub">⭐${Number(p.rating || 0).toFixed(1)}</div>
                                     </button>
                                 `).join("")}
@@ -3596,7 +3775,7 @@ window.openInlineSelectorPopup = function(team) {
                         data-player-name="${escHtml(p.name)}"
                         onclick="window._selectorPopupTogglePick('${team}','${String(p.name).replace(/'/g, "\\'")}')">
                         <span class="sel-avatar-wrap">
-                            <img class="sel-avatar" src="${playerImageSrc(p.name)}" alt="${escHtml(p.name)}" loading="lazy" onerror="this.src='https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png';">
+                            <img class="sel-avatar" src="${playerImageSrc(p.name)}" alt="${escHtml(p.name)}" loading="lazy" onerror="this.onerror=null; this.src=getCricketAvatarSvg(this.alt, '');">
                         </span>
                         <span class="sel-player-meta">
                             <span class="sel-name">${escHtml(p.name)}${p.foreign ? ' <span class="sel-foreign" title="Overseas">✈</span>' : ''}</span>
@@ -3891,87 +4070,14 @@ window.viewSetPlayer = function(name, role, rating, isForeign, pteam) {
     openPlayerProfile(playerData, null, null);
 };
 
+
+
 function renderRulesPanel() {
-    const container = document.getElementById("panel-sets");
-    if (!container) return;
-    container.innerHTML = `
-        <div class="panel-rules-inner panel-rules-inner--fit">
-            <h3 class="panel-rules-title">📜 Tournament Rules</h3>
-            <div class="panel-rules-grid">
-                <div class="rule-box"><div class="rule-box-lbl">💰 Purse</div><div class="rule-box-val">₹<span id="pop_viewPurse">---</span> Cr</div></div>
-                <div class="rule-box"><div class="rule-box-lbl">👥 Squad</div><div class="rule-box-val"><span id="pop_viewSquadSize">---</span></div></div>
-                <div class="rule-box"><div class="rule-box-lbl">✈️ Foreign</div><div class="rule-box-val"><span id="pop_viewForeign">---</span></div></div>
-                <div class="rule-box rule-box--rtm" id="pop_viewRtmBox" style="display:none;"><div class="rule-box-lbl">🔄 RTM</div><div class="rule-box-val"><span id="pop_viewRtm">---</span></div></div>
-            </div>
-            <h4 class="panel-rules-sub">Playing XI</h4>
-            <ul class="panel-rules-list panel-rules-list--grid">
-                <li>${roleIconHtml("BAT")} Bat: <strong id="pop_viewBat">-</strong></li>
-                <li>${roleIconHtml("BOWL")} Bowl: <strong id="pop_viewBowl">-</strong></li>
-                <li>${roleIconHtml("SPIN")} Spin: <strong id="pop_viewSpin">-</strong></li>
-                <li>${roleIconHtml("WK")} WK: <strong id="pop_viewWK">-</strong></li>
-                <li>${roleIconHtml("ALL")} AR: <strong id="pop_viewAR">-</strong></li>
-                <li>✈︎ OS XI: <strong id="pop_viewForeignXI">-</strong></li>
-            </ul>
-        </div>`;
-    updateRulesUI();
+    renderGeneralTab();
 }
 
 function renderSetsPanel() {
-    const container = document.getElementById("panel-sets");
-    if(!container || !remainingSets.length) return;
-    const activeSet = remainingSets[0];
-    // Updated HTML: Added onclick and cursor:pointer
-    let html = `
-        <div class="panel-sets-inner premium-panel">
-            <h2 class="set-title active">🔥 ${activeSet.name} (${activeSet.players.length})</h2>
-            <div class="set-players-list">
-                ${activeSet.players.map(p => {
-                    const pteam = (p.pteam && String(p.pteam).trim()) ? String(p.pteam).trim() : '--';
-                    const esc = (s) => String(s).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-                    return `
-                    <div class="set-player-row active-p"
-                         style="cursor: pointer;"
-                         onclick="viewSetPlayer('${esc(p.name)}', '${p.role}', ${p.rating}, ${p.foreign}, '${esc(pteam)}')">
-                        <div class="set-row-name-wrap">
-                            <span class="set-player-name">${p.name}</span>
-                            <span class="set-pteam-badge" title="Previous team / RTM">${pteam}</span>
-                        </div>
-                        <div class="set-row-meta">
-                            <span class="sp-role">${p.role}</span>
-                            <span class="sp-rating">⭐ ${p.rating}</span>
-                        </div>
-                    </div>
-                `;
-                }).join("")}
-                ${activeSet.players.length===0 ? '<div class="set-empty-msg">Set Finished</div>' : ''}
-            </div>
-    `;
-    if(remainingSets.length > 1) {
-        remainingSets.slice(1).forEach(set => {
-            html += `
-                <h2 class="set-title">📦 ${set.name} (${set.players.length})</h2>
-                <div class="set-players-list set-upcoming">
-                    ${set.players.map(p => {
-                        const pteam = (p.pteam && String(p.pteam).trim()) ? String(p.pteam).trim() : '--';
-                        const esc = (s) => String(s).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-                        return `
-                        <div class="set-player-row"
-                             style="cursor: pointer;"
-                             onclick="viewSetPlayer('${esc(p.name)}', '${p.role}', ${p.rating}, ${p.foreign}, '${esc(pteam)}')">
-                            <div class="set-row-name-wrap">
-                                <span class="set-player-name">${p.name}</span>
-                                <span class="set-pteam-badge" title="Previous team / RTM">${pteam}</span>
-                            </div>
-                            <div class="set-row-meta"><span class="sp-role">${p.role}</span><span class="sp-rating">⭐ ${p.rating}</span></div>
-                        </div>
-                    `;
-                    }).join("")}
-                </div>
-            `;
-        });
-    }
-    html += `</div>`;
-    container.innerHTML = html;
+    renderGeneralTab();
 }
 // --- SQUADS DATA ---
 // --- UPDATED: Socket Listener for Squad Data ---
@@ -5301,16 +5407,33 @@ window.closeCustomBuilder = function(skipReset) {
     }
 };
 
+let activeCustomRoleFilter = "";
+window.setCustomRoleFilter = function(role, btnEl) {
+    if (activeCustomRoleFilter === role && role !== "") {
+        activeCustomRoleFilter = "";
+    } else {
+        activeCustomRoleFilter = role;
+    }
+    const container = document.getElementById("customRoleFilterGroup");
+    if (container) {
+        container.querySelectorAll(".custom-role-btn").forEach(b => {
+            if (b.getAttribute("data-role") === activeCustomRoleFilter) b.classList.add("active");
+            else b.classList.remove("active");
+        });
+    }
+    renderCustomPlayerList();
+};
+
 function renderCustomPlayerList() {
     const listBox = document.getElementById("customPlayerList");
     const searchInput = document.getElementById("customSearch");
-    const roleFilter = document.getElementById("customRoleFilter");
+    const roleFilterSelect = document.getElementById("customRoleFilter");
     const useRatingsToggle = document.getElementById("useRatingsToggle");
 
     if (!listBox) return;
 
     const term = (searchInput?.value || "").trim().toLowerCase();
-    const role = (roleFilter?.value || "").trim();
+    const role = (roleFilterSelect ? roleFilterSelect.value : activeCustomRoleFilter) || "";
 
     const rows = customAllPlayers
         .map((p, idx) => ({ p, idx }))
@@ -5464,40 +5587,40 @@ socket.on("leaderboard", (board) => {
         tbody.innerHTML = "";
         filteredBoard.forEach((t, i) => {
             const tr = document.createElement("tr");
-            
-            // 🔴 LOGIC: Status Icons
-            let statusHtml = '<span class="lb-status-icon lb-dash">-</span>';
-            
-            if (t.disqualified) {
-                statusHtml = `<span class="lb-status-icon lb-cross" title="Disqualified">❌</span>`;
-            } 
-            // Check if XI exists and has players (valid submission)
-            else if (
-                t.xi && (
-                    (Array.isArray(t.xi) && t.xi.length > 0) ||
-                    (!Array.isArray(t.xi) && (t.xi.BAT?.length > 0 || t.xi.WK?.length > 0))
-                )
-            ) {
-                statusHtml = `<span class="lb-status-icon lb-tick">✅</span>`;
-            }
-            // Disqualified: always show 0 rating on leaderboard
+            const teamColor = TEAM_COLORS[t.team] || "#94a3b8";
             const displayRating = t.disqualified ? 0 : (t.rating != null ? t.rating : 0);
-
+            const hasXI = t.xi && (
+                (Array.isArray(t.xi) && t.xi.length > 0) ||
+                (!Array.isArray(t.xi) && (t.xi.BAT?.length > 0 || t.xi.WK?.length > 0))
+            );
+            const xiHtml = t.disqualified
+                ? `<span class="lb-xi-badge lb-xi-dq">DQ</span>`
+                : hasXI
+                    ? `<span class="lb-xi-badge lb-xi-ok">&#10003; XI</span>`
+                    : `<span class="lb-xi-badge lb-xi-pending">&#8212;</span>`;
+            const rankMedals = ["&#127945;","&#129352;","&#129353;"];
+            const rankInner = i < 3 ? rankMedals[i] : `#${i+1}`;
             const rankClass = i === 0 ? "lb-rank lb-rank--gold" : i === 1 ? "lb-rank lb-rank--silver" : i === 2 ? "lb-rank lb-rank--bronze" : "lb-rank";
+            const ownerName = (teamOwners && teamOwners[t.team]) ? teamOwners[t.team] : "";
+            const squadCount = (allSquads && allSquads[t.team]) ? allSquads[t.team].length : 0;
             tr.className = "lb-row";
             tr.innerHTML = `
-                <td data-label="Rank"><span class="${rankClass}">#${i + 1}</span></td>
-                <td data-label="Team">
+                <td class="lb-td-rank"><span class="${rankClass}">${rankInner}</span></td>
+                <td class="lb-td-team">
                     <div class="lb-team-cell">
-                        <span class="lb-team-dot" style="background:${TEAM_COLORS[t.team] || '#fff'}"></span>
-                        <span class="lb-team-name" style="color:${TEAM_COLORS[t.team] || '#fff'}">${t.team}</span>
+                        <span class="lb-team-dot" style="background:${teamColor}; box-shadow:0 0 5px ${teamColor}55;"></span>
+                        <div class="lb-team-info">
+                            <span class="lb-team-name" style="color:${teamColor}">${t.team}</span>
+                            ${ownerName ? `<span class="lb-owner-name">${ownerName}</span>` : ""}
+                        </div>
                     </div>
                 </td>
-                <td data-label="Rating" class="lb-rating">⭐ ${displayRating}</td>
-                <td data-label="Purse" class="lb-purse">₹${Number(t.purse).toFixed(2)}</td>
-                <td data-label="XI">${statusHtml}</td>
-                <td data-label="View" class="lb-view-cell">
-                    <button type="button" onclick="openSquadView('${t.team}')" class="lb-view-btn" title="View Squad">View</button>
+                <td class="lb-td-rating"><span class="lb-rating-val">${displayRating > 0 ? Number(displayRating).toFixed(1) : "&#8212;"}</span></td>
+                <td class="lb-td-purse"><span class="lb-purse">&#8377;${Number(t.purse || 0).toFixed(1)}</span></td>
+                <td class="lb-td-squad"><span class="lb-squad-count">${squadCount}</span></td>
+                <td class="lb-td-xi">${xiHtml}</td>
+                <td class="lb-td-view">
+                    <button type="button" onclick="openSquadView('${t.team}')" class="lb-view-btn">View</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -5849,7 +5972,7 @@ window.toggleSummaryInsight = function(mode) {
                     <div class="top-purchase-card insight-rank-${idx + 1}">
                         <div class="tp-rank">#${idx + 1}</div>
                         <div class="tp-img-wrap">
-                            <img src="${playerImg(p.name)}" alt="${p.name}" onerror="this.src='https://resources.premierleague.com/premierleague/photos/players/250x250/Photo-Missing.png';">
+                            <img src="${playerImg(p.name)}" alt="${p.name}" onerror="this.onerror=null; this.src=getCricketAvatarSvg(this.alt, '${p.role || ''}');">
                         </div>
                         <div class="tp-name">${p.name}</div>
                         <div class="tp-meta">

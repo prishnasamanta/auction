@@ -1,0 +1,17 @@
+node_modules
+# Firebase Secret Key
+firebase-service-account.json
+# Uploaded stickers (per-room, cleaned up on auction end)
+sticker_uploads/
+
+-e 
+# Environment and credential files
+.env
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
+.emergent/
+.gitconfig
