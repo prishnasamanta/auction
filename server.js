@@ -636,7 +636,7 @@ io.on("connection", socket => {
     });
 
     // 2. CREATE ROOM
-    socket.on("createRoom", async ({ user, isPublic, datasetId }) => {
+    socket.on("createRoom", async ({ user, isPublic, datasetId, deviceId }) => {
         const code = generateRoomCode();
         
         // Choose player pool based on selected dataset (default -> PLAYERS)
@@ -732,7 +732,7 @@ if (datasetId === "legends") {
         socket.user = user;
         socket.isAdmin = true;
         
-        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true, deviceId: body.deviceId };
+        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true, deviceId: deviceId };
 
         socket.emit("roomCreated", code);
         socket.emit("joinedRoom", {
