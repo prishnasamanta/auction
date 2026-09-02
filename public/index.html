@@ -510,7 +510,7 @@
                         </div>
                         <div class="feed-input-wrapper">
                             <button type="button" class="feed-list-btn" id="soldUnsoldBtn" onclick="toggleSoldUnsoldPopup()" title="Sold / Unsold list" aria-label="Sold Unsold list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
-                            <button type="button" class="feed-list-btn hidden" id="hostQuickSettingsBtn" onclick="openHostQuickSettings()" title="Host quick settings" aria-label="Host quick settings">⚙</button>
+                            
                             <button type="button" class="feed-list-btn" id="stickerBtn" onclick="toggleStickerPanel()" title="Stickers" aria-label="Open stickers">😊</button>
                             <input type="text" id="msg" placeholder="Chat..." autocomplete="off">
                             <button type="button" class="chat-send-btn" onclick="sendChat()" aria-label="Send message">➤</button>
@@ -755,16 +755,21 @@
     </div>
 
     <div id="identityVerifyOverlay" class="rules-overlay hidden">
-        <div class="glass rules-card identity-verify-card" style="max-width: 400px; padding: 20px; padding-top: 44px; text-align: center; position: relative;">
-            <button type="button" class="identity-verify-close" onclick="document.getElementById('identityVerifyOverlay').classList.add('hidden')" aria-label="Close and go back">×</button>
-            <h2 style="color: #fca5a5; border: none;">⚠️ Identity Check</h2>
-            <p>A new device is trying to join as <b id="verifyName" style="color: #fff;"></b>.</p>
-            <p>Is this you trying to switch devices?</p>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button id="btnVerifyYes" class="primary-btn" style="width: 100%;">Yes, Switch Device</button>
-                <button id="btnVerifyNo" class="secondary-btn" style="width: 100%; border-color: #ef4444; color: #ef4444;">No, Block Them</button>
+        <div class="glass rules-card identity-verify-card">
+            <button type="button" class="identity-verify-close" onclick="document.getElementById('identityVerifyOverlay').classList.add('hidden')" aria-label="Close">✕</button>
+            <div class="iv-badge">🔐 IDENTITY VERIFICATION</div>
+            <h3 class="iv-title">Switch Device Request</h3>
+            <p class="iv-desc">Another device is attempting to log in as <b id="verifyName"></b>.</p>
+            <div class="iv-pin-container">
+                <span class="iv-pin-lbl">ENTER 3-DIGIT VERIFICATION CODE</span>
+                <input type="number" id="verifyInput" placeholder="000" class="iv-pin-input" maxlength="3" autocomplete="off" />
+            </div>
+            <div class="iv-actions">
+                <button type="button" id="btnSubmitCode" class="primary-btn iv-btn-main">VERIFY & JOIN</button>
+                <button type="button" onclick="document.getElementById('identityVerifyOverlay').classList.add('hidden')" class="secondary-btn iv-btn-sec">Cancel</button>
             </div>
         </div>
+    </div>
     </div>
 
     <div id="rtmOfferOverlay" class="rules-overlay hidden">

@@ -98,14 +98,15 @@ function getInlineXIStatsHtml(team) {
     const bowl = s.BOWL.length;
     const foreign = [...s.WK, ...s.BAT, ...s.ALL, ...s.BOWL].filter(p => p.foreign).length;
     const spin = (s.BOWL || []).filter(p => p.role === "SPIN").length;
-    const total = wk + bat + all + bowl;
+    const totalSelected = wk + bat + all + bowl;
+    const squadCount = (allSquads && allSquads[team]) ? allSquads[team].length : 0;
     const r = activeRules || { maxForeignXI: 4, minWK: 1, minBat: 3, minBowl: 3, minAll: 1, minSpin: 0 };
     const minSpin = r.minSpin ?? 0;
     const minBowl = r.minBowl ?? 3;
     const badge = (iconRole, curr, req, isMax, textFallback = "") => {
         const valid = isMax ? curr <= req : curr >= req;
         const icon = iconRole ? roleIconHtml(iconRole) : textFallback;
-        return `<span class="xi-stat-badge ${valid ? "ok" : "bad"}">${icon}<span class="xi-stat-nums">${curr}/${req}</span></span>`;
+        return `<span class="xi-stat-badge obround ${valid ? "ok" : "bad"}">${icon}<span class="xi-stat-nums">${curr}/${req}</span></span>`;
     };
     const wrapItem = (html) => `<span class="xi-stat-item">${html}</span>`;
 
@@ -117,7 +118,8 @@ function getInlineXIStatsHtml(team) {
         wrapItem(badge("BOWL", bowl, minBowl, false)),
     ];
     if (minSpin > 0) desktopParts.push(wrapItem(badge("SPIN", spin, minSpin, false)));
-    desktopParts.push(wrapItem(`<span class="xi-stat-badge ${total === 11 ? "ok" : "bad"}"><span class="xi-stat-label">XI</span><span class="xi-stat-nums">${total}/11</span></span>`));
+    desktopParts.push(wrapItem(`<span class="xi-stat-badge obround ${totalSelected === 11 ? "ok" : "bad"}"><span class="xi-stat-label">XI</span><span class="xi-stat-nums">${totalSelected}/11</span></span>`));
+    desktopParts.push(wrapItem(`<span class="xi-stat-badge obround bought-count-badge"><span class="xi-stat-label">Bought</span><span class="xi-stat-nums">${squadCount}</span></span>`));
 
     return `<span class="xi-stats-layout xi-stats-desktop">${desktopParts.join("")}</span>`;
 }
@@ -1518,11 +1520,13 @@ socket.on("identityDismiss", () => {
 });
 
 socket.on("identitySuccess", ({ message }) => {
+    if (typeof showPopup === "function") showPopup("Please refresh after joining for live update.", "REJOIN NOTICE", "🔄");
     clearIdentityCodeAlert();
     showPopup(message || "Verification successful.", "VERIFIED", "✅");
 });
 
 socket.on("identityTakeoverSuccess", ({ by }) => {
+    if (typeof showPopup === "function") showPopup("Please refresh after joining for live update.", "REJOIN NOTICE", "🔄");
     clearIdentityCodeAlert();
     showPopup(`Another device joined successfully as "${by}".`, "LOGIN TRANSFERRED", "ℹ️");
 });
@@ -2262,13 +2266,40 @@ function getSoldListFromSquads() {
     return out;
 }
 function getSetsListHtml() {
-    const tmp = document.getElementById('panel-sets');
-    if (!tmp) return '';
-    const saved = tmp.innerHTML;
-    if (typeof renderSetsPanel === 'function') renderSetsPanel();
-    const html = tmp.innerHTML;
-    tmp.innerHTML = saved;
-    return html || '<div style="padding:20px;color:#64748b;text-align:center">No sets loaded yet</div>';
+    if (!remainingSets || remainingSets.length === 0) {
+        return '<div style="padding:24px; color:#64748b; text-align:center; font-size:0.8rem;">No upcoming sets available</div>';
+    }
+    const activeSet = remainingSets[0];
+    const escQ = (s) => String(s || "").replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+    
+    let html = `
+        <div class="gt-sets-section popup-sets-only">
+            <div class="gt-section-head-bar">
+                <span>Upcoming Players</span>
+                <span class="gt-set-badge">${activeSet.players.length} in set</span>
+            </div>
+            <div class="gt-active-set-name">${activeSet.name}</div>
+            <div class="gt-set-list">
+                ${activeSet.players.map(p => {
+                    const pteam = (p.pteam && String(p.pteam).trim()) ? String(p.pteam).trim() : '';
+                    return `<div class="gt-set-row" onclick="viewSetPlayer('${escQ(p.name)}','${p.role}',${p.rating},${p.foreign},'${escQ(pteam || '--')}')">
+                        <span class="gt-sp-name">${p.name}${pteam ? `<span class="gt-sp-pteam">${pteam}</span>` : ''}</span>
+                        <span class="gt-sp-meta"><span class="gt-sp-role">${p.role}</span><span class="gt-sp-rat">★${p.rating}</span></span>
+                    </div>`;
+                }).join("")}
+                ${activeSet.players.length === 0 ? '<div class="gt-set-done">Set complete</div>' : ''}
+            </div>
+        </div>
+    `;
+
+    if (remainingSets.length > 1) {
+        html += `<div class="gt-upcoming-queue">`;
+        remainingSets.slice(1).forEach(set => {
+            html += `<div class="gt-uq-row"><span>${set.name}</span><span class="gt-uq-count">${set.players.length}</span></div>`;
+        });
+        html += `</div>`;
+    }
+    return html;
 }
 
 function renderSoldUnsoldList() {
@@ -3305,15 +3336,21 @@ window.viewEmbeddedSquad = function(team) {
                 <div class="squad-head-single-row">
                     <button type="button" class="squad-back-btn squad-back-inline" onclick="backToSquadTeams()">← Back</button>
                     <div class="squad-head-center">
-                        <span class="squad-team-title" style="color:${teamColor};">${team}</span>
-                        <span class="squad-head-meta">${owner} · ♟${squad.length} OS:${foreignCount}${activeRules.rtmEnabled ? ' RTM:'+rtmVal : ''}</span>
+                        <div class="sq-title-line">
+                            <img src="/logos/${team}.png" class="sq-inline-logo" onerror="this.style.display='none';">
+                            <span class="squad-team-title" style="color:${teamColor};">${team}</span>
+                            <span class="sq-owner-meta"> - ${owner}</span>
+                        </div>
+                        <div class="sq-purse-line">
+                            <span class="sq-purse-lbl">₹${purse.toFixed(2)} Cr</span>
+                        </div>
                     </div>
                     <div class="squad-head-right-grp">
-                        <span class="sq-purse-lbl">₹${purse.toFixed(2)} Cr</span>
                         <button type="button" class="squad-check-xi-btn" onclick="openPlayingXIFromSquad('${team}')">Check XI</button>
                         <button type="button" onclick="downloadSquadImage()" class="squad-dl-btn" title="Download">↓</button>
                     </div>
                 </div>
+            </div>
                 ` : `
                 <div class="squad-xi-header-row squad-xi-header-row--xi">
                     <span id="inlineXiHeaderStats" class="inline-xi-stats header-inline xi-stats-bar xi-stats-bar--full">${getInlineXIStatsHtml(team)}</span>
@@ -3391,24 +3428,24 @@ function renderGeneralTab() {
     if (!container) return;
     const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    // SVG icon helper
     const svgIco = {
-        bat: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l7-7m4-4l7-7M14 4l6 6-10 10-6-6z"/></svg>`,
-        bowl: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12a4 4 0 018 0"/></svg>`,
-        spin: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>`,
-        wk: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11V7a5 5 0 0110 0v4"/><rect x="3" y="11" width="18" height="11" rx="2"/></svg>`,
-        ar: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
-        os: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
-        purse: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
-        squad: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>`,
-        foreign: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
-        rtm: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>`,
-        mail: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>`,
+        bat: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l7-7m4-4l7-7M14 4l6 6-10 10-6-6z"/></svg>`,
+        bowl: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12a4 4 0 018 0"/></svg>`,
+        spin: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>`,
+        wk: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11V7a5 5 0 0110 0v4"/><rect x="3" y="11" width="18" height="11" rx="2"/></svg>`,
+        ar: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+        os: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
+        purse: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
+        squad: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>`,
+        foreign: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
+        rtm: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>`,
+        mail: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>`,
+        gear: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`
     };
 
-    // 1. Compact Room + Rules combined card
+    // 1. Room Code + Rules Strip (Ultra Compact)
     const rulesHtml = `
-        <div class="gt-combined-card">
+        <div class="gt-combined-card compact">
             <div class="gt-room-strip">
                 <span class="gt-room-chip"><span class="gt-chip-lbl">Room</span> <b>${roomCode || '---'}</b></span>
                 <span class="gt-room-chip"><span class="gt-chip-lbl">Host</span> <b>${activeRules?.hostName || '---'}</b></span>
@@ -3421,7 +3458,7 @@ function renderGeneralTab() {
                 <div class="gt-rmini" id="pop_viewRtmBox" style="display:none;">${svgIco.rtm}<div><b id="pop_viewRtm">---</b><span> RTM</span></div></div>
             </div>
             <div class="gt-xi-strip">
-                <span class="gt-xi-label">XI</span>
+                <span class="gt-xi-label">XI:</span>
                 <span class="gt-xi-chip">${svgIco.bat}<b id="pop_viewBat">-</b></span>
                 <span class="gt-xi-chip">${svgIco.bowl}<b id="pop_viewBowl">-</b></span>
                 <span class="gt-xi-chip">${svgIco.spin}<b id="pop_viewSpin">-</b></span>
@@ -3432,7 +3469,55 @@ function renderGeneralTab() {
         </div>
     `;
 
-    // 2. Security Inbox
+    // 2. Host Settings Section (Embedded in General Tab)
+    const isHost = !!isAdmin;
+    let hostHtml = "";
+    if (isHost) {
+        const curTimer = (activeRules && activeRules.bidTimer != null) ? activeRules.bidTimer : 10;
+        const curMinSquad = (activeRules && activeRules.minSquadSize != null) ? activeRules.minSquadSize : 18;
+        hostHtml = `
+            <div class="gt-host-settings-card">
+                <div class="gt-card-head">${svgIco.gear}<span>Host Quick Controls</span></div>
+                <div class="gt-host-body">
+                    <div class="gt-hqs-row">
+                        <span class="gt-hqs-lbl">Timer:</span>
+                        <div class="gt-chip-grp">
+                            <button type="button" class="gt-hchip ${curTimer === 5 ? 'active' : ''}" onclick="gtSetTimer(5)">5s</button>
+                            <button type="button" class="gt-hchip ${curTimer === 7 ? 'active' : ''}" onclick="gtSetTimer(7)">7s</button>
+                            <button type="button" class="gt-hchip ${curTimer === 10 ? 'active' : ''}" onclick="gtSetTimer(10)">10s</button>
+                        </div>
+                    </div>
+                    <div class="gt-hqs-row">
+                        <span class="gt-hqs-lbl">Min Squad:</span>
+                        <div class="gt-chip-grp">
+                            <button type="button" class="gt-hchip ${curMinSquad === 12 ? 'active' : ''}" onclick="gtSetMinSquad(12)">12</button>
+                            <button type="button" class="gt-hchip ${curMinSquad === 15 ? 'active' : ''}" onclick="gtSetMinSquad(15)">15</button>
+                            <button type="button" class="gt-hchip ${curMinSquad === 18 ? 'active' : ''}" onclick="gtSetMinSquad(18)">18</button>
+                        </div>
+                    </div>
+                    <div class="gt-host-actions">
+                        <button type="button" onclick="admin('start')" class="gt-btn gt-btn-start">▶ Start</button>
+                        <button type="button" onclick="admin('togglePause')" class="gt-btn gt-btn-pause">⏸ Pause</button>
+                        <button type="button" onclick="admin('skip')" class="gt-btn gt-btn-skip">⏭ Skip</button>
+                        <button type="button" onclick="admin('skipSet')" class="gt-btn gt-btn-skipset">⏭ Set</button>
+                        <button type="button" onclick="admin('end')" class="gt-btn gt-btn-end">⊘ End</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        hostHtml = `
+            <div class="gt-host-settings-card">
+                <div class="gt-card-head">${svgIco.gear}<span>Host Status</span></div>
+                <div class="gt-host-body-spectator">
+                    <span>Host: <strong>${esc(activeRules?.hostName || 'Host')}</strong></span>
+                    <span class="gt-status-badge">${auctionStarted ? 'Auction Live' : 'Lobby Waiting'}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    // 3. Security Inbox
     let inboxHtml = "";
     if (activeIdentityCodeAlert) {
         inboxHtml = `
@@ -3440,7 +3525,7 @@ function renderGeneralTab() {
                 <div class="gt-inbox-head">${svgIco.mail}<span>Security Inbox • <span style="color:#ef4444;font-weight:800;">1 Alert</span></span></div>
                 <div class="gt-inbox-alert-body">
                     <div class="gt-alert-msg">Device trying to join as <strong>"${esc(activeIdentityCodeAlert.name)}"</strong></div>
-                    <div class="gt-alert-sub">Share this code with that device:</div>
+                    <div class="gt-alert-sub">Share code with joining device:</div>
                     <div class="gt-alert-code-box"><span class="gt-alert-code">${esc(activeIdentityCodeAlert.code)}</span></div>
                 </div>
             </div>
@@ -3454,37 +3539,7 @@ function renderGeneralTab() {
         `;
     }
 
-    // 3. Upcoming Sets
-    let setsHtml = "";
-    if (remainingSets && remainingSets.length > 0) {
-        const activeSet = remainingSets[0];
-        const escQ = (s) => String(s || "").replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-        setsHtml = `
-            <div class="gt-sets-section">
-                <div class="gt-section-head-bar"><span>Upcoming Players</span><span class="gt-set-badge">${activeSet.players.length} in set</span></div>
-                <div class="gt-active-set-name">${activeSet.name}</div>
-                <div class="gt-set-list">
-                    ${activeSet.players.map(p => {
-                        const pteam = (p.pteam && String(p.pteam).trim()) ? String(p.pteam).trim() : '';
-                        return `<div class="gt-set-row" onclick="viewSetPlayer('${escQ(p.name)}','${p.role}',${p.rating},${p.foreign},'${escQ(pteam || '--')}')">
-                            <span class="gt-sp-name">${p.name}${pteam ? `<span class="gt-sp-pteam">${pteam}</span>` : ''}</span>
-                            <span class="gt-sp-meta"><span class="gt-sp-role">${p.role}</span><span class="gt-sp-rat">★${p.rating}</span></span>
-                        </div>`;
-                    }).join("")}
-                    ${activeSet.players.length === 0 ? '<div class="gt-set-done">Set complete</div>' : ''}
-                </div>
-            </div>
-        `;
-        if (remainingSets.length > 1) {
-            setsHtml += `<div class="gt-upcoming-queue">`;
-            remainingSets.slice(1).forEach(set => {
-                setsHtml += `<div class="gt-uq-row"><span>${set.name}</span><span class="gt-uq-count">${set.players.length}</span></div>`;
-            });
-            setsHtml += `</div>`;
-        }
-    }
-
-    container.innerHTML = `${rulesHtml}${inboxHtml}${setsHtml}`;
+    container.innerHTML = `${rulesHtml}${hostHtml}${inboxHtml}`;
     updateRulesUI();
 }
 
@@ -4491,21 +4546,36 @@ socket.on("specialPlayerIntro", ({ playerName, videoPath }) => {
 
     const fallbackPath = `/special player vid/${encodeURIComponent(String(playerName || "").toLowerCase())}.mp4`;
     video.src = videoPath || fallbackPath;
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("webkit-playsinline", "true");
+    video.preload = "auto";
+    video.muted = false;
+
     overlay.classList.remove("hidden");
 
-    video.onended = () => {
+    let finished = false;
+    const finishIntro = () => {
+        if (finished) return;
+        finished = true;
         hideSpecialIntroOverlay();
         if (isHost) socket.emit("specialIntroFinished", { playerName: specialIntroCurrentPlayer });
         specialIntroCurrentPlayer = null;
     };
-    video.onerror = () => {
-        hideSpecialIntroOverlay();
-        if (isHost) socket.emit("specialIntroFinished", { playerName: specialIntroCurrentPlayer });
-        specialIntroCurrentPlayer = null;
-    };
-    video.play().catch(() => {
-        showPopup("Special intro video could not autoplay.", "VIDEO NOTICE", "🎬");
-    });
+
+    video.onended = finishIntro;
+    video.onerror = finishIntro;
+
+    // Safety timeout so slow devices don't get stuck forever
+    setTimeout(() => { if (!finished) finishIntro(); }, 14000);
+
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+            console.warn("Video play catch:", err);
+            // On autoplay block, allow user touch to play smoothly
+            overlay.onclick = () => { video.play(); };
+        });
+    }
 });
 // --- 2. RENDER SELECTION LIST (FIXED) ---
 socket.on("mySquad", ({ squad, rules }) => {
@@ -6656,3 +6726,18 @@ function refreshGlobalUI() {
 }
 
 
+
+window.gtSetTimer = function(val) {
+    const el = document.getElementById("hqsTimer");
+    if (el) el.value = val;
+    if (typeof setHqsTimer === "function") setHqsTimer(val);
+    if (typeof saveHostQuickSettings === "function") saveHostQuickSettings();
+    renderGeneralTab();
+};
+window.gtSetMinSquad = function(val) {
+    const el = document.getElementById("hqsMinSquad");
+    if (el) el.value = val;
+    if (typeof setHqsMinSquad === "function") setHqsMinSquad(val);
+    if (typeof saveHostQuickSettings === "function") saveHostQuickSettings();
+    renderGeneralTab();
+};

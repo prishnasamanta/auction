@@ -605,6 +605,28 @@ function broadcastUserList(room, roomCode) {
 
 io.on("connection", socket => {
 
+function broadcastPublicRooms() {
+    const liveRooms = [];
+    const waitingRooms = [];
+    for (const [id, room] of Object.entries(rooms)) {
+        if (room.isPublic && !room.auctionEnded) {
+            const info = {
+                id,
+                count: Object.keys(room.users || {}).length,
+                poolName: poolDisplayName(room.datasetId),
+                hostName: room.adminUser || "Host",
+            };
+            if (room.auctionStarted) {
+                liveRooms.push(info);
+            } else {
+                waitingRooms.push(info);
+            }
+        }
+    }
+    io.emit('publicRoomsList', { live: liveRooms, waiting: waitingRooms });
+}
+
+
     // 1. GET PUBLIC ROOMS
     socket.on('getPublicRooms', () => {
         const liveRooms = [];
@@ -747,6 +769,7 @@ if (datasetId === "legends") {
         
         // Save initial state
 await syncRoom(code);
+        if (room.isPublic) broadcastPublicRooms();
     });
 // Add or Update this handler
 socket.on("getAuctionState", () => {
