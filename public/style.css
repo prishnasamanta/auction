@@ -17202,3 +17202,32 @@ button[disabled] {
 .sidebar-action-btn:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
 .sidebar-action-btn.danger-btn { border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); color: #ef4444; }
 .sidebar-action-btn.danger-btn:hover { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
+/* --- Additional Mobile Layout Fixes --- */
+@media (max-width: 768px) {
+    /* Make player pool scroll horizontally on mobile */
+    #auth #createSection .dataset-scroll-container,
+    .dataset-scroll-container {
+        display: flex !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        grid-template-columns: none !important;
+        padding-bottom: 8px !important;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    #auth #createSection .dataset-card,
+    .dataset-card {
+        flex: 0 0 110px !important;
+        min-width: 110px !important;
+        margin-right: 8px;
+    }
+
+    /* Fix the large gap at the bottom of the Join Room card */
+    #auth .auth-card {
+        min-height: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        padding-bottom: 24px !important;
+    }
+}
