@@ -429,7 +429,7 @@ function setupEventListeners() {
          //  const datasetIdInput = document.getElementById('selectedSetId');
            //const datasetId = datasetIdInput ? datasetIdInput.value : "ipl2026";
             
-            socket.emit("createRoom", { user: username, isPublic: isPublic, datasetId });
+            socket.emit("createRoom", { user: username, isPublic: isPublic, datasetId, deviceId: getDeviceId() });
         };
     }
 
@@ -456,7 +456,7 @@ function setupEventListeners() {
             sessionStorage.setItem('ipl_user', username);
             localStorage.setItem('ipl_user', username);
             console.log(`🚀 Sending join request: ${username} -> ${roomCode}`);
-            socket.emit("joinRoom", { roomCode, user: username });
+            socket.emit("joinRoom", { roomCode, user: username, deviceId: getDeviceId() });
         };
         joinBtn.onclick = doJoin;
         const codeInput = document.getElementById('code');
@@ -603,7 +603,7 @@ if (!result.active) {
     // SCENARIO A: Reconnecting (Session Valid)
     if (sUser && sRoom && (!urlCode || urlCode === sRoom)) {
         // ... (Keep existing reconnect logic) ...
-        socket.emit('reconnectUser', { roomId: sRoom, username: sUser });
+        socket.emit('reconnectUser', { roomId: sRoom, username: sUser, deviceId: getDeviceId() });
       
         // If deep link exists during reconnect, restore it
         if (subPage) sessionStorage.setItem('redirect_target', subPage);
@@ -1254,7 +1254,6 @@ socket.on("roomUsersUpdate", (data) => {
     if (me && me.isHost && !isHost) {
         isHost = true;
         updateAdminButtons(gameStarted);
-        alert("🜲 You are now the Host!");
     }
     // ... (Sort Logic) ...
     users.sort((a, b) => {
@@ -1351,6 +1350,9 @@ window.switchCcTab = function(tabName) {
         socket.emit("getSquads");
     }
     if (tabName === 'sets') {
+        renderSetsTab();
+    }
+    if (tabName === 'general') {
         renderGeneralTab();
     }
 };
@@ -1501,7 +1503,7 @@ socket.on("identityInputRequired", ({ roomCode, name }) => {
             const input = document.getElementById("verifyInput");
             const code = input ? String(input.value || "").trim() : "";
             if (!code) return;
-            socket.emit("verifyIdentityCode", { roomCode, name, code });
+            socket.emit("verifyIdentityCode", { roomCode, name, code, deviceId: getDeviceId() });
             const card = overlay.querySelector(".identity-verify-card");
             if (card) card.innerHTML = `<div style="color:#e2e8f0; text-align:center; padding:30px 0;">Verifying...</div>`;
         };
@@ -1562,7 +1564,7 @@ socket.on('connect', () => {
         }
         
         console.log("🔄 Reconnecting...");
-        socket.emit('reconnectUser', { roomId: roomCode, username: username });
+        socket.emit('reconnectUser', { roomId: roomCode, username: username, deviceId: getDeviceId() });
         // Request immediate state update to check if auction ended
         socket.emit("getAuctionState"); 
     }
@@ -1626,7 +1628,7 @@ function renderEmbeddedTeams(teams) {
         allTeams.forEach(team => {
             const isAvailable = availableSet.has(team);
             const isTaken = !isAvailable;
-            const balance = Number(teamPurse[team]);
+            const balance = Number(teamPurse[team] || activeRules?.purse || 120);
             const balanceText = Number.isFinite(balance) ? `₹${balance.toFixed(2)} Cr` : "₹--";
             const owner = teamOwners[team] || "";
             const btn = document.createElement("button");
@@ -1703,7 +1705,6 @@ socket.on("teamPicked", ({ team, user, remaining }) => {
 socket.on("adminPromoted", () => {
     isHost = true;
     updateAdminButtons(gameStarted);
-    alert("🜲 You are now the Host!");
 });
 socket.on("youAreSpectator", () => {
     if (typeof showPopup === "function") showPopup("You are a spectator now. You can watch the auction but no longer have a team.", "SPECTATOR", "👁️");
@@ -2302,6 +2303,12 @@ function getSetsListHtml() {
     return html;
 }
 
+window.renderSetsTab = function() {
+    const container = document.getElementById("panel-sets");
+    if (!container) return;
+    container.innerHTML = getSetsListHtml();
+};
+
 function renderSoldUnsoldList() {
     const listEl = document.getElementById("soldUnsoldList");
     const soldBadge = document.getElementById("soldCountBadge");
@@ -2369,6 +2376,11 @@ window.toggleSoldUnsoldPopup = function() {
 window.closeSoldUnsoldPopup = function() {
     document.getElementById("soldUnsoldOverlay")?.classList.add("hidden");
 };
+socket.on("setsUpdate", ({ sets }) => {
+    remainingSets = sets;
+    renderSoldUnsoldList();
+    renderSetsTab();
+});
 window.switchSoldUnsoldTab = function(tab) {
     soldUnsoldTab = tab;
     document.querySelectorAll(".sold-unsold-tab").forEach(b => {
@@ -3423,7 +3435,7 @@ window.backToSquadTeams = function() {
 };
 
 function renderGeneralTab() {
-    const container = document.getElementById("panel-sets");
+    const container = document.getElementById("panel-general");
     if (!container) return;
     const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -3481,17 +3493,17 @@ function renderGeneralTab() {
                     <div class="gt-hqs-row">
                         <span class="gt-hqs-lbl">Timer:</span>
                         <div class="gt-chip-grp">
-                            <button type="button" class="gt-hchip ${curTimer === 5 ? 'active' : ''}" onclick="gtSetTimer(5)">5s</button>
-                            <button type="button" class="gt-hchip ${curTimer === 7 ? 'active' : ''}" onclick="gtSetTimer(7)">7s</button>
-                            <button type="button" class="gt-hchip ${curTimer === 10 ? 'active' : ''}" onclick="gtSetTimer(10)">10s</button>
+                            <button type="button" class="gt-hchip ${curTimer === 5 ? 'active' : ''}" onclick="gtSetTimer(5, event)">5s</button>
+                            <button type="button" class="gt-hchip ${curTimer === 7 ? 'active' : ''}" onclick="gtSetTimer(7, event)">7s</button>
+                            <button type="button" class="gt-hchip ${curTimer === 10 ? 'active' : ''}" onclick="gtSetTimer(10, event)">10s</button>
                         </div>
                     </div>
                     <div class="gt-hqs-row">
                         <span class="gt-hqs-lbl">Min Squad:</span>
                         <div class="gt-chip-grp">
-                            <button type="button" class="gt-hchip ${curMinSquad === 12 ? 'active' : ''}" onclick="gtSetMinSquad(12)">12</button>
-                            <button type="button" class="gt-hchip ${curMinSquad === 15 ? 'active' : ''}" onclick="gtSetMinSquad(15)">15</button>
-                            <button type="button" class="gt-hchip ${curMinSquad === 18 ? 'active' : ''}" onclick="gtSetMinSquad(18)">18</button>
+                            <button type="button" class="gt-hchip ${curMinSquad === 12 ? 'active' : ''}" onclick="gtSetMinSquad(12, event)">12</button>
+                            <button type="button" class="gt-hchip ${curMinSquad === 15 ? 'active' : ''}" onclick="gtSetMinSquad(15, event)">15</button>
+                            <button type="button" class="gt-hchip ${curMinSquad === 18 ? 'active' : ''}" onclick="gtSetMinSquad(18, event)">18</button>
                         </div>
                     </div>
                     <div class="gt-host-actions">
@@ -4565,7 +4577,7 @@ socket.on("specialPlayerIntro", ({ playerName, videoPath }) => {
     video.onerror = finishIntro;
 
     // Safety timeout so slow devices don't get stuck forever
-    setTimeout(() => { if (!finished) finishIntro(); }, 14000);
+    setTimeout(() => { if (!finished) finishIntro(); }, 35000);
 
     const playPromise = video.play();
     if (playPromise !== undefined) {
@@ -6726,17 +6738,29 @@ function refreshGlobalUI() {
 
 
 
-window.gtSetTimer = function(val) {
+window.gtSetTimer = function(val, e) {
     const el = document.getElementById("hqsTimer");
     if (el) el.value = val;
     if (typeof setHqsTimer === "function") setHqsTimer(val);
     if (typeof saveHostQuickSettings === "function") saveHostQuickSettings();
-    renderGeneralTab();
+    if (e && e.target) {
+        const ogText = e.target.innerHTML;
+        e.target.innerHTML = "✓";
+        setTimeout(() => renderGeneralTab(), 300);
+    } else {
+        renderGeneralTab();
+    }
 };
-window.gtSetMinSquad = function(val) {
+window.gtSetMinSquad = function(val, e) {
     const el = document.getElementById("hqsMinSquad");
     if (el) el.value = val;
     if (typeof setHqsMinSquad === "function") setHqsMinSquad(val);
     if (typeof saveHostQuickSettings === "function") saveHostQuickSettings();
-    renderGeneralTab();
+    if (e && e.target) {
+        const ogText = e.target.innerHTML;
+        e.target.innerHTML = "✓";
+        setTimeout(() => renderGeneralTab(), 300);
+    } else {
+        renderGeneralTab();
+    }
 };

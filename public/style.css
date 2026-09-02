@@ -16981,3 +16981,11 @@ button[disabled] {
     min-height: 20px !important;
     padding: 2px 8px !important;
 }
+
+/* Overrides for recent bug fixes */
+.cc-tabs { flex-wrap: nowrap !important; overflow-x: auto !important; }
+.cc-tab-btn { min-width: 0 !important; flex-shrink: 1 !important; }
+.gt-alert-code-box { padding-bottom: 10px !important; }
+.identity-verify-card { background: rgba(15, 23, 42, 0.95) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 20px 40px rgba(0,0,0,0.5) !important; border-radius: 12px !important; backdrop-filter: blur(10px) !important; }
+.identity-verify-card input { font-size: 1.5rem !important; letter-spacing: 4px !important; text-align: center !important; }
+

@@ -599,13 +599,12 @@ function broadcastUserList(room, roomCode) {
         isHost: (room.admin === u.id)
     }));
     io.to(roomCode).emit("roomUsersUpdate", userList);
+    if (room.isPublic) broadcastPublicRooms();
 }
 
 /* ================= SOCKET LOGIC ================= */
 
-io.on("connection", socket => {
-
-function broadcastPublicRooms() {
+function getPublicRoomsData() {
     const liveRooms = [];
     const waitingRooms = [];
     for (const [id, room] of Object.entries(rooms)) {
@@ -623,30 +622,17 @@ function broadcastPublicRooms() {
             }
         }
     }
-    io.emit('publicRoomsList', { live: liveRooms, waiting: waitingRooms });
+    return { live: liveRooms, waiting: waitingRooms };
 }
 
+function broadcastPublicRooms() {
+    io.emit('publicRoomsList', getPublicRoomsData());
+}
 
+io.on("connection", socket => {
     // 1. GET PUBLIC ROOMS
     socket.on('getPublicRooms', () => {
-        const liveRooms = [];
-        const waitingRooms = [];
-        for (const [id, room] of Object.entries(rooms)) {
-            if (room.isPublic && !room.auctionEnded) {
-                const info = {
-                    id,
-                    count: Object.keys(room.users).length,
-                    poolName: poolDisplayName(room.datasetId),
-                    hostName: room.adminUser || "Host",
-                };
-                if (room.auctionStarted) {
-                    liveRooms.push(info);
-                } else {
-                    waitingRooms.push(info);
-                }
-            }
-        }
-        socket.emit('publicRoomsList', { live: liveRooms, waiting: waitingRooms });
+        socket.emit('publicRoomsList', getPublicRoomsData());
     });
 
     // 2. CREATE ROOM
@@ -746,7 +732,7 @@ if (datasetId === "legends") {
         socket.user = user;
         socket.isAdmin = true;
         
-        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true };
+        room.users[socket.id] = { name: user, team: null, id: socket.id, connected: true, deviceId: body.deviceId };
 
         socket.emit("roomCreated", code);
         socket.emit("joinedRoom", {
@@ -862,7 +848,10 @@ socket.on("getArchivedLeaderboard", async ({ roomCode } = {}) => {
 
     // 3. RECONNECT USER
     // 3. RECONNECT USER (Updated Logic)
-    socket.on('reconnectUser', ({ roomId, username }) => {
+    socket.on('reconnectUser', (body) => {
+        const roomId = body.roomId;
+        const username = body.username;
+        const deviceId = body.deviceId;
         const room = rooms[roomId];
         const timerKey = `${roomId}_${username}`;
         
@@ -883,6 +872,15 @@ socket.on("getArchivedLeaderboard", async ({ roomCode } = {}) => {
             }
             // Find user by name (since socket ID changes on reconnect)
             let oldSocketId = Object.keys(room.users).find(key => room.users[key].name === username);
+            
+            if (oldSocketId) {
+                const existingUser = room.users[oldSocketId];
+                if (deviceId && existingUser.deviceId === deviceId) {
+                    // Match by device ID, they are the same person on the same device.
+                    // Bypass any pending identity challenge.
+                    if (pendingChallenge) delete global.identityChallenges[challengeKey];
+                }
+            }
             
             // If user wasn't in room and auction ended -> block them unless they just want to see results
             // (Optional: You can remove this check if you want to allow late spectators)
@@ -1007,7 +1005,10 @@ socket.on("getArchivedLeaderboard", async ({ roomCode } = {}) => {
     });
 
     // 4. JOIN ROOM (with identity verification for same-name joins)
-    socket.on("joinRoom", ({ roomCode, user }) => {
+    socket.on("joinRoom", (body) => {
+        const roomCode = body.roomCode;
+        const user = body.user;
+        const deviceId = body.deviceId;
         const room = rooms[roomCode];
         if(!room) return socket.emit("error", "Room not found");
         
@@ -1041,9 +1042,10 @@ socket.on("getArchivedLeaderboard", async ({ roomCode } = {}) => {
         // If a user with this name already exists, check if they are disconnected/away
         if (existingSocketId) {
             const existingUser = room.users[existingSocketId];
-            // If user is disconnected (isAway, !connected, or timer running), allow direct rejoin
+            // If user is disconnected (isAway, !connected, timer running), or on the same device, allow direct rejoin
             const timerKey = `${roomCode}_${user}`;
-            const isDisconnected = existingUser.isAway || existingUser.connected === false || disconnectTimers[timerKey];
+            const isSameDevice = deviceId && existingUser.deviceId === deviceId;
+            const isDisconnected = isSameDevice || existingUser.isAway || existingUser.connected === false || disconnectTimers[timerKey];
             
             if (isDisconnected) {
                 // Cancel any pending disconnect timer
@@ -1061,6 +1063,7 @@ socket.on("getArchivedLeaderboard", async ({ roomCode } = {}) => {
                 userData.isAway = false;
                 userData.disconnectTime = null;
                 userData.isKicked = false;
+                if (deviceId) userData.deviceId = deviceId;
                 
                 room.users[socket.id] = userData;
                 
@@ -1262,7 +1265,7 @@ socket.on("getArchivedLeaderboard", async ({ roomCode } = {}) => {
     });
 
     // 5a. IDENTITY CHALLENGE RESPONSE (old device typing the 3‑digit code)
- socket.on("verifyIdentityCode", ({ roomCode, name, code }) => {
+ socket.on("verifyIdentityCode", ({ roomCode, name, code, deviceId }) => {
     const challengeKey = `${roomCode}:${name}`;
     if (!global.identityChallenges) return;
     const ch = global.identityChallenges[challengeKey];
@@ -1301,6 +1304,7 @@ socket.on("getArchivedLeaderboard", async ({ roomCode } = {}) => {
         isAway: false,
         isKicked: false
     };
+    if (deviceId) room.users[newSocketId].deviceId = deviceId;
 
     // Transfer Admin if necessary
     if (room.admin === oldSocketId) {
