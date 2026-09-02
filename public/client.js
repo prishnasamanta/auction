@@ -633,19 +633,7 @@ function updateBrowserURL(code) {
     }
 }
 window.switchAuthTab = function(tab) {
-    closePublicRoomsBrowse();
-    if (typeof closeAuthGameHistory === "function") closeAuthGameHistory();
-    document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab' + (tab === 'join' ? 'Join' : 'Create')).classList.add('active');
-    if (tab === 'create') {
-        document.getElementById('createSection').classList.remove('hidden');
-        document.getElementById('joinSection').classList.add('hidden');
-        if (typeof updatePoolSelectedLabel === 'function') updatePoolSelectedLabel();
-    } else {
-        document.getElementById('createSection').classList.add('hidden');
-        document.getElementById('joinSection').classList.remove('hidden');
-        socket.emit('getPublicRooms');
-    }
+    // Tabs have been removed in favor of the dashboard layout.
 };
 // --- 1. EXIT TO HOME (Fixes Reconnect Loop) ---
 window.exitToHome = function() {
@@ -742,10 +730,8 @@ function renderPublicRoomsListFull() {
 }
 
 window.openPublicRoomsBrowse = function() {
-    const card = document.querySelector("#auth .auth-card");
     const browse = document.getElementById("publicRoomsBrowse");
-    if (!card || !browse) return;
-    card.classList.add("auth-public-browse-active");
+    if (!browse) return;
     browse.classList.remove("hidden");
     browse.setAttribute("aria-hidden", "false");
     renderPublicRoomsListFull();
@@ -753,9 +739,7 @@ window.openPublicRoomsBrowse = function() {
 };
 
 window.closePublicRoomsBrowse = function() {
-    const card = document.querySelector("#auth .auth-card");
     const browse = document.getElementById("publicRoomsBrowse");
-    if (card) card.classList.remove("auth-public-browse-active");
     if (browse) {
         browse.classList.add("hidden");
         browse.setAttribute("aria-hidden", "true");
@@ -830,6 +814,7 @@ function updateAuthGoogleButtons() {
     const profileBtn = document.getElementById("authProfileBtn");
     const profileImg = document.getElementById("authProfileImg");
     const sidebarProfileImg = document.getElementById("sidebarProfileImg");
+    const dashboardProfileImg = document.getElementById("dashboardProfileImg");
     
     // Check local storage for name
     const savedName = localStorage.getItem("ipl_user") || sessionStorage.getItem("ipl_user") || "";
@@ -843,6 +828,7 @@ function updateAuthGoogleButtons() {
         const photoUrl = iplGoogleProfile.photo || "https://img.icons8.com/color/48/000000/google-logo.png";
         if (profileImg) profileImg.src = photoUrl;
         if (sidebarProfileImg) sidebarProfileImg.src = photoUrl;
+        if (dashboardProfileImg) dashboardProfileImg.src = photoUrl;
     } else {
         if (btn) btn.classList.remove("hidden");
         if (profileBtn) profileBtn.classList.add("hidden");
@@ -957,12 +943,7 @@ window.openAuthGameHistory = async function () {
         await authGoogleSync();
         if (!iplGoogleLinked) return;
     }
-    const card = document.querySelector("#auth .auth-card");
     const panel = document.getElementById("authGameHistory");
-    if (card) {
-        card.classList.add("auth-history-active");
-        card.classList.remove("auth-public-browse-active");
-    }
     if (panel) {
         panel.classList.remove("hidden");
         panel.setAttribute("aria-hidden", "false");
@@ -972,9 +953,7 @@ window.openAuthGameHistory = async function () {
 };
 
 window.closeAuthGameHistory = function () {
-    const card = document.querySelector("#auth .auth-card");
     const panel = document.getElementById("authGameHistory");
-    if (card) card.classList.remove("auth-history-active");
     if (panel) {
         panel.classList.add("hidden");
         panel.setAttribute("aria-hidden", "true");
@@ -5408,12 +5387,9 @@ function isAuthScreenVisible() {
 window.openCustomBuilder = async function() {
     const overlay = document.getElementById("customBuilderOverlay");
     const el = getCustomBuilderEls();
-    const authCard = document.querySelector("#auth .auth-card");
-
     if (!overlay) return;
 
     overlay.classList.remove("hidden");
-    if (authCard) authCard.classList.add("auth-card--builder");
     if (isAuthScreenVisible()) {
         document.getElementById("createSection")?.classList.remove("custom-builder-open");
     }
@@ -5558,9 +5534,7 @@ window.toggleAutoSelectPool = function() {
 
 window.closeCustomBuilder = function(skipReset) {
     const overlay = document.getElementById("customBuilderOverlay");
-    const authCard = document.querySelector("#auth .auth-card");
     if (overlay) overlay.classList.add("hidden");
-    if (authCard) authCard.classList.remove("auth-card--builder");
     document.getElementById("createSection")?.classList.remove("custom-builder-open");
     customBuilderBackToChoice();
 
