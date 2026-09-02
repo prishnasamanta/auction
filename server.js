@@ -720,6 +720,8 @@ if (datasetId === "legends") {
         };
 
         const room = rooms[code];
+        room.rules.hostName = user;
+        
         AVAILABLE_TEAMS_LIST.forEach(t => {
             room.squads[t] = [];
             room.purse[t] = room.rules.purse;

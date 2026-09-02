@@ -16989,3 +16989,55 @@ button[disabled] {
 .identity-verify-card { background: rgba(15, 23, 42, 0.95) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 20px 40px rgba(0,0,0,0.5) !important; border-radius: 12px !important; backdrop-filter: blur(10px) !important; }
 .identity-verify-card input { font-size: 1.5rem !important; letter-spacing: 4px !important; text-align: center !important; }
 
+/* XI Pills Styles */
+.gt-xi-pills-row, .mobile-bottom-xi-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.gt-xi-pills-row {
+    margin-left: auto; /* Push to right */
+}
+.xi-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1.5px solid currentColor;
+}
+.xi-pill svg { width: 14px; height: 14px; }
+.xi-pill b { margin-left: 2px; font-weight: 700; font-family: monospace; }
+
+/* SVG Color Mapping */
+.xi-pill.os-pill { color: #4ade80; }
+.xi-pill.wk-pill { color: #ec4899; }
+.xi-pill.bat-pill { color: #fbbf24; }
+.xi-pill.ar-pill { color: #10b981; }
+.xi-pill.spin-pill { color: #38bdf8; }
+.xi-pill.pace-pill { color: #a855f7; }
+
+/* Mobile Bottom Bar */
+.mobile-bottom-xi-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    z-index: 1000;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .desktop-only { display: none !important; }
+}
+@media (min-width: 769px) {
+    .mobile-only { display: none !important; }
+}

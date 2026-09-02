@@ -3455,12 +3455,21 @@ function renderGeneralTab() {
     };
 
     // 1. Room Code + Rules Strip (Ultra Compact)
+    const xiPillsHtml = `
+        <span class="xi-pill os-pill">${svgIco.foreign} <b class="val-os">-</b></span>
+        <span class="xi-pill wk-pill">${svgIco.wk} <b class="val-wk">-</b></span>
+        <span class="xi-pill bat-pill">${svgIco.bat} <b class="val-bat">-</b></span>
+        <span class="xi-pill ar-pill">${svgIco.ar} <b class="val-ar">-</b></span>
+        <span class="xi-pill spin-pill">${svgIco.spin} <b class="val-spin">-</b></span>
+        <span class="xi-pill pace-pill">${svgIco.bowl} <b class="val-bowl">-</b></span>
+    `;
+
     const rulesHtml = `
         <div class="gt-combined-card compact">
             <div class="gt-room-strip">
                 <span class="gt-room-chip"><span class="gt-chip-lbl">Room</span> <b>${roomCode || '---'}</b></span>
                 <span class="gt-room-chip"><span class="gt-chip-lbl">Host</span> <b>${activeRules?.hostName || '---'}</b></span>
-                <span class="gt-room-chip"><span class="gt-chip-lbl">Pool</span> <b>${activeRules?.poolName || '---'}</b></span>
+                <div class="gt-xi-pills-row desktop-only">${xiPillsHtml}</div>
             </div>
             <div class="gt-rules-mini">
                 <div class="gt-rmini">${svgIco.purse}<div><b id="pop_viewPurse">---</b><span> Cr</span></div></div>
@@ -3468,16 +3477,8 @@ function renderGeneralTab() {
                 <div class="gt-rmini">${svgIco.foreign}<div><b id="pop_viewForeign">---</b><span> OS</span></div></div>
                 <div class="gt-rmini" id="pop_viewRtmBox" style="display:none;">${svgIco.rtm}<div><b id="pop_viewRtm">---</b><span> RTM</span></div></div>
             </div>
-            <div class="gt-xi-strip">
-                <span class="gt-xi-label">XI:</span>
-                <span class="gt-xi-chip">${svgIco.bat}<b id="pop_viewBat">-</b></span>
-                <span class="gt-xi-chip">${svgIco.bowl}<b id="pop_viewBowl">-</b></span>
-                <span class="gt-xi-chip">${svgIco.spin}<b id="pop_viewSpin">-</b></span>
-                <span class="gt-xi-chip">${svgIco.wk}<b id="pop_viewWK">-</b></span>
-                <span class="gt-xi-chip">${svgIco.ar}<b id="pop_viewAR">-</b></span>
-                <span class="gt-xi-chip">${svgIco.os}<b id="pop_viewForeignXI">-</b></span>
-            </div>
         </div>
+        <div class="mobile-bottom-xi-bar mobile-only">${xiPillsHtml}</div>
     `;
 
     // 2. Host Settings Section (Embedded in General Tab)
@@ -4481,12 +4482,14 @@ function updateRulesUI() {
             rtmBox.style.display = 'none';
         }
     }
-    set('pop_viewBat', r.minBat);
-    set('pop_viewBowl', r.minBowl);
-    set('pop_viewWK', r.minWK);
-    set('pop_viewAR', r.minAll);
-    set('pop_viewSpin', r.minSpin);
-    set('pop_viewForeignXI', r.maxForeignXI);
+    const setClassVal = (cls, val) => document.querySelectorAll(`.${cls}`).forEach(el => el.innerText = val);
+    
+    setClassVal('val-bat', r.minBat);
+    setClassVal('val-bowl', r.minBowl);
+    setClassVal('val-wk', r.minWK);
+    setClassVal('val-ar', r.minAll);
+    setClassVal('val-spin', r.minSpin);
+    setClassVal('val-os', r.maxForeignXI);
 
     set('viewPurse', r.purse);
     set('viewSquadSize', `${minSq}–${maxSq}`);
