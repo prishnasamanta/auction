@@ -866,22 +866,20 @@ socket.on("getArchivedLeaderboard", async ({ roomCode } = {}) => {
         if (room) {
             const challengeKey = `${roomId}:${username}`;
             const pendingChallenge = global.identityChallenges && global.identityChallenges[challengeKey];
-            // Enforce same-name verification even across refresh/reconnect.
-            if (pendingChallenge) {
+
+            // Find user by name (since socket ID changes on reconnect)
+            let oldSocketId = Object.keys(room.users).find(key => room.users[key].name === username);
+            let existingUser = oldSocketId ? room.users[oldSocketId] : null;
+
+            if (existingUser && deviceId && existingUser.deviceId === deviceId) {
+                // Legitimate user reconnecting
+                // Bypass any pending identity challenge
+                if (pendingChallenge) delete global.identityChallenges[challengeKey];
+            } else if (pendingChallenge) {
+                // Intruder reconnecting or refreshing during challenge
                 pendingChallenge.newSocketId = socket.id;
                 socket.emit("identityInputRequired", { roomCode: roomId, name: username });
                 return;
-            }
-            // Find user by name (since socket ID changes on reconnect)
-            let oldSocketId = Object.keys(room.users).find(key => room.users[key].name === username);
-            
-            if (oldSocketId) {
-                const existingUser = room.users[oldSocketId];
-                if (deviceId && existingUser.deviceId === deviceId) {
-                    // Match by device ID, they are the same person on the same device.
-                    // Bypass any pending identity challenge.
-                    if (pendingChallenge) delete global.identityChallenges[challengeKey];
-                }
             }
             
             // If user wasn't in room and auction ended -> block them unless they just want to see results
@@ -1204,7 +1202,7 @@ socket.on("getArchivedLeaderboard", async ({ roomCode } = {}) => {
                     delete global.identityChallenges[challengeKey];
                     io.to(socket.id).emit("identityFailed", { reason: "timeout" });
                 }
-            }, 30000); // Give them 30 seconds
+            }, 20000); // Give them 20 seconds
 
             return; 
         }

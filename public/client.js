@@ -785,11 +785,8 @@ function updatePublicRoomsUI() {
     if (browseActive) renderPublicRoomsListFull();
 
     if (toggle) {
-        if (total <= 3) toggle.classList.add("hidden");
-        else {
-            toggle.classList.remove("hidden");
-            toggle.innerHTML = `View all ${total} rooms`;
-        }
+        toggle.classList.remove("hidden");
+        toggle.innerHTML = `View all ${total} rooms`;
     }
 }
 
@@ -1523,19 +1520,37 @@ socket.on("identityInputRequired", ({ roomCode, name }) => {
     }
 
     overlay.innerHTML = `
-        <div class="glass rules-card identity-verify-card" style="max-width:420px; margin:0 auto;">
-            <button type="button" class="identity-verify-close" aria-label="Close">×</button>
-            <h2 style="color:#facc15; margin-bottom:10px;">🔐 Verification</h2>
-            <p style="color:#cbd5e1; font-size:0.9rem; margin:0 0 12px 0;">
-                Check your other device for the 3-digit code.
+        <div class="glass identity-verify-card" style="max-width:380px; margin:auto; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 0 40px rgba(0,0,0,0.8);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+                <h2 style="color:#fff; margin:0; font-size: 1.2rem; display:flex; align-items:center; gap:8px;">
+                    <span style="color:#38bdf8;">🔐</span> Verification
+                </h2>
+                <button type="button" class="identity-verify-close" aria-label="Close" style="background:transparent; border:none; color:#cbd5e1; font-size:1.5rem; cursor:pointer;">×</button>
+            </div>
+            
+            <p style="color:#94a3b8; font-size:0.95rem; margin:0 0 20px 0; line-height:1.5;">
+                Another device is currently acting as <strong>"${esc(name)}"</strong>. Please enter the 3-digit code shown on that device to claim this identity.
             </p>
-            <input type="number" id="verifyInput" placeholder="000" class="identity-verify-input centered-input" maxlength="3">
-            <button id="btnSubmitCode" class="primary-btn" style="width:100%; margin-top:12px;">VERIFY & JOIN</button>
+            
+            <div style="display:flex; justify-content:center; margin-bottom: 24px;">
+                <input type="number" id="verifyInput" placeholder="0 0 0" class="identity-verify-input centered-input" maxlength="3" style="font-size: 2.5rem; letter-spacing: 12px; padding: 12px; width: 140px; text-align: center; border-radius: 12px; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); color: #fff;">
+            </div>
+            
+            <button id="btnSubmitCode" class="primary-btn" style="width:100%; padding: 14px; font-size: 1.1rem; border-radius: 8px; margin-bottom: 12px;">VERIFY & JOIN</button>
+            <div style="text-align:center; color:#ef4444; font-size:0.85rem; font-weight:600;">Time remaining: <span id="verifyTimer">20s</span></div>
         </div>
     `;
 
+    let timeLeft = 20;
+    const verifyInterval = setInterval(() => {
+        timeLeft--;
+        const tEl = document.getElementById("verifyTimer");
+        if (tEl) tEl.innerText = `${timeLeft}s`;
+        if (timeLeft <= 0) clearInterval(verifyInterval);
+    }, 1000);
+
     const closeBtn = overlay.querySelector(".identity-verify-close");
-    if (closeBtn) closeBtn.onclick = closeAndGoHome;
+    if (closeBtn) closeBtn.onclick = () => { clearInterval(verifyInterval); closeAndGoHome(); };
 
     const submitBtn = document.getElementById("btnSubmitCode");
     if (submitBtn) {
@@ -1545,7 +1560,8 @@ socket.on("identityInputRequired", ({ roomCode, name }) => {
             if (!code) return;
             socket.emit("verifyIdentityCode", { roomCode, name, code, deviceId: getDeviceId() });
             const card = overlay.querySelector(".identity-verify-card");
-            if (card) card.innerHTML = `<div style="color:#e2e8f0; text-align:center; padding:30px 0;">Verifying...</div>`;
+            if (card) card.innerHTML = `<div style="color:#38bdf8; text-align:center; padding:40px 0; font-size:1.2rem;">Verifying Identity...</div>`;
+            clearInterval(verifyInterval);
         };
     }
 });
