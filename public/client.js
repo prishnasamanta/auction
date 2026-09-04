@@ -633,7 +633,19 @@ function updateBrowserURL(code) {
     }
 }
 window.switchAuthTab = function(tab) {
-    // Tabs have been removed in favor of the dashboard layout.
+    closePublicRoomsBrowse();
+    if (typeof closeAuthGameHistory === "function") closeAuthGameHistory();
+    document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab' + (tab === 'join' ? 'Join' : 'Create')).classList.add('active');
+    if (tab === 'create') {
+        document.getElementById('createSection').classList.remove('hidden');
+        document.getElementById('joinSection').classList.add('hidden');
+        if (typeof updatePoolSelectedLabel === 'function') updatePoolSelectedLabel();
+    } else {
+        document.getElementById('createSection').classList.add('hidden');
+        document.getElementById('joinSection').classList.remove('hidden');
+        socket.emit('getPublicRooms');
+    }
 };
 // --- 1. EXIT TO HOME (Fixes Reconnect Loop) ---
 window.exitToHome = function() {
@@ -730,8 +742,10 @@ function renderPublicRoomsListFull() {
 }
 
 window.openPublicRoomsBrowse = function() {
+    const card = document.querySelector("#auth .auth-card");
     const browse = document.getElementById("publicRoomsBrowse");
-    if (!browse) return;
+    if (!card || !browse) return;
+    card.classList.add("auth-public-browse-active");
     browse.classList.remove("hidden");
     browse.setAttribute("aria-hidden", "false");
     renderPublicRoomsListFull();
@@ -739,7 +753,9 @@ window.openPublicRoomsBrowse = function() {
 };
 
 window.closePublicRoomsBrowse = function() {
+    const card = document.querySelector("#auth .auth-card");
     const browse = document.getElementById("publicRoomsBrowse");
+    if (card) card.classList.remove("auth-public-browse-active");
     if (browse) {
         browse.classList.add("hidden");
         browse.setAttribute("aria-hidden", "true");
@@ -814,7 +830,6 @@ function updateAuthGoogleButtons() {
     const profileBtn = document.getElementById("authProfileBtn");
     const profileImg = document.getElementById("authProfileImg");
     const sidebarProfileImg = document.getElementById("sidebarProfileImg");
-    const dashboardProfileImg = document.getElementById("dashboardProfileImg");
     
     // Check local storage for name
     const savedName = localStorage.getItem("ipl_user") || sessionStorage.getItem("ipl_user") || "";
@@ -828,7 +843,6 @@ function updateAuthGoogleButtons() {
         const photoUrl = iplGoogleProfile.photo || "https://img.icons8.com/color/48/000000/google-logo.png";
         if (profileImg) profileImg.src = photoUrl;
         if (sidebarProfileImg) sidebarProfileImg.src = photoUrl;
-        if (dashboardProfileImg) dashboardProfileImg.src = photoUrl;
     } else {
         if (btn) btn.classList.remove("hidden");
         if (profileBtn) profileBtn.classList.add("hidden");
@@ -943,7 +957,12 @@ window.openAuthGameHistory = async function () {
         await authGoogleSync();
         if (!iplGoogleLinked) return;
     }
+    const card = document.querySelector("#auth .auth-card");
     const panel = document.getElementById("authGameHistory");
+    if (card) {
+        card.classList.add("auth-history-active");
+        card.classList.remove("auth-public-browse-active");
+    }
     if (panel) {
         panel.classList.remove("hidden");
         panel.setAttribute("aria-hidden", "false");
@@ -953,7 +972,9 @@ window.openAuthGameHistory = async function () {
 };
 
 window.closeAuthGameHistory = function () {
+    const card = document.querySelector("#auth .auth-card");
     const panel = document.getElementById("authGameHistory");
+    if (card) card.classList.remove("auth-history-active");
     if (panel) {
         panel.classList.add("hidden");
         panel.setAttribute("aria-hidden", "true");
@@ -1507,24 +1528,18 @@ socket.on("identityInputRequired", ({ roomCode, name }) => {
     }
 
     overlay.innerHTML = `
-        <div class="glass identity-verify-card" style="max-width:380px; margin:auto; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 0 40px rgba(0,0,0,0.8);">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
-                <h2 style="color:#fff; margin:0; font-size: 1.2rem; display:flex; align-items:center; gap:8px;">
-                    <span style="color:#38bdf8;">🔐</span> Verification
-                </h2>
-                <button type="button" class="identity-verify-close" aria-label="Close" style="background:transparent; border:none; color:#cbd5e1; font-size:1.5rem; cursor:pointer;">×</button>
+        <div class="iv-card-v2">
+            <div class="iv-header-v2">
+                <h2 class="iv-title-v2"><span style="color:#38bdf8">🔐</span> Verification</h2>
+                <button type="button" class="iv-close-v2 identity-verify-close" aria-label="Close">×</button>
             </div>
-            
-            <p style="color:#94a3b8; font-size:0.95rem; margin:0 0 20px 0; line-height:1.5;">
-                Another device is currently acting as <strong>"${esc(name)}"</strong>. Please enter the 3-digit code shown on that device to claim this identity.
-            </p>
-            
-            <div style="display:flex; justify-content:center; margin-bottom: 24px;">
-                <input type="number" id="verifyInput" placeholder="0 0 0" class="identity-verify-input centered-input" maxlength="3" style="font-size: 2.5rem; letter-spacing: 12px; padding: 12px; width: 140px; text-align: center; border-radius: 12px; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); color: #fff;">
+            <p class="iv-desc-v2">Another device is acting as <strong>"${esc(name)}"</strong>. Enter the 3-digit code shown on that device.</p>
+            <div class="iv-input-wrap-v2">
+                <input type="number" id="verifyInput" placeholder="000" class="iv-code-input-v2" maxlength="3">
             </div>
-            
-            <button id="btnSubmitCode" class="primary-btn" style="width:100%; padding: 14px; font-size: 1.1rem; border-radius: 8px; margin-bottom: 12px;">VERIFY & JOIN</button>
-            <div style="text-align:center; color:#ef4444; font-size:0.85rem; font-weight:600;">Time remaining: <span id="verifyTimer">20s</span></div>
+            <button id="btnSubmitCode" class="iv-submit-v2">VERIFY & JOIN</button>
+            <div class="iv-timer-bar-wrap"><div id="verifyTimerBar" class="iv-timer-bar" style="width:100%"></div></div>
+            <div class="iv-timer-text">Expires in <span id="verifyTimer">20s</span></div>
         </div>
     `;
 
@@ -1532,7 +1547,9 @@ socket.on("identityInputRequired", ({ roomCode, name }) => {
     const verifyInterval = setInterval(() => {
         timeLeft--;
         const tEl = document.getElementById("verifyTimer");
+        const bar = document.getElementById("verifyTimerBar");
         if (tEl) tEl.innerText = `${timeLeft}s`;
+        if (bar) bar.style.width = `${(timeLeft / 20) * 100}%`;
         if (timeLeft <= 0) clearInterval(verifyInterval);
     }, 1000);
 
@@ -5387,9 +5404,12 @@ function isAuthScreenVisible() {
 window.openCustomBuilder = async function() {
     const overlay = document.getElementById("customBuilderOverlay");
     const el = getCustomBuilderEls();
+    const authCard = document.querySelector("#auth .auth-card");
+
     if (!overlay) return;
 
     overlay.classList.remove("hidden");
+    if (authCard) authCard.classList.add("auth-card--builder");
     if (isAuthScreenVisible()) {
         document.getElementById("createSection")?.classList.remove("custom-builder-open");
     }
@@ -5534,7 +5554,9 @@ window.toggleAutoSelectPool = function() {
 
 window.closeCustomBuilder = function(skipReset) {
     const overlay = document.getElementById("customBuilderOverlay");
+    const authCard = document.querySelector("#auth .auth-card");
     if (overlay) overlay.classList.add("hidden");
+    if (authCard) authCard.classList.remove("auth-card--builder");
     document.getElementById("createSection")?.classList.remove("custom-builder-open");
     customBuilderBackToChoice();
 

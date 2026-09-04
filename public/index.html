@@ -211,97 +211,79 @@
         </div>
     </div>
 
-    <div class="auth-page auth-dashboard">
-        <div class="auth-dashboard-container">
-            <div class="auth-dashboard-header">
-                <h2>Enter the <span class="auth-heading-accent">arena</span></h2>
-            </div>
-            
-            <!-- Profile Tile -->
-            <div class="glass auth-card dashboard-tile profile-tile">
-                <div class="profile-tile-inner">
-                    <div class="profile-tile-avatar-wrap">
-                        <img id="dashboardProfileImg" src="https://ui-avatars.com/api/?name=Guest&background=0f172a&color=38bdf8" alt="Avatar">
-                    </div>
-                    <div class="profile-tile-info">
-                        <label class="auth-field-label" for="username">Display Name</label>
-                        <input id="username" class="auth-input" placeholder="Your name in the auction" autocomplete="nickname">
-                    </div>
-                </div>
+    <div class="auth-page">
+    <div class="auth-wrapper">
+        <div class="glass auth-card">
+            <div class="auth-card-main">
+            <div class="auth-card-head">
+                <p class="auth-eyebrow">Room lobby</p>
+                <h2 class="auth-heading">Enter the <span class="auth-heading-accent">arena</span></h2>
             </div>
 
-            <div class="auth-dashboard-grid">
-                <!-- Join Room Tile -->
-                <div class="glass auth-card dashboard-tile join-tile">
-                    <div class="tile-icon">🎯</div>
-                    <h3 class="tile-title">Join Room</h3>
-                    <p class="tile-desc">Enter a 5-letter code to join an existing auction.</p>
-                    <div class="tile-action auth-join-row" style="margin-top: 15px;">
-                        <input id="code" class="auth-input auth-input-code" placeholder="ABCDE" maxlength="5" autocomplete="off" style="text-align: center; letter-spacing: 4px;">
-                        <button type="button" id="joinBtn" class="primary-btn auth-go-btn" style="min-width: 80px;">Go</button>
+            <div class="auth-tabs">
+                <button type="button" onclick="switchAuthTab('join')" class="auth-tab-btn active" id="tabJoin">Join room</button>
+                <button type="button" onclick="switchAuthTab('create')" class="auth-tab-btn" id="tabCreate">Create room</button>
+            </div>
+
+            <div class="auth-body">
+                <label class="auth-field-label" for="username">Display name</label>
+                <input id="username" class="auth-input" placeholder="Your name in the auction" autocomplete="nickname">
+
+                <div id="joinSection">
+                    <label class="auth-field-label" for="code">Room code</label>
+                    <div class="auth-join-row">
+                        <input id="code" class="auth-input auth-input-code" placeholder="ABCDE" maxlength="5" autocomplete="off">
+                        <button type="button" id="joinBtn" class="primary-btn auth-go-btn">Go</button>
                     </div>
+                    <button type="button" id="publicRoomsToggle" class="secondary-btn auth-public-rooms-btn compact-public-rooms" onclick="openPublicRoomsBrowse()">
+                        <span aria-hidden="true">🌐</span> Browse Public Rooms (<span id="publicRoomsCount">0</span>)
+                    </button>
                 </div>
 
-                <!-- Create Room Tile -->
-                <div class="glass auth-card dashboard-tile create-tile">
-                    <div class="tile-header-flex">
-                        <div>
-                            <div class="tile-icon">🔨</div>
-                            <h3 class="tile-title">Create Room</h3>
-                            <p class="tile-desc">Host a new auction.</p>
-                        </div>
-                        <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                            <span class="label-text" style="font-size:0.7rem; color:#94a3b8; margin-bottom:4px;">Public</span>
-                            <label class="toggle-switch auth-toggle" title="Public Room">
-                                <input type="checkbox" id="isPublicRoom" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+                <div id="createSection" class="hidden">
+                    <div class="auth-toggle-box">
+                        <label class="toggle-switch auth-toggle">
+                            <span class="label-text">Public room</span>
+                            <input type="checkbox" id="isPublicRoom" checked>
+                            <span class="slider"></span>
+                        </label>
                     </div>
 
-                    <div class="dataset-scroll-container" style="margin-top: 15px;">
+                    <label class="auth-field-label auth-field-label-pool">Player pool</label>
+                    
+                    <div class="dataset-scroll-container">
                         <div class="dataset-card active" data-dataset-id="ipl2026" onclick="selectDataset('ipl2026', this)">
-                            <div class="ds-icon">🏆</div><div class="ds-title">IPL 2026</div><div class="ds-sub">Standard</div>
+                            <div class="ds-icon">🏆</div>
+                            <div class="ds-title">IPL 2026</div>
+                            <div class="ds-sub">Standard</div>
                         </div>
                         <div class="dataset-card" data-dataset-id="legends" onclick="selectDataset('legends', this)">
-                            <div class="ds-icon">🔥</div><div class="ds-title">LEGENDS</div><div class="ds-sub">All-Time</div>
+                            <div class="ds-icon">🔥</div>
+                            <div class="ds-title">LEGENDS</div>
+                            <div class="ds-sub">All-Time</div>
                         </div>
                         <div class="dataset-card" data-dataset-id="mixed" onclick="selectDataset('mixed', this)">
-                            <div class="ds-icon">⚔️</div><div class="ds-title">MIXED</div><div class="ds-sub">Great Icon</div>
+                            <div class="ds-icon">⚔️</div>
+                            <div class="ds-title">MIXED</div>
+                            <div class="ds-sub">Great Icon</div>
                         </div>
                         <div class="dataset-card" data-dataset-id="custom" onclick="selectDataset('custom', this)">
-                            <div class="ds-icon">🛠️</div><div class="ds-title">CUSTOM</div><div class="ds-sub">Builder</div>
+                            <div class="ds-icon">🛠️</div>
+                            <div class="ds-title">CUSTOM</div>
+                            <div class="ds-sub">Builder</div>
                         </div>
                     </div>
+
                     <div id="poolSelectedLabel" class="pool-selected-label">IPL 2026 pool is selected</div>
                     <input type="hidden" id="selectedSetId" value="ipl2026">
-                    
-                    <button type="button" id="createBtn" class="primary-btn auth-create-btn" style="width: 100%; margin-top: 10px;">Create room</button>
-                </div>
 
-                <!-- Public Rooms Tile -->
-                <div class="glass auth-card dashboard-tile action-tile" onclick="openPublicRoomsBrowse()">
-                    <div class="tile-icon">🌐</div>
-                    <div class="action-tile-info">
-                        <h3 class="tile-title">Public Rooms</h3>
-                        <p class="tile-desc">Browse <strong id="publicRoomsCount" style="color:#38bdf8;">0</strong> active public auctions</p>
-                    </div>
+                    <button type="button" id="createBtn" class="primary-btn auth-create-btn">Create room</button>
                 </div>
-
-                <!-- Game History Tile -->
-                <div class="glass auth-card dashboard-tile action-tile" onclick="openAuthGameHistory()">
-                    <div class="tile-icon">📜</div>
-                    <div class="action-tile-info">
-                        <h3 class="tile-title">Your History</h3>
-                        <p class="tile-desc">View your past completed games</p>
-                    </div>
-                </div>
-                
             </div>
-        </div>
+            </div>
 
-        <div id="authGameHistory" class="glass auth-card dashboard-modal hidden" aria-hidden="true">
-            <div class="auth-game-history-head">
+            <div id="authGameHistory" class="auth-game-history hidden" aria-hidden="true">
+                <div class="auth-game-history-head">
                     <button type="button" class="auth-public-browse-back" onclick="closeAuthGameHistory()">← Back to lobby</button>
                     <h3 class="auth-public-browse-title">Your games</h3>
                     <p id="authGameHistoryUser" class="auth-game-history-user"></p>
@@ -310,16 +292,16 @@
                 <div id="authGameHistoryList" class="auth-game-history-list custom-scroll"></div>
             </div>
 
-            <div id="publicRoomsBrowse" class="glass auth-card dashboard-modal hidden" aria-hidden="true">
+            <div id="publicRoomsBrowse" class="auth-public-rooms-browse hidden" aria-hidden="true">
                 <div class="auth-public-browse-head">
-                    <button type="button" class="auth-public-browse-back" onclick="closePublicRoomsBrowse()">← Back</button>
+                    <button type="button" class="auth-public-browse-back" onclick="closePublicRoomsBrowse()">← Back to lobby</button>
                     <h3 class="auth-public-browse-title">Public rooms</h3>
                 </div>
                 <p id="publicRoomsBrowseEmpty" class="auth-public-rooms-empty hidden">No active rooms right now.</p>
-                <div id="publicRoomListFull" class="room-list-box custom-scroll auth-room-list-full" style="max-height: 400px; overflow-y: auto;"></div>
+                <div id="publicRoomListFull" class="room-list-box custom-scroll auth-room-list-full"></div>
             </div>
 
-            <div id="customBuilderOverlay" class="glass auth-card dashboard-modal hidden">
+            <div id="customBuilderOverlay" class="auth-custom-builder auth-custom-builder-card hidden">
         <div class="glass rules-card cb-panel">
             <header class="cb-header">
                 <div class="cb-header-text">
