@@ -18711,3 +18711,603 @@ section#auth .auth-public-browse-title {
         padding: 14px 6px 12px !important;
     }
 }
+/* ================================================================== */
+/* 🚀 GROUND-UP COMPLETE ROOM LOBBY OVERHAUL                         */
+/* ================================================================== */
+
+@keyframes pulseGlowDot {
+    0% { opacity: 0.5; transform: scale(0.85); box-shadow: 0 0 4px #10b981; }
+    100% { opacity: 1; transform: scale(1.15); box-shadow: 0 0 14px #10b981; }
+}
+
+@keyframes cardGlowPulse {
+    0% { box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(56, 189, 248, 0.15); }
+    50% { box-shadow: 0 32px 85px rgba(0, 0, 0, 0.85), 0 0 30px rgba(16, 185, 129, 0.1), 0 0 0 1px rgba(52, 211, 153, 0.25); }
+    100% { box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(56, 189, 248, 0.15); }
+}
+
+/* Auth Canvas Background */
+section#auth.theme-app {
+    background: radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 60%),
+                linear-gradient(160deg, #020617 0%, #080e1a 50%, #030712 100%) !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    color: #f8fafc !important;
+}
+
+/* Header Navbar */
+section#auth .auth-global-topbar {
+    background: rgba(2, 6, 23, 0.85) !important;
+    backdrop-filter: blur(28px) !important;
+    -webkit-backdrop-filter: blur(28px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    padding: 14px 32px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+section#auth .auth-topbar-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+
+section#auth .auth-topbar-logo {
+    width: 40px !important;
+    height: 40px !important;
+    object-fit: contain !important;
+    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.45)) !important;
+}
+
+section#auth .auth-brand-text {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+section#auth .auth-topbar-title {
+    font-size: 1.2rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.06em !important;
+    color: #ffffff !important;
+}
+
+section#auth .auth-live-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-size: 0.64rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.1em !important;
+    color: #34d399 !important;
+    background: rgba(16, 185, 129, 0.12) !important;
+    padding: 4px 10px !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+section#auth .pulse-dot {
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 50% !important;
+    background: #10b981 !important;
+    animation: pulseGlowDot 1.4s infinite alternate ease-in-out !important;
+}
+
+/* Account Bar */
+section#auth .auth-account-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+section#auth .auth-google-sync-btn {
+    padding: 9px 18px !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #f1f5f9 !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    transition: all 0.25s ease !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+section#auth .auth-google-sync-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+section#auth .auth-profile-btn {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    border: 2px solid rgba(52, 211, 153, 0.4) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    cursor: pointer !important;
+    background: transparent !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.2) !important;
+}
+
+section#auth .auth-profile-btn:hover {
+    border-color: rgba(52, 211, 153, 0.8) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 0 18px rgba(52, 211, 153, 0.4) !important;
+}
+
+section#auth .auth-profile-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+}
+
+/* Page Body */
+section#auth .auth-page {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 40px 20px 60px !important;
+}
+
+section#auth .auth-wrapper {
+    width: 100% !important;
+    max-width: 510px !important;
+    margin: 0 auto !important;
+}
+
+/* Main Arena Card */
+section#auth .auth-card {
+    background: linear-gradient(165deg, rgba(15, 23, 42, 0.94), rgba(4, 9, 20, 0.98)) !important;
+    border: 1px solid rgba(56, 189, 248, 0.15) !important;
+    border-radius: 28px !important;
+    animation: cardGlowPulse 4s infinite ease-in-out !important;
+    backdrop-filter: blur(40px) !important;
+    -webkit-backdrop-filter: blur(40px) !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+section#auth .auth-card::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, #10b981, #0ea5e9, #6366f1) !important;
+}
+
+section#auth .auth-card-head {
+    padding: 34px 32px 12px !important;
+    text-align: center !important;
+}
+
+section#auth .auth-eyebrow-pill {
+    display: inline-block !important;
+    font-size: 0.65rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.22em !important;
+    color: #34d399 !important;
+    background: rgba(52, 211, 153, 0.08) !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
+    padding: 5px 14px !important;
+    border-radius: 20px !important;
+    margin-bottom: 14px !important;
+}
+
+section#auth .auth-heading {
+    font-size: 1.9rem !important;
+    font-weight: 900 !important;
+    color: #f8fafc !important;
+    margin: 0 0 8px !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.2 !important;
+}
+
+section#auth .auth-heading-accent {
+    background: linear-gradient(135deg, #34d399 0%, #38bdf8 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+section#auth .auth-subheading {
+    font-size: 0.85rem !important;
+    color: #64748b !important;
+    margin: 0 !important;
+    font-weight: 500 !important;
+}
+
+/* Tabs */
+section#auth .auth-tabs {
+    display: flex !important;
+    gap: 6px !important;
+    padding: 6px !important;
+    margin: 24px 30px 0 !important;
+    background: rgba(2, 6, 23, 0.55) !important;
+    border-radius: 18px !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+section#auth .auth-tab-btn {
+    flex: 1 !important;
+    padding: 13px 16px !important;
+    border: 1px solid transparent !important;
+    border-radius: 13px !important;
+    font-size: 0.9rem !important;
+    font-weight: 800 !important;
+    color: #64748b !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+section#auth .auth-tab-btn.active {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(14, 165, 233, 0.14)) !important;
+    color: #f8fafc !important;
+    border-color: rgba(52, 211, 153, 0.35) !important;
+    box-shadow: 0 4px 18px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+section#auth .auth-tab-btn:hover:not(.active) {
+    color: #94a3b8 !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Inputs & Form */
+section#auth .auth-body {
+    padding: 26px 30px 36px !important;
+}
+
+section#auth .auth-input-group {
+    margin-bottom: 20px !important;
+}
+
+section#auth .auth-field-label {
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+    color: #475569 !important;
+    margin: 0 0 8px !important;
+    display: block !important;
+}
+
+section#auth .auth-input-wrapper {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+section#auth .auth-input-icon {
+    position: absolute !important;
+    left: 16px !important;
+    font-size: 1.1rem !important;
+    opacity: 0.6 !important;
+    pointer-events: none !important;
+}
+
+section#auth .auth-input {
+    width: 100% !important;
+    padding: 15px 18px 15px 48px !important;
+    background: rgba(2, 6, 23, 0.6) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 15px !important;
+    color: #f8fafc !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    outline: none !important;
+    transition: all 0.25s ease !important;
+    box-sizing: border-box !important;
+}
+
+section#auth .auth-input:focus {
+    border-color: rgba(56, 189, 248, 0.5) !important;
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12), 0 0 24px rgba(56, 189, 248, 0.08) !important;
+    background: rgba(2, 6, 23, 0.8) !important;
+}
+
+/* Join Section */
+section#auth .auth-join-row {
+    display: flex !important;
+    gap: 12px !important;
+}
+
+section#auth .auth-input-code {
+    font-family: 'JetBrains Mono', monospace !important;
+    letter-spacing: 0.25em !important;
+    text-transform: uppercase !important;
+    font-weight: 800 !important;
+    font-size: 1.2rem !important;
+    padding: 14px 16px !important;
+    text-align: center !important;
+}
+
+section#auth .auth-go-btn {
+    padding: 15px 30px !important;
+    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0284c7 100%) !important;
+    border: none !important;
+    border-radius: 15px !important;
+    color: #ffffff !important;
+    font-weight: 900 !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 6px 22px rgba(16, 185, 129, 0.32) !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    letter-spacing: 0.04em !important;
+}
+
+section#auth .auth-go-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.48) !important;
+}
+
+section#auth .auth-public-divider {
+    display: flex !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin: 24px 0 16px !important;
+    font-size: 0.65rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.16em !important;
+    color: #334155 !important;
+}
+
+section#auth .auth-public-divider::before,
+section#auth .auth-public-divider::after {
+    content: '' !important;
+    flex: 1 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+section#auth .auth-public-divider span {
+    padding: 0 12px !important;
+}
+
+section#auth .auth-public-rooms-btn {
+    width: 100% !important;
+    padding: 14px 20px !important;
+    background: rgba(14, 165, 233, 0.08) !important;
+    border: 1px solid rgba(14, 165, 233, 0.2) !important;
+    border-radius: 15px !important;
+    color: #38bdf8 !important;
+    font-weight: 800 !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+section#auth .auth-public-rooms-btn:hover {
+    background: rgba(14, 165, 233, 0.16) !important;
+    border-color: rgba(14, 165, 233, 0.4) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Create Section */
+section#auth .auth-toggle-box {
+    margin-bottom: 20px !important;
+    background: rgba(2, 6, 23, 0.45) !important;
+    padding: 14px 18px !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+section#auth .auth-toggle .label-text {
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: #cbd5e1 !important;
+}
+
+section#auth .dataset-scroll-container {
+    display: flex !important;
+    gap: 12px !important;
+    overflow-x: auto !important;
+    padding: 8px 4px 18px !important;
+    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+}
+
+section#auth .dataset-scroll-container::-webkit-scrollbar {
+    display: none !important;
+}
+
+section#auth .dataset-card {
+    flex: 0 0 108px !important;
+    min-width: 108px !important;
+    background: rgba(2, 6, 23, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-radius: 18px !important;
+    padding: 18px 8px 14px !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+    position: relative !important;
+}
+
+section#auth .dataset-card:hover {
+    border-color: rgba(52, 211, 153, 0.3) !important;
+    background: rgba(52, 211, 153, 0.05) !important;
+    transform: translateY(-2px) !important;
+}
+
+section#auth .dataset-card.active {
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.18), rgba(14, 165, 233, 0.14)) !important;
+    border-color: rgba(52, 211, 153, 0.5) !important;
+    box-shadow: 0 0 26px rgba(52, 211, 153, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    transform: translateY(-3px) !important;
+}
+
+section#auth .ds-badge {
+    position: absolute !important;
+    top: -9px !important;
+    font-size: 0.52rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    padding: 2px 7px !important;
+    border-radius: 10px !important;
+    background: rgba(56, 189, 248, 0.18) !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+}
+
+section#auth .ds-badge-hot {
+    background: rgba(249, 115, 22, 0.18) !important;
+    color: #fb923c !important;
+    border-color: rgba(249, 115, 22, 0.3) !important;
+}
+
+section#auth .ds-badge-custom {
+    background: rgba(168, 85, 247, 0.18) !important;
+    color: #c084fc !important;
+    border-color: rgba(168, 85, 247, 0.3) !important;
+}
+
+section#auth .dataset-card .ds-icon {
+    font-size: 1.7rem !important;
+    margin: 4px 0 2px !important;
+}
+
+section#auth .dataset-card .ds-title {
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    color: #f1f5f9 !important;
+    letter-spacing: 0.05em !important;
+}
+
+section#auth .dataset-card .ds-sub {
+    font-size: 0.62rem !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
+
+section#auth .pool-selected-label {
+    font-size: 0.8rem !important;
+    color: #34d399 !important;
+    text-align: center !important;
+    padding: 8px 0 4px !important;
+    font-weight: 700 !important;
+    opacity: 0.9 !important;
+}
+
+section#auth .auth-create-btn {
+    width: 100% !important;
+    padding: 17px !important;
+    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0284c7 100%) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    color: #ffffff !important;
+    font-weight: 900 !important;
+    font-size: 1rem !important;
+    letter-spacing: 0.05em !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 8px 26px rgba(16, 185, 129, 0.35) !important;
+    margin-top: 10px !important;
+}
+
+section#auth .auth-create-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 34px rgba(16, 185, 129, 0.5) !important;
+}
+
+/* History and Public Rooms Browse */
+section#auth .auth-game-history,
+section#auth .auth-public-rooms-browse {
+    padding: 26px 30px 36px !important;
+}
+
+section#auth .auth-public-browse-head {
+    margin-bottom: 20px !important;
+}
+
+section#auth .auth-public-browse-back {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #94a3b8 !important;
+    padding: 8px 16px !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    font-size: 0.84rem !important;
+    font-weight: 700 !important;
+    transition: all 0.2s !important;
+    margin-bottom: 14px !important;
+}
+
+section#auth .auth-public-browse-back:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+}
+
+section#auth .auth-public-browse-title {
+    font-size: 1.25rem !important;
+    font-weight: 800 !important;
+    color: #f8fafc !important;
+    margin: 6px 0 !important;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    section#auth .auth-global-topbar {
+        padding: 12px 18px !important;
+    }
+    section#auth .auth-topbar-title {
+        font-size: 1.05rem !important;
+    }
+    section#auth .auth-live-badge {
+        font-size: 0.58rem !important;
+        padding: 2px 6px !important;
+    }
+    section#auth .auth-page {
+        padding: 20px 14px 36px !important;
+        align-items: flex-start !important;
+    }
+    section#auth .auth-card {
+        border-radius: 22px !important;
+    }
+    section#auth .auth-card-head {
+        padding: 26px 20px 8px !important;
+    }
+    section#auth .auth-heading {
+        font-size: 1.5rem !important;
+    }
+    section#auth .auth-tabs {
+        margin: 18px 20px 0 !important;
+    }
+    section#auth .auth-body {
+        padding: 20px 20px 26px !important;
+    }
+    section#auth .dataset-card {
+        flex: 0 0 96px !important;
+        min-width: 96px !important;
+        padding: 15px 6px 12px !important;
+    }
+}
