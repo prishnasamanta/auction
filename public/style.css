@@ -18712,3 +18712,185 @@ section#auth .auth-public-rooms-empty {
         padding-bottom: 24px !important;
     }
 }
+
+/* ================================================================== */
+/* ?? ULTRA-COMPACT MOBILE ROOM LOBBY UI (FIT ABOVE FOOTER ALWAYS)     */
+/* ================================================================== */
+@media (max-width: 600px) {
+    section#auth .arena-global-topbar {
+        padding: 6px 12px !important;
+    }
+    section#auth .arena-topbar-logo {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    section#auth .arena-topbar-title {
+        font-size: 0.95rem !important;
+    }
+    section#auth .arena-live-badge {
+        font-size: 0.52rem !important;
+        padding: 2px 6px !important;
+    }
+
+    section#auth.screen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 50px !important;
+        overflow-y: auto !important;
+    }
+
+    section#auth .arena-page {
+        padding: 6px 8px 85px !important;
+        min-height: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    section#auth .arena-wrapper {
+        margin: 0 auto !important;
+        width: 100% !important;
+        max-width: 440px !important;
+    }
+
+    section#auth .auth-card {
+        border-radius: 18px !important;
+        max-height: calc(100vh - 120px) !important;
+        overflow-y: auto !important;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7) !important;
+    }
+
+    section#auth .arena-card-head {
+        padding: 12px 14px 2px !important;
+    }
+    section#auth .arena-eyebrow-pill {
+        display: none !important;
+    }
+    section#auth .arena-heading {
+        font-size: 1.15rem !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+    }
+    section#auth .arena-subheading {
+        display: none !important;
+    }
+
+    section#auth .arena-tabs {
+        margin: 8px 12px 0 !important;
+        padding: 2px !important;
+        gap: 3px !important;
+        border-radius: 10px !important;
+    }
+    section#auth .auth-tab-btn {
+        padding: 7px 10px !important;
+        font-size: 0.78rem !important;
+        border-radius: 8px !important;
+    }
+
+    section#auth .arena-body {
+        padding: 10px 12px 14px !important;
+    }
+    section#auth .arena-input-group {
+        margin-bottom: 6px !important;
+    }
+    section#auth .arena-field-label {
+        font-size: 0.62rem !important;
+        margin: 2px 0 3px !important;
+        letter-spacing: 0.08em !important;
+    }
+    section#auth .arena-input-wrapper {
+        height: 38px !important;
+    }
+    section#auth .arena-input-icon {
+        font-size: 0.85rem !important;
+        padding-left: 10px !important;
+    }
+    section#auth .arena-input {
+        padding: 8px 10px 8px 34px !important;
+        font-size: 0.85rem !important;
+        border-radius: 10px !important;
+        height: 38px !important;
+    }
+    section#auth .arena-join-row {
+        gap: 8px !important;
+    }
+    section#auth .arena-input-code {
+        height: 38px !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.15em !important;
+    }
+    section#auth .arena-go-btn {
+        height: 38px !important;
+        padding: 8px 16px !important;
+        font-size: 0.82rem !important;
+        border-radius: 10px !important;
+    }
+
+    section#auth .arena-public-divider {
+        margin: 8px 0 !important;
+        font-size: 0.65rem !important;
+    }
+    section#auth .arena-public-rooms-btn {
+        padding: 8px 12px !important;
+        font-size: 0.78rem !important;
+        border-radius: 10px !important;
+    }
+    section#auth .arena-toggle-box {
+        margin-bottom: 6px !important;
+    }
+    section#auth .auth-toggle .label-text {
+        font-size: 0.75rem !important;
+    }
+    section#auth .auth-toggle .sub-label-text {
+        display: none !important;
+    }
+
+    section#auth .arena-field-label-pool {
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+    }
+    section#auth .dataset-scroll-container {
+        gap: 6px !important;
+        padding: 2px !important;
+        margin-bottom: 2px !important;
+    }
+    section#auth .dataset-card {
+        flex: 0 0 76px !important;
+        min-width: 76px !important;
+        padding: 6px 4px !important;
+        height: 64px !important;
+        border-radius: 10px !important;
+        gap: 2px !important;
+    }
+    section#auth .dataset-card .ds-badge {
+        font-size: 0.48rem !important;
+        padding: 1px 4px !important;
+    }
+    section#auth .dataset-card .ds-icon {
+        font-size: 1rem !important;
+    }
+    section#auth .dataset-card .ds-title {
+        font-size: 0.65rem !important;
+    }
+    section#auth .dataset-card .ds-sub {
+        display: none !important;
+    }
+    section#auth .pool-selected-label {
+        font-size: 0.68rem !important;
+        padding: 1px 0 !important;
+        margin-bottom: 4px !important;
+    }
+
+    section#auth .arena-create-btn {
+        padding: 10px 14px !important;
+        font-size: 0.88rem !important;
+        border-radius: 12px !important;
+        margin-top: 4px !important;
+        height: 42px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
