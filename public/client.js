@@ -786,7 +786,7 @@ function updatePublicRoomsUI() {
 
     if (toggle) {
         toggle.classList.remove("hidden");
-        toggle.innerHTML = `View all ${total} rooms`;
+        toggle.innerHTML = `<span class="btn-ico">🌐</span> Browse Public Rooms (${total})`;
     }
 }
 
@@ -2703,15 +2703,34 @@ socket.on("chatUpdate", d => {
         ? `<span class="chat-msg-reaction-badge">${sortedReactions.map(([emoji, count]) => `${emoji} ${count}`).join("  ")}</span>`
         : "";
 
+window.showFloatingStickerPop = function(sticker, isImage, senderName) {
+    const screen = document.getElementById("auctionUI");
+    if (!screen || screen.classList.contains("hidden")) return;
+    const pop = document.createElement("div");
+    pop.className = "floating-sticker-pop";
+    pop.innerHTML = `
+        <div class="fsp-badge">${senderName || 'Player'}</div>
+        ${isImage ? `<img src="${sticker}" class="fsp-img" alt="sticker">` : `<span class="fsp-emoji">${sticker}</span>`}
+    `;
+    screen.appendChild(pop);
+    setTimeout(() => {
+        if (pop && pop.parentNode) pop.parentNode.removeChild(pop);
+    }, 2400);
+};
+
     const rawMsg = String(d.msg || "");
     const isSticker = rawMsg.startsWith("__sticker__:");
     const sticker = isSticker ? rawMsg.replace("__sticker__:", "").trim() : "";
     const isImageSticker = isSticker && (
         sticker.startsWith("data:image/") ||
+        sticker.startsWith("blob:") ||
         sticker.startsWith("/sticker-uploads/") ||
         /^https?:\/\//i.test(sticker)
     );
-    if (isSticker) div.classList.add("has-sticker");
+    if (isSticker) {
+        div.classList.add("has-sticker");
+        try { showFloatingStickerPop(sticker, isImageSticker, d.user); } catch (_) {}
+    }
     if (isImageSticker) div.classList.add("has-image-sticker");
     div.innerHTML = `
         <div class="chat-msg-reactions"><span data-emoji="👍" title="Like">👍</span><span data-emoji="👏" title="Clap">👏</span><span data-emoji="😂" title="Laugh">😂</span><span data-emoji="❤️" title="Love">❤️</span><span data-emoji="🔥" title="Fire">🔥</span></div>
@@ -3073,7 +3092,7 @@ function renderStickerPanel() {
         requestAnimationFrame(() => { panel.scrollTop = 0; });
         return;
     }
-    const defaults = ["😎", "🥳", "🔥", "👏", "😂", "💯", "🏏", "🎯", "💥", "🙌", "❤️", "👑"];
+    const defaults = ["🏆", "🔥", "💣", "💥", "👏", "💰", "👑", "🏏", "🎯", "🚀", "😎", "🤫", "🥳", "😂", "💯", "🙌", "❤️", "🤩", "⚡", "💪", "🤯", "🥶", "💸", "🗿"];
     const customFiles = Array.isArray(localStickerFiles) ? localStickerFiles : [];
     const legacy = readLegacyStickers();
     const mobile = isStickerMobileUi();
@@ -3092,21 +3111,17 @@ function renderStickerPanel() {
         );
     }
     const chips = [
+        `<button type="button" class="sticker-chip sticker-chip-add" onclick="openStickerBulkPicker()" title="Upload custom sticker images from local device">+</button>`,
         ...defaults.map(s => `<button type="button" class="sticker-chip" data-testid="sticker-default-${s}" onclick="sendSticker('${s}')">${s}</button>`),
         ...customChips,
         ...legacy.map((src, i) => `<button type="button" class="sticker-chip sticker-image-chip" data-testid="sticker-legacy-${i}" onclick="sendSticker('${src.replace(/'/g, "\\'")}')" title="Legacy ${i + 1}"><img src="${src}" alt="sticker" loading="lazy" decoding="async"></button>`)
     ].join("");
-    const headHtml = showLinkFolder
-            ? `<div class="sticker-panel-actions">
-                    <button type="button" class="sticker-folder-btn" data-testid="sticker-bulk-btn" onclick="openStickerBulkPicker()" title="Choose sticker image files from your device">🖼️ Choose Images</button>
-                    <button type="button" class="sticker-folder-btn" data-testid="sticker-add-folder-btn" onclick="openStickerFolderPicker()" title="Link an entire stickers folder on this device">📁 Link Folder</button>
-               </div>`
-            : (hasLocalStickers && customFiles.length > 0
-                ? `<div class="sticker-panel-local-bar">
-                        <span class="sticker-panel-local-note"><strong>${customFiles.length}</strong> sticker${customFiles.length === 1 ? "" : "s"} loaded</span>
-                        <button type="button" class="sticker-folder-mini-btn" onclick="openStickerBulkPicker()" title="Add more stickers">✚ Add More</button>
-                   </div>`
-                : "");
+    const headHtml = `
+        <div class="sticker-panel-actions" style="display:flex; align-items:center; gap:8px; width:100%; margin-bottom:4px;">
+            <button type="button" class="sticker-add-plus-btn" onclick="openStickerBulkPicker()" title="Upload custom sticker images from local device">➕ Add Custom Stickers</button>
+            <button type="button" class="sticker-folder-btn" onclick="openStickerFolderPicker()" title="Link an entire stickers folder on this device">📁 Link Folder</button>
+            ${customFiles.length > 0 ? `<span style="font-size:0.75rem; color:#34d399; font-weight:700; margin-left:auto;">${customFiles.length} loaded</span>` : ""}
+        </div>`;
     const hintHtml = moreCustom
         ? `<div class="sticker-load-hint">Showing <strong>${renderCount}</strong> of <strong>${customFiles.length}</strong> — scroll for more</div>`
         : "";
@@ -3143,23 +3158,17 @@ function renderStickerPanel() {
         stickerGridLoadObserver.observe(sentinel);
     }
 }
-window.toggleStickerPanel = function() {
+window.toggleStickerPanel = function(e) {
+    if (e && e.stopPropagation) e.stopPropagation();
     const panel = document.getElementById("stickerPanel");
     if (!panel) return;
-    const opening = panel.classList.contains("hidden");
-    if (!panel.dataset.initialized) {
-        panel.dataset.initialized = "1";
-        stickerCustomRenderCap = isStickerMobileUi() ? STICKER_MOBILE_RENDER_CAP : 280;
+    const isHidden = panel.classList.contains("hidden");
+    if (isHidden) {
         renderStickerPanel();
-    }
-    panel.classList.toggle("hidden");
-    if (opening) {
-        const mobile = isStickerMobileUi();
-        stickerCustomRenderCap = mobile
-            ? Math.min(STICKER_MOBILE_RENDER_CAP + STICKER_MOBILE_RENDER_STEP, Math.max(localStickerFiles.length, STICKER_MOBILE_RENDER_CAP))
-            : Math.min(300, Math.max(localStickerFiles.length, 120));
-        renderStickerPanel();
+        panel.classList.remove("hidden");
+        requestAnimationFrame(() => { panel.scrollTop = 0; });
     } else {
+        panel.classList.add("hidden");
         disconnectStickerGridObserver();
     }
 };
