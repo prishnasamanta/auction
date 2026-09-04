@@ -151,7 +151,10 @@
     <header class="auth-global-topbar">
         <div class="auth-topbar-brand">
             <img src="/logo.png?v=2" alt="IPL Live Auction Logo" class="auth-topbar-logo">
-            <span class="auth-topbar-title">IPL AUCTION</span>
+            <div class="auth-brand-text">
+                <span class="auth-topbar-title">IPL AUCTION</span>
+                <span class="auth-live-badge"><span class="pulse-dot"></span> ARENA LIVE</span>
+            </div>
         </div>
         <div id="authAccountBar" class="auth-account-bar">
             <!-- Sync Button (Shown when not logged in) -->
@@ -161,7 +164,7 @@
             </button>
             
             <!-- Profile Avatar (Shown when logged in) -->
-            <button type="button" id="authProfileBtn" class="auth-profile-btn hidden" onclick="openProfileSidebar()">
+            <button type="button" id="authProfileBtn" class="auth-profile-btn hidden" onclick="openProfileSidebar()" title="Account Profile">
                 <img id="authProfileImg" src="" alt="Profile" class="auth-profile-img">
             </button>
 
@@ -216,76 +219,101 @@
         <div class="glass auth-card">
             <div class="auth-card-main">
             <div class="auth-card-head">
-                <p class="auth-eyebrow">Room lobby</p>
-                <h2 class="auth-heading">Enter the <span class="auth-heading-accent">arena</span></h2>
+                <div class="auth-eyebrow-pill">⚡ OFFICIAL IPL BIDDING ARENA</div>
+                <h2 class="auth-heading">Enter the <span class="auth-heading-accent">Auction Arena</span></h2>
+                <p class="auth-subheading">Build your dream squad or challenge friends in real-time bidding</p>
             </div>
 
             <div class="auth-tabs">
-                <button type="button" onclick="switchAuthTab('join')" class="auth-tab-btn active" id="tabJoin">Join room</button>
-                <button type="button" onclick="switchAuthTab('create')" class="auth-tab-btn" id="tabCreate">Create room</button>
+                <button type="button" onclick="switchAuthTab('join')" class="auth-tab-btn active" id="tabJoin">
+                    <span class="tab-ico">🔑</span> Join Room
+                </button>
+                <button type="button" onclick="switchAuthTab('create')" class="auth-tab-btn" id="tabCreate">
+                    <span class="tab-ico">⚡</span> Create Room
+                </button>
             </div>
 
             <div class="auth-body">
-                <label class="auth-field-label" for="username">Display name</label>
-                <input id="username" class="auth-input" placeholder="Your name in the auction" autocomplete="nickname">
+                <div class="auth-input-group">
+                    <label class="auth-field-label" for="username">
+                        <span>YOUR DISPLAY NAME</span>
+                    </label>
+                    <div class="auth-input-wrapper">
+                        <span class="auth-input-icon">👤</span>
+                        <input id="username" class="auth-input" placeholder="Enter your manager name" autocomplete="nickname">
+                    </div>
+                </div>
 
                 <div id="joinSection">
-                    <label class="auth-field-label" for="code">Room code</label>
-                    <div class="auth-join-row">
-                        <input id="code" class="auth-input auth-input-code" placeholder="ABCDE" maxlength="5" autocomplete="off">
-                        <button type="button" id="joinBtn" class="primary-btn auth-go-btn">Go</button>
+                    <div class="auth-input-group">
+                        <label class="auth-field-label" for="code">
+                            <span>ROOM ACCESS CODE</span>
+                        </label>
+                        <div class="auth-join-row">
+                            <input id="code" class="auth-input auth-input-code" placeholder="ABCDE" maxlength="5" autocomplete="off">
+                            <button type="button" id="joinBtn" class="primary-btn auth-go-btn">ENTER ARENA →</button>
+                        </div>
                     </div>
-                    <button type="button" id="publicRoomsToggle" class="secondary-btn auth-public-rooms-btn compact-public-rooms" onclick="openPublicRoomsBrowse()">
-                        <span aria-hidden="true">🌐</span> Browse Public Rooms (<span id="publicRoomsCount">0</span>)
+                    
+                    <div class="auth-public-divider">
+                        <span>OR EXPLORE PUBLIC MATCHES</span>
+                    </div>
+
+                    <button type="button" id="publicRoomsToggle" class="secondary-btn auth-public-rooms-btn" onclick="openPublicRoomsBrowse()">
+                        <span class="btn-ico">🌐</span> Browse Public Rooms (<span id="publicRoomsCount">0</span>)
                     </button>
                 </div>
 
                 <div id="createSection" class="hidden">
                     <div class="auth-toggle-box">
                         <label class="toggle-switch auth-toggle">
-                            <span class="label-text">Public room</span>
+                            <span class="label-text">Make Room Public (Allow anyone to join)</span>
                             <input type="checkbox" id="isPublicRoom" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
 
-                    <label class="auth-field-label auth-field-label-pool">Player pool</label>
+                    <label class="auth-field-label auth-field-label-pool">SELECT PLAYER POOL</label>
                     
                     <div class="dataset-scroll-container">
                         <div class="dataset-card active" data-dataset-id="ipl2026" onclick="selectDataset('ipl2026', this)">
+                            <div class="ds-badge">STANDARD</div>
                             <div class="ds-icon">🏆</div>
                             <div class="ds-title">IPL 2026</div>
-                            <div class="ds-sub">Standard</div>
+                            <div class="ds-sub">Current Rosters</div>
                         </div>
                         <div class="dataset-card" data-dataset-id="legends" onclick="selectDataset('legends', this)">
+                            <div class="ds-badge ds-badge-hot">ALL-TIME</div>
                             <div class="ds-icon">🔥</div>
                             <div class="ds-title">LEGENDS</div>
-                            <div class="ds-sub">All-Time</div>
+                            <div class="ds-sub">Cricket Icons</div>
                         </div>
                         <div class="dataset-card" data-dataset-id="mixed" onclick="selectDataset('mixed', this)">
+                            <div class="ds-badge">HYBRID</div>
                             <div class="ds-icon">⚔️</div>
                             <div class="ds-title">MIXED</div>
-                            <div class="ds-sub">Great Icon</div>
+                            <div class="ds-sub">Icons + Current</div>
                         </div>
                         <div class="dataset-card" data-dataset-id="custom" onclick="selectDataset('custom', this)">
+                            <div class="ds-badge ds-badge-custom">BUILDER</div>
                             <div class="ds-icon">🛠️</div>
                             <div class="ds-title">CUSTOM</div>
-                            <div class="ds-sub">Builder</div>
+                            <div class="ds-sub">Upload CSV</div>
                         </div>
                     </div>
 
                     <div id="poolSelectedLabel" class="pool-selected-label">IPL 2026 pool is selected</div>
                     <input type="hidden" id="selectedSetId" value="ipl2026">
 
-                    <button type="button" id="createBtn" class="primary-btn auth-create-btn">Create room</button>
+                    <button type="button" id="createBtn" class="primary-btn auth-create-btn">CREATE & START ROOM →</button>
                 </div>
             </div>
             </div>
 
             <div id="authGameHistory" class="auth-game-history hidden" aria-hidden="true">
                 <div class="auth-game-history-head">
-                    <button type="button" class="auth-public-browse-back" onclick="closeAuthGameHistory()">← Back to lobby</button>
-                    <h3 class="auth-public-browse-title">Your games</h3>
+                    <button type="button" class="auth-public-browse-back" onclick="closeAuthGameHistory()">← Back to Arena</button>
+                    <h3 class="auth-public-browse-title">📜 Your Match History</h3>
                     <p id="authGameHistoryUser" class="auth-game-history-user"></p>
                 </div>
                 <p id="authGameHistoryEmpty" class="auth-public-rooms-empty hidden">No completed games yet. Finish an auction while signed in.</p>
@@ -294,10 +322,10 @@
 
             <div id="publicRoomsBrowse" class="auth-public-rooms-browse hidden" aria-hidden="true">
                 <div class="auth-public-browse-head">
-                    <button type="button" class="auth-public-browse-back" onclick="closePublicRoomsBrowse()">← Back to lobby</button>
-                    <h3 class="auth-public-browse-title">Public rooms</h3>
+                    <button type="button" class="auth-public-browse-back" onclick="closePublicRoomsBrowse()">← Back to Arena</button>
+                    <h3 class="auth-public-browse-title">🌐 Active Public Rooms</h3>
                 </div>
-                <p id="publicRoomsBrowseEmpty" class="auth-public-rooms-empty hidden">No active rooms right now.</p>
+                <p id="publicRoomsBrowseEmpty" class="auth-public-rooms-empty hidden">No active public rooms right now. Create one to get started!</p>
                 <div id="publicRoomListFull" class="room-list-box custom-scroll auth-room-list-full"></div>
             </div>
 
