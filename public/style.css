@@ -18647,3 +18647,68 @@ section#auth .auth-public-rooms-empty {
 .sticker-panel.hidden {
     display: none !important;
 }
+
+/* ================================================================== */
+/* ?? MOBILE ROOM LOBBY TILE & FOOTER OVERLAP FIX                     */
+/* ================================================================== */
+@media (max-width: 768px) {
+    :root {
+        --footer-height-lock: 52px;
+    }
+
+    .app-footer {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 9999 !important;
+        padding: 8px 12px !important;
+        padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+        background: rgba(4, 9, 20, 0.98) !important;
+        backdrop-filter: blur(16px) !important;
+        border-top: 1px solid rgba(56, 189, 248, 0.2) !important;
+    }
+
+    .screen {
+        bottom: 52px !important;
+        padding-bottom: 0 !important;
+    }
+
+    section#auth.theme-app {
+        min-height: auto !important;
+        padding-bottom: 30px !important;
+    }
+
+    section#auth .arena-page {
+        padding: 12px 10px 95px !important;
+        align-items: flex-start !important;
+    }
+
+    section#auth .arena-wrapper {
+        margin-bottom: 30px !important;
+    }
+
+    section#auth .auth-card {
+        margin-bottom: 30px !important;
+    }
+
+    section#auth .auth-public-rooms-browse,
+    section#auth .auth-game-history {
+        padding: 16px 14px 36px !important;
+    }
+
+    section#auth .room-list-box {
+        max-height: calc(100vh - 270px) !important;
+        padding-bottom: 24px !important;
+        margin-bottom: 12px !important;
+    }
+
+    section#auth .room-tile {
+        margin-bottom: 4px !important;
+    }
+
+    section#auth .auth-game-history-list {
+        max-height: calc(100vh - 270px) !important;
+        padding-bottom: 24px !important;
+    }
+}
