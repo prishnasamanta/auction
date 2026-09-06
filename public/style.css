@@ -1,4 +1,4 @@
-
+﻿
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Syne:wght@500;600;700;800&display=swap');
 
@@ -351,7 +351,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 .toggle-switch input:checked + .slider::before { transform: translateX(20px); }
 .toggle-switch .label-text { color: #fff; font-size: 0.9rem; }
 
-/* Custom builder toggles – compact, good-looking sliders */
+/* Custom builder toggles â€“ compact, good-looking sliders */
 #customBuilderOverlay .toggle-switch {
     padding: 6px 12px;
     gap: 8px;
@@ -560,10 +560,10 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 
 /* ================= AUCTION UI ================= */
 /* ================================================= */
-/* 💎 PREMIUM COMPACT HEADER CSS                     */
+/* ðŸ’Ž PREMIUM COMPACT HEADER CSS                     */
 /* ================================================= */
 /* ================================================= */
-/* 💎 FINAL PREMIUM HEADER & CARD STYLES             */
+/* ðŸ’Ž FINAL PREMIUM HEADER & CARD STYLES             */
 /* ================================================= */
 
 /* --- 1. COMPACT HEADER --- */
@@ -582,7 +582,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     display: flex; align-items: center; gap: 8px; height: 100%;
 }
 
-/* Topbar Buttons & Badges – Modern Sleek Design */
+/* Topbar Buttons & Badges â€“ Modern Sleek Design */
 .header-badge {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.14);
@@ -853,7 +853,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 .ac-main-bid-btn span { font-family: 'Exo 2', sans-serif; font-size: 1.4rem; font-weight: 800; line-height: 1; }
 .ac-main-bid-btn .sub-text { font-family: monospace; font-size: 0.85rem; font-weight: 600; margin-top: 2px; opacity: 0.8; }
 
-/* Purse in top row (playerMeta), after paused badge — small green */
+/* Purse in top row (playerMeta), after paused badge â€” small green */
 .meta-purse-text {
     font-size: 0.55rem;
     font-weight: 700;
@@ -1048,10 +1048,10 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 }
 .team-btn:hover { background: var(--team-color); color: #000; }
 
-/* 💎 [REMOVED "FINAL FIXED PRO CARD" SECTION TO AVOID CONFLICT WITH JS] */
+/* ðŸ’Ž [REMOVED "FINAL FIXED PRO CARD" SECTION TO AVOID CONFLICT WITH JS] */
 
 /* ================================================= */
-/* 💎 XI SELECTION STYLES (Kept for Playing XI)      */
+/* ðŸ’Ž XI SELECTION STYLES (Kept for Playing XI)      */
 /* ================================================= */
 
 /* 1. XI Card Container */
@@ -1822,7 +1822,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 /* EXPANDED STATE */
 #commandCenter.expanded { height: 600px; }
 
-/* 1. PREMIUM TABS ROW – slightly compact */
+/* 1. PREMIUM TABS ROW â€“ slightly compact */
 .cc-tabs {
     display: flex;
     background: rgba(0, 0, 0, 0.3);
@@ -1854,7 +1854,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     height: 20px;
 }
 
-/* Sets: green | Feed: blue | Squads: yellow – hover/active show color */
+/* Sets: green | Feed: blue | Squads: yellow â€“ hover/active show color */
 .cc-tab-btn[data-tab="sets"] { --tab-color: #eab308; }
 .cc-tab-btn[data-tab="feed"] { --tab-color: #3b82f6; }
 .cc-tab-btn[data-tab="squads"] { --tab-color: #34d399; }
@@ -1968,7 +1968,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     color: #fff;
 }
 
-/* Chat send button – same size and style as feed-list-btn (36px, rectangular) */
+/* Chat send button â€“ same size and style as feed-list-btn (36px, rectangular) */
 .chat-send-btn {
     flex-shrink: 0;
     width: 36px;
@@ -2320,7 +2320,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 
 
 /* ================================================= */
-/* 💎 PREMIUM PLAYER CARD (MODERN GLASS STYLE)       */
+/* ðŸ’Ž PREMIUM PLAYER CARD (MODERN GLASS STYLE)       */
 /* ================================================= */
 
 .player-card-overlay {
@@ -2392,7 +2392,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     padding: 25px 20px;
 }
 
-/* 4. PLAYER IMAGE (Circle with Glow) – fixed circle from first paint (no oval flash on mobile) */
+/* 4. PLAYER IMAGE (Circle with Glow) â€“ fixed circle from first paint (no oval flash on mobile) */
 .pc-img-box {
     width: 160px; height: 160px;
     min-width: 160px; min-height: 160px;
@@ -2483,7 +2483,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 @keyframes slideUpTag { to { transform: translateY(0); opacity: 1; } }
 
 /* ================================================= */
-/* 🎨 TEAM SPECIFIC LOGOS & COLORS                   */
+/* ðŸŽ¨ TEAM SPECIFIC LOGOS & COLORS                   */
 /* ================================================= */
 
 /* We use a CSS Variable --team-color for dynamic glows */
@@ -2578,7 +2578,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     border-radius: 16px;
 }
 
-/* Adjust internal elements for the compact size – fixed circle (no oval on load) */
+/* Adjust internal elements for the compact size â€“ fixed circle (no oval on load) */
 .pc-card.compact .pc-img-box {
     width: 140px;
     height: 140px;
@@ -2704,7 +2704,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     font-family: 'Inter', sans-serif;
 }
 
-/* Base Message Row – compact */
+/* Base Message Row â€“ compact */
 .chat-msg {
     display: flex;
     align-items: flex-start;
@@ -2738,7 +2738,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     border-left-width: 4px;
 }
 
-/* Reaction bar – WhatsApp-style floating pill above message */
+/* Reaction bar â€“ WhatsApp-style floating pill above message */
 .chat-msg-reactions {
     display: none;
     position: absolute;
@@ -2784,7 +2784,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     transform: scale(1.1);
 }
 
-/* Reaction badge – WhatsApp-style pill (top 3 emoji + count) on message */
+/* Reaction badge â€“ WhatsApp-style pill (top 3 emoji + count) on message */
 .chat-msg-reaction-badge {
     display: inline-flex;
     align-items: center;
@@ -3054,11 +3054,11 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 .rating-tag { color: #888; font-size: 0.75rem; margin-left: 5px; }
 .price-tag { color: #4ade80; font-weight: bold; font-size: 0.9rem; }
 
-/* 💎 [REMOVED "UNIVERSAL SQUAD CARD STYLING" & "CAPTURE CARD" SECTIONS] */
+/* ðŸ’Ž [REMOVED "UNIVERSAL SQUAD CARD STYLING" & "CAPTURE CARD" SECTIONS] */
 /* The styles for the Squad Card are now injected dynamically via JS */
 
 /* ================================================= */
-/* 🏟️ COMPACT FANTASY CARD (Fix for "Cracked" UI)    */
+/* ðŸŸï¸ COMPACT FANTASY CARD (Fix for "Cracked" UI)    */
 /* ================================================= */
 
 .fantasy-card {
@@ -3284,7 +3284,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 
 
 /* ================================================= */
-/* 🏆 PROFESSIONAL LEADERBOARD STYLING               */
+/* ðŸ† PROFESSIONAL LEADERBOARD STYLING               */
 /* ================================================= */
 
 /* 1. Container & Scroll Area */
@@ -3360,11 +3360,11 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 
 /* Top 3 Ranks Highlights */
 .lb-table tbody tr:nth-child(1) td { background: rgba(250, 204, 21, 0.05); border-bottom-color: rgba(250, 204, 21, 0.2); }
-.lb-table tbody tr:nth-child(1) td:first-child { color: #facc15; font-size: 1.2rem; text-shadow: 0 0 10px rgba(250, 204, 21, 0.5); } /* 🥇 Gold */
+.lb-table tbody tr:nth-child(1) td:first-child { color: #facc15; font-size: 1.2rem; text-shadow: 0 0 10px rgba(250, 204, 21, 0.5); } /* ðŸ¥‡ Gold */
 
-.lb-table tbody tr:nth-child(2) td:first-child { color: #e2e8f0; font-size: 1.1rem; text-shadow: 0 0 10px rgba(226, 232, 240, 0.5); } /* 🥈 Silver */
+.lb-table tbody tr:nth-child(2) td:first-child { color: #e2e8f0; font-size: 1.1rem; text-shadow: 0 0 10px rgba(226, 232, 240, 0.5); } /* ðŸ¥ˆ Silver */
 
-.lb-table tbody tr:nth-child(3) td:first-child { color: #b45309; font-size: 1.1rem; text-shadow: 0 0 10px rgba(180, 83, 9, 0.5); } /* 🥉 Bronze */
+.lb-table tbody tr:nth-child(3) td:first-child { color: #b45309; font-size: 1.1rem; text-shadow: 0 0 10px rgba(180, 83, 9, 0.5); } /* ðŸ¥‰ Bronze */
 
 /* 6. Team Name Column */
 .lb-team-name {
@@ -3441,7 +3441,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     background: radial-gradient(circle at top, #1e293b, #0f172a);
 }
 
-/* Summary header – clearer title and exit button */
+/* Summary header â€“ clearer title and exit button */
 #postAuctionSummary .summary-topbar {
     min-height: 52px;
     padding: 0 16px;
@@ -3853,7 +3853,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     justify-content: center;
 }
 /* ================================================= */
-/* 💎 PREMIUM SQUAD CARD V3 (Final Polish)           */
+/* ðŸ’Ž PREMIUM SQUAD CARD V3 (Final Polish)           */
 /* ================================================= */
 
 .premium-squad-card {
@@ -3872,7 +3872,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     color: white;
 }
 
-/* 🟢 WATERMARK FIX: Increased opacity and size */
+/* ðŸŸ¢ WATERMARK FIX: Increased opacity and size */
 .prem-watermark {
     position: absolute;
     top: 50%; 
@@ -3974,7 +3974,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     border-radius: 4px 4px 0 0;
 }
 
-/* 🟢 PLAYER ROW & BADGE STYLING */
+/* ðŸŸ¢ PLAYER ROW & BADGE STYLING */
 .p-row {
     display: flex;
     justify-content: space-between;
@@ -4055,7 +4055,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
 
 
 /* ================================================= */
-/* 💎 PREMIUM LANDING PAGE STYLES                    */
+/* ðŸ’Ž PREMIUM LANDING PAGE STYLES                    */
 /* ================================================= */
 
 /* Allow scrolling ONLY on landing page */
@@ -4203,7 +4203,7 @@ input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52, 211, 
     .nav-links { display: none; } /* Simple hide for now */
 }
 /* ================================================= */
-/* ⚡ LAYOUT & SCROLLING FIXES                       */
+/* âš¡ LAYOUT & SCROLLING FIXES                       */
 /* ================================================= */
 
 /* 1. Page Layout (Fixed Height, No Body Scroll) */
@@ -4463,7 +4463,7 @@ body {
     .app-footer-fixed { position: static; } 
 }
 
-/* 🟢 GREEN FLASH ANIMATION */
+/* ðŸŸ¢ GREEN FLASH ANIMATION */
 #auctionCard.pulse-green {
     animation: flashGreen 0.5s ease-out;
 }
@@ -4523,7 +4523,7 @@ body {
     margin-top: 5px; letter-spacing: 1px;
 }
 
-/* Right Status Box (Timer + bidder badge) – fixed width, no size change */
+/* Right Status Box (Timer + bidder badge) â€“ fixed width, no size change */
 .ac-status-box {
     flex-shrink: 0;
     width: 40px !important;
@@ -4536,7 +4536,7 @@ body {
     gap: 6px;
 }
 
-/* Timer – fixed 40×32px, inner snake from top, visible track */
+/* Timer â€“ fixed 40Ã—32px, inner snake from top, visible track */
 .ac-timer-box {
     width: 40px !important;
     height: 32px !important;
@@ -4657,7 +4657,7 @@ body {
     flex-shrink: 0 !important; /* Prevent squishing */
 }
 
-/* Pause button – interactive, same size */
+/* Pause button â€“ interactive, same size */
 #togglePauseBtn {
     position: relative;
     font-size: 0 !important;
@@ -4748,10 +4748,10 @@ body {
 
 
 /* ================================================= */
-/* 💎 PREMIUM SOLD / UNSOLD OVERLAY (Full-card, hazy/blur) */
+/* ðŸ’Ž PREMIUM SOLD / UNSOLD OVERLAY (Full-card, hazy/blur) */
 /* ================================================= */
 
-/* 1. Full-card overlay – covers entire #auctionCard, hazy blurred background */
+/* 1. Full-card overlay â€“ covers entire #auctionCard, hazy blurred background */
 .ac-result-overlay {
     position: absolute;
     inset: 0;
@@ -4825,7 +4825,7 @@ body {
     }
 }
 /* ================================================= */
-/* 🚑 EMERGENCY ORDER FIX (Paste at bottom of CSS)   */
+/* ðŸš‘ EMERGENCY ORDER FIX (Paste at bottom of CSS)   */
 /* ================================================= */
 
 @media (max-width: 900px) {
@@ -4906,7 +4906,7 @@ body {
     z-index: 2000;
 }
 
-/* Single header row (auction): 3 parts – left (fixed), middle (flex), right (fixed + invisible scroll) */
+/* Single header row (auction): 3 parts â€“ left (fixed), middle (flex), right (fixed + invisible scroll) */
 #auctionUI .topbar {
     min-height: 44px;
     height: 44px;
@@ -4931,7 +4931,7 @@ body {
     min-height: 44px;
     align-self: stretch;
 }
-/* Left: right edge touches count-pill border – no extra space after it */
+/* Left: right edge touches count-pill border â€“ no extra space after it */
 .topbar-left {
     display: flex;
     align-items: center;
@@ -5024,7 +5024,7 @@ body {
     border-color: #ef4444;
     color: #fff;
 }
-/* When admin controls (host) are hidden, right bar uses only leave-btn space – middle gets the rest, like lateJoin */
+/* When admin controls (host) are hidden, right bar uses only leave-btn space â€“ middle gets the rest, like lateJoin */
 .topbar-right .admin-group.hidden {
     display: none !important;
     width: 0 !important;
@@ -5069,7 +5069,7 @@ body {
     #auctionUI .topbar {
         display: flex;
         align-items: center;
-        overflow: visible; /* was hidden – allow dropdown to show */
+        overflow: visible; /* was hidden â€“ allow dropdown to show */
     }
     #auctionUI .topbar .topbar-row {
         padding: 0 4px;
@@ -5169,7 +5169,7 @@ body {
 
 /* 6. COMMAND CENTER (Bottom Item - Fills Remaining Space) */
 #commandCenter {
-    flex: 1; /* 🟢 THE MAGIC: Stretches to touch Footer */
+    flex: 1; /* ðŸŸ¢ THE MAGIC: Stretches to touch Footer */
     width: 100%;
     display: flex; 
     flex-direction: column;
@@ -5259,7 +5259,7 @@ body {
 
 
 /* ================================================= */
-/* 🦶 UNIVERSAL FOOTER STYLES                        */
+/* ðŸ¦¶ UNIVERSAL FOOTER STYLES                        */
 /* ================================================= */
 
 /* Hide footer when God Panel is open */
@@ -5361,7 +5361,7 @@ body {
     left: 0;
     width: 100vw; 
     height: 100vh;
-    z-index: -1; /* 🟢 CRITICAL: Puts canvas BEHIND the text */
+    z-index: -1; /* ðŸŸ¢ CRITICAL: Puts canvas BEHIND the text */
     pointer-events: none; /* Allows clicking through to buttons */
     opacity: 0.8; /* Visibility of stars */
 }
@@ -5374,7 +5374,7 @@ body {
 }
 
 /* ================================================= */
-/* 🆕 NEW JOIN/CREATE UI STYLES                      */
+/* ðŸ†• NEW JOIN/CREATE UI STYLES                      */
 /* ================================================= */
 
 /* Tabs */
@@ -5440,10 +5440,10 @@ body {
 }
 
 /* ================================================= */
-/* 🔧 HEADER & TRANSPARENCY FIXES                    */
+/* ðŸ”§ HEADER & TRANSPARENCY FIXES                    */
 /* ================================================= */
 
-/* 1. Header Buttons (Equal Size); row does not scroll – only .topbar-right scrolls when needed */
+/* 1. Header Buttons (Equal Size); row does not scroll â€“ only .topbar-right scrolls when needed */
 .top-right {
     overflow-x: auto;
     white-space: nowrap;
@@ -5466,7 +5466,7 @@ body {
     font-size: 1.1rem;
     padding: 0; /* Remove padding */
 }
-/* 💎 TRANSPARENT AUCTION TILE */
+/* ðŸ’Ž TRANSPARENT AUCTION TILE */
 #auctionCard {
     /* High Transparency Dark Blue */
     background: rgba(15, 23, 42, 0.4) !important; 
@@ -5493,7 +5493,7 @@ body {
     border-radius: 16px; /* All corners rounded */
     background: #0f172a; /* Solid bg for popup readability */
 }
-/* ↔️ HEADER SCROLL FIX */
+/* â†”ï¸ HEADER SCROLL FIX */
 .top-right.custom-scroll-x {
     display: flex;
     align-items: center;
@@ -5519,7 +5519,7 @@ body {
 .header-icon-btn, .admin-group {
     flex-shrink: 0 !important;
 }
-/* ↔️ JOIN PAGE CARDS SCROLL */
+/* â†”ï¸ JOIN PAGE CARDS SCROLL */
 .dataset-scroll-container {
     display: flex;
     gap: 10px;
@@ -5558,7 +5558,7 @@ body {
 }
 
 /* ================================================= */
-/* 📱 MOBILE POPUP & CARD FIXES                      */
+/* ðŸ“± MOBILE POPUP & CARD FIXES                      */
 /* ================================================= */
 
 /* 1. Ensure the Overlay allows centering */
@@ -5681,7 +5681,7 @@ body {
     padding-bottom: 10px;
 }
 
-/* ↔️ HEADER BUTTONS SCROLL FIX */
+/* â†”ï¸ HEADER BUTTONS SCROLL FIX */
 .top-right.custom-scroll-x {
     display: flex;
     align-items: center;
@@ -5704,14 +5704,14 @@ body {
     display: none; 
 }
 
-/* 🛑 PREVENT BUTTON SQUISHING */
+/* ðŸ›‘ PREVENT BUTTON SQUISHING */
 /* Keep icon-only buttons fixed, allow label variants to grow */
 .header-icon-btn, 
 .admin-group, 
 .admin-group button {
     flex-shrink: 0 !important;
 }
-/* 💎 AUCTION CARD: Transparent so background animation is visible */
+/* ðŸ’Ž AUCTION CARD: Transparent so background animation is visible */
 #auctionCard {
     background: transparent !important;
     backdrop-filter: none !important;
@@ -5726,7 +5726,7 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 /* Removed duplicate #auctionCard rules - final definition at line 4723 */
-/* 🚑 HEADER BUTTON SIZE FIX */
+/* ðŸš‘ HEADER BUTTON SIZE FIX */
 /* Icon-only header buttons - compact; label buttons override below */
 .header-icon-btn {
     width: 24px !important;
@@ -5792,7 +5792,7 @@ body {
     #bid.ac-bid-xlong { font-size: 0.88rem !important; }
     #bid.ac-bid-long { font-size: 1rem !important; }
 }
-/* 🚑 INVISIBLE LINE/GAP FIX (Keep status-box, timer, leader-badge as original – no overrides) */
+/* ðŸš‘ INVISIBLE LINE/GAP FIX (Keep status-box, timer, leader-badge as original â€“ no overrides) */
 .ac-info-box {
     padding-right: 5px !important;
     overflow: hidden !important;
@@ -5837,7 +5837,7 @@ body {
 
 
 /* Removed duplicate #xiStatus rules - final definition at line 4045 */
-/* 🚑 ADD SCROLLING TO FULL SQUAD VIEW (Popup/Embedded) */
+/* ðŸš‘ ADD SCROLLING TO FULL SQUAD VIEW (Popup/Embedded) */
 .prem-body {
     max-height: 400px !important; /* Limit height to enable scroll if content overflows */
     overflow-y: auto !important; /* Enable vertical scrolling */
@@ -5852,7 +5852,7 @@ body {
     }
 }
 /* Removed duplicate - final definition at line 4734 */
-/* 🚑 DISQUALIFIED MESSAGE POSITION FIX (Below Buttons, Same Length) */
+/* ðŸš‘ DISQUALIFIED MESSAGE POSITION FIX (Below Buttons, Same Length) */
 #xiStatus {
     /* Keep status BELOW the sticky button row (never behind it) */
     position: sticky !important;
@@ -6030,7 +6030,7 @@ body {
 }
 
 /* ================================================= */
-/* ✅ FINAL FIXES: Pulse, Timer, Footer, Squad View */
+/* âœ… FINAL FIXES: Pulse, Timer, Footer, Squad View */
 /* ================================================= */
 
 /* Ensure pulse animation works with team colors */
@@ -6088,7 +6088,7 @@ body {
 }
 
 /* ================================================= */
-/* ✅ RESTORE WATERMARK LOGOS + HEADER POLISH         */
+/* âœ… RESTORE WATERMARK LOGOS + HEADER POLISH         */
 /* ================================================= */
 
 /* 1) Restore faded logos on Playing XI cards */
@@ -6157,7 +6157,7 @@ body {
     border: 1px solid currentColor !important;
 }
 /* ================================================= */
-/* 💎 PROFESSIONAL CUSTOM POPUP (Replacement)        */
+/* ðŸ’Ž PROFESSIONAL CUSTOM POPUP (Replacement)        */
 /* ================================================= */
 
 .cp-overlay {
@@ -6361,7 +6361,7 @@ body {
 }
 
 /* ================================================= */
-/* 🎯 FIX: Command Center, Auction Card, Header/Footer Width & Borders */
+/* ðŸŽ¯ FIX: Command Center, Auction Card, Header/Footer Width & Borders */
 /* ================================================= */
 
 /* 1. Command Center: Match Team Selection Main width (530px) and styling */
@@ -6660,7 +6660,7 @@ body {
 }
 
 /* ================================================= */
-/* 🎯 FINAL FIXES: Button Sizes, Pause Badge, Chat  */
+/* ðŸŽ¯ FINAL FIXES: Button Sizes, Pause Badge, Chat  */
 /* ================================================= */
 
 /* Ensure admin group buttons fit in single row */
@@ -6735,7 +6735,7 @@ body {
     color: #fff !important;
 }
 /* ================================================= */
-/* 🏷️ META BADGES & PAUSED STATE                     */
+/* ðŸ·ï¸ META BADGES & PAUSED STATE                     */
 /* ================================================= */
 
 /* 1. Flex container for the meta row */
@@ -6767,9 +6767,9 @@ body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
 }
 
-/* 3. Team name / "PAUSED" Badge – always visible; text = pteam or "⏸ PAUSED" */
+/* 3. Team name / "PAUSED" Badge â€“ always visible; text = pteam or "â¸ PAUSED" */
 .meta-badge-paused {
-    display: inline-flex !important; /* Always show: team name when not paused, "⏸ PAUSED" when paused */
+    display: inline-flex !important; /* Always show: team name when not paused, "â¸ PAUSED" when paused */
     align-items: center !important;
     justify-content: center !important;
     
@@ -6802,10 +6802,10 @@ body {
 
 
 /* ================================================= */
-/* 🎨 FIXED BUTTON COLORS & SOUND ICON               */
+/* ðŸŽ¨ FIXED BUTTON COLORS & SOUND ICON               */
 /* ================================================= */
 
-/* 1. Header icon buttons – interactive, size unchanged (26px) */
+/* 1. Header icon buttons â€“ interactive, size unchanged (26px) */
 .header-icon-btn {
     border: 1px solid rgba(255, 255, 255, 0.25) !important;
     color: #fff !important;
@@ -6899,7 +6899,7 @@ body {
     border-color: #fca5a5 !important;
 }
 
-/* Rules button (book icon) and label buttons – same interactive look */
+/* Rules button (book icon) and label buttons â€“ same interactive look */
 .top-right .header-icon-btn:has(img),
 .topbar-row .header-icon-btn:has(img) {
     background: rgba(255, 255, 255, 0.05) !important;
@@ -6931,7 +6931,7 @@ body {
     border-color: rgba(255, 255, 255, 0.45) !important;
 }
 
-/* Sound button – interactive, same size */
+/* Sound button â€“ interactive, same size */
 #toggleMuteBtn {
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -7633,7 +7633,7 @@ body {
 }
 
 #playingXI #mySquadList .role-group-title::after {
-    content: "−";
+    content: "âˆ’";
     position: absolute;
     right: 10px;
     top: 5px;
@@ -8565,7 +8565,7 @@ body {
     padding-bottom: 12px;
 }
 
-/* Inline selector buttons: square tile — avatar top, rating bottom (see end of file) */
+/* Inline selector buttons: square tile â€” avatar top, rating bottom (see end of file) */
 
 /* Foreign players: red border accent on avatar chip */
 #embeddedSquadView #view-squad-list .inline-xi-wrap .inline-circle-pill.foreign .inline-circle-avatar,
@@ -9573,7 +9573,7 @@ body {
 /* - Remove unnecessary outer padding around the two panels          */
 /* - Tighten the "Back Squad" top bar with a proper bordered finish  */
 /* - Larger, scrollable, smoother sticker panel                      */
-/* - New "expanded selector" popup for the left ↗ button             */
+/* - New "expanded selector" popup for the left â†— button             */
 /* ================================================================ */
 
 /* 1. Remove the chunky outer padding so panels meet the container */
@@ -9597,7 +9597,7 @@ body {
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
 }
 
-/* 2. Top bar (where "Back Squad" lives) — minimal hardening only.
+/* 2. Top bar (where "Back Squad" lives) â€” minimal hardening only.
    Per user request, the squad header itself is left to its original look;
    we just guarantee it doesn't bleed outside its rounded card when full. */
 #embeddedSquadView .squad-header-compact {
@@ -9625,7 +9625,7 @@ body {
     white-space: nowrap;
     align-self: center;
 }
-/* Stat badges row scrolls horizontally inside its slot — never escapes the card */
+/* Stat badges row scrolls horizontally inside its slot â€” never escapes the card */
 #embeddedSquadView .squad-header-compact #inlineXiHeaderStats.inline-xi-stats.header-inline {
     flex: 1 1 0 !important;
     min-width: 0 !important;
@@ -9662,7 +9662,7 @@ body {
     color: #f87171 !important;
 }
 
-/* XI header stats — desktop: original row centered; mobile: compact stacked layout */
+/* XI header stats â€” desktop: original row centered; mobile: compact stacked layout */
 #embeddedSquadView .squad-xi-header-row--xi {
     justify-content: center !important;
     gap: 6px !important;
@@ -9762,7 +9762,7 @@ body {
     scroll-behavior: smooth;
 }
 
-/* 3. Sticker panel — bigger chips, scrollable, smooth finish.
+/* 3. Sticker panel â€” bigger chips, scrollable, smooth finish.
    IMPORTANT: override the legacy `display: grid` on .sticker-panel so the
    head row (Add Folder / progress bar) and chip grid stack normally,
    instead of being squeezed into one column of an outer 6-col grid. */
@@ -9908,7 +9908,7 @@ body {
     margin-bottom: 6px;
 }
 
-/* Sticker bubble — auto-grow, contained image, no overflow leakage */
+/* Sticker bubble â€” auto-grow, contained image, no overflow leakage */
 #chat .chat-msg.has-sticker {
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -10033,7 +10033,7 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-/* 4. Selector popup (left ↗ button) — mobile + desktop friendly */
+/* 4. Selector popup (left â†— button) â€” mobile + desktop friendly */
 .inline-selector-popup-overlay {
     position: fixed;
     inset: 0;
@@ -10299,7 +10299,7 @@ body {
 }
 
 /* ================================================================ */
-/* Auction UI polish — chat c1/c2, feed scroll, squads, summary     */
+/* Auction UI polish â€” chat c1/c2, feed scroll, squads, summary     */
 /* ================================================================ */
 #feedChat {
     overflow: hidden !important;
@@ -10618,7 +10618,7 @@ body {
 }
 
 /* ============================================================
-   TURF THEME v2 — auth, overlays, team pick, global polish
+   TURF THEME v2 â€” auth, overlays, team pick, global polish
    ============================================================ */
 
 body.theme-app {
@@ -10806,7 +10806,7 @@ section#auth.theme-app {
     background: rgba(52, 211, 153, 0.08);
 }
 
-/* Inline custom builder (legacy — not full-card mode) */
+/* Inline custom builder (legacy â€” not full-card mode) */
 #auth .auth-custom-builder:not(.auth-custom-builder-card) {
     position: static;
     inset: auto;
@@ -11191,7 +11191,7 @@ section#auth.theme-app {
     font-size: 0.75rem;
 }
 
-/* Team selection — minimal team-color border */
+/* Team selection â€” minimal team-color border */
 #embeddedTeamList .team-btn {
     display: flex;
     flex-direction: column;
@@ -11316,7 +11316,7 @@ section#auth.theme-app {
     }
 }
 
-/* Landing — match app pitch background */
+/* Landing â€” match app pitch background */
 #landing.landing-themed {
     position: relative;
     z-index: 10;
@@ -11332,7 +11332,7 @@ section#auth.theme-app {
     margin: 4px 0 16px;
 }
 
-/* Team selected panel — transparent card */
+/* Team selected panel â€” transparent card */
 #teamSelectionMain,
 #auctionUI #teamSelectionMain.glass {
     background: transparent !important;
@@ -11454,7 +11454,7 @@ section#auth.theme-app {
     position: relative;
 }
 
-/* Feed / command center — turf theme (fonts unchanged) */
+/* Feed / command center â€” turf theme (fonts unchanged) */
 #auctionUI #commandCenter.glass {
     background: linear-gradient(165deg, rgba(15, 26, 22, 0.94), rgba(5, 10, 8, 0.98)) !important;
     border: 1px solid var(--border) !important;
@@ -11778,7 +11778,7 @@ section#auth.theme-app {
 }
 .inline-xi-footer-actions .squad-check-xi-btn { flex: 1; margin: 0; }
 
-/* Rules tab — fit in command center without scroll */
+/* Rules tab â€” fit in command center without scroll */
 #auctionUI #view-sets,
 #auctionUI #panel-sets {
     overflow: hidden !important;
@@ -11952,7 +11952,7 @@ section#auth.theme-app .auth-page {
     font-size: 0.55rem !important;
 }
 
-/* Public rooms — preview + full list */
+/* Public rooms â€” preview + full list */
 .auth-public-rooms-empty {
     margin: 0 0 8px;
     padding: 8px 10px;
@@ -12053,7 +12053,7 @@ section#auth.theme-app .auth-page {
     max-height: none !important;
 }
 
-/* Squad XI picker: stack on mobile — picker top, buttons bottom */
+/* Squad XI picker: stack on mobile â€” picker top, buttons bottom */
 #embeddedSquadView #view-squad-list .inline-xi-layout.inline-xi-layout--single {
     display: flex !important;
     flex-direction: column !important;
@@ -12102,7 +12102,7 @@ section#auth.theme-app .auth-page {
     box-sizing: border-box !important;
 }
 
-/* Playing XI popup — mobile bottom sheet (match selector popup) */
+/* Playing XI popup â€” mobile bottom sheet (match selector popup) */
 @media (max-width: 540px) {
     .inline-xi-popup-overlay {
         align-items: flex-end !important;
@@ -12199,7 +12199,7 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     max-width: none !important;
 }
 
-/* Squad XI inline picker — square tiles (wins over earlier compact overrides) */
+/* Squad XI inline picker â€” square tiles (wins over earlier compact overrides) */
 #embeddedSquadView #view-squad-list .inline-role-group-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)) !important;
@@ -12442,7 +12442,7 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     min-height: 38px;
 }
 
-/* Custom builder — full overlay, no overlap */
+/* Custom builder â€” full overlay, no overlap */
 #auth .auth-custom-builder.auth-custom-builder-card {
     width: 100%;
     height: 100%;
@@ -12504,7 +12504,7 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     padding-right: 8px;
 }
 
-/* Tournament rules — mobile fit */
+/* Tournament rules â€” mobile fit */
 @media (max-width: 520px) {
     #auth .auth-wrapper {
         max-width: calc(100vw - 20px);
@@ -12582,7 +12582,7 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
         font-size: 0.72rem;
     }
 
-    /* Post-auction summary — mobile */
+    /* Post-auction summary â€” mobile */
     #postAuctionSummary {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -12633,12 +12633,12 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     }
 }
 /* ================================================================== */
-/* 🎨 UI/UX OVERHAUL – Professional Buttons, Auth, Google, Mobile     */
+/* ðŸŽ¨ UI/UX OVERHAUL â€“ Professional Buttons, Auth, Google, Mobile     */
 /* ================================================================== */
 
 /* ---- 1. AUTH PAGE LAYOUT FIX ---- */
 
-/* Remove floating animation – replace with elegant entrance */
+/* Remove floating animation â€“ replace with elegant entrance */
 .landing-card, .auth-card {
     animation: authCardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -12788,7 +12788,7 @@ section#auth .auth-custom-builder-card #customBuilderUploadSection::-webkit-scro
     text-align: left;
 }
 
-/* Connected state – green accent */
+/* Connected state â€“ green accent */
 .auth-google-sync-btn--linked {
     border-color: rgba(34, 197, 94, 0.35);
     background: rgba(34, 197, 94, 0.06);
@@ -13263,7 +13263,7 @@ button[disabled] {
 }
 
 /* ================================================================== */
-/* 📱 MOBILE RESPONSIVENESS                                            */
+/* ðŸ“± MOBILE RESPONSIVENESS                                            */
 /* ================================================================== */
 
 /* Phones (< 480px) */
@@ -13374,7 +13374,7 @@ button[disabled] {
     }
 }
 
-/* Tablets (481px – 768px) */
+/* Tablets (481px â€“ 768px) */
 @media (min-width: 481px) and (max-width: 768px) {
     .auth-card {
         max-width: 420px !important;
@@ -13393,7 +13393,7 @@ button[disabled] {
     }
 }
 /* ================================================================== */
-/* 🎨 UI/UX OVERHAUL – Professional Buttons, Auth, Google, Mobile     */
+/* ðŸŽ¨ UI/UX OVERHAUL â€“ Professional Buttons, Auth, Google, Mobile     */
 /* ================================================================== */
 
 /* ---- 1. AUTH PAGE LAYOUT & SLIDE TRANSITIONS ---- */
@@ -14041,7 +14041,7 @@ button[disabled] {
 }
 
 /* ================================================================== */
-/* 📱 MOBILE RESPONSIVENESS                                            */
+/* ðŸ“± MOBILE RESPONSIVENESS                                            */
 /* ================================================================== */
 
 @media (max-width: 480px) {
@@ -14157,7 +14157,7 @@ button[disabled] {
 }
 
 /* ================================================================== */
-/* 📱 STICKER PANEL & UPLOAD UI ENHANCEMENTS                          */
+/* ðŸ“± STICKER PANEL & UPLOAD UI ENHANCEMENTS                          */
 /* ================================================================== */
 
 .sticker-panel {
@@ -14395,7 +14395,7 @@ button[disabled] {
 }
 
 /* ================================================================== */
-/* 🎨 TOURNAMENT RULES & GENERAL TAB STYLING (MATCHING IMAGE 1)      */
+/* ðŸŽ¨ TOURNAMENT RULES & GENERAL TAB STYLING (MATCHING IMAGE 1)      */
 /* ================================================================== */
 
 #auctionUI #panel-sets .panel-rules-inner--fit {
@@ -14500,7 +14500,7 @@ button[disabled] {
 }
 
 /* ================================================================== */
-/* 🛡️ SQUAD HEADER 2-LINE COMPACT STYLING (MATCHING IMAGE 2)          */
+/* ðŸ›¡ï¸ SQUAD HEADER 2-LINE COMPACT STYLING (MATCHING IMAGE 2)          */
 /* ================================================================== */
 
 .squad-header-compact {
@@ -15608,7 +15608,7 @@ button[disabled] {
 
 
 /* ============================================================ */
-/* 🎯 GENERAL TAB: RULES ONLY + SECURITY INBOX SPACE BELOW      */
+/* ðŸŽ¯ GENERAL TAB: RULES ONLY + SECURITY INBOX SPACE BELOW      */
 /* ============================================================ */
 
 #panel-sets {
@@ -15859,7 +15859,7 @@ button[disabled] {
 }
 
 /* ============================================================ */
-/* 🎯 SQUADS TAB: SQUAD GRID & CHECK XI COMPACT HEADER FIX      */
+/* ðŸŽ¯ SQUADS TAB: SQUAD GRID & CHECK XI COMPACT HEADER FIX      */
 /* ============================================================ */
 
 #view-squads {
@@ -15972,7 +15972,7 @@ button[disabled] {
 /* FIX: Squad Watermark Height, Grid Fill, General Tab           */
 /* ============================================================ */
 
-/* FIX 1: Watermark height issue — limit watermark to header area */
+/* FIX 1: Watermark height issue â€” limit watermark to header area */
 .squad-watermark {
     position: absolute !important;
     top: 0 !important;
@@ -16151,7 +16151,7 @@ button[disabled] {
 
 
 /* ============================================================ */
-/* OVERHAUL v3 – General, Squad Header, Leaderboard, Summary   */
+/* OVERHAUL v3 â€“ General, Squad Header, Leaderboard, Summary   */
 /* ============================================================ */
 
 /* GENERAL TAB */
@@ -16363,7 +16363,7 @@ button[disabled] {
     font-size: 0.58rem;
 }
 
-/* SQUAD HEADER – SINGLE ROW */
+/* SQUAD HEADER â€“ SINGLE ROW */
 .squad-head-single-row {
     display: flex;
     align-items: center;
@@ -16720,7 +16720,7 @@ button[disabled] {
 /* OVERHAUL v4: General Tab, Header Logo, Obround XI Badges    */
 /* ============================================================ */
 
-/* GENERAL TAB – Compact Host Controls & Rules */
+/* GENERAL TAB â€“ Compact Host Controls & Rules */
 .gt-combined-card.compact {
     padding: 6px 10px !important;
     margin-bottom: 6px !important;
@@ -17398,7 +17398,7 @@ button[disabled] {
     display: none;
 }
 /* ================================================================== */
-/* 🔥 COMPLETE UI REDESIGN v2 – Lobby, Verify, Leaderboard, Summary   */
+/* ðŸ”¥ COMPLETE UI REDESIGN v2 â€“ Lobby, Verify, Leaderboard, Summary   */
 /* ================================================================== */
 
 /* =================== VERIFICATION POPUP REDESIGN =================== */
@@ -17787,7 +17787,7 @@ button[disabled] {
 }
 /* ================================================================== */
 /* ================================================================== */
-/* 🚀 GROUND-UP COMPLETE ROOM LOBBY OVERHAUL                         */
+/* ðŸš€ GROUND-UP COMPLETE ROOM LOBBY OVERHAUL                         */
 /* ================================================================== */
 
 @keyframes pulseGlowDot {
@@ -18611,15 +18611,11 @@ section#auth .auth-public-rooms-empty {
 }
 
 /* ================================================================== */
-/* ?? STICKER PANEL OVERLAY OVER CHATBOX FIX                           */
+/* ðŸŽ¯ STICKER PANEL OVERLAY FIX                                        */
 /* ================================================================== */
 .feed-input-wrapper {
     position: relative !important;
     z-index: 500 !important;
-}
-
-#feedChat {
-    overflow: visible !important;
 }
 
 #stickerPanel,
@@ -18642,255 +18638,518 @@ section#auth .auth-public-rooms-empty {
     display: flex !important;
     flex-direction: column !important;
 }
-
 #stickerPanel.hidden,
 .sticker-panel.hidden {
     display: none !important;
 }
 
 /* ================================================================== */
-/* ?? MOBILE ROOM LOBBY TILE & FOOTER OVERLAP FIX                     */
+/* ðŸŸï¸ DEFINITIVE ROOM LOBBY LAYOUT â€” DESKTOP & MOBILE                  */
 /* ================================================================== */
-@media (max-width: 768px) {
-    :root {
-        --footer-height-lock: 52px;
-    }
 
+/* --- Footer: always fixed at bottom --- */
+.app-footer {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 9999 !important;
+    height: auto !important;
+    padding: 10px 16px !important;
+    padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    background: rgba(4, 9, 20, 0.98) !important;
+    backdrop-filter: blur(16px) !important;
+    border-top: 1px solid rgba(56, 189, 248, 0.15) !important;
+}
+
+/* --- Every screen sits above the footer --- */
+.screen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 48px !important;
+    width: 100vw !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding-bottom: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* --- Auth section fills the screen slot and scrolls --- */
+section#auth.theme-app {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100% !important;
+}
+
+/* --- Arena page: centers the card, scrolls on overflow --- */
+section#auth .arena-page {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 24px 16px 36px !important;
+    min-height: 0 !important;
+}
+
+/* --- Arena wrapper: max-width container --- */
+section#auth .arena-wrapper {
+    width: 100% !important;
+    max-width: 480px !important;
+    margin: 0 auto !important;
+}
+
+/* --- Auth card: glass container --- */
+section#auth .auth-card {
+    background: linear-gradient(165deg, rgba(15, 23, 42, 0.96), rgba(4, 9, 20, 0.98)) !important;
+    border: 1px solid rgba(56, 189, 248, 0.16) !important;
+    border-radius: 24px !important;
+    overflow: hidden !important;
+    position: relative !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(56, 189, 248, 0.12) !important;
+}
+
+/* --- Card header (desktop) --- */
+section#auth .arena-card-head {
+    padding: 22px 24px 6px !important;
+    text-align: center !important;
+}
+section#auth .arena-eyebrow-pill {
+    display: inline-block !important;
+    font-size: 0.62rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.12em !important;
+    color: #34d399 !important;
+    background: rgba(52, 211, 153, 0.08) !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
+    padding: 4px 12px !important;
+    border-radius: 20px !important;
+    margin-bottom: 10px !important;
+}
+section#auth .arena-heading {
+    font-size: 1.55rem !important;
+    font-weight: 800 !important;
+    color: #f8fafc !important;
+    margin: 0 0 4px !important;
+    line-height: 1.3 !important;
+}
+section#auth .arena-subheading {
+    font-size: 0.82rem !important;
+    color: #94a3b8 !important;
+    margin: 0 0 4px !important;
+    line-height: 1.4 !important;
+}
+
+/* --- Tabs --- */
+section#auth .arena-tabs {
+    display: flex !important;
+    gap: 4px !important;
+    margin: 12px 24px 0 !important;
+    padding: 3px !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+section#auth .auth-tab-btn {
+    flex: 1 !important;
+    padding: 9px 14px !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+    border: none !important;
+    background: transparent !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+}
+section#auth .auth-tab-btn.active {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15) !important;
+}
+section#auth .auth-tab-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #94a3b8 !important;
+}
+
+/* --- Body --- */
+section#auth .arena-body {
+    padding: 16px 24px 22px !important;
+}
+
+/* --- Inputs --- */
+section#auth .arena-input-group {
+    margin-bottom: 10px !important;
+}
+section#auth .arena-field-label {
+    display: block !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    color: #64748b !important;
+    margin-bottom: 6px !important;
+}
+section#auth .arena-input-wrapper {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+}
+section#auth .arena-input-icon {
+    position: absolute !important;
+    left: 14px !important;
+    font-size: 0.95rem !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+}
+section#auth .arena-input {
+    width: 100% !important;
+    padding: 11px 14px 11px 40px !important;
+    font-size: 0.9rem !important;
+    background: rgba(2, 6, 23, 0.7) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    color: #f1f5f9 !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+section#auth .arena-input:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    outline: none !important;
+}
+
+/* --- Join row --- */
+section#auth .arena-join-row {
+    display: flex !important;
+    gap: 10px !important;
+}
+section#auth .arena-input-code {
+    flex: 1 !important;
+    text-align: center !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.2em !important;
+    text-transform: uppercase !important;
+    font-size: 1rem !important;
+    padding: 11px 14px !important;
+}
+section#auth .arena-go-btn {
+    padding: 11px 22px !important;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: #fff !important;
+    border: none !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
+}
+section#auth .arena-go-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* --- Public rooms divider --- */
+section#auth .arena-public-divider {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 12px 0 !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    color: #475569 !important;
+    text-transform: uppercase !important;
+}
+section#auth .arena-public-divider::before,
+section#auth .arena-public-divider::after {
+    content: '' !important;
+    flex: 1 !important;
+    height: 1px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* --- Public rooms button --- */
+section#auth .arena-public-rooms-btn {
+    width: 100% !important;
+    padding: 10px 14px !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+section#auth .arena-public-rooms-btn:hover {
+    background: rgba(14, 165, 233, 0.12) !important;
+    border-color: rgba(14, 165, 233, 0.3) !important;
+    color: #f1f5f9 !important;
+}
+
+/* --- Toggle box --- */
+section#auth .arena-toggle-box {
+    margin-bottom: 10px !important;
+    padding: 10px 14px !important;
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 12px !important;
+}
+
+/* --- Dataset cards (player pool selector) --- */
+section#auth .dataset-scroll-container {
+    display: flex !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding: 4px 0 !important;
+    margin-bottom: 6px !important;
+    scrollbar-width: none !important;
+}
+section#auth .dataset-scroll-container::-webkit-scrollbar {
+    display: none !important;
+}
+section#auth .dataset-card {
+    flex: 0 0 100px !important;
+    min-width: 100px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    padding: 10px 6px !important;
+    border-radius: 12px !important;
+    background: rgba(2, 6, 23, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-align: center !important;
+}
+section#auth .dataset-card.active {
+    border-color: rgba(16, 185, 129, 0.5) !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15) !important;
+}
+section#auth .dataset-card:hover:not(.active) {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+section#auth .dataset-card .ds-badge {
+    font-size: 0.52rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    padding: 2px 6px !important;
+    border-radius: 8px !important;
+    background: rgba(16, 185, 129, 0.2) !important;
+    color: #34d399 !important;
+}
+section#auth .dataset-card .ds-badge.ds-badge-hot {
+    background: rgba(251, 146, 60, 0.2) !important;
+    color: #fb923c !important;
+}
+section#auth .dataset-card .ds-badge.ds-badge-custom {
+    background: rgba(139, 92, 246, 0.2) !important;
+    color: #a78bfa !important;
+}
+section#auth .dataset-card .ds-icon {
+    font-size: 1.3rem !important;
+}
+section#auth .dataset-card .ds-title {
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    color: #e2e8f0 !important;
+}
+section#auth .dataset-card .ds-sub {
+    font-size: 0.58rem !important;
+    color: #64748b !important;
+}
+
+/* --- Pool label --- */
+section#auth .pool-selected-label {
+    font-size: 0.72rem !important;
+    color: #34d399 !important;
+    text-align: center !important;
+    padding: 4px 0 !important;
+}
+
+/* --- Create button --- */
+section#auth .arena-create-btn {
+    width: 100% !important;
+    padding: 13px 18px !important;
+    font-size: 0.92rem !important;
+    font-weight: 800 !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: #fff !important;
+    border: none !important;
+    cursor: pointer !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3) !important;
+    transition: all 0.2s ease !important;
+    margin-top: 6px !important;
+}
+section#auth .arena-create-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 28px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* ================================================================== */
+/* ðŸ“± MOBILE RESPONSIVE (â‰¤ 640px)                                      */
+/* ================================================================== */
+@media (max-width: 640px) {
     .app-footer {
-        position: fixed !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        z-index: 9999 !important;
-        padding: 8px 12px !important;
+        padding: 8px 10px !important;
         padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
-        background: rgba(4, 9, 20, 0.98) !important;
-        backdrop-filter: blur(16px) !important;
-        border-top: 1px solid rgba(56, 189, 248, 0.2) !important;
+    }
+    .footer-content {
+        gap: 6px !important;
+        font-size: 0.72rem !important;
+        flex-wrap: nowrap !important;
+    }
+    .footer-social svg {
+        width: 14px !important;
+        height: 14px !important;
     }
 
     .screen {
-        bottom: 52px !important;
-        padding-bottom: 0 !important;
-    }
-
-    section#auth.theme-app {
-        min-height: auto !important;
-        padding-bottom: 30px !important;
+        bottom: 44px !important;
     }
 
     section#auth .arena-page {
-        padding: 12px 10px 95px !important;
+        padding: 10px 10px 20px !important;
         align-items: flex-start !important;
     }
 
     section#auth .arena-wrapper {
-        margin-bottom: 30px !important;
-    }
-
-    section#auth .auth-card {
-        margin-bottom: 30px !important;
-    }
-
-    section#auth .auth-public-rooms-browse,
-    section#auth .auth-game-history {
-        padding: 16px 14px 36px !important;
-    }
-
-    section#auth .room-list-box {
-        max-height: calc(100vh - 270px) !important;
-        padding-bottom: 24px !important;
-        margin-bottom: 12px !important;
-    }
-
-    section#auth .room-tile {
-        margin-bottom: 4px !important;
-    }
-
-    section#auth .auth-game-history-list {
-        max-height: calc(100vh - 270px) !important;
-        padding-bottom: 24px !important;
-    }
-}
-
-/* ================================================================== */
-/* ?? ULTRA-COMPACT MOBILE ROOM LOBBY UI (FIT ABOVE FOOTER ALWAYS)     */
-/* ================================================================== */
-@media (max-width: 600px) {
-    section#auth .arena-global-topbar {
-        padding: 6px 12px !important;
-    }
-    section#auth .arena-topbar-logo {
-        width: 24px !important;
-        height: 24px !important;
-    }
-    section#auth .arena-topbar-title {
-        font-size: 0.95rem !important;
-    }
-    section#auth .arena-live-badge {
-        font-size: 0.52rem !important;
-        padding: 2px 6px !important;
-    }
-
-    section#auth.screen {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 50px !important;
-        overflow-y: auto !important;
-    }
-
-    section#auth .arena-page {
-        padding: 6px 8px 85px !important;
-        min-height: auto !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-
-    section#auth .arena-wrapper {
-        margin: 0 auto !important;
-        width: 100% !important;
-        max-width: 440px !important;
+        max-width: 100% !important;
     }
 
     section#auth .auth-card {
         border-radius: 18px !important;
-        max-height: calc(100vh - 120px) !important;
-        overflow-y: auto !important;
-        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7) !important;
     }
 
+    /* Compact header */
     section#auth .arena-card-head {
-        padding: 12px 14px 2px !important;
+        padding: 14px 16px 4px !important;
     }
     section#auth .arena-eyebrow-pill {
-        display: none !important;
+        font-size: 0.55rem !important;
+        padding: 3px 8px !important;
+        margin-bottom: 6px !important;
     }
     section#auth .arena-heading {
-        font-size: 1.15rem !important;
-        margin: 0 !important;
-        line-height: 1.2 !important;
+        font-size: 1.25rem !important;
+        margin: 0 0 2px !important;
     }
     section#auth .arena-subheading {
-        display: none !important;
+        font-size: 0.72rem !important;
+        margin: 0 !important;
     }
 
+    /* Compact tabs */
     section#auth .arena-tabs {
-        margin: 8px 12px 0 !important;
-        padding: 2px !important;
-        gap: 3px !important;
+        margin: 8px 14px 0 !important;
+        padding: 3px !important;
         border-radius: 10px !important;
     }
     section#auth .auth-tab-btn {
-        padding: 7px 10px !important;
+        padding: 8px 12px !important;
         font-size: 0.78rem !important;
         border-radius: 8px !important;
     }
 
+    /* Compact body */
     section#auth .arena-body {
-        padding: 10px 12px 14px !important;
+        padding: 12px 14px 16px !important;
     }
     section#auth .arena-input-group {
-        margin-bottom: 6px !important;
+        margin-bottom: 8px !important;
     }
     section#auth .arena-field-label {
         font-size: 0.62rem !important;
-        margin: 2px 0 3px !important;
-        letter-spacing: 0.08em !important;
-    }
-    section#auth .arena-input-wrapper {
-        height: 38px !important;
-    }
-    section#auth .arena-input-icon {
-        font-size: 0.85rem !important;
-        padding-left: 10px !important;
+        margin-bottom: 4px !important;
     }
     section#auth .arena-input {
-        padding: 8px 10px 8px 34px !important;
-        font-size: 0.85rem !important;
+        padding: 10px 12px 10px 36px !important;
+        font-size: 0.88rem !important;
         border-radius: 10px !important;
-        height: 38px !important;
-    }
-    section#auth .arena-join-row {
-        gap: 8px !important;
     }
     section#auth .arena-input-code {
-        height: 38px !important;
-        font-size: 0.9rem !important;
-        letter-spacing: 0.15em !important;
+        font-size: 0.95rem !important;
+        padding: 10px 12px !important;
     }
     section#auth .arena-go-btn {
-        height: 38px !important;
-        padding: 8px 16px !important;
+        padding: 10px 18px !important;
         font-size: 0.82rem !important;
         border-radius: 10px !important;
     }
 
+    /* Compact public divider */
     section#auth .arena-public-divider {
         margin: 8px 0 !important;
-        font-size: 0.65rem !important;
+        font-size: 0.62rem !important;
     }
     section#auth .arena-public-rooms-btn {
-        padding: 8px 12px !important;
+        padding: 9px 12px !important;
         font-size: 0.78rem !important;
         border-radius: 10px !important;
     }
+
+    /* Compact toggle & datasets */
     section#auth .arena-toggle-box {
-        margin-bottom: 6px !important;
-    }
-    section#auth .auth-toggle .label-text {
-        font-size: 0.75rem !important;
+        padding: 8px 12px !important;
+        margin-bottom: 8px !important;
     }
     section#auth .auth-toggle .sub-label-text {
         display: none !important;
     }
-
-    section#auth .arena-field-label-pool {
-        margin-top: 4px !important;
-        margin-bottom: 4px !important;
-    }
     section#auth .dataset-scroll-container {
         gap: 6px !important;
-        padding: 2px !important;
-        margin-bottom: 2px !important;
     }
     section#auth .dataset-card {
-        flex: 0 0 76px !important;
-        min-width: 76px !important;
-        padding: 6px 4px !important;
-        height: 64px !important;
+        flex: 0 0 82px !important;
+        min-width: 82px !important;
+        padding: 8px 4px !important;
         border-radius: 10px !important;
-        gap: 2px !important;
-    }
-    section#auth .dataset-card .ds-badge {
-        font-size: 0.48rem !important;
-        padding: 1px 4px !important;
     }
     section#auth .dataset-card .ds-icon {
-        font-size: 1rem !important;
+        font-size: 1.1rem !important;
     }
     section#auth .dataset-card .ds-title {
         font-size: 0.65rem !important;
     }
     section#auth .dataset-card .ds-sub {
-        display: none !important;
+        font-size: 0.5rem !important;
     }
     section#auth .pool-selected-label {
         font-size: 0.68rem !important;
-        padding: 1px 0 !important;
-        margin-bottom: 4px !important;
+        padding: 2px 0 !important;
     }
-
     section#auth .arena-create-btn {
-        padding: 10px 14px !important;
+        padding: 11px 14px !important;
         font-size: 0.88rem !important;
         border-radius: 12px !important;
         margin-top: 4px !important;
-        height: 42px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+    }
+
+    /* Topbar compact */
+    section#auth .arena-global-topbar {
+        padding: 8px 12px !important;
+    }
+    section#auth .arena-topbar-logo {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    section#auth .arena-topbar-title {
+        font-size: 1rem !important;
+    }
+    section#auth .arena-live-badge {
+        font-size: 0.55rem !important;
+        padding: 2px 6px !important;
     }
 }
+
