@@ -7,6 +7,14 @@ const multer = require('multer');
 const PLAYERS = require("./players");
 const SPECIAL_PLAYERS = require("./specialplayer.json");
 
+// Process-level crash prevention to keep auction rooms stable
+process.on('uncaughtException', (err) => {
+    console.error('🛡️ Uncaught Exception caught to prevent server crash:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('🛡️ Unhandled Rejection caught to prevent server crash:', reason);
+});
+
 const app = express();
 app.use(express.json({ limit: "256kb" }));
 const server = http.createServer(app);

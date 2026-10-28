@@ -1,4 +1,4 @@
-﻿
+
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Syne:wght@500;600;700;800&display=swap');
 
@@ -8991,28 +8991,25 @@ body {
     position: relative !important;
 }
 
-/* Keep footer fixed as ceiling boundary */
+/* Unified flex layout for footer and screen */
 .app-footer {
-    position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    height: var(--footer-height-lock, 44px) !important;
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
 }
 
-/* Every app screen must fit exactly above footer */
 .screen {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: var(--footer-height-lock, 44px) !important;
-    width: 100vw !important;
-    height: auto !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    flex: 1 1 auto !important;
     min-height: 0 !important;
-    max-height: none !important;
-    margin: 0 !important;
-    padding-bottom: 0 !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
 }
@@ -18628,528 +18625,796 @@ section#auth .auth-public-rooms-empty {
     width: auto !important;
     max-height: 260px !important;
     background: rgba(10, 16, 28, 0.98) !important;
-    border: 1.5px solid rgba(52, 211, 153, 0.35) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.8), 0 0 24px rgba(52, 211, 153, 0.12) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    z-index: 99999 !important;
-    overflow-y: auto !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    z-index: 600 !important;
+}
+
+/* ================================================================== */
+/* 🚀 GLOBAL APP FLEX SHELL & PREVIOUS FOOTER ARCHITECTURE            */
+/* ================================================================== */
+html, body {
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+body {
     display: flex !important;
     flex-direction: column !important;
+    min-height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+    background: #020617 !important;
+    color: #f8fafc !important;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    padding-bottom: 0 !important;
 }
-#stickerPanel.hidden,
-.sticker-panel.hidden {
+
+/* Screens fill the flex area between header and footer */
+.screen {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.screen.hidden {
     display: none !important;
 }
 
-/* ================================================================== */
-/* ðŸŸï¸ DEFINITIVE ROOM LOBBY LAYOUT â€” DESKTOP & MOBILE                  */
-/* ================================================================== */
-
-/* --- Footer: always fixed at bottom --- */
+/* Restored Original/Previous Simple Dark Footer */
 .app-footer {
-    position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    z-index: 9999 !important;
-    height: auto !important;
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+    background: #020617 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
     padding: 10px 16px !important;
     padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
-    background: rgba(4, 9, 20, 0.98) !important;
-    backdrop-filter: blur(16px) !important;
-    border-top: 1px solid rgba(56, 189, 248, 0.15) !important;
+    z-index: 999 !important;
+    font-size: 0.8rem !important;
+    color: #94a3b8 !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
 }
 
-/* --- Every screen sits above the footer --- */
-.screen {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 48px !important;
-    width: 100vw !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    margin: 0 !important;
-    padding-bottom: 0 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+.footer-content {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 12px !important;
+    font-size: 0.78rem !important;
+    color: #94a3b8 !important;
+    font-family: inherit !important;
+    text-align: center !important;
+    flex-wrap: wrap !important;
 }
 
-/* --- Auth section fills the screen slot and scrolls --- */
-section#auth.theme-app {
+.footer-social {
+    color: #ffd700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform 0.2s ease, color 0.2s ease !important;
+}
+
+.footer-social svg {
+    width: 17px !important;
+    height: 17px !important;
+}
+
+.footer-social:hover {
+    color: #ffffff !important;
+    transform: scale(1.15) !important;
+}
+
+/* ================================================================== */
+/* 🏆 ROOM LOBBY COMPLETE REDESIGN (DESKTOP & MOBILE)                 */
+/* ================================================================== */
+section#auth {
     display: flex !important;
     flex-direction: column !important;
     min-height: 100% !important;
+    background: radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.08), transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.05), transparent 40%),
+                linear-gradient(180deg, #020617 0%, #080f1e 40%, #030712 100%) !important;
+    box-sizing: border-box !important;
+    padding-bottom: 24px !important; /* Critical for mobile: content NEVER touches or hides behind footer */
 }
 
-/* --- Arena page: centers the card, scrolls on overflow --- */
-section#auth .arena-page {
-    flex: 1 !important;
+/* Topbar */
+section#auth .arena-global-topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    flex-shrink: 0 !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    padding: 24px 16px 36px !important;
-    min-height: 0 !important;
+    justify-content: space-between !important;
+    background: rgba(2, 6, 23, 0.85) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+    padding: 10px 24px !important;
+    box-sizing: border-box !important;
 }
 
-/* --- Arena wrapper: max-width container --- */
+section#auth .arena-topbar-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+section#auth .arena-topbar-logo {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    object-fit: contain !important;
+}
+
+section#auth .arena-brand-text {
+    display: flex !important;
+    flex-direction: column !important;
+    line-height: 1.1 !important;
+}
+
+section#auth .arena-topbar-title {
+    font-size: 1.05rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    color: #f8fafc !important;
+}
+
+section#auth .arena-live-badge {
+    font-size: 0.6rem !important;
+    font-weight: 700 !important;
+    color: #34d399 !important;
+    letter-spacing: 0.08em !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+section#auth .pulse-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background: #34d399 !important;
+    box-shadow: 0 0 8px #34d399 !important;
+    display: inline-block !important;
+    animation: arenaPulse 1.8s infinite !important;
+}
+
+@keyframes arenaPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+section#auth .arena-account-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+section#auth .arena-google-sync-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #cbd5e1 !important;
+    padding: 6px 14px !important;
+    border-radius: 20px !important;
+    font-size: 0.76rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+section#auth .arena-google-sync-btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
+    color: #fff !important;
+}
+
+section#auth .arena-google-icon {
+    font-weight: 800 !important;
+    color: #4ade80 !important;
+}
+
+section#auth .arena-profile-btn {
+    background: none !important;
+    border: 2px solid #34d399 !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    overflow: hidden !important;
+}
+
+section#auth .arena-profile-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+section#auth .arena-inline-history-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #94a3b8 !important;
+    padding: 6px 12px !important;
+    border-radius: 16px !important;
+    font-size: 0.74rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+}
+
+/* Arena Main Page & Centered Card */
+section#auth .arena-page {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px 16px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+
 section#auth .arena-wrapper {
     width: 100% !important;
-    max-width: 480px !important;
+    max-width: 440px !important;
     margin: 0 auto !important;
 }
 
-/* --- Auth card: glass container --- */
 section#auth .auth-card {
-    background: linear-gradient(165deg, rgba(15, 23, 42, 0.96), rgba(4, 9, 20, 0.98)) !important;
-    border: 1px solid rgba(56, 189, 248, 0.16) !important;
-    border-radius: 24px !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    backdrop-filter: blur(28px) !important;
+    -webkit-backdrop-filter: blur(28px) !important;
+    border: 1px solid rgba(52, 211, 153, 0.18) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04) inset !important;
     overflow: hidden !important;
     position: relative !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(56, 189, 248, 0.12) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
-/* --- Card header (desktop) --- */
+/* Card Header - Clean & Compact */
 section#auth .arena-card-head {
-    padding: 22px 24px 6px !important;
+    padding: 20px 20px 6px !important;
     text-align: center !important;
 }
+
 section#auth .arena-eyebrow-pill {
-    display: inline-block !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
     font-size: 0.62rem !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
     letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
     color: #34d399 !important;
     background: rgba(52, 211, 153, 0.08) !important;
-    border: 1px solid rgba(52, 211, 153, 0.2) !important;
-    padding: 4px 12px !important;
-    border-radius: 20px !important;
-    margin-bottom: 10px !important;
+    border: 1px solid rgba(52, 211, 153, 0.22) !important;
+    padding: 3px 10px !important;
+    border-radius: 14px !important;
+    margin-bottom: 8px !important;
 }
+
 section#auth .arena-heading {
-    font-size: 1.55rem !important;
+    font-size: 1.45rem !important;
     font-weight: 800 !important;
     color: #f8fafc !important;
     margin: 0 0 4px !important;
-    line-height: 1.3 !important;
-}
-section#auth .arena-subheading {
-    font-size: 0.82rem !important;
-    color: #94a3b8 !important;
-    margin: 0 0 4px !important;
-    line-height: 1.4 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.2 !important;
 }
 
-/* --- Tabs --- */
+section#auth .arena-heading-accent {
+    background: linear-gradient(135deg, #34d399 20%, #38bdf8 80%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    font-style: normal !important;
+}
+
+section#auth .arena-subheading {
+    font-size: 0.78rem !important;
+    color: #94a3b8 !important;
+    margin: 0 !important;
+    line-height: 1.35 !important;
+}
+
+/* Segmented Tabs */
 section#auth .arena-tabs {
     display: flex !important;
     gap: 4px !important;
-    margin: 12px 24px 0 !important;
-    padding: 3px !important;
-    background: rgba(0, 0, 0, 0.3) !important;
+    padding: 4px !important;
+    margin: 14px 20px 0 !important;
+    background: rgba(0, 0, 0, 0.35) !important;
     border-radius: 12px !important;
     border: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
+
 section#auth .auth-tab-btn {
     flex: 1 !important;
     padding: 9px 14px !important;
+    border: none !important;
+    border-radius: 9px !important;
     font-size: 0.82rem !important;
     font-weight: 700 !important;
-    border-radius: 10px !important;
-    border: none !important;
-    background: transparent !important;
     color: #64748b !important;
+    background: transparent !important;
     cursor: pointer !important;
-    transition: all 0.25s ease !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
 }
+
 section#auth .auth-tab-btn.active {
-    background: rgba(16, 185, 129, 0.15) !important;
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.15)) !important;
     color: #34d399 !important;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
 }
+
 section#auth .auth-tab-btn:hover:not(.active) {
+    color: #cbd5e1 !important;
     background: rgba(255, 255, 255, 0.04) !important;
-    color: #94a3b8 !important;
 }
 
-/* --- Body --- */
+/* Card Body */
 section#auth .arena-body {
-    padding: 16px 24px 22px !important;
+    padding: 16px 20px 20px !important;
 }
 
-/* --- Inputs --- */
 section#auth .arena-input-group {
-    margin-bottom: 10px !important;
+    margin-bottom: 12px !important;
 }
+
 section#auth .arena-field-label {
     display: block !important;
-    font-size: 0.68rem !important;
+    font-size: 0.65rem !important;
     font-weight: 800 !important;
     letter-spacing: 0.1em !important;
     text-transform: uppercase !important;
     color: #64748b !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 5px !important;
 }
+
 section#auth .arena-input-wrapper {
     position: relative !important;
     display: flex !important;
     align-items: center !important;
 }
+
 section#auth .arena-input-icon {
     position: absolute !important;
-    left: 14px !important;
-    font-size: 0.95rem !important;
+    left: 12px !important;
+    font-size: 0.9rem !important;
     z-index: 2 !important;
     pointer-events: none !important;
+    opacity: 0.8 !important;
 }
+
 section#auth .arena-input {
     width: 100% !important;
-    padding: 11px 14px 11px 40px !important;
-    font-size: 0.9rem !important;
-    background: rgba(2, 6, 23, 0.7) !important;
+    height: 42px !important;
+    padding: 0 14px 0 38px !important;
+    background: rgba(0, 0, 0, 0.35) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
-    color: #f1f5f9 !important;
+    border-radius: 10px !important;
+    color: #f8fafc !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
     transition: border-color 0.2s, box-shadow 0.2s !important;
-}
-section#auth .arena-input:focus {
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    box-sizing: border-box !important;
     outline: none !important;
 }
 
-/* --- Join row --- */
-section#auth .arena-join-row {
-    display: flex !important;
-    gap: 10px !important;
-}
-section#auth .arena-input-code {
-    flex: 1 !important;
-    text-align: center !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.2em !important;
-    text-transform: uppercase !important;
-    font-size: 1rem !important;
-    padding: 11px 14px !important;
-}
-section#auth .arena-go-btn {
-    padding: 11px 22px !important;
-    font-size: 0.88rem !important;
-    font-weight: 800 !important;
-    border-radius: 12px !important;
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    color: #fff !important;
-    border: none !important;
-    cursor: pointer !important;
-    white-space: nowrap !important;
-    transition: all 0.2s ease !important;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
-}
-section#auth .arena-go-btn:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+section#auth .arena-input:focus {
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15) !important;
 }
 
-/* --- Public rooms divider --- */
+/* Join Section Row */
+section#auth .arena-join-row {
+    display: flex !important;
+    gap: 8px !important;
+}
+
+section#auth .arena-input-code {
+    flex: 1 !important;
+    height: 44px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    letter-spacing: 0.18em !important;
+    text-transform: uppercase !important;
+    font-weight: 700 !important;
+    font-size: 0.98rem !important;
+    text-align: center !important;
+    padding: 0 10px !important;
+}
+
+section#auth .arena-go-btn {
+    height: 44px !important;
+    padding: 0 20px !important;
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    font-weight: 800 !important;
+    font-size: 0.84rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25) !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+section#auth .arena-go-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Public Matches Divider & Button */
 section#auth .arena-public-divider {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
-    margin: 12px 0 !important;
-    font-size: 0.68rem !important;
+    gap: 8px !important;
+    margin: 14px 0 10px !important;
+    font-size: 0.62rem !important;
     font-weight: 700 !important;
-    letter-spacing: 0.08em !important;
+    letter-spacing: 0.1em !important;
     color: #475569 !important;
     text-transform: uppercase !important;
 }
+
 section#auth .arena-public-divider::before,
 section#auth .arena-public-divider::after {
     content: '' !important;
     flex: 1 !important;
     height: 1px !important;
-    background: rgba(255, 255, 255, 0.06) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* --- Public rooms button --- */
 section#auth .arena-public-rooms-btn {
     width: 100% !important;
-    padding: 10px 14px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    background: rgba(56, 189, 248, 0.06) !important;
+    border: 1px solid rgba(56, 189, 248, 0.18) !important;
+    border-radius: 10px !important;
+    color: #38bdf8 !important;
     font-size: 0.82rem !important;
     font-weight: 700 !important;
-    border-radius: 12px !important;
-    background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #94a3b8 !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
 }
+
 section#auth .arena-public-rooms-btn:hover {
-    background: rgba(14, 165, 233, 0.12) !important;
-    border-color: rgba(14, 165, 233, 0.3) !important;
-    color: #f1f5f9 !important;
+    background: rgba(56, 189, 248, 0.14) !important;
+    border-color: rgba(56, 189, 248, 0.35) !important;
 }
 
-/* --- Toggle box --- */
+/* Create Section */
 section#auth .arena-toggle-box {
     margin-bottom: 10px !important;
-    padding: 10px 14px !important;
-    background: rgba(0, 0, 0, 0.2) !important;
+    padding: 8px 12px !important;
+    background: rgba(0, 0, 0, 0.25) !important;
     border: 1px solid rgba(255, 255, 255, 0.06) !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
 }
 
-/* --- Dataset cards (player pool selector) --- */
 section#auth .dataset-scroll-container {
-    display: flex !important;
-    gap: 8px !important;
-    overflow-x: auto !important;
-    padding: 4px 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
     margin-bottom: 6px !important;
-    scrollbar-width: none !important;
+    padding: 2px !important;
 }
-section#auth .dataset-scroll-container::-webkit-scrollbar {
-    display: none !important;
-}
+
 section#auth .dataset-card {
-    flex: 0 0 100px !important;
-    min-width: 100px !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 10px !important;
+    padding: 8px 4px !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    justify-content: center !important;
     gap: 3px !important;
-    padding: 10px 6px !important;
-    border-radius: 12px !important;
-    background: rgba(2, 6, 23, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    text-align: center !important;
 }
+
 section#auth .dataset-card.active {
-    border-color: rgba(16, 185, 129, 0.5) !important;
-    background: rgba(16, 185, 129, 0.1) !important;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15) !important;
+    border-color: #34d399 !important;
+    background: rgba(52, 211, 153, 0.12) !important;
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.2) !important;
 }
-section#auth .dataset-card:hover:not(.active) {
-    border-color: rgba(255, 255, 255, 0.15) !important;
-    background: rgba(255, 255, 255, 0.04) !important;
-}
-section#auth .dataset-card .ds-badge {
-    font-size: 0.52rem !important;
+
+section#auth .ds-badge {
+    font-size: 0.55rem !important;
     font-weight: 800 !important;
-    letter-spacing: 0.08em !important;
-    padding: 2px 6px !important;
-    border-radius: 8px !important;
-    background: rgba(16, 185, 129, 0.2) !important;
+    padding: 2px 5px !important;
+    border-radius: 4px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.05em !important;
+}
+
+section#auth .dataset-card.active .ds-badge {
+    background: rgba(52, 211, 153, 0.2) !important;
     color: #34d399 !important;
 }
-section#auth .dataset-card .ds-badge.ds-badge-hot {
-    background: rgba(251, 146, 60, 0.2) !important;
-    color: #fb923c !important;
+
+section#auth .ds-icon {
+    font-size: 1.1rem !important;
+    line-height: 1 !important;
 }
-section#auth .dataset-card .ds-badge.ds-badge-custom {
-    background: rgba(139, 92, 246, 0.2) !important;
-    color: #a78bfa !important;
-}
-section#auth .dataset-card .ds-icon {
-    font-size: 1.3rem !important;
-}
-section#auth .dataset-card .ds-title {
+
+section#auth .ds-title {
     font-size: 0.72rem !important;
     font-weight: 800 !important;
-    color: #e2e8f0 !important;
+    color: #f1f5f9 !important;
 }
-section#auth .dataset-card .ds-sub {
+
+section#auth .ds-sub {
     font-size: 0.58rem !important;
     color: #64748b !important;
+    line-height: 1 !important;
 }
 
-/* --- Pool label --- */
 section#auth .pool-selected-label {
-    font-size: 0.72rem !important;
+    font-size: 0.7rem !important;
     color: #34d399 !important;
     text-align: center !important;
-    padding: 4px 0 !important;
+    padding: 3px 0 !important;
+    font-weight: 600 !important;
 }
 
-/* --- Create button --- */
 section#auth .arena-create-btn {
     width: 100% !important;
-    padding: 13px 18px !important;
-    font-size: 0.92rem !important;
+    height: 44px !important;
+    font-size: 0.88rem !important;
     font-weight: 800 !important;
-    border-radius: 14px !important;
+    border-radius: 10px !important;
     background: linear-gradient(135deg, #10b981, #059669) !important;
     color: #fff !important;
     border: none !important;
     cursor: pointer !important;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3) !important;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3) !important;
     transition: all 0.2s ease !important;
     margin-top: 6px !important;
 }
+
 section#auth .arena-create-btn:hover {
     transform: translateY(-1px) !important;
-    box-shadow: 0 8px 28px rgba(16, 185, 129, 0.4) !important;
+    box-shadow: 0 6px 22px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Sub-views: Browse Public Rooms & Match History */
+section#auth .auth-card.auth-public-browse-active .arena-card-main,
+section#auth .auth-card.auth-history-active .arena-card-main,
+section#auth .auth-card.auth-card--builder .arena-card-main {
+    display: none !important;
+}
+
+section#auth .auth-public-rooms-browse,
+section#auth .auth-game-history {
+    padding: 16px 20px 20px !important;
+}
+
+section#auth .auth-public-browse-head,
+section#auth .auth-game-history-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 12px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+section#auth .auth-public-browse-back {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #cbd5e1 !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+section#auth .auth-public-browse-title {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    color: #f8fafc !important;
+    margin: 0 !important;
+}
+
+section#auth .auth-room-list-full,
+section#auth .auth-game-history-list {
+    max-height: 320px !important;
+    overflow-y: auto !important;
 }
 
 /* ================================================================== */
-/* ðŸ“± MOBILE RESPONSIVE (â‰¤ 640px)                                      */
+/* 📱 LANDING PAGE DOWNLOAD APK CTA STYLES                           */
 /* ================================================================== */
+.lp-download-cta {
+    max-width: 700px;
+    margin: 30px auto 40px;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.lp-download-card {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.6));
+    border: 1px solid rgba(52, 211, 153, 0.25);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.lp-download-info {
+    flex: 1;
+    min-width: 220px;
+}
+
+.lp-download-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.15);
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
+
+.lp-download-info h3 {
+    margin: 0 0 6px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #f1f5f9;
+}
+
+.lp-download-info p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.lp-btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.lp-btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(16, 185, 129, 0.5);
+    color: #fff !important;
+}
+
+.lp-btn-apk {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    color: #34d399 !important;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lp-btn-apk:hover {
+    background: rgba(16, 185, 129, 0.22);
+    border-color: #34d399;
+    color: #6ee7b7 !important;
+    transform: translateY(-2px);
+}
+
+/* Mobile Optimizations */
 @media (max-width: 640px) {
-    .app-footer {
-        padding: 8px 10px !important;
-        padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    section#auth {
+        padding-bottom: 28px !important;
     }
-    .footer-content {
-        gap: 6px !important;
-        font-size: 0.72rem !important;
-        flex-wrap: nowrap !important;
-    }
-    .footer-social svg {
-        width: 14px !important;
-        height: 14px !important;
-    }
-
-    .screen {
-        bottom: 44px !important;
-    }
-
     section#auth .arena-page {
-        padding: 10px 10px 20px !important;
-        align-items: flex-start !important;
+        padding: 12px 10px !important;
     }
-
-    section#auth .arena-wrapper {
-        max-width: 100% !important;
+    section#auth .arena-global-topbar {
+        padding: 8px 14px !important;
     }
-
+    section#auth .arena-topbar-title {
+        font-size: 0.95rem !important;
+    }
     section#auth .auth-card {
-        border-radius: 18px !important;
+        border-radius: 16px !important;
     }
-
-    /* Compact header */
     section#auth .arena-card-head {
-        padding: 14px 16px 4px !important;
-    }
-    section#auth .arena-eyebrow-pill {
-        font-size: 0.55rem !important;
-        padding: 3px 8px !important;
-        margin-bottom: 6px !important;
+        padding: 16px 14px 4px !important;
     }
     section#auth .arena-heading {
         font-size: 1.25rem !important;
-        margin: 0 0 2px !important;
     }
-    section#auth .arena-subheading {
-        font-size: 0.72rem !important;
-        margin: 0 !important;
-    }
-
-    /* Compact tabs */
     section#auth .arena-tabs {
-        margin: 8px 14px 0 !important;
-        padding: 3px !important;
-        border-radius: 10px !important;
+        margin: 10px 14px 0 !important;
     }
-    section#auth .auth-tab-btn {
-        padding: 8px 12px !important;
-        font-size: 0.78rem !important;
-        border-radius: 8px !important;
-    }
-
-    /* Compact body */
     section#auth .arena-body {
-        padding: 12px 14px 16px !important;
-    }
-    section#auth .arena-input-group {
-        margin-bottom: 8px !important;
-    }
-    section#auth .arena-field-label {
-        font-size: 0.62rem !important;
-        margin-bottom: 4px !important;
-    }
-    section#auth .arena-input {
-        padding: 10px 12px 10px 36px !important;
-        font-size: 0.88rem !important;
-        border-radius: 10px !important;
-    }
-    section#auth .arena-input-code {
-        font-size: 0.95rem !important;
-        padding: 10px 12px !important;
-    }
-    section#auth .arena-go-btn {
-        padding: 10px 18px !important;
-        font-size: 0.82rem !important;
-        border-radius: 10px !important;
-    }
-
-    /* Compact public divider */
-    section#auth .arena-public-divider {
-        margin: 8px 0 !important;
-        font-size: 0.62rem !important;
-    }
-    section#auth .arena-public-rooms-btn {
-        padding: 9px 12px !important;
-        font-size: 0.78rem !important;
-        border-radius: 10px !important;
-    }
-
-    /* Compact toggle & datasets */
-    section#auth .arena-toggle-box {
-        padding: 8px 12px !important;
-        margin-bottom: 8px !important;
-    }
-    section#auth .auth-toggle .sub-label-text {
-        display: none !important;
+        padding: 14px 14px 18px !important;
     }
     section#auth .dataset-scroll-container {
-        gap: 6px !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 4px !important;
     }
     section#auth .dataset-card {
-        flex: 0 0 82px !important;
-        min-width: 82px !important;
-        padding: 8px 4px !important;
-        border-radius: 10px !important;
+        padding: 6px 2px !important;
     }
-    section#auth .dataset-card .ds-icon {
-        font-size: 1.1rem !important;
-    }
-    section#auth .dataset-card .ds-title {
+    section#auth .ds-title {
         font-size: 0.65rem !important;
     }
-    section#auth .dataset-card .ds-sub {
-        font-size: 0.5rem !important;
+    .lp-download-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 18px;
     }
-    section#auth .pool-selected-label {
-        font-size: 0.68rem !important;
-        padding: 2px 0 !important;
-    }
-    section#auth .arena-create-btn {
-        padding: 11px 14px !important;
-        font-size: 0.88rem !important;
-        border-radius: 12px !important;
-        margin-top: 4px !important;
-    }
-
-    /* Topbar compact */
-    section#auth .arena-global-topbar {
-        padding: 8px 12px !important;
-    }
-    section#auth .arena-topbar-logo {
-        width: 28px !important;
-        height: 28px !important;
-    }
-    section#auth .arena-topbar-title {
-        font-size: 1rem !important;
-    }
-    section#auth .arena-live-badge {
-        font-size: 0.55rem !important;
-        padding: 2px 6px !important;
+    .lp-btn-download {
+        width: 100%;
+        justify-content: center;
     }
 }
-

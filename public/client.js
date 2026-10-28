@@ -1,4 +1,11 @@
-const socket = io();
+const socket = io({
+    reconnection: true,
+    reconnectionAttempts: 15,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 8000,
+    timeout: 25000,
+    transports: ['websocket', 'polling']
+});
 let username = "";
 let roomCode = "";
 let myTeam = null;
@@ -602,7 +609,8 @@ if (!result.active) {
   
     // SCENARIO A: Reconnecting (Session Valid)
     if (sUser && sRoom && (!urlCode || urlCode === sRoom)) {
-        // ... (Keep existing reconnect logic) ...
+        username = sUser;
+        roomCode = sRoom;
         socket.emit('reconnectUser', { roomId: sRoom, username: sUser, deviceId: getDeviceId() });
       
         // If deep link exists during reconnect, restore it
@@ -1613,53 +1621,79 @@ socket.on("identityFailed", ({ reason }) => {
 // --- RECONNECTION & STATE HANDLING ---
 let isReconnecting = false;
 let reconnectionPopupShown = false;
+let disconnectPopupTimer = null;
+let isFirstSocketConnect = true;
 
 socket.on('connect', () => {
-    // If we have session data, try to reconnect user to room
-    if (username && roomCode) {
-        // Check if we're on auctionUI screen (manual refresh or long absence)
-        const auctionUI = document.getElementById("auctionUI");
-        const isOnAuctionScreen = auctionUI && !auctionUI.classList.contains("hidden");
-        
-        if (isOnAuctionScreen && !reconnectionPopupShown) {
-            // Show reconnecting popup
-            isReconnecting = true;
-            reconnectionPopupShown = true;
-            showPopup("Reconnecting to your auction room...", "RECONNECTING", "🔄");
-        }
-        
-        console.log("🔄 Reconnecting...");
-        socket.emit('reconnectUser', { roomId: roomCode, username: username, deviceId: getDeviceId() });
-        // Request immediate state update to check if auction ended
-        socket.emit("getAuctionState"); 
+    console.log("⚡ Socket connected:", socket.id);
+    if (disconnectPopupTimer) {
+        clearTimeout(disconnectPopupTimer);
+        disconnectPopupTimer = null;
     }
-});
-
-// Show a soft "reconnecting" popup when socket drops
-socket.on('disconnect', () => {
-    if (roomCode) {
-        const auctionUI = document.getElementById("auctionUI");
-        const isOnAuctionScreen = auctionUI && !auctionUI.classList.contains("hidden");
-        if (isOnAuctionScreen) {
-            reconnectionPopupShown = false; // Reset so it shows again on reconnect
-            showPopup("Trying to reconnect to your auction room...", "RECONNECTING", "🔄");
-        }
+    if (reconnectionPopupShown) {
+        reconnectionPopupShown = false;
+        isReconnecting = false;
+        toggleCustomPopup(false);
     }
-});
 
-// When user returns to the tab/screen, ask server for a fresh snapshot
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && roomCode) {
+    if (isFirstSocketConnect) {
+        isFirstSocketConnect = false;
+        return; // Initial connection handled by window.onload / direct actions
+    }
+
+    // Recovering from a dropped connection
+    const targetRoom = roomCode || sessionStorage.getItem('ipl_room');
+    const targetUser = username || sessionStorage.getItem('ipl_user');
+
+    if (targetUser && targetRoom) {
+        console.log("🔄 Re-syncing socket after connection restore...");
+        socket.emit('reconnectUser', { roomId: targetRoom, username: targetUser, deviceId: getDeviceId() });
         const auctionUI = document.getElementById("auctionUI");
-        const isOnAuctionScreen = auctionUI && !auctionUI.classList.contains("hidden");
-        if (isOnAuctionScreen) {
-            // Show reconnecting popup if coming back after long time
-            if (!reconnectionPopupShown) {
-                isReconnecting = true;
-                reconnectionPopupShown = true;
-                showPopup("Reconnecting to your auction room...", "RECONNECTING", "🔄");
-            }
+        if (auctionUI && !auctionUI.classList.contains("hidden")) {
             socket.emit("getAuctionState");
+        }
+    }
+});
+
+// Graceful disconnect handling with debounce to avoid flickering
+socket.on('disconnect', (reason) => {
+    console.warn("⚠️ Socket disconnected:", reason);
+    const targetRoom = roomCode || sessionStorage.getItem('ipl_room');
+    if (targetRoom) {
+        const auctionUI = document.getElementById("auctionUI");
+        const isOnAuctionScreen = auctionUI && !auctionUI.classList.contains("hidden");
+        if (isOnAuctionScreen) {
+            if (disconnectPopupTimer) clearTimeout(disconnectPopupTimer);
+            disconnectPopupTimer = setTimeout(() => {
+                if (!socket.connected) {
+                    reconnectionPopupShown = true;
+                    isReconnecting = true;
+                    showPopup("Reconnecting to auction room...", "RECONNECTING", "🔄");
+                }
+            }, 2500); // Only notify user if disconnected for > 2.5 seconds
+        }
+    }
+});
+
+socket.on('connect_error', (error) => {
+    console.warn("Socket connect error:", error ? error.message : error);
+});
+
+// When user returns to tab, smoothly sync state WITHOUT showing jarring blocking popup
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        const targetRoom = roomCode || sessionStorage.getItem('ipl_room');
+        if (targetRoom) {
+            if (!socket.connected) {
+                console.log("Tab focused and socket disconnected, connecting...");
+                socket.connect();
+            } else {
+                const auctionUI = document.getElementById("auctionUI");
+                if (auctionUI && !auctionUI.classList.contains("hidden")) {
+                    // Silently sync state in background
+                    socket.emit("getAuctionState");
+                }
+            }
         }
     }
 });
@@ -6858,5 +6892,26 @@ window.gtSetMinSquad = function(val, e) {
         setTimeout(() => renderGeneralTab(), 300);
     } else {
         renderGeneralTab();
+    }
+};
+
+window.handleApkDownload = async function(event) {
+    if (event) event.preventDefault();
+    try {
+        const res = await fetch('/app-release.apk', { method: 'HEAD' });
+        if (res.ok) {
+            window.location.href = '/app-release.apk';
+            return;
+        }
+    } catch (_) {}
+    
+    if (typeof showPopup === "function") {
+        showPopup(
+            "The official Android APK is being prepared for the latest release. In the meantime, you can enjoy the full experience directly in any mobile browser or get updates in our Telegram channel!",
+            "ANDROID APK",
+            "📱"
+        );
+    } else {
+        alert("The Android APK will be available shortly! You can play directly in your mobile browser.");
     }
 };
