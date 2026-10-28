@@ -608,7 +608,7 @@ if (!result.active) {
     const sUser = sessionStorage.getItem('ipl_user');
   
     // SCENARIO A: Reconnecting (Session Valid)
-    if (sUser && sRoom && (!urlCode || urlCode === sRoom)) {
+    if (sUser && sRoom && (urlCode === sRoom || (!urlCode && path.startsWith('/room/')))) {
         username = sUser;
         roomCode = sRoom;
         socket.emit('reconnectUser', { roomId: sRoom, username: sUser, deviceId: getDeviceId() });

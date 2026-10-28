@@ -17784,831 +17784,7 @@ button[disabled] {
 }
 /* ================================================================== */
 /* ================================================================== */
-/* ðŸš€ GROUND-UP COMPLETE ROOM LOBBY OVERHAUL                         */
-/* ================================================================== */
-
-@keyframes pulseGlowDot {
-    0% { opacity: 0.5; transform: scale(0.85); box-shadow: 0 0 4px #10b981; }
-    100% { opacity: 1; transform: scale(1.15); box-shadow: 0 0 14px #10b981; }
-}
-
-@keyframes cardGlowPulse {
-    0% { box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(56, 189, 248, 0.15); }
-    50% { box-shadow: 0 32px 85px rgba(0, 0, 0, 0.85), 0 0 30px rgba(16, 185, 129, 0.1), 0 0 0 1px rgba(52, 211, 153, 0.25); }
-    100% { box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(56, 189, 248, 0.15); }
-}
-
-/* Auth Canvas Background */
-section#auth.theme-app {
-    background: radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.12) 0%, transparent 40%),
-                radial-gradient(circle at 90% 90%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 60%),
-                linear-gradient(160deg, #020617 0%, #080e1a 50%, #030712 100%) !important;
-    min-height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-    color: #f8fafc !important;
-}
-
-/* Header Navbar */
-section#auth .arena-global-topbar {
-    background: rgba(2, 6, 23, 0.85) !important;
-    backdrop-filter: blur(28px) !important;
-    -webkit-backdrop-filter: blur(28px) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-    padding: 12px 28px !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 100 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-topbar-brand {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-}
-
-section#auth .arena-topbar-logo {
-    width: 36px !important;
-    height: 36px !important;
-    object-fit: contain !important;
-    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.45)) !important;
-}
-
-section#auth .arena-brand-text {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-}
-
-section#auth .arena-topbar-title {
-    font-size: 1.15rem !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.04em !important;
-    color: #ffffff !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-live-badge {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    font-size: 0.62rem !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.08em !important;
-    color: #34d399 !important;
-    background: rgba(16, 185, 129, 0.12) !important;
-    padding: 3px 9px !important;
-    border-radius: 20px !important;
-    border: 1px solid rgba(16, 185, 129, 0.3) !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .pulse-dot {
-    width: 6px !important;
-    height: 6px !important;
-    border-radius: 50% !important;
-    background: #10b981 !important;
-    animation: pulseGlowDot 1.4s infinite alternate ease-in-out !important;
-}
-
-/* Account Bar */
-section#auth .arena-account-bar {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-}
-
-section#auth .arena-google-sync-btn {
-    padding: 8px 16px !important;
-    border-radius: 10px !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: #f1f5f9 !important;
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    transition: all 0.25s ease !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-google-sync-btn:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border-color: rgba(255, 255, 255, 0.25) !important;
-}
-
-section#auth .arena-profile-btn {
-    width: 36px !important;
-    height: 36px !important;
-    border-radius: 50% !important;
-    border: 2px solid rgba(52, 211, 153, 0.4) !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    cursor: pointer !important;
-    background: transparent !important;
-    transition: all 0.25s ease !important;
-    box-shadow: 0 0 12px rgba(52, 211, 153, 0.2) !important;
-}
-
-section#auth .arena-profile-btn:hover {
-    border-color: rgba(52, 211, 153, 0.8) !important;
-    transform: scale(1.05) !important;
-    box-shadow: 0 0 18px rgba(52, 211, 153, 0.4) !important;
-}
-
-section#auth .arena-profile-img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    border-radius: 50% !important;
-}
-
-/* Page Body */
-section#auth .arena-page {
-    flex: 1 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 24px 16px 36px !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-wrapper {
-    width: 100% !important;
-    max-width: 480px !important;
-    margin: 0 auto !important;
-}
-
-/* Main Arena Card */
-section#auth .auth-card {
-    background: linear-gradient(165deg, rgba(15, 23, 42, 0.96), rgba(4, 9, 20, 0.98)) !important;
-    border: 1px solid rgba(56, 189, 248, 0.16) !important;
-    border-radius: 24px !important;
-    animation: cardGlowPulse 4s infinite ease-in-out !important;
-    backdrop-filter: blur(40px) !important;
-    -webkit-backdrop-filter: blur(40px) !important;
-    overflow: hidden !important;
-    position: relative !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(56, 189, 248, 0.12) !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .auth-card::before {
-    content: '' !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    height: 3px !important;
-    background: linear-gradient(90deg, #10b981, #0ea5e9, #6366f1) !important;
-}
-
-section#auth .arena-card-head {
-    padding: 22px 24px 6px !important;
-    text-align: center !important;
-}
-
-section#auth .arena-eyebrow-pill {
-    display: inline-block !important;
-    font-size: 0.62rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.12em !important;
-    color: #34d399 !important;
-    background: rgba(52, 211, 153, 0.08) !important;
-    border: 1px solid rgba(52, 211, 153, 0.2) !important;
-    padding: 4px 12px !important;
-    border-radius: 20px !important;
-    margin-bottom: 10px !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-heading {
-    font-size: 1.55rem !important;
-    font-weight: 800 !important;
-    color: #f8fafc !important;
-    margin: 0 0 4px !important;
-    letter-spacing: -0.02em !important;
-    line-height: 1.2 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-heading-accent {
-    background: linear-gradient(135deg, #34d399 0%, #38bdf8 100%) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-}
-
-section#auth .arena-subheading {
-    font-size: 0.8rem !important;
-    color: #64748b !important;
-    margin: 0 !important;
-    font-weight: 500 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-/* Tabs */
-section#auth .arena-tabs {
-    display: flex !important;
-    gap: 4px !important;
-    padding: 4px !important;
-    margin: 16px 20px 0 !important;
-    background: rgba(2, 6, 23, 0.55) !important;
-    border-radius: 14px !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
-}
-
-section#auth .auth-tab-btn {
-    flex: 1 !important;
-    padding: 9px 12px !important;
-    border: 1px solid transparent !important;
-    border-radius: 10px !important;
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    color: #64748b !important;
-    background: transparent !important;
-    cursor: pointer !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif !important;
-    letter-spacing: 0.03em !important;
-    text-transform: uppercase !important;
-}
-
-section#auth .auth-tab-btn.active {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(14, 165, 233, 0.14)) !important;
-    color: #f8fafc !important;
-    border-color: rgba(52, 211, 153, 0.35) !important;
-    box-shadow: 0 4px 18px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
-}
-
-section#auth .auth-tab-btn:hover:not(.active) {
-    color: #94a3b8 !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-}
-
-/* Inputs & Form */
-section#auth .arena-body {
-    padding: 18px 20px 22px !important;
-}
-
-section#auth .arena-input-group {
-    margin-bottom: 12px !important;
-}
-
-section#auth .arena-field-label {
-    font-size: 0.64rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.08em !important;
-    text-transform: uppercase !important;
-    color: #64748b !important;
-    margin: 0 0 5px !important;
-    display: block !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-input-wrapper {
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-}
-
-section#auth .arena-input-icon {
-    position: absolute !important;
-    left: 14px !important;
-    font-size: 1rem !important;
-    opacity: 0.6 !important;
-    pointer-events: none !important;
-}
-
-section#auth .arena-input {
-    width: 100% !important;
-    padding: 10px 14px 10px 42px !important;
-    background: rgba(2, 6, 23, 0.6) !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 12px !important;
-    color: #f8fafc !important;
-    font-size: 0.9rem !important;
-    font-weight: 600 !important;
-    outline: none !important;
-    transition: all 0.25s ease !important;
-    box-sizing: border-box !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-input:focus {
-    border-color: rgba(56, 189, 248, 0.5) !important;
-    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12), 0 0 24px rgba(56, 189, 248, 0.08) !important;
-    background: rgba(2, 6, 23, 0.8) !important;
-}
-
-/* Join Section */
-section#auth .arena-join-row {
-    display: flex !important;
-    gap: 10px !important;
-}
-
-section#auth .arena-input-code {
-    font-family: 'JetBrains Mono', monospace !important;
-    letter-spacing: 0.2em !important;
-    text-transform: uppercase !important;
-    font-weight: 800 !important;
-    font-size: 1.1rem !important;
-    padding: 10px 14px !important;
-    text-align: center !important;
-}
-
-section#auth .arena-go-btn {
-    padding: 10px 18px !important;
-    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0284c7 100%) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    color: #ffffff !important;
-    font-weight: 800 !important;
-    font-size: 0.88rem !important;
-    cursor: pointer !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.32) !important;
-    white-space: nowrap !important;
-    flex-shrink: 0 !important;
-    letter-spacing: 0.03em !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-go-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 10px 28px rgba(16, 185, 129, 0.48) !important;
-}
-
-section#auth .arena-public-divider {
-    display: flex !important;
-    align-items: center !important;
-    text-align: center !important;
-    margin: 14px 0 10px !important;
-    font-size: 0.6rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.12em !important;
-    color: #475569 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-public-divider::before,
-section#auth .arena-public-divider::after {
-    content: '' !important;
-    flex: 1 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-}
-
-section#auth .arena-public-divider span {
-    padding: 0 10px !important;
-}
-
-section#auth .arena-public-rooms-btn {
-    width: 100% !important;
-    padding: 10px 14px !important;
-    background: rgba(14, 165, 233, 0.08) !important;
-    border: 1px solid rgba(14, 165, 233, 0.2) !important;
-    border-radius: 12px !important;
-    color: #38bdf8 !important;
-    font-weight: 700 !important;
-    font-size: 0.82rem !important;
-    cursor: pointer !important;
-    transition: all 0.25s ease !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-public-rooms-btn:hover {
-    background: rgba(14, 165, 233, 0.16) !important;
-    border-color: rgba(14, 165, 233, 0.4) !important;
-    transform: translateY(-1px) !important;
-}
-
-/* Create Section */
-section#auth .arena-toggle-box {
-    margin-bottom: 12px !important;
-    background: rgba(2, 6, 23, 0.45) !important;
-    padding: 9px 14px !important;
-    border-radius: 12px !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
-}
-
-section#auth .auth-toggle .label-text {
-    font-size: 0.8rem !important;
-    font-weight: 600 !important;
-    color: #cbd5e1 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .dataset-scroll-container {
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 8px !important;
-    padding: 6px 0 4px !important;
-    overflow-x: visible !important;
-}
-
-section#auth .dataset-scroll-container::-webkit-scrollbar {
-    display: none !important;
-}
-
-section#auth .dataset-card {
-    flex: initial !important;
-    min-width: 0 !important;
-    width: 100% !important;
-    background: rgba(2, 6, 23, 0.5) !important;
-    border: 1px solid rgba(255, 255, 255, 0.07) !important;
-    border-radius: 14px !important;
-    padding: 12px 4px 8px !important;
-    text-align: center !important;
-    cursor: pointer !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 2px !important;
-    position: relative !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .dataset-card:hover {
-    border-color: rgba(52, 211, 153, 0.3) !important;
-    background: rgba(52, 211, 153, 0.05) !important;
-    transform: translateY(-2px) !important;
-}
-
-section#auth .dataset-card.active {
-    background: linear-gradient(145deg, rgba(16, 185, 129, 0.18), rgba(14, 165, 233, 0.14)) !important;
-    border-color: rgba(52, 211, 153, 0.5) !important;
-    box-shadow: 0 0 20px rgba(52, 211, 153, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
-    transform: translateY(-2px) !important;
-}
-
-section#auth .ds-badge {
-    position: absolute !important;
-    top: -7px !important;
-    font-size: 0.48rem !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.04em !important;
-    padding: 1px 5px !important;
-    border-radius: 8px !important;
-    background: rgba(56, 189, 248, 0.18) !important;
-    color: #38bdf8 !important;
-    border: 1px solid rgba(56, 189, 248, 0.3) !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-    white-space: nowrap !important;
-}
-
-section#auth .ds-badge-hot {
-    background: rgba(249, 115, 22, 0.18) !important;
-    color: #fb923c !important;
-    border-color: rgba(249, 115, 22, 0.3) !important;
-}
-
-section#auth .ds-badge-custom {
-    background: rgba(168, 85, 247, 0.18) !important;
-    color: #c084fc !important;
-    border-color: rgba(168, 85, 247, 0.3) !important;
-}
-
-section#auth .dataset-card .ds-icon {
-    font-size: 1.3rem !important;
-    margin: 2px 0 1px !important;
-}
-
-section#auth .dataset-card .ds-title {
-    font-size: 0.68rem !important;
-    font-weight: 700 !important;
-    color: #f1f5f9 !important;
-    letter-spacing: 0.02em !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .dataset-card .ds-sub {
-    font-size: 0.58rem !important;
-    color: #64748b !important;
-    font-weight: 500 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .pool-selected-label {
-    font-size: 0.75rem !important;
-    color: #34d399 !important;
-    text-align: center !important;
-    padding: 4px 0 2px !important;
-    font-weight: 700 !important;
-    opacity: 0.9 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-create-btn {
-    width: 100% !important;
-    padding: 12px !important;
-    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0284c7 100%) !important;
-    border: none !important;
-    border-radius: 13px !important;
-    color: #ffffff !important;
-    font-weight: 800 !important;
-    font-size: 0.9rem !important;
-    letter-spacing: 0.03em !important;
-    cursor: pointer !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
-    margin-top: 8px !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .arena-create-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 10px 28px rgba(16, 185, 129, 0.5) !important;
-}
-
-/* Active Browse & History View Toggles */
-section#auth .auth-card.auth-public-browse-active .arena-card-main,
-section#auth .auth-card.auth-history-active .arena-card-main {
-    display: none !important;
-}
-
-section#auth .auth-card.auth-public-browse-active #publicRoomsBrowse:not(.hidden),
-section#auth .auth-card.auth-history-active #authGameHistory:not(.hidden) {
-    display: block !important;
-    pointer-events: auto !important;
-    position: relative !important;
-    z-index: 10 !important;
-}
-
-/* History and Public Rooms Browse Styling */
-section#auth .auth-game-history,
-section#auth .auth-public-rooms-browse {
-    padding: 22px 24px 28px !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .auth-public-browse-head {
-    margin-bottom: 16px !important;
-}
-
-section#auth .auth-public-browse-back {
-    background: rgba(255, 255, 255, 0.06) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: #38bdf8 !important;
-    padding: 7px 14px !important;
-    border-radius: 10px !important;
-    cursor: pointer !important;
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    transition: all 0.25s ease !important;
-    margin-bottom: 12px !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-}
-
-section#auth .auth-public-browse-back:hover {
-    background: rgba(14, 165, 233, 0.16) !important;
-    border-color: rgba(14, 165, 233, 0.4) !important;
-    color: #f1f5f9 !important;
-}
-
-section#auth .auth-public-browse-title {
-    font-size: 1.2rem !important;
-    font-weight: 800 !important;
-    color: #f8fafc !important;
-    margin: 4px 0 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .room-list-box {
-    max-height: 320px !important;
-    overflow-y: auto !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-    padding-right: 4px !important;
-}
-
-section#auth .room-section-title {
-    font-size: 0.68rem !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.1em !important;
-    text-transform: uppercase !important;
-    color: #64748b !important;
-    margin: 12px 0 6px !important;
-}
-
-section#auth .room-tile {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 11px 14px !important;
-    background: rgba(2, 6, 23, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 12px !important;
-    cursor: pointer !important;
-    transition: all 0.25s ease !important;
-    pointer-events: auto !important;
-}
-
-section#auth .room-tile:hover {
-    background: rgba(14, 165, 233, 0.15) !important;
-    border-color: rgba(14, 165, 233, 0.4) !important;
-    transform: translateY(-1px) !important;
-}
-
-section#auth .room-tile.live {
-    border-left: 4px solid #ef4444 !important;
-    background: rgba(239, 68, 68, 0.08) !important;
-}
-
-section#auth .room-tile.waiting {
-    border-left: 4px solid #10b981 !important;
-    background: rgba(16, 185, 129, 0.08) !important;
-}
-
-section#auth .room-tile .r-code {
-    font-family: 'JetBrains Mono', monospace !important;
-    font-weight: 800 !important;
-    color: #38bdf8 !important;
-    font-size: 0.95rem !important;
-    letter-spacing: 0.1em !important;
-}
-
-section#auth .room-tile .r-name {
-    font-weight: 700 !important;
-    color: #f8fafc !important;
-    font-size: 0.85rem !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .room-tile .r-host {
-    font-size: 0.78rem !important;
-    color: #94a3b8 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .room-tile .r-count {
-    font-size: 0.8rem !important;
-    color: #34d399 !important;
-    font-weight: 700 !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-section#auth .auth-public-rooms-empty {
-    font-size: 0.85rem !important;
-    color: #64748b !important;
-    text-align: center !important;
-    padding: 24px 12px !important;
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 600px) {
-    section#auth .arena-global-topbar {
-        padding: 10px 14px !important;
-    }
-    section#auth .arena-topbar-title {
-        font-size: 1rem !important;
-    }
-    section#auth .arena-live-badge {
-        font-size: 0.55rem !important;
-        padding: 2px 6px !important;
-    }
-    section#auth .arena-page {
-        padding: 14px 10px 24px !important;
-        align-items: flex-start !important;
-    }
-    section#auth .auth-card {
-        border-radius: 20px !important;
-    }
-    section#auth .arena-card-head {
-        padding: 18px 16px 6px !important;
-    }
-    section#auth .arena-heading {
-        font-size: 1.35rem !important;
-    }
-    section#auth .arena-tabs {
-        margin: 12px 14px 0 !important;
-    }
-    section#auth .arena-body {
-        padding: 14px 14px 18px !important;
-    }
-    section#auth .dataset-scroll-container {
-        gap: 5px !important;
-    }
-    section#auth .dataset-card {
-        padding: 10px 2px 6px !important;
-    }
-    section#auth .dataset-card .ds-icon {
-        font-size: 1.15rem !important;
-    }
-    section#auth .dataset-card .ds-title {
-        font-size: 0.62rem !important;
-    }
-    section#auth .dataset-card .ds-sub {
-        font-size: 0.52rem !important;
-    }
-}
-
-/* Custom Sticker & Floating Pop Animations */
-.sticker-chip-add {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(14, 165, 233, 0.2)) !important;
-    border: 1.5px dashed rgba(52, 211, 153, 0.5) !important;
-    color: #34d399 !important;
-    font-weight: 800 !important;
-    font-size: 1.6rem !important;
-    cursor: pointer !important;
-}
-
-.sticker-chip-add:hover {
-    border-color: rgba(52, 211, 153, 0.9) !important;
-    background: rgba(52, 211, 153, 0.25) !important;
-    box-shadow: 0 0 16px rgba(52, 211, 153, 0.3) !important;
-}
-
-.sticker-add-plus-btn {
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
-    color: #ffffff !important;
-    font-weight: 800 !important;
-    font-size: 0.82rem !important;
-    border-radius: 10px !important;
-    padding: 7px 12px !important;
-    border: none !important;
-    cursor: pointer !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-}
-
-.sticker-add-plus-btn:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45) !important;
-}
-
-@keyframes popStickerBounce {
-    0% { opacity: 0; transform: translate(-50%, -40%) scale(0.3) rotate(-10deg); }
-    15% { opacity: 1; transform: translate(-50%, -55%) scale(1.25) rotate(5deg); }
-    30% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-    80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    100% { opacity: 0; transform: translate(-50%, -85%) scale(0.7); }
-}
-
-.floating-sticker-pop {
-    position: fixed;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    animation: popStickerBounce 2.4s ease-out forwards;
-}
-
-.floating-sticker-pop .fsp-badge {
-    background: rgba(15, 23, 42, 0.9);
-    border: 1px solid rgba(56, 189, 248, 0.4);
-    color: #38bdf8;
-    font-size: 0.75rem;
-    font-weight: 800;
-    padding: 3px 12px;
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-}
-
-.floating-sticker-pop .fsp-emoji {
-    font-size: 4.2rem;
-    filter: drop-shadow(0 8px 22px rgba(0,0,0,0.6));
-}
-
-.floating-sticker-pop .fsp-img {
-    max-width: 120px;
-    max-height: 120px;
-    object-fit: contain;
-    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.65));
-}
-
-/* ================================================================== */
-/* ðŸŽ¯ STICKER PANEL OVERLAY FIX                                        */
+/* 🎯 STICKER PANEL OVERLAY FIX                                        */
 /* ================================================================== */
 .feed-input-wrapper {
     position: relative !important;
@@ -18629,6 +17805,42 @@ section#auth .auth-public-rooms-empty {
     border-radius: 12px !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
     z-index: 600 !important;
+}
+
+#stickerPanel.hidden,
+.sticker-panel.hidden {
+    display: none !important;
+}
+
+/* ================================================================== */
+/* 🔒 ABSOLUTE HIDDEN STATE ENFORCEMENT                                */
+/* ================================================================== */
+.hidden,
+.screen.hidden,
+section.screen.hidden,
+section#landing.hidden,
+section#auth.hidden,
+section#auth.theme-app.hidden,
+section#auctionUI.hidden,
+section#playingXI.hidden,
+section#leaderboard.hidden,
+section#postAuctionSummary.hidden,
+#landing.hidden,
+#auth.hidden,
+#auctionUI.hidden,
+#playingXI.hidden,
+#leaderboard.hidden,
+#postAuctionSummary.hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
 }
 
 /* ================================================================== */
@@ -18654,8 +17866,8 @@ body {
     padding-bottom: 0 !important;
 }
 
-/* Screens fill the flex area between header and footer */
-.screen {
+/* Active screens fill the flex area between top and footer */
+.screen:not(.hidden) {
     position: relative !important;
     top: auto !important;
     bottom: auto !important;
@@ -18665,16 +17877,28 @@ body {
     flex: 1 1 auto !important;
     min-height: 0 !important;
     height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     box-sizing: border-box !important;
     margin: 0 !important;
     padding: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
 }
 
-.screen.hidden {
-    display: none !important;
+/* Landing Page Screen */
+section#landing:not(.hidden) {
+    display: flex !important;
+    flex-direction: column !important;
+    background: linear-gradient(175deg, #020617, #0f172a 50%, #0c1220) !important;
+    color: #f1f5f9 !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+    padding-bottom: 20px !important;
 }
 
 /* Restored Original/Previous Simple Dark Footer */
@@ -18731,15 +17955,18 @@ body {
 /* ================================================================== */
 /* 🏆 ROOM LOBBY COMPLETE REDESIGN (DESKTOP & MOBILE)                 */
 /* ================================================================== */
-section#auth {
+section#auth:not(.hidden) {
     display: flex !important;
     flex-direction: column !important;
     min-height: 100% !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
     background: radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.08), transparent 50%),
                 radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.05), transparent 40%),
                 linear-gradient(180deg, #020617 0%, #080f1e 40%, #030712 100%) !important;
     box-sizing: border-box !important;
-    padding-bottom: 24px !important; /* Critical for mobile: content NEVER touches or hides behind footer */
+    padding-bottom: 24px !important;
 }
 
 /* Topbar */
@@ -19371,7 +18598,7 @@ section#auth .auth-game-history-list {
 
 /* Mobile Optimizations */
 @media (max-width: 640px) {
-    section#auth {
+    section#auth:not(.hidden) {
         padding-bottom: 28px !important;
     }
     section#auth .arena-page {
