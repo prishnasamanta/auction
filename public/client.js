@@ -1,3 +1,15 @@
+
+window.toggleIntroVideosSetting = function() {
+    const current = localStorage.getItem('ipl_intro_videos') !== 'false';
+    const next = !current;
+    localStorage.setItem('ipl_intro_videos', next.toString());
+    const hqsBtn = document.getElementById('hqsIntroVideoBtn');
+    if (hqsBtn) {
+        hqsBtn.classList.toggle('active', next);
+        hqsBtn.textContent = next ? 'ON ✓' : 'OFF ✕';
+    }
+    if (typeof renderGeneralTab === 'function') renderGeneralTab();
+};
 const socket = io({
     reconnection: true,
     reconnectionAttempts: 15,
@@ -2392,13 +2404,7 @@ function getSetsListHtml() {
         </div>
     `;
 
-    if (remainingSets.length > 1) {
-        html += `<div class="gt-upcoming-queue">`;
-        remainingSets.slice(1).forEach(set => {
-            html += `<div class="gt-uq-row"><span>${set.name}</span><span class="gt-uq-count">${set.players.length}</span></div>`;
-        });
-        html += `</div>`;
-    }
+    // Category queue breakdown removed per user preference
     return html;
 }
 
@@ -3678,7 +3684,22 @@ function renderGeneralTab() {
         `;
     }
 
-    container.innerHTML = `${rulesHtml}${hostHtml}${inboxHtml}`;
+    const isIntroEnabled = localStorage.getItem('ipl_intro_videos') !== 'false';
+    const introSettingHtml = `
+        <div class="gt-host-settings-card gt-intro-setting-card">
+            <div class="gt-card-head">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Special Player Intro Videos</span>
+            </div>
+            <div class="gt-hqs-row" style="padding: 4px 0;">
+                <span class="gt-hqs-lbl" style="font-size:0.75rem; color:#e2e8f0;">Play Intro Videos:</span>
+                <button type="button" id="toggleIntroVideoBtn" class="gt-hchip ${isIntroEnabled ? 'active' : ''}" onclick="toggleIntroVideosSetting()" style="min-width: 65px; font-weight: 800; cursor: pointer;">
+                    ${isIntroEnabled ? 'ON ✓' : 'OFF ✕'}
+                </button>
+            </div>
+        </div>
+    `;
+    container.innerHTML = `${rulesHtml}${hostHtml}${introSettingHtml}${inboxHtml}`;
     updateRulesUI();
 }
 
@@ -4487,6 +4508,12 @@ window.openHostQuickSettings = function() {
     const currentTimer = Number(activeRules.bidTimer || 10);
     window.setHqsTimer([5, 7, 10].includes(currentTimer) ? currentTimer : 10);
     window.setHqsMinSquad(Number(activeRules.minSquadSize || 18));
+    const isIntroOn = localStorage.getItem('ipl_intro_videos') !== 'false';
+    const hqsBtn = document.getElementById('hqsIntroVideoBtn');
+    if (hqsBtn) {
+        hqsBtn.classList.toggle('active', isIntroOn);
+        hqsBtn.textContent = isIntroOn ? 'ON ✓' : 'OFF ✕';
+    }
     overlay.classList.remove("hidden");
 };
 
@@ -4681,6 +4708,14 @@ socket.on("auctionEnded", () => {
 
 socket.on("specialPlayerIntro", ({ playerName, videoPath }) => {
     specialIntroCurrentPlayer = playerName;
+    const isIntroEnabled = localStorage.getItem('ipl_intro_videos') !== 'false';
+    if (!isIntroEnabled) {
+        if (isHost) {
+            socket.emit("specialIntroFinished", { playerName: specialIntroCurrentPlayer });
+        }
+        specialIntroCurrentPlayer = null;
+        return;
+    }
     const overlay = ensureSpecialIntroOverlay();
     const video = document.getElementById("specialIntroVideo");
     if (!overlay || !video) return;
