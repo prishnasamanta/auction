@@ -18650,12 +18650,38 @@ section#auth .auth-public-rooms-empty {
 
 
 /* ================================================================== */
-/* 📱 LANDING PAGE DOWNLOAD APK CTA STYLES                           */
+/* 📱 LANDING PAGE DOWNLOAD APK CTA STYLES (MOBILE ONLY)              */
 /* ================================================================== */
+/* Hidden by default on PC / Desktop */
+.lp-btn-apk,
+.lp-download-cta {
+    display: none !important;
+}
+
+/* Shown ONLY on Mobile Devices / Mobile Screens (≤ 768px) */
+@media (max-width: 768px) {
+    .lp-btn-apk {
+        display: inline-flex !important;
+    }
+    .lp-download-cta {
+        display: block !important;
+    }
+}
+
+html.is-mobile-device .lp-btn-apk,
+body.is-mobile-device .lp-btn-apk {
+    display: inline-flex !important;
+}
+
+html.is-mobile-device .lp-download-cta,
+body.is-mobile-device .lp-download-cta {
+    display: block !important;
+}
+
 .lp-download-cta {
     max-width: 700px;
-    margin: 30px auto 40px;
-    padding: 0 20px;
+    margin: 24px auto 32px;
+    padding: 0 16px;
     box-sizing: border-box;
 }
 
@@ -18663,18 +18689,18 @@ section#auth .auth-public-rooms-empty {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.6));
     border: 1px solid rgba(52, 211, 153, 0.25);
     border-radius: 16px;
-    padding: 24px;
+    padding: 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
     flex-wrap: wrap;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 .lp-download-info {
     flex: 1;
-    min-width: 220px;
+    min-width: 200px;
 }
 
 .lp-download-badge {
@@ -18692,7 +18718,7 @@ section#auth .auth-public-rooms-empty {
 
 .lp-download-info h3 {
     margin: 0 0 6px;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     font-weight: 800;
     color: #f1f5f9;
 }
@@ -18728,7 +18754,6 @@ section#auth .auth-public-rooms-empty {
 }
 
 .lp-btn-apk {
-    display: inline-flex;
     align-items: center;
     gap: 6px;
     background: rgba(16, 185, 129, 0.12);
@@ -18753,11 +18778,16 @@ section#auth .auth-public-rooms-empty {
 @media (max-width: 640px) {
     .lp-download-card {
         flex-direction: column;
-        align-items: flex-start;
-        padding: 18px;
+        align-items: stretch;
+        padding: 16px;
+        text-align: center;
+    }
+    .lp-download-info {
+        text-align: center;
     }
     .lp-btn-download {
         width: 100%;
         justify-content: center;
+        box-sizing: border-box;
     }
 }

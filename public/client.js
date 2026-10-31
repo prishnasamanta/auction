@@ -6882,23 +6882,28 @@ window.gtSetMinSquad = function(val, e) {
     }
 };
 
-window.handleApkDownload = async function(event) {
-    if (event) event.preventDefault();
-    try {
-        const res = await fetch('/app-release.apk', { method: 'HEAD' });
-        if (res.ok) {
-            window.location.href = '/app-release.apk';
-            return;
+// Detect mobile device to selectively show APK download elements
+(function initMobileDeviceDetection() {
+    function check() {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        if (isMobile) {
+            document.documentElement.classList.add('is-mobile-device');
+        } else {
+            document.documentElement.classList.remove('is-mobile-device');
         }
-    } catch (_) {}
-    
-    if (typeof showPopup === "function") {
-        showPopup(
-            "The official Android APK is being prepared for the latest release. In the meantime, you can enjoy the full live auction experience directly in your mobile browser or get direct updates in our Telegram channel!",
-            "ANDROID APK",
-            "📱"
-        );
-    } else {
-        alert("The Android APK will be available shortly! You can play directly in your mobile browser.");
     }
+    check();
+    window.addEventListener('resize', check);
+})();
+
+window.handleApkDownload = function(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    const link = document.createElement('a');
+    link.href = '/app-release.apk';
+    link.setAttribute('download', 'AuctionSimulator.apk');
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+        if (link.parentNode) link.parentNode.removeChild(link);
+    }, 300);
 };
