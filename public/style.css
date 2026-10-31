@@ -18652,9 +18652,13 @@ section#auth .auth-public-rooms-empty {
 /* ================================================================== */
 /* 📱 LANDING PAGE DOWNLOAD APK CTA STYLES (MOBILE ONLY)              */
 /* ================================================================== */
-/* Hidden by default on PC / Desktop */
+/* Hidden by default on PC / Desktop and when inside the native App */
 .lp-btn-apk,
-.lp-download-cta {
+.lp-download-cta,
+html.is-app .lp-btn-apk,
+html.is-app .lp-download-cta,
+body.is-app .lp-btn-apk,
+body.is-app .lp-download-cta {
     display: none !important;
 }
 

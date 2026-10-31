@@ -6884,7 +6884,15 @@ window.gtSetMinSquad = function(val, e) {
 
 // Detect mobile device to selectively show APK download elements
 (function initMobileDeviceDetection() {
+    const isApp = /AuctionSimulatorApp/i.test(navigator.userAgent);
+    if (isApp) {
+        document.documentElement.classList.add('is-app');
+    }
     function check() {
+        if (isApp) {
+            document.documentElement.classList.remove('is-mobile-device');
+            return;
+        }
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
         if (isMobile) {
             document.documentElement.classList.add('is-mobile-device');
