@@ -15264,7 +15264,7 @@ button[disabled] {
     font-weight: 700;
 }
 .gt-set-list {
-    max-height: none;
+    max-height: 200px;
     overflow-y: auto;
 }
 .gt-set-row {
@@ -15362,7 +15362,7 @@ button[disabled] {
     .gt-rule { padding: 5px 4px; min-width: 50px; }
     .gt-rule-val { font-size: 0.8rem; }
     .gt-rule-lbl { font-size: 0.48rem; }
-    .gt-set-list { max-height: none; }
+    .gt-set-list { max-height: 160px; }
     .gt-xi-tag { font-size: 0.56rem; padding: 2px 5px; }
     #squadTabList .h-team-btn { padding: 4px 10px; font-size: 0.62rem; }
 }
@@ -16326,7 +16326,7 @@ button[disabled] {
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
-.gt-set-list { max-height: none; overflow-y: auto; }
+.gt-set-list { max-height: 180px; overflow-y: auto; }
 .gt-set-row {
     display: flex;
     align-items: center;
@@ -17844,7 +17844,7 @@ section#postAuctionSummary.hidden,
 }
 
 /* ================================================================== */
-/* 🚀 GLOBAL APP FLEX SHELL & PREVIOUS FOOTER ARCHITECTURE            */
+/* 🚀 GLOBAL APP FLEX SHELL & RESTORED PREVIOUS FOOTER ARCHITECTURE   */
 /* ================================================================== */
 html, body {
     height: 100% !important;
@@ -17901,7 +17901,7 @@ section#landing:not(.hidden) {
     padding-bottom: 20px !important;
 }
 
-/* Restored Original/Previous Simple Dark Footer */
+/* Restored Original / Previous Dark Gold Footer */
 .app-footer {
     position: relative !important;
     top: auto !important;
@@ -17913,9 +17913,9 @@ section#landing:not(.hidden) {
     margin-top: auto !important;
     background: #020617 !important;
     border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-    padding: 10px 16px !important;
-    padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
-    z-index: 999 !important;
+    padding: 12px 16px !important;
+    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    z-index: 100 !important;
     font-size: 0.8rem !important;
     color: #94a3b8 !important;
     text-align: center !important;
@@ -17949,11 +17949,11 @@ section#landing:not(.hidden) {
 
 .footer-social:hover {
     color: #ffffff !important;
-    transform: scale(1.15) !important;
+    transform: scale(1.18) !important;
 }
 
 /* ================================================================== */
-/* 🏆 ROOM LOBBY COMPLETE REDESIGN (DESKTOP & MOBILE)                 */
+/* 🏆 ROOM LOBBY COMPLETE GROUND-UP REDESIGN (DESKTOP & MOBILE)       */
 /* ================================================================== */
 section#auth:not(.hidden) {
     display: flex !important;
@@ -17962,9 +17962,9 @@ section#auth:not(.hidden) {
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
-    background: radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.08), transparent 50%),
-                radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.05), transparent 40%),
-                linear-gradient(180deg, #020617 0%, #080f1e 40%, #030712 100%) !important;
+    background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
+                radial-gradient(circle at 85% 85%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+                linear-gradient(180deg, #020617 0%, #070d1d 50%, #030712 100%) !important;
     box-sizing: border-box !important;
     padding-bottom: 0 !important;
 }
@@ -17973,16 +17973,16 @@ section#auth:not(.hidden) {
 section#auth .arena-global-topbar {
     position: sticky !important;
     top: 0 !important;
-    z-index: 100 !important;
+    z-index: 50 !important;
     flex-shrink: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    background: rgba(2, 6, 23, 0.85) !important;
+    background: rgba(2, 6, 23, 0.88) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
-    padding: 10px 24px !important;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.12) !important;
+    padding: 10px 20px !important;
     box-sizing: border-box !important;
 }
 
@@ -18106,34 +18106,38 @@ section#auth .arena-page {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    padding: 16px 16px 0 !important;
+    justify-content: flex-start !important; /* CRITICAL: Never center so top or bottom never clips! */
+    padding: 24px 16px 85px !important; /* Generous bottom spacing so card is ALWAYS above footer */
     box-sizing: border-box !important;
     width: 100% !important;
+    min-height: min-content !important;
 }
 
 section#auth .arena-wrapper {
     width: 100% !important;
-    max-width: 440px !important;
+    max-width: 450px !important;
     margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
 }
 
 section#auth .auth-card {
-    background: rgba(15, 23, 42, 0.75) !important;
-    backdrop-filter: blur(28px) !important;
-    -webkit-backdrop-filter: blur(28px) !important;
-    border: 1px solid rgba(52, 211, 153, 0.18) !important;
+    background: linear-gradient(165deg, rgba(15, 23, 42, 0.88) 0%, rgba(6, 12, 24, 0.95) 100%) !important;
+    backdrop-filter: blur(32px) !important;
+    -webkit-backdrop-filter: blur(32px) !important;
+    border: 1px solid rgba(52, 211, 153, 0.22) !important;
     border-radius: 20px !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04) inset !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 30px rgba(16, 185, 129, 0.07) !important;
     overflow: hidden !important;
     position: relative !important;
     width: 100% !important;
     box-sizing: border-box !important;
 }
 
-/* Card Header - Clean & Compact */
+/* Card Header - Clean & Modern */
 section#auth .arena-card-head {
-    padding: 20px 20px 6px !important;
+    padding: 22px 20px 6px !important;
     text-align: center !important;
 }
 
@@ -18147,19 +18151,19 @@ section#auth .arena-eyebrow-pill {
     text-transform: uppercase !important;
     color: #34d399 !important;
     background: rgba(52, 211, 153, 0.08) !important;
-    border: 1px solid rgba(52, 211, 153, 0.22) !important;
-    padding: 3px 10px !important;
+    border: 1px solid rgba(52, 211, 153, 0.24) !important;
+    padding: 3px 12px !important;
     border-radius: 14px !important;
     margin-bottom: 8px !important;
 }
 
 section#auth .arena-heading {
-    font-size: 1.45rem !important;
+    font-size: 1.48rem !important;
     font-weight: 800 !important;
     color: #f8fafc !important;
     margin: 0 0 4px !important;
     letter-spacing: -0.02em !important;
-    line-height: 1.2 !important;
+    line-height: 1.25 !important;
 }
 
 section#auth .arena-heading-accent {
@@ -18183,14 +18187,14 @@ section#auth .arena-tabs {
     gap: 4px !important;
     padding: 4px !important;
     margin: 14px 20px 0 !important;
-    background: rgba(0, 0, 0, 0.35) !important;
+    background: rgba(0, 0, 0, 0.4) !important;
     border-radius: 12px !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
 section#auth .auth-tab-btn {
     flex: 1 !important;
-    padding: 9px 14px !important;
+    padding: 10px 14px !important;
     border: none !important;
     border-radius: 9px !important;
     font-size: 0.82rem !important;
@@ -18206,9 +18210,10 @@ section#auth .auth-tab-btn {
 }
 
 section#auth .auth-tab-btn.active {
-    background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.15)) !important;
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.22), rgba(16, 185, 129, 0.16)) !important;
     color: #34d399 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(52, 211, 153, 0.3) !important;
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2) !important;
 }
 
 section#auth .auth-tab-btn:hover:not(.active) {
@@ -18218,7 +18223,7 @@ section#auth .auth-tab-btn:hover:not(.active) {
 
 /* Card Body */
 section#auth .arena-body {
-    padding: 16px 20px 20px !important;
+    padding: 16px 20px 22px !important;
 }
 
 section#auth .arena-input-group {
@@ -18252,13 +18257,13 @@ section#auth .arena-input-icon {
 
 section#auth .arena-input {
     width: 100% !important;
-    height: 42px !important;
+    height: 44px !important;
     padding: 0 14px 0 38px !important;
-    background: rgba(0, 0, 0, 0.35) !important;
+    background: rgba(0, 0, 0, 0.4) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     color: #f8fafc !important;
-    font-size: 0.88rem !important;
+    font-size: 0.9rem !important;
     font-weight: 600 !important;
     transition: border-color 0.2s, box-shadow 0.2s !important;
     box-sizing: border-box !important;
@@ -18267,7 +18272,7 @@ section#auth .arena-input {
 
 section#auth .arena-input:focus {
     border-color: #34d399 !important;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2), 0 0 16px rgba(52, 211, 153, 0.1) !important;
 }
 
 /* Join Section Row */
@@ -18290,10 +18295,10 @@ section#auth .arena-input-code {
 
 section#auth .arena-go-btn {
     height: 44px !important;
-    padding: 0 20px !important;
+    padding: 0 22px !important;
     background: linear-gradient(135deg, #10b981, #059669) !important;
     border: none !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     color: #fff !important;
     font-weight: 800 !important;
     font-size: 0.84rem !important;
@@ -18338,8 +18343,8 @@ section#auth .arena-public-rooms-btn {
     justify-content: center !important;
     gap: 6px !important;
     background: rgba(56, 189, 248, 0.06) !important;
-    border: 1px solid rgba(56, 189, 248, 0.18) !important;
-    border-radius: 10px !important;
+    border: 1px solid rgba(56, 189, 248, 0.2) !important;
+    border-radius: 12px !important;
     color: #38bdf8 !important;
     font-size: 0.82rem !important;
     font-weight: 700 !important;
@@ -18355,10 +18360,10 @@ section#auth .arena-public-rooms-btn:hover {
 /* Create Section */
 section#auth .arena-toggle-box {
     margin-bottom: 10px !important;
-    padding: 8px 12px !important;
-    background: rgba(0, 0, 0, 0.25) !important;
+    padding: 10px 14px !important;
+    background: rgba(0, 0, 0, 0.3) !important;
     border: 1px solid rgba(255, 255, 255, 0.06) !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
 }
 
 section#auth .dataset-scroll-container {
@@ -18370,9 +18375,9 @@ section#auth .dataset-scroll-container {
 }
 
 section#auth .dataset-card {
-    background: rgba(0, 0, 0, 0.3) !important;
+    background: rgba(0, 0, 0, 0.35) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     padding: 8px 4px !important;
     text-align: center !important;
     cursor: pointer !important;
@@ -18385,8 +18390,8 @@ section#auth .dataset-card {
 
 section#auth .dataset-card.active {
     border-color: #34d399 !important;
-    background: rgba(52, 211, 153, 0.12) !important;
-    box-shadow: 0 0 12px rgba(52, 211, 153, 0.2) !important;
+    background: rgba(52, 211, 153, 0.14) !important;
+    box-shadow: 0 0 14px rgba(52, 211, 153, 0.2) !important;
 }
 
 section#auth .ds-badge {
@@ -18405,7 +18410,7 @@ section#auth .dataset-card.active .ds-badge {
 }
 
 section#auth .ds-icon {
-    font-size: 1.1rem !important;
+    font-size: 1.15rem !important;
     line-height: 1 !important;
 }
 
@@ -18431,10 +18436,10 @@ section#auth .pool-selected-label {
 
 section#auth .arena-create-btn {
     width: 100% !important;
-    height: 44px !important;
+    height: 46px !important;
     font-size: 0.88rem !important;
     font-weight: 800 !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     background: linear-gradient(135deg, #10b981, #059669) !important;
     color: #fff !important;
     border: none !important;
@@ -18447,6 +18452,42 @@ section#auth .arena-create-btn {
 section#auth .arena-create-btn:hover {
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 22px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* APK Download Pill under Lobby Card */
+.arena-apk-pill-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+}
+
+.arena-apk-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 18px !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(52, 211, 153, 0.28) !important;
+    border-radius: 14px !important;
+    color: #34d399 !important;
+    font-size: 0.82rem !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.arena-apk-pill:hover {
+    background: rgba(16, 185, 129, 0.2) !important;
+    border-color: #34d399 !important;
+    color: #6ee7b7 !important;
+    transform: translateY(-1px) !important;
+}
+
+.arena-apk-pill .apk-arrow {
+    font-weight: 800 !important;
+    font-size: 1rem !important;
 }
 
 /* Sub-views: Browse Public Rooms & Match History */
@@ -18596,13 +18637,15 @@ section#auth .auth-game-history-list {
     transform: translateY(-2px);
 }
 
-/* Mobile Optimizations */
+/* ================================================================== */
+/* 📱 MOBILE RESPONSIVE OPTIMIZATIONS (≤ 640px)                       */
+/* ================================================================== */
 @media (max-width: 640px) {
     section#auth:not(.hidden) {
-        padding-bottom: 28px !important;
+        padding-bottom: 0 !important;
     }
     section#auth .arena-page {
-        padding: 12px 10px !important;
+        padding: 12px 10px 95px !important; /* Critical clearance: bottom tile ALWAYS sits above footer */
     }
     section#auth .arena-global-topbar {
         padding: 8px 14px !important;
@@ -18621,9 +18664,23 @@ section#auth .auth-game-history-list {
     }
     section#auth .arena-tabs {
         margin: 10px 14px 0 !important;
+        padding: 3px !important;
+    }
+    section#auth .auth-tab-btn {
+        padding: 8px 10px !important;
+        font-size: 0.78rem !important;
     }
     section#auth .arena-body {
         padding: 14px 14px 18px !important;
+    }
+    section#auth .arena-input {
+        height: 40px !important;
+        font-size: 0.86rem !important;
+    }
+    section#auth .arena-go-btn {
+        height: 40px !important;
+        padding: 0 16px !important;
+        font-size: 0.8rem !important;
     }
     section#auth .dataset-scroll-container {
         grid-template-columns: repeat(4, 1fr) !important;
@@ -18635,6 +18692,17 @@ section#auth .auth-game-history-list {
     section#auth .ds-title {
         font-size: 0.65rem !important;
     }
+    section#auth .ds-sub {
+        font-size: 0.52rem !important;
+    }
+    section#auth .arena-create-btn {
+        height: 44px !important;
+        font-size: 0.85rem !important;
+    }
+    .arena-apk-pill {
+        padding: 8px 14px !important;
+        font-size: 0.76rem !important;
+    }
     .lp-download-card {
         flex-direction: column;
         align-items: flex-start;
@@ -18643,5 +18711,17 @@ section#auth .auth-game-history-list {
     .lp-btn-download {
         width: 100%;
         justify-content: center;
+    }
+    .app-footer {
+        padding: 10px 12px !important;
+        padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    }
+    .footer-content {
+        gap: 8px !important;
+        font-size: 0.72rem !important;
+    }
+    .footer-social svg {
+        width: 15px !important;
+        height: 15px !important;
     }
 }

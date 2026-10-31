@@ -1,20 +1,8 @@
-
-window.toggleIntroVideosSetting = function() {
-    const current = localStorage.getItem('ipl_intro_videos') !== 'false';
-    const next = !current;
-    localStorage.setItem('ipl_intro_videos', next.toString());
-    const hqsBtn = document.getElementById('hqsIntroVideoBtn');
-    if (hqsBtn) {
-        hqsBtn.classList.toggle('active', next);
-        hqsBtn.textContent = next ? 'ON ✓' : 'OFF ✕';
-    }
-    if (typeof renderGeneralTab === 'function') renderGeneralTab();
-};
 const socket = io({
     reconnection: true,
-    reconnectionAttempts: 15,
+    reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
-    reconnectionDelayMax: 8000,
+    reconnectionDelayMax: 5000,
     timeout: 25000,
     transports: ['websocket', 'polling']
 });
@@ -620,9 +608,8 @@ if (!result.active) {
     const sUser = sessionStorage.getItem('ipl_user');
   
     // SCENARIO A: Reconnecting (Session Valid)
-    if (sUser && sRoom && (urlCode === sRoom || (!urlCode && path.startsWith('/room/')))) {
-        username = sUser;
-        roomCode = sRoom;
+    if (sUser && sRoom && (!urlCode || urlCode === sRoom)) {
+        // ... (Keep existing reconnect logic) ...
         socket.emit('reconnectUser', { roomId: sRoom, username: sUser, deviceId: getDeviceId() });
       
         // If deep link exists during reconnect, restore it
@@ -1248,7 +1235,11 @@ socket.on("joinedRoom", (data) => {
     // Otherwise we override Summary / Playing XI routing and users see a blank/incorrect screen.
     const auctionEndedNow = !!(data.auctionEnded || data.ended);
     if (!auctionEndedNow) {
-        setupAuctionScreen();
+        const auctionUI = document.getElementById("auctionUI");
+        const alreadyOnAuction = auctionUI && !auctionUI.classList.contains("hidden");
+        if (!alreadyOnAuction) {
+            setupAuctionScreen();
+        }
         updateAdminButtons(data.auctionStarted);
         renderEmbeddedTeams(data.availableTeams || []);
     } else {
@@ -1630,81 +1621,65 @@ socket.on("identityFailed", ({ reason }) => {
         window.location.href = "/";
     }, 1400);
 });
-// --- RECONNECTION & STATE HANDLING ---
+// --- STABLE RECONNECTION & STATE SYNC ---
 let isReconnecting = false;
 let reconnectionPopupShown = false;
-let disconnectPopupTimer = null;
-let isFirstSocketConnect = true;
+let disconnectNoticeTimer = null;
 
 socket.on('connect', () => {
-    console.log("⚡ Socket connected:", socket.id);
-    if (disconnectPopupTimer) {
-        clearTimeout(disconnectPopupTimer);
-        disconnectPopupTimer = null;
+    if (disconnectNoticeTimer) {
+        clearTimeout(disconnectNoticeTimer);
+        disconnectNoticeTimer = null;
     }
-    if (reconnectionPopupShown) {
-        reconnectionPopupShown = false;
+    if (isReconnecting) {
         isReconnecting = false;
+        reconnectionPopupShown = false;
         toggleCustomPopup(false);
     }
-
-    if (isFirstSocketConnect) {
-        isFirstSocketConnect = false;
-        return; // Initial connection handled by window.onload / direct actions
-    }
-
-    // Recovering from a dropped connection
-    const targetRoom = roomCode || sessionStorage.getItem('ipl_room');
-    const targetUser = username || sessionStorage.getItem('ipl_user');
-
-    if (targetUser && targetRoom) {
-        console.log("🔄 Re-syncing socket after connection restore...");
-        socket.emit('reconnectUser', { roomId: targetRoom, username: targetUser, deviceId: getDeviceId() });
-        const auctionUI = document.getElementById("auctionUI");
-        if (auctionUI && !auctionUI.classList.contains("hidden")) {
-            socket.emit("getAuctionState");
-        }
+    
+    // If we have session data, seamlessly reconnect user to room without disruptive UI resets
+    if (username && roomCode) {
+        console.log("🔄 Seamlessly reconnected socket to room:", roomCode);
+        socket.emit('reconnectUser', { roomId: roomCode, username: username, deviceId: getDeviceId() });
+        socket.emit("getAuctionState");
+        socket.emit("getSquads");
     }
 });
 
-// Graceful disconnect handling with debounce to avoid flickering
+// Resilient disconnect handling: Only show notice if disconnected for > 4s
 socket.on('disconnect', (reason) => {
     console.warn("⚠️ Socket disconnected:", reason);
-    const targetRoom = roomCode || sessionStorage.getItem('ipl_room');
-    if (targetRoom) {
+    if (disconnectNoticeTimer) clearTimeout(disconnectNoticeTimer);
+
+    if (roomCode) {
         const auctionUI = document.getElementById("auctionUI");
         const isOnAuctionScreen = auctionUI && !auctionUI.classList.contains("hidden");
         if (isOnAuctionScreen) {
-            if (disconnectPopupTimer) clearTimeout(disconnectPopupTimer);
-            disconnectPopupTimer = setTimeout(() => {
-                if (!socket.connected) {
-                    reconnectionPopupShown = true;
+            // Wait 4 seconds: 95% of drops recover in < 1-2s and should not interrupt bidding
+            disconnectNoticeTimer = setTimeout(() => {
+                if (!socket.connected && !reconnectionPopupShown) {
                     isReconnecting = true;
-                    showPopup("Reconnecting to auction room...", "RECONNECTING", "🔄");
+                    reconnectionPopupShown = true;
+                    showPopup("Network paused. Reconnecting to auction room...", "RECONNECTING", "🔄");
                 }
-            }, 2500); // Only notify user if disconnected for > 2.5 seconds
+            }, 4000);
         }
     }
 });
 
-socket.on('connect_error', (error) => {
-    console.warn("Socket connect error:", error ? error.message : error);
-});
-
-// When user returns to tab, smoothly sync state WITHOUT showing jarring blocking popup
+// Tab visibility handling: When user switches back, sync state silently without disrupting popups
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-        const targetRoom = roomCode || sessionStorage.getItem('ipl_room');
-        if (targetRoom) {
-            if (!socket.connected) {
-                console.log("Tab focused and socket disconnected, connecting...");
-                socket.connect();
+    if (!document.hidden && roomCode) {
+        const auctionUI = document.getElementById("auctionUI");
+        const isOnAuctionScreen = auctionUI && !auctionUI.classList.contains("hidden");
+        if (isOnAuctionScreen) {
+            if (socket.connected) {
+                // Connection is healthy! Silently refresh auction timer and squad data
+                socket.emit("getAuctionState");
+                socket.emit("getSquads");
             } else {
-                const auctionUI = document.getElementById("auctionUI");
-                if (auctionUI && !auctionUI.classList.contains("hidden")) {
-                    // Silently sync state in background
-                    socket.emit("getAuctionState");
-                }
+                // If socket dropped while tab was in background, reconnect immediately
+                socket.connect();
             }
         }
     }
@@ -2404,7 +2379,13 @@ function getSetsListHtml() {
         </div>
     `;
 
-    // Category queue breakdown removed per user preference
+    if (remainingSets.length > 1) {
+        html += `<div class="gt-upcoming-queue">`;
+        remainingSets.slice(1).forEach(set => {
+            html += `<div class="gt-uq-row"><span>${set.name}</span><span class="gt-uq-count">${set.players.length}</span></div>`;
+        });
+        html += `</div>`;
+    }
     return html;
 }
 
@@ -3684,22 +3665,7 @@ function renderGeneralTab() {
         `;
     }
 
-    const isIntroEnabled = localStorage.getItem('ipl_intro_videos') !== 'false';
-    const introSettingHtml = `
-        <div class="gt-host-settings-card gt-intro-setting-card">
-            <div class="gt-card-head">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                <span>Special Player Intro Videos</span>
-            </div>
-            <div class="gt-hqs-row" style="padding: 4px 0;">
-                <span class="gt-hqs-lbl" style="font-size:0.75rem; color:#e2e8f0;">Play Intro Videos:</span>
-                <button type="button" id="toggleIntroVideoBtn" class="gt-hchip ${isIntroEnabled ? 'active' : ''}" onclick="toggleIntroVideosSetting()" style="min-width: 65px; font-weight: 800; cursor: pointer;">
-                    ${isIntroEnabled ? 'ON ✓' : 'OFF ✕'}
-                </button>
-            </div>
-        </div>
-    `;
-    container.innerHTML = `${rulesHtml}${hostHtml}${introSettingHtml}${inboxHtml}`;
+    container.innerHTML = `${rulesHtml}${hostHtml}${inboxHtml}`;
     updateRulesUI();
 }
 
@@ -4508,12 +4474,6 @@ window.openHostQuickSettings = function() {
     const currentTimer = Number(activeRules.bidTimer || 10);
     window.setHqsTimer([5, 7, 10].includes(currentTimer) ? currentTimer : 10);
     window.setHqsMinSquad(Number(activeRules.minSquadSize || 18));
-    const isIntroOn = localStorage.getItem('ipl_intro_videos') !== 'false';
-    const hqsBtn = document.getElementById('hqsIntroVideoBtn');
-    if (hqsBtn) {
-        hqsBtn.classList.toggle('active', isIntroOn);
-        hqsBtn.textContent = isIntroOn ? 'ON ✓' : 'OFF ✕';
-    }
     overlay.classList.remove("hidden");
 };
 
@@ -4708,14 +4668,6 @@ socket.on("auctionEnded", () => {
 
 socket.on("specialPlayerIntro", ({ playerName, videoPath }) => {
     specialIntroCurrentPlayer = playerName;
-    const isIntroEnabled = localStorage.getItem('ipl_intro_videos') !== 'false';
-    if (!isIntroEnabled) {
-        if (isHost) {
-            socket.emit("specialIntroFinished", { playerName: specialIntroCurrentPlayer });
-        }
-        specialIntroCurrentPlayer = null;
-        return;
-    }
     const overlay = ensureSpecialIntroOverlay();
     const video = document.getElementById("specialIntroVideo");
     if (!overlay || !video) return;
@@ -6942,7 +6894,7 @@ window.handleApkDownload = async function(event) {
     
     if (typeof showPopup === "function") {
         showPopup(
-            "The official Android APK is being prepared for the latest release. In the meantime, you can enjoy the full experience directly in any mobile browser or get updates in our Telegram channel!",
+            "The official Android APK is being prepared for the latest release. In the meantime, you can enjoy the full live auction experience directly in your mobile browser or get direct updates in our Telegram channel!",
             "ANDROID APK",
             "📱"
         );

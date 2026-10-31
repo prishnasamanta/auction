@@ -114,7 +114,7 @@
             <button class="lp-btn-primary" onclick="showScreen('auth')">Create Room</button>
             <button class="lp-btn-outline" onclick="showScreen('auth')">Join Room</button>
             <a href="/app-release.apk" class="lp-btn-apk" download="AuctionSimulator.apk" onclick="handleApkDownload(event)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:4px"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4144 13.8533 8.0965 12 8.0965s-3.5902.3179-5.1367.8532L4.841 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"/></svg>Download APK
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:6px"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4144 13.8533 8.0965 12 8.0965s-3.5902.3179-5.1367.8532L4.841 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"/></svg>Download APK
             </a>
         </div>
     </div>
@@ -147,9 +147,9 @@
     <div class="lp-download-cta">
         <div class="lp-download-card">
             <div class="lp-download-info">
-                <span class="lp-download-badge">📱 Mobile App</span>
+                <span class="lp-download-badge">📱 Official Android App</span>
                 <h3>Download Auction Simulator APK</h3>
-                <p>Get the native Android app for ultra-fast bidding, smooth live updates, and match alerts.</p>
+                <p>Get the native Android app for ultra-fast bidding, smooth live updates, audio commentary, and match alerts.</p>
             </div>
             <a href="/app-release.apk" class="lp-btn-download" download="AuctionSimulator.apk" onclick="handleApkDownload(event)">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4144 13.8533 8.0965 12 8.0965s-3.5902.3179-5.1367.8532L4.841 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"/></svg>
@@ -456,6 +456,14 @@
         </div>
     </div>
 
+        </div>
+
+        <div class="arena-apk-pill-wrapper">
+            <a href="/app-release.apk" class="arena-apk-pill" download="AuctionSimulator.apk" onclick="handleApkDownload(event)">
+                <span class="apk-icon">📱</span>
+                <span class="apk-text">Get Official Android App <b>(Download APK)</b></span>
+                <span class="apk-arrow">↓</span>
+            </a>
         </div>
     </div>
     </div>
@@ -864,6 +872,14 @@
                 <button type="button" onclick="document.getElementById('identityVerifyOverlay').classList.add('hidden')" class="secondary-btn iv-btn-sec">Cancel</button>
             </div>
         </div>
+
+        <div class="arena-apk-pill-wrapper">
+            <a href="/app-release.apk" class="arena-apk-pill" download="AuctionSimulator.apk" onclick="handleApkDownload(event)">
+                <span class="apk-icon">📱</span>
+                <span class="apk-text">Get Official Android App <b>(Download APK)</b></span>
+                <span class="apk-arrow">↓</span>
+            </a>
+        </div>
     </div>
     </div>
 
@@ -993,11 +1009,6 @@
                 <button type="button" class="hqs-chip" data-value="18" onclick="setHqsMinSquad(18)">18</button>
             </div>
             <input id="hqsMinSquad" type="hidden" value="18" />
-
-            <label class="hqs-label">Special Player Intro Videos</label>
-            <div class="hqs-chip-row" id="hqsIntroVideoRow" role="group" aria-label="Special Player Intro Videos">
-                <button type="button" id="hqsIntroVideoBtn" class="hqs-chip active" onclick="toggleIntroVideosSetting()">ON ✓</button>
-            </div>
         </div>
         <div class="hqs-actions">
             <button type="button" class="secondary-btn" onclick="closeHostQuickSettings()">Cancel</button>

@@ -7,7 +7,7 @@ const multer = require('multer');
 const PLAYERS = require("./players");
 const SPECIAL_PLAYERS = require("./specialplayer.json");
 
-// Process-level crash prevention to keep auction rooms stable
+// Global process crash prevention to keep auction rooms stable
 process.on('uncaughtException', (err) => {
     console.error('🛡️ Uncaught Exception caught to prevent server crash:', err);
 });
@@ -19,8 +19,9 @@ const app = express();
 app.use(express.json({ limit: "256kb" }));
 const server = http.createServer(app);
 const io = new Server(server, {
-    pingTimeout: 60000, 
-    pingInterval: 25000
+    pingTimeout: 45000, 
+    pingInterval: 15000,
+    transports: ['websocket', 'polling']
 });
 const admin = require("firebase-admin");
 
@@ -201,6 +202,14 @@ LANDING_SPA_PATHS.forEach((p) => {
     app.get(p, (_req, res) => {
         res.sendFile(path.join(PUBLIC_DIR, "index.html"));
     });
+});
+
+app.get("/app-release.apk", (req, res) => {
+    const apkPath = path.join(PUBLIC_DIR, "app-release.apk");
+    if (fs.existsSync(apkPath)) {
+        return res.download(apkPath, "AuctionSimulator.apk");
+    }
+    return res.status(404).json({ ok: false, message: "APK release coming soon" });
 });
 
 app.use(express.static(PUBLIC_DIR));
